@@ -1,0 +1,91 @@
+{
+  "id": "chest",
+  "name": "Chest",
+  "version": "0.1.0",
+  "maturity": "phase-one-local-candidate",
+  "category": "documents",
+  "spine": {
+    "id": "governed-documents",
+    "record": "Document with immutable versions and exact review decisions"
+  },
+  "description": "Owned business records with immutable originals, exact-version review, enforced access and complete local recovery.",
+  "capabilities": [
+    {
+      "id": "governed-library",
+      "clauses": [
+        "CHEST-01",
+        "CHEST-02",
+        "CHEST-03",
+        "CHEST-04",
+        "CHEST-05",
+        "CHEST-06",
+        "CHEST-07",
+        "CHEST-08",
+        "CHEST-09",
+        "CHEST-10",
+        "CHEST-11",
+        "CHEST-12",
+        "CHEST-13"
+      ]
+    }
+  ],
+  "nonGoals": [
+    "AI jobs (phase two)",
+    "Office editing and universal previews",
+    "Anonymous sharing and device sync",
+    "Statutory retention and automatic destruction"
+  ],
+  "externals": [
+    {
+      "id": "cloudflare",
+      "required": false,
+      "why": "Optional remote Worker/D1/R2 hosting; local operations use no account",
+      "data": [
+        "HTTP requests",
+        "documents"
+      ],
+      "adapters": []
+    }
+  ],
+  "env": [],
+  "deploy": {
+    "healthPath": "/health",
+    "publicPaths": [
+      "/",
+      "/health",
+      "/signin"
+    ],
+    "notes": "Native owner sessions guard /app; unknown paths return real 404s; the development outbox is local-only."
+  },
+  "extensionPoints": {
+    "contributions": [],
+    "policies": [],
+    "events": [],
+    "slots": [],
+    "adapters": []
+  },
+  "limits": {
+    "status": "unmeasured"
+  },
+  "accessibility": {
+    "level": "WCAG 2.2 AA",
+    "status": "target; unaudited"
+  },
+  "operatingCost": {
+    "status": "unmeasured"
+  },
+  "composition": {
+    "base": "base",
+    "family": "documents",
+    "edition": "chest",
+    "modules": [
+      "job-queue",
+      "release",
+      "deploy-kit",
+      "mail",
+      "operator-auth",
+      "portability",
+      "import-kit"
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+/* Chest's shared components, used by the app (with chest-app.css) and the run site (landing and docs).
+   Tokens come from rer-theme.css. Visual authority: SPEC.md §2.4 and the 12ui picks. */
+
+/* Primary button: ink fill. Cobalt fill is reserved for "Approve this exact version". */
+.btn { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 44px; padding: 10px 22px; border: 1px solid var(--chest-ink); border-radius: var(--chest-radius); background: var(--chest-ink); color: var(--chest-surface); font: 600 16px/1.2 var(--chest-font-sans); text-decoration: none; white-space: nowrap; cursor: pointer; transition: background-color .15s ease, transform .15s ease; }
+.btn:hover { background: #2f2f2f; }
+.btn:active { transform: translateY(1px); }
+.btn-lg { min-height: 56px; padding: 14px 32px; font-size: 20px; }
+.btn-outline { background: var(--chest-surface); color: var(--chest-ink); border-color: var(--chest-line); }
+.btn-outline:hover { background: var(--chest-paper); box-shadow: inset 0 0 0 1px var(--chest-line); }
+.btn-approve { background: var(--chest-cobalt); border-color: var(--chest-cobalt); color: var(--chest-cobalt-ink); }
+.btn-approve:hover { background: #003bc0; }
+.btn .arrow { font-weight: 400; transition: transform .12s ease; }
+.btn:hover .arrow { transform: translateX(3px); }
+@media (prefers-reduced-motion: reduce) { .btn, .btn .arrow { transition: none; } .btn:hover .arrow { transform: none; } }
+
+/* Text link: ink, underline 1px offset 4px; 2px on hover. */
+.link { color: var(--chest-ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.link:hover { text-decoration-thickness: 2px; }
+
+/* Focus: 3px cobalt, offset 2px, everywhere. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: var(--chest-focus); outline-offset: 2px; }
+
+.mono { font-family: var(--chest-font-mono); font-weight: 400; }
+
+/* Chips: pill, 13px. Quiet by default (Submitted, Awaiting approval, Completed with evidence). */
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: 999px; background: var(--chest-chip); color: var(--chest-ink); font: 500 13px/1.45 var(--chest-font-sans); white-space: nowrap; }
+.chip-due { background: var(--chest-due); color: var(--chest-due-ink); }
+.chip-upcoming { background: var(--chest-upcoming); color: var(--chest-upcoming-ink); }
+.chip-issue { background: #fbe9e4; color: var(--chest-issue); }
+.chip-dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--chest-cobalt); }
+
+/* Folder tab: a status tab sitting on the top edge of a row or card. Manila by default; cobalt for the
+   current approved version. Top corners 8px with a 45° shoulder drawn by the tab's own outline. */
+.tab { position: relative; display: inline-flex; align-items: center; min-height: 24px; padding: 2px 18px 1px; background: var(--chest-manila); color: var(--chest-ink); font: 500 13px/1.4 var(--chest-font-sans); white-space: nowrap; border: 1px solid var(--chest-line); border-bottom: 0; border-radius: 8px 8px 0 0; clip-path: polygon(0 100%, 0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px, 100% 100%); }
+.tab-cobalt { background: var(--chest-cobalt); border-color: var(--chest-cobalt); color: var(--chest-cobalt-ink); }
+.tab-plain { background: var(--chest-manila); }
+
+/* Document icon (src/ui/icons.ts). */
+.icon { display: inline-block; flex: none; width: 24px; height: 24px; color: currentColor; }
+.icon svg { display: block; width: 100%; height: 100%; }
+
+/* Manila folder: the drawings' frame and the app's empty state. A tab on the back panel, a white sheet
+   inside, and the paper-stack edge (2px offsets in manila-deep) behind. */
+.folder { position: relative; padding: 30px 0 0; }
+.folder-back { position: absolute; inset: 30px 0 0; background: var(--chest-manila); border: 1px solid var(--chest-line); border-radius: var(--chest-radius); box-shadow: 6px 5px 0 -1px var(--chest-manila), 6px 5px 0 0 var(--chest-line), 12px 10px 0 -1px var(--chest-manila-deep), 12px 10px 0 0 var(--chest-line); }
+.folder-back::after { content: ""; position: absolute; inset: 24px -20px -20px 24px; z-index: -1; border-radius: var(--chest-radius); background-image: radial-gradient(circle, rgba(24, 24, 24, .42) .7px, transparent 1px); background-size: 4px 4px; -webkit-mask-image: linear-gradient(135deg, transparent 55%, #000 80%); mask-image: linear-gradient(135deg, transparent 55%, #000 80%); }
+.folder-tab { position: absolute; top: 1px; left: 14%; width: 26%; min-width: 96px; height: 30px; }
+.folder-tab svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.folder-tab path { fill: var(--chest-manila); stroke: var(--chest-line); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.folder-sheet { position: relative; margin: 10px 12px 12px; padding: 28px 32px 32px; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: 8px; }

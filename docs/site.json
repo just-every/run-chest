@@ -1,0 +1,29 @@
+{
+  "sections": [
+    {
+      "title": "Get started",
+      "pages": [
+        { "slug": "introduction", "title": "What Chest is", "file": "introduction.md", "summary": "How a document moves through Chest, from upload to the approved version everyone opens." },
+        { "slug": "run", "title": "Run Chest on your computer", "file": "run.md", "summary": "Install rer, get Chest, start it with rer dev and finish first-run setup." },
+        { "slug": "set-up", "title": "Set up your library", "file": "set-up.md", "summary": "Invite your staff, then create collections, document types and groups before the first upload." }
+      ]
+    },
+    {
+      "title": "Everyday work",
+      "pages": [
+        { "slug": "filing", "title": "File and find documents", "file": "filing.md", "summary": "Upload an original, file it with a type, an owner and a relationship, then search, preview and download." },
+        { "slug": "versions", "title": "Versions and approval", "file": "versions.md", "summary": "Submit a replacement, review the exact version, and see what stays current while you decide." },
+        { "slug": "access", "title": "People and access", "file": "access.md", "summary": "Grant reader, editor and reviewer roles to people and groups, keep a record private, and remove access everywhere at once." },
+        { "slug": "dates", "title": "Review and expiry dates", "file": "dates.md", "summary": "Schedule reviews and expiries, see what is due, and record who checked it with evidence." },
+        { "slug": "trash-and-audit", "title": "Trash and the audit trail", "file": "trash-and-audit.md", "summary": "Move a record to reversible trash, restore it, and read every change in the audit trail." }
+      ]
+    },
+    {
+      "title": "Move in and keep it safe",
+      "pages": [
+        { "slug": "move-in", "title": "Move an archive into Chest", "file": "move-in.md", "summary": "Prepare a Chest archive file, preview every item before anything is written, then apply, resume or undo the batch." },
+        { "slug": "backup-and-restore", "title": "Backup and restore", "file": "backup-and-restore.md", "summary": "Export the whole library to one file and restore it into a fresh Chest." }
+      ]
+    }
+  ]
+}

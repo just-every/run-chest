@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "id": "documents/chest",
+  "identityKind": "project",
+  "toolchain": {
+    "id": "runeditrun/edition-authoring",
+    "version": "1.1.0"
+  },
+  "parent": null,
+  "components": [
+    {
+      "id": "documents/chest",
+      "role": "edition",
+      "source": {
+        "kind": "local",
+        "paths": [
+          "src/chest",
+          "src/routes",
+          "public/chest.css",
+          "migrations",
+          "tests/chest"
+        ]
+      }
+    },
+    {
+      "id": "runeditrun/base",
+      "role": "foundation",
+      "source": {
+        "kind": "local",
+        "paths": [
+          "src/base",
+          "src/modules/operator-auth",
+          "src/modules/mail",
+          "scripts/edition-authoring",
+          "src/modules/dependencies",
+          "src/modules/owner-claim"
+        ],
+        "origin": {
+          "repository": "https://github.com/runeditrun/base.git",
+          "revision": "10e569948863b7050e6645b7219b56007953b232",
+          "path": ".",
+          "paths": [
+            "foundation/runtime",
+            "modules/operator-auth",
+            "modules/mail",
+            "edition-authoring",
+            "modules/dependencies",
+            "modules/owner-claim"
+          ]
+        },
+        "mappings": [
+          {
+            "path": "src/base/hydration/README.md",
+            "originPath": "foundation/runtime/hydration/README.md"
+          }
+        ]
+      }
+    },
+    {
+      "id": "runeditrun/import-kit",
+      "role": "module",
+      "source": {
+        "kind": "local",
+        "paths": [
+          "src/modules/import-kit"
+        ],
+        "origin": {
+          "repository": "https://github.com/runeditrun/base.git",
+          "revision": "10e569948863b7050e6645b7219b56007953b232",
+          "path": "modules/import-kit",
+          "paths": [
+            "src",
+            "schema",
+            "README.md",
+            "LICENSE",
+            "CONTRACT.md"
+          ]
+        }
+      }
+    }
+  ]
+}

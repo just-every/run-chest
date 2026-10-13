@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "projectId": "documents/chest",
+  "name": "Chest",
+  "sourceRepository": "https://github.com/just-every/run-chest",
+  "license": "MIT"
+}

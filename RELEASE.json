@@ -1,0 +1,4 @@
+{
+  "version": "0.1.0",
+  "publicReleaseNotes": "Chest 0.1.0 is an owner-operated document library with immutable originals, exact-version review, typed metadata, collection and document access, reversible archive move-in and complete local recovery. Public source: https://github.com/just-every/run-chest. External email, hosted operation, owner-data acceptance and optional AI features are separate from this local release."
+}

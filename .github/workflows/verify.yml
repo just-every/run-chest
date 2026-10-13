@@ -1,0 +1,52 @@
+name: Verify
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.20.0'
+      - name: Recover unused Android SDK space
+        # GitHub's Ubuntu image documents this SDK path; Chest uses no Android tools.
+        # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#android
+        run: |
+          set -euo pipefail
+          printf 'Disk space before Android SDK removal\n'
+          df -h . /tmp
+          sudo rm -rf -- /usr/local/lib/android/sdk
+          printf 'Disk space after Android SDK removal\n'
+          df -h . /tmp
+          node --input-type=module <<'NODE'
+          import {statfs} from 'node:fs/promises';
+          import {tmpdir} from 'node:os';
+          const minimum = 15n * 1024n ** 3n;
+          for (const [label, path] of [['checkout', process.cwd()], ['temporary', tmpdir()]]) {
+            const state = await statfs(path, {bigint: true});
+            const free = state.bavail * state.bsize;
+            console.log(`${label}: ${(Number(free) / 1024 ** 3).toFixed(2)} GiB free; requires at least 15 GiB`);
+            if (free < minimum) throw Error(`${label} volume has insufficient free space for the real RER server`);
+          }
+          NODE
+      - run: npm install --global pnpm@10.12.4
+      - run: pnpm install --frozen-lockfile && pnpm exec rer install
+      - run: pnpm exec rer check --profile first-party
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec rer verify
+      - run: pnpm run test:journey
+        env:
+          CHEST_TEST_CHECKOUT: '1'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chest-browser-pages
+          path: test-results/*.png

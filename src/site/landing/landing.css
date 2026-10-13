@@ -1,0 +1,59 @@
+/* The landing's layout and type (SPEC §1–2): hero, alternating sections, closing actions.
+   Colour stays inside the drawings; the chrome is ink on paper. */
+.landing { max-width: 1440px; margin: 0 auto; padding: 0 80px; }
+.site h1, .site h2 { font-family: var(--chest-font-sans); font-weight: 800; font-stretch: 80%; color: var(--chest-ink); text-wrap: balance; }
+
+/* Hero */
+.hero { display: grid; grid-template-columns: minmax(0, 620px) minmax(0, 1fr); align-items: center; column-gap: 0; min-height: 780px; padding: 64px 0 96px; scroll-margin-top: 0; }
+.hero h1 { font-size: 88px; line-height: .95; letter-spacing: -0.025em; }
+.hero-sub { margin-top: 28px; max-width: 560px; font-size: 22px; line-height: 1.4; text-wrap: pretty; }
+.hero-free { margin-top: 32px; max-width: 520px; font-size: 19px; line-height: 1.45; }
+.hero-free strong { font-weight: 700; }
+.hero-alts { white-space: nowrap; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 40px; margin-top: 48px; }
+.actions .link { font-size: 20px; font-weight: 500; }
+.hero-licence { margin-top: 28px; color: var(--chest-ink); font-size: 15px; }
+
+/* Sections: heading, one line, one drawing; the drawing alternates right and left. */
+.band { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "copy drawing"; align-items: center; column-gap: 96px; padding: 128px 0; scroll-margin-top: 24px; }
+.band-left { grid-template-areas: "drawing copy"; }
+.band-copy { grid-area: copy; max-width: 600px; }
+.band-left .band-copy { justify-self: start; }
+.band h2 { max-width: 560px; font-size: 56px; line-height: 1; letter-spacing: -0.02em; }
+.band-line { margin-top: 28px; max-width: 540px; font-size: 22px; line-height: 1.4; text-wrap: pretty; }
+.band .actions-stacked { flex-direction: column; align-items: flex-start; gap: 28px; margin-top: 48px; }
+.drawing { grid-area: drawing; min-width: 0; }
+
+/* Laptop widths: a narrower copy column and H1 leave the record drawing room for its rows. */
+@media (min-width: 1181px) and (max-width: 1400px) {
+  .hero { grid-template-columns: minmax(0, 520px) minmax(0, 1fr); }
+  .hero h1 { font-size: 76px; }
+}
+@media (min-width: 1181px) and (max-width: 1279px) {
+  .hero { grid-template-columns: minmax(0, 1fr); row-gap: 56px; min-height: 0; padding-top: 72px; }
+  .hero-copy { max-width: 640px; }
+  .hero-drawing { max-width: 720px; }
+}
+
+@media (max-width: 1180px) {
+  .landing { padding: 0 48px; }
+  .hero { grid-template-columns: minmax(0, 1fr); row-gap: 56px; min-height: 0; padding-top: 72px; }
+  .hero-copy { max-width: 640px; }
+  .band { column-gap: 56px; }
+}
+
+@media (max-width: 760px) {
+  .landing { padding: 0 20px; }
+  .hero { padding: 32px 0 64px; row-gap: 40px; }
+  .hero h1 { font-size: 44px; line-height: 1; }
+  .hero-sub { margin-top: 16px; font-size: 18px; }
+  .hero-free { margin-top: 20px; font-size: 16px; }
+  .actions { flex-direction: column; align-items: stretch; gap: 16px; margin-top: 28px; text-align: center; }
+  .actions .btn-lg { min-height: 52px; font-size: 18px; }
+  .actions .link { font-size: 17px; align-self: center; }
+  .hero-licence { margin-top: 16px; font-size: 13px; text-align: center; }
+  .band, .band-left { grid-template-columns: minmax(0, 1fr); grid-template-areas: "copy" "drawing"; row-gap: 40px; padding: 64px 0; }
+  .band h2 { font-size: 40px; line-height: 1.02; }
+  .band-line { margin-top: 16px; font-size: 18px; }
+  .band .actions-stacked { align-items: stretch; margin-top: 32px; gap: 16px; }
+}

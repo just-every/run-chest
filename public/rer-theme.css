@@ -1,0 +1,107 @@
+@import url('/fonts/fonts.css');
+/* Chest's theme: the one place its tokens are defined. Every Chest page links this file: the app (with
+   public/chest.css), the run site (landing, docs, Run page), the Lobby, sign-in and first-run setup.
+   The --chest-* tokens are Chest's own; the --rer-* tokens below map them for Base's shared documents
+   (Lobby, Run page, sign-in, setup), which read only --rer-*. Visual authority: the 12ui picks in
+   rer-consolidation/evidence/gr-chest-style (SPEC.md §2). */
+:root {
+  /* Colour. Chrome is ink on warm paper; cobalt is the one accent (current approved, approve, callouts,
+     focus); manila belongs to folders and tabs. Status colours appear only on app status chips. */
+  --chest-paper: #fdfcf8;
+  --chest-surface: #ffffff;
+  --chest-ink: #181818;
+  --chest-muted: #55524c;
+  --chest-line: #2a2a2a;
+  --chest-hairline: #e4e0d6;
+  --chest-manila: #ead6b4;
+  --chest-manila-deep: #d9c296;
+  --chest-cobalt: #004be9;
+  --chest-cobalt-ink: #ffffff;
+  --chest-chip: #d2d6da;
+  --chest-due: #f6d7cf;
+  --chest-due-ink: #7a2414;
+  --chest-upcoming: #f4e3b8;
+  --chest-upcoming-ink: #5c4300;
+  --chest-issue: #9a2a12;
+
+  /* Type. Archivo carries headings (compact width 80, weight 800) and body (width 100); exact facts are
+     IBM Plex Mono; Caveat is only for the hand-inked callouts inside drawings. */
+  --chest-font-sans: Archivo, 'Helvetica Neue', Arial, sans-serif;
+  --chest-font-display: 'Archivo Compact', Archivo, 'Arial Narrow', Arial, sans-serif;
+  --chest-font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --chest-font-hand: Caveat, 'Bradley Hand', cursive;
+
+  /* Shape. */
+  --chest-radius: 10px;
+  --chest-radius-input: 8px;
+  --chest-focus: 3px solid var(--chest-cobalt);
+
+  /* Base's shared documents. */
+  --rer-font-body: var(--chest-font-sans);
+  --rer-font-heading: var(--chest-font-display);
+  --rer-font-mono: var(--chest-font-mono);
+  --rer-page: var(--chest-paper);
+  --rer-surface: var(--chest-surface);
+  --rer-text: var(--chest-ink);
+  --rer-muted: var(--chest-muted);
+  --rer-border: var(--chest-line);
+  --rer-focus: var(--chest-cobalt);
+  --rer-link: var(--chest-ink);
+  --rer-radius: var(--chest-radius);
+  --rer-button-radius: var(--chest-radius);
+  --rer-accent: var(--chest-ink);
+  --rer-accent-text: var(--chest-surface);
+  --rer-code-background: var(--chest-ink);
+  --rer-code-text: var(--chest-paper);
+  --rer-wordmark-weight: 800;
+  --rer-wordmark-tracking: -0.02em;
+}
+
+/* Run page (Base's run template): the wordmark and heading in the landing's heavy compact Archivo. */
+body > .bar .brand, body > main > .intro h1 { font-weight: 800; }
+
+/* Sign-in and first-run setup (Base frames, html.rer-themed): the wordmark centred above one 1px ink card,
+   compact heavy heading, ink buttons. html.rer-themed outranks the frames' own .rer-themed rules. */
+html.rer-themed { background: var(--chest-paper); }
+html.rer-themed body { display: block; min-height: 100vh; margin: 0; padding: 24px 20px 64px; background: var(--chest-paper); color: var(--chest-ink); font: 400 16px/1.5 var(--chest-font-sans); -webkit-font-smoothing: antialiased; }
+html.rer-themed main { position: relative; box-sizing: border-box; width: 100%; max-width: 520px; margin: 116px auto 0; padding: 36px 40px 40px; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: var(--chest-radius); box-shadow: none; }
+html.rer-themed main > .brand,
+html.rer-themed main > .rer-brand { position: absolute; left: 0; right: 0; top: -84px; display: block; margin: 0; text-align: center; color: var(--chest-ink); font: 800 44px/1 var(--chest-font-display); letter-spacing: -0.02em; }
+html.rer-themed main > .brand::before,
+html.rer-themed main > .rer-brand::before,
+html.rer-themed .mark { display: none; }
+html.rer-themed h1 { margin: 0 0 20px; color: var(--chest-ink); font: 800 44px/1.05 var(--chest-font-display); letter-spacing: -0.02em; text-wrap: balance; }
+html.rer-themed h2 { margin: 32px 0 12px; padding-top: 28px; border-top: 1px solid var(--chest-hairline); color: var(--chest-ink); font: 800 28px/1.1 var(--chest-font-display); letter-spacing: -0.02em; }
+html.rer-themed p { margin: 0 0 20px; color: var(--chest-muted); font-size: 16px; }
+html.rer-themed .notice { border-left: 3px solid var(--chest-ink); color: var(--chest-ink); }
+html.rer-themed .secondary-link { margin: 20px 0 0; text-align: center; font-size: 15px; }
+html.rer-themed .divider::before,
+html.rer-themed .divider::after { border-color: var(--chest-hairline); }
+html.rer-themed label { margin: 0 0 8px; color: var(--chest-ink); font-size: 15px; font-weight: 500; }
+html.rer-themed input:not([type=checkbox]):not([type=hidden]) { box-sizing: border-box; width: 100%; min-height: 48px; margin: 0 0 16px; padding: 10px 14px; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: var(--chest-radius-input); color: var(--chest-ink); font: 400 15px/1.4 var(--chest-font-mono); }
+html.rer-themed input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--chest-ink); }
+html.rer-themed label:has(input[type=checkbox]) { display: flex; gap: 12px; align-items: flex-start; margin: 0; font-weight: 400; }
+html.rer-themed button,
+html.rer-themed .action { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; padding: 12px 20px; background: var(--chest-ink); border: 1px solid var(--chest-ink); border-radius: var(--chest-radius); box-shadow: none; color: var(--chest-surface); font: 600 16px/1.2 var(--chest-font-sans); text-decoration: none; cursor: pointer; }
+html.rer-themed button:hover,
+html.rer-themed .action:hover { background: #2f2f2f; box-shadow: none; }
+html.rer-themed button.secondary { background: transparent; color: var(--chest-ink); border-color: var(--chest-line); }
+html.rer-themed a { color: var(--chest-ink); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+html.rer-themed a:hover { text-decoration-thickness: 2px; }
+html.rer-themed :focus-visible,
+html.rer-themed button:focus-visible,
+html.rer-themed input:focus-visible { outline: var(--chest-focus); outline-offset: 2px; }
+/* First-run setup: the owner facts between hairlines, in mono. */
+html.rer-themed dl { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px 16px; margin: 0 0 24px; padding: 20px 0; border-top: 1px solid var(--chest-hairline); border-bottom: 1px solid var(--chest-hairline); }
+html.rer-themed dt { color: var(--chest-ink); font-size: 15px; }
+html.rer-themed dd { margin: 0; color: var(--chest-ink); font: 400 15px/1.5 var(--chest-font-mono); overflow-wrap: anywhere; }
+html.rer-themed form p { margin: 0 0 4px; color: var(--chest-ink); }
+@media (max-width: 480px) {
+  html.rer-themed body { padding: 16px 16px 40px; }
+  html.rer-themed main { margin-top: 88px; }
+  html.rer-themed main { padding: 28px 20px 28px; }
+  html.rer-themed main > .brand,
+  html.rer-themed main > .rer-brand { top: -68px; font-size: 36px; }
+  html.rer-themed h1 { font-size: 32px; line-height: 1.1; }
+  html.rer-themed h2 { font-size: 24px; }
+}
