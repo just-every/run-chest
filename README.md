@@ -14,6 +14,8 @@ Phase one needs no provider account. Local D1 and R2 persist under
 `.wrangler/state`; ordinary sign-in and invitations use the private development
 outbox and send no external email.
 
+The project site is at https://run-chest.com.
+
 Open the `RER_OPEN` link on this computer and finish first-run setup. Treat that
 link as a credential. Use `rer dev --login` for ordinary email-link sign-in. Create
 staff from **People & settings**, then open their invitation from the local
