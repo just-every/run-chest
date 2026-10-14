@@ -1,6 +1,6 @@
 import { Folder, Icon } from '../../shell/Icon'
 
-const rows = [['document', 'Document type', 'Insurance'], ['building', 'Supplier', 'Kestrel Freight'], ['person', 'Owner', 'maria@kestrel.test'], ['calendar', 'Review', '2027-03-01']] as const
+const rows = [['document', 'Document type', 'Insurance'], ['building', 'Supplier', 'Kestrel Freight'], ['person', 'Owner', 'maria@kestrel-freight.example'], ['calendar', 'Review', '2027-03-01']] as const
 
 /** Section 2: the library search field above a record card's filing rows. */
 export function FilingDrawing() {
