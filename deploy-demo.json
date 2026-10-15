@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "domain": "run-chest.com",
+  "name": "Chest",
+  "settings": {
+    "MAIL_PROVIDER": "development",
+    "MAIL_FROM": "Chest demo <demo@demo.invalid>"
+  },
+  "instanceType": "basic"
+}

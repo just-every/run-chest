@@ -38,5 +38,12 @@
     {
       "binding": "BLOBS"
     }
-  ]
+  ],
+  "platforms": [
+    "workers",
+    "container"
+  ],
+  "container": {
+    "engine": "workerd"
+  }
 }

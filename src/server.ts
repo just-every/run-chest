@@ -1,3 +1,4 @@
+import { withDemo } from './modules/demo/index.mjs'
 import start from '@tanstack/react-start/server-entry'
 import { Hono } from 'hono'
 import { apiResponse } from './chest/api'
@@ -9,6 +10,7 @@ import { lobbyResponse } from './base/lobby'
 import { setupStateResponse } from './base/setup-state'
 import { identity } from './identity'
 import { authResponse, runtimeBindings, type Bindings } from './auth.server'
+import { seedDemo } from './demo'
 
 const api = new Hono<{ Bindings: Bindings }>()
 api.get('/health', (context) => context.json({ status: 'ok', ...deploymentHealth(context.env) }))
@@ -21,7 +23,7 @@ function documentResponse(response: Response): Response {
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
 }
 
-export default {
+export default withDemo({
   async fetch(request, original, execution) {
     const asset = await staticAssetResponse(request, original)
     if (asset) return documentResponse(asset)
@@ -34,4 +36,4 @@ export default {
     if (product) return documentResponse(product)
     return documentResponse(await dispatch(request, () => api.fetch(request, env, execution), () => start.fetch(request)))
   },
-} satisfies ExportedHandler<Bindings>
+} satisfies ExportedHandler<Bindings>, { seed: seedDemo })

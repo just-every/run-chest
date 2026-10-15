@@ -7,7 +7,7 @@ edition-authoring source. `base-copies.json` records verbatim copies;
 provenance. The hydration README is adapted for package-mode commands, with its
 original path mapped in `edition.json`; it makes no claim of byte equality.
 
-The published `@runeditrun/rer` 0.2.0 is pinned exactly in `package.json` and
+The published `@runeditrun/rer` 0.2.19 is pinned exactly in `package.json` and
 `pnpm-lock.yaml`. It owns command execution and archive format v2, whose integrity
 digest binds the manifest, including source identity, erasure epoch and journal.
 Version 1 archives require the acknowledged, backup-only recovery procedure in

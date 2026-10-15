@@ -1,6 +1,6 @@
 # Run it locally
 
-Install the command once with `npx -y @runeditrun/rer cli install`. Chest pins the published `@runeditrun/rer` 0.2.0; every verb runs that package.
+Install the command once with `npx -y @runeditrun/rer cli install`. Chest pins the published `@runeditrun/rer` 0.2.19; every verb runs that package. `rer demo` runs a throwaway demo with sample data; see [DEMO.md](DEMO.md).
 
 ## Launch with one command
 

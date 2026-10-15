@@ -2,6 +2,7 @@ import { firstRunResponse } from './base/setup'
 import { fontDocumentResponse } from './base/font-response'
 import { createOperatorAuth, createAuthHandler, createSignInHandler, devGate, devNotFound, type AuthConfig } from './modules/operator-auth/index.mjs'
 import { operatorMail } from './mail.server.mjs'
+import { createOwnerClaimHandler, OwnerClaimError } from './modules/owner-claim/index.mjs'
 import { createD1DevelopmentOutbox, createDevelopmentOutboxHandler } from './modules/mail/src/development/index.mjs'
 import branding from './branding.json'
 
@@ -30,6 +31,13 @@ export interface Bindings {
  MAIL_FROM?: string
  MAIL_API_KEY?: string
  MAIL_ACCOUNT_ID?: string
+ /** A signed owner claim (RER Managed, or a hosted demo's front): its issuer, installation and public keys. */
+ RER_OWNER_CLAIM_ISSUER?: string
+ RER_OWNER_CLAIM_INSTALLATION_ID?: string
+ RER_OWNER_CLAIM_PUBLIC_KEYS?: string
+ /** Demo mode (`rer demo`, a hosted demo container); Base modules/demo reads it. Deploy refuses both. */
+ RER_DEMO?: string
+ RER_DEMO_EXPIRES?: string
 }
 
 export const runtimeBindings = (env: Bindings): Bindings => env.RER_DEV_ORIGIN && env.AUTH_LOCAL === 'true' ? { ...env, AUTH_ORIGIN: env.RER_DEV_ORIGIN } : env
@@ -59,10 +67,22 @@ export async function authResponse(request: Request, original: Bindings): Promis
   })(request)
   if (page) return fontDocumentResponse(page)
  }
+ // The signed owner claim: deployment bindings are the authority, the request carries only the signed token.
+ if (url.pathname === '/auth/owner-claim' && env.RER_OWNER_CLAIM_PUBLIC_KEYS) return await ownerClaim(request, env)
  if (url.pathname.startsWith('/auth/')) return fontDocumentResponse(await createAuthHandler(operatorAuth(env))(request))
  if (url.pathname === '/setup' || url.pathname === '/app' || url.pathname.startsWith('/app/')) {
   const setup = await firstRunResponse(request, env, operatorAuth(env), { theme })
   if (setup) return setup
  }
  return null
+}
+
+async function ownerClaim(request: Request, env: Bindings): Promise<Response> {
+ try {
+  const handler = createOwnerClaimHandler({ db: env.DB, authConfig: authConfig(env), clientIp: request => request.headers.get('CF-Connecting-IP') ?? '', issuer: env.RER_OWNER_CLAIM_ISSUER ?? '', installationId: env.RER_OWNER_CLAIM_INSTALLATION_ID ?? env.RER_INSTALLATION_ID ?? '', appOrigin: env.AUTH_ORIGIN, expectedEmail: env.OWNER_EMAIL, publicKeys: JSON.parse(env.RER_OWNER_CLAIM_PUBLIC_KEYS!) })
+  return (await handler(request))!
+ } catch (error) {
+  if (error instanceof OwnerClaimError) return Response.json({ error: error.code }, { status: error.status, headers: { 'cache-control': 'no-store' } })
+  return Response.json({ error: 'owner_claim_configuration_invalid' }, { status: 503, headers: { 'cache-control': 'no-store' } })
+ }
 }

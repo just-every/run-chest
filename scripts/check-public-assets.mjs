@@ -18,8 +18,9 @@ async function hasArchiveManifest(file) {
     // An incomplete archive can still expose private records.
     return record?.kind === 'manifest' && record.format === FORMAT;
   } catch (error) {
-    // Neither a binary asset nor an overlong line is admitted by readArchive.
-    if (error.code === 'ERR_ENCODING_INVALID_ENCODED_DATA' || error.message === 'An archive line exceeds the supported size.') return false;
+    // Neither a binary asset (rer's line reader answers invalid UTF-8 with archive_json)
+    // nor an overlong line is admitted by readArchive.
+    if (error.code === 'archive_json' || error.code === 'ERR_ENCODING_INVALID_ENCODED_DATA' || error.message === 'An archive line exceeds the supported size.') return false;
     throw error;
   } finally { await lines.return(); }
 }
