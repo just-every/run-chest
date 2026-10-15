@@ -41,8 +41,8 @@ export async function restoreJourney({root,target,port,oldCookie,expected,oldMem
  const trash=await(await fetch(origin+'/api/chest/documents/'+custody.trash.id,{headers:{cookie,'x-rer-dev-key':devKey}})).json();assert.deepEqual(trash.payload,custody.trash.payload);
  const restoredJob=await(await fetch(origin+'/api/chest/archive/'+custody.jobId,{headers:{cookie,'x-rer-dev-key':devKey}})).json();assert.equal(restoredJob.state,'completed');
  for(const v of doc.payload.versions){const r=await fetch(`${origin}/api/chest/documents/${doc.id}/bytes/${v.id}?download=true`,{headers:{cookie,'x-rer-dev-key':devKey}});assert.equal(r.status,200);const bytes=new Uint8Array(await r.arrayBuffer());assert.equal(bytes.length,v.size)}
- // Export suspends personas; once the owner reactivates the reviewer, its restored grants apply again.
- const reactivated=await fetch(origin+'/api/chest/people',{method:'POST',headers:{cookie,'x-rer-dev-key':devKey,origin,'content-type':'application/json'},body:JSON.stringify({action:'reactivate',email:reviewerEmail})});assert.equal(reactivated.status,200);const memberCookie=await devSession(origin,devKey,reviewerPersona);assert.equal((await fetch(origin+'/api/chest/documents/'+expected.id,{headers:{cookie:memberCookie,'x-rer-dev-key':devKey}})).status,200);
+ // Sessions and accounts do not travel: the reviewer signs in afresh and its archived grants apply by email.
+ const memberCookie=await devSession(origin,devKey,reviewerPersona);assert.equal((await fetch(origin+'/api/chest/documents/'+expected.id,{headers:{cookie:memberCookie,'x-rer-dev-key':devKey}})).status,200);
  assert.equal((await fetch(origin+'/api/chest/documents/'+custody.trash.id,{headers:{cookie:memberCookie,'x-rer-dev-key':devKey}})).status,404);
  assert.equal((await fetch(origin+'/api/chest/documents/'+custody.imported.id,{headers:{cookie:memberCookie,'x-rer-dev-key':devKey}})).status,404);
 
