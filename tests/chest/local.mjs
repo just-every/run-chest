@@ -8,7 +8,7 @@ import {loadavg,tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createRedaction,credentialValues} from '@runeditrun/rer/redaction';
 import {localVariables} from '@runeditrun/rer/local/environment';
-export async function command(root,args,{refuse=false}={}){const p=spawn(process.execPath,__rerTestEntryArgs([__rerTestEntry,...args]),{cwd:root,stdio:['ignore','pipe','pipe'],env:{...process.env,CI:'true',WRANGLER_SEND_METRICS:'false'}});let output='';for(const s of [p.stdout,p.stderr])s.on('data',c=>output+=c);const code=await new Promise(r=>p.once('exit',r));if(refuse)assert.notEqual(code,0,`${args[0]} must refuse`);else assert.equal(code,0,`${args[0]} failed (private command output withheld)`);return output}
+export async function command(root,args,{refuse=false,env={}}={}){const p=spawn(process.execPath,__rerTestEntryArgs([__rerTestEntry,...args]),{cwd:root,stdio:['ignore','pipe','pipe'],env:{...process.env,CI:'true',WRANGLER_SEND_METRICS:'false',...env}});let output='';for(const s of [p.stdout,p.stderr])s.on('data',c=>output+=c);const code=await new Promise(r=>p.once('exit',r));if(refuse)assert.notEqual(code,0,`${args[0]} must refuse`);else assert.equal(code,0,`${args[0]} failed (private command output withheld)`);return output}
 // Only the CLI's structured, approved error reaches the test log. Never print
 // its ready event (which carries a dev key), progress stream or private capture.
 async function startupDiagnostic(root,failure){

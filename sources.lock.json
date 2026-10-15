@@ -2213,11 +2213,11 @@
       "executable": false
     },
     "tests/chest/journey.mjs": {
-      "sha256": "0853eeb55e58529f13f15d268ce8a554d29fef6e84701ea0d9c419a88c8ef7c5",
+      "sha256": "921d179cdfc4081144f87478079ccdafbb354e23481f578f781b7d39aae57dcf",
       "executable": false
     },
     "tests/chest/local.mjs": {
-      "sha256": "346e6c97cecb6962632486eebfc1e005f3ee453b08680e5153a6c29872a53d52",
+      "sha256": "f74f92b37473018a63fea2a125fd74ff013181b318eb3b6289c494a6a48db6ec",
       "executable": false
     },
     "tests/chest/restore.mjs": {
