@@ -9,7 +9,7 @@ export function Hero() {
         <h1 id="hero-title">The right version, every time.</h1>
         <p className="hero-sub">Chest files every document, keeps every original, and shows everyone the approved version.</p>
         <p className="hero-free">100% free, open source alternative to <span className="hero-alts"><strong>Google Drive</strong>, <strong>Dropbox</strong> and <strong>Box</strong></span></p>
-        <Actions />
+        <Actions demo />
         <p className="hero-licence mono">Free and open source, MIT licensed.</p>
       </div>
       <HeroRecord />

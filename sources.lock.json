@@ -2043,7 +2043,7 @@
       "executable": false
     },
     "src/site/landing/Actions.tsx": {
-      "sha256": "f87aed2d45cfc429cdab5c8357e9c4a1e629b28a7bc8421ea86a05a159662d40",
+      "sha256": "7b0eff305c96742aacb5988fd8cb87dc65b59101dd991ff3615bb3682e39e168",
       "executable": false
     },
     "src/site/landing/drawings/AccessDrawing.tsx": {
@@ -2091,7 +2091,7 @@
       "executable": false
     },
     "src/site/landing/Hero.tsx": {
-      "sha256": "9a5a43fb52fc5201c9ac47eae1d6b16f8ce0b52f670835e8611ef6e19a67443e",
+      "sha256": "a289c1ce9fe49223e536ea16cfe32916d58e864e8f2a89ab7f0b7f36fd79d64d",
       "executable": false
     },
     "src/site/landing/landing.css": {
