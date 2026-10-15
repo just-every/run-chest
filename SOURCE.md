@@ -7,7 +7,7 @@ edition-authoring source. `base-copies.json` records verbatim copies;
 provenance. The hydration README is adapted for package-mode commands, with its
 original path mapped in `edition.json`; it makes no claim of byte equality.
 
-The published `@runeditrun/rer` 0.2.22 is pinned exactly in `package.json` and
+The published `@runeditrun/rer` 0.2.24 is pinned exactly in `package.json` and
 `pnpm-lock.yaml`. It owns command execution and archive format v2, whose integrity
 digest binds the manifest, including source identity, erasure epoch and journal.
 Version 1 archives require the acknowledged, backup-only recovery procedure in
@@ -42,6 +42,6 @@ remain `documents/chest`, `@documents/chest`, `documents-chest`, `foundation` an
 [just-every/run-chest](https://github.com/just-every/run-chest).
 
 The demo, operator-auth, owner-claim, mail, dependencies and import-kit modules
-are refreshed together from `rer-v0.2.22` (1ce15dd8cbb7c8cf2d83ebfde2b4a8a130ff9d74),
+are refreshed together from `rer-v0.2.24` (1ee378e41142c673a9098f60af21664c6d8477d1),
 including import-kit’s shared d1-transport dependency. Their exact copies are
 recorded in `base-copies.json`; applied migrations remain unchanged.

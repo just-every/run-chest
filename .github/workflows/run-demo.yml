@@ -19,7 +19,7 @@ jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch' || vars.RUN_DEMO_DEPLOY == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 40
     environment: run-demo
     steps:
       - name: Require the test environment for removal
@@ -90,3 +90,14 @@ jobs:
             sleep 15
           done
           ! curl --silent --show-error --doh-url "$doh" -D - -o /dev/null "https://$domain/" | grep -qi '^set-cookie:'
+      - name: Observe a quiet test host before fresh starts
+        if: inputs.test_only && !inputs.remove_test
+        run: node scripts/demo-observe.mjs
+        env:
+          CLOUDFLARE_ACCOUNT_ID: b20c0ca9cab0c2b70e13d7cf724b89bd
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        if: always() && inputs.test_only && !inputs.remove_test
+        with:
+          name: demo-admissions
+          path: ${{ runner.temp }}/demo-admissions.jsonl
