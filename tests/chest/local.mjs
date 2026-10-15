@@ -42,13 +42,11 @@ export async function serving(root,verb,port,extra=[]){
  p.kill('SIGTERM');await closed;throw Error(`${verb} readiness timeout\n${await startupDiagnostic(root,failure)}`);
 }
 export async function key(root){return (await readFile(root+'/.rer/local/dev-key.env','utf8')).trim().split('=')[1]}
-export async function ordinaryLink(origin,devKey,email,request=true){
- if(request){const r=await fetch(origin+'/auth/magic-link',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify({email,returnTo:'/app'})});assert.equal(r.status,202)}
- const listing=await(await fetch(origin+'/__dev/outbox',{headers:{'x-rer-dev-key':devKey}})).text();
- for(const match of listing.matchAll(/href="(\/__dev\/outbox\?message=[^"]+)"/g)){const detail=await(await fetch(origin+match[1].replaceAll('&amp;','&'),{headers:{'x-rer-dev-key':devKey}})).text();if(!detail.includes(email))continue;const m=detail.match(/href="([^"]*\/auth\/confirm\?token=[^"]+)"/);if(m)return new URL(m[1].replaceAll('&amp;','&'),origin).href}
- throw Error('Ordinary identity link missing')
-}
-export async function browserSignIn(page,origin,devKey,email,request=true){try{await page.goto(await ordinaryLink(origin,devKey,email,request));await page.getByRole('button',{name:/continue|confirm|sign in/i}).click();await page.waitForURL(/\/(app|setup)/);if(new URL(page.url()).pathname==='/setup'){await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Finish setup'}).click();await page.waitForURL('**/app')}}catch{throw Error('Ordinary sign-in browser confirmation failed; credential-bearing navigation details withheld')}}
+// Local dev identity: the key exchange sets the gate cookie, then the dev
+// layer signs this browser in as the owner or a declared persona.
+export async function browserSignIn(page,origin,devKey,as='owner'){try{await page.goto(`${origin}/__dev/key#rer-dev=${devKey}&next=${encodeURIComponent(`/auth/dev/enter?as=${as}&returnTo=/app`)}`);await page.waitForURL(/\/(app|setup)(\/|$)/);if(new URL(page.url()).pathname==='/setup'){await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Finish setup'}).click();await page.waitForURL('**/app')}}catch{throw Error('Dev identity browser sign-in failed; credential-bearing navigation details withheld')}}
+// The same sign-in for an HTTP client presenting the checkout key.
+export async function devSession(origin,devKey,as){const r=await fetch(`${origin}/auth/dev/enter?as=${as}`,{redirect:'manual',headers:{'x-rer-dev-key':devKey}});assert.equal(r.status,303,`dev sign-in as ${as}`);return r.headers.getSetCookie().map(v=>v.split(';')[0]).join('; ')}
 // The static UI forbids browser script connections. API assertions use the same
 // browser context's live cookie jar without changing the product's CSP.
 export async function json(page,origin,path,body){

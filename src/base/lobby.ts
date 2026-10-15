@@ -1,12 +1,12 @@
+import { rejectedResponse } from './rejected-response'
 // The Lobby: what an installed instance serves at / when its edition identity
 // says installedHome: 'lobby'. A centred lockup, one line, one button and the
 // seed's floor art. Claimed, the button is Sign in; before the owner's claim it
 // is Finish setup. It reveals nothing but that state, is the same for every
-// visitor and works without JavaScript. Visual authority: the 12ui Lobby
-// (evidence/homepage-variants/minimal in rer-consolidation).
+// visitor and works without JavaScript. Visual authority: the 12ui Lobby.
 // This file is copied unchanged to src/base by both maintained exporters.
-import { checkIdentity, deploymentLine, type EditionIdentity } from './identity'
-import { admitted, baseFirstRun, setupState, type ClaimRead, type SetupState } from './setup-state'
+import { checkIdentity, type EditionIdentity } from './identity'
+import { admitted, baseOwnerClaim, setupState, type ClaimRead, type SetupState } from './setup-state'
 import { ink } from './theme-frame'
 
 interface LobbyBindings { DB: D1Database; AUTH_ORIGIN: string }
@@ -42,15 +42,18 @@ const accentStyle = (identity: EditionIdentity) => identity.accentColor ? `:root
 export function lobbyHtml(identity: EditionIdentity, state: SetupState): string {
   checkIdentity(identity)
   const claimed = state === 'claimed', product = escape(identity.product)
-  const line = claimed ? escape(deploymentLine(identity)) : `This ${product} is waiting for its owner.`
+  const line = claimed ? 'The owner is set up. Sign in to continue.' : `This ${product} is waiting for its owner.`
   const action = claimed ? `<a class="btn" href="${escape(identity.signInPath)}">Sign in${ARROW}</a>` : `<a class="btn" href="/setup">Finish setup${ARROW}</a>`
-  const credit = claimed ? `<p class="credit">Powered by <a href="${escape(identity.runSite)}">${product}</a>, free and open source</p>` : '<p class="credit">You’ll need the setup token from your install.</p>'
+  const ownerHelp = claimed ? '<p class="credit">Owners can also run <code>rer signin</code> from the project folder.</p>' : ''
+  const credit = claimed
+    ? `<p class="credit">Powered by <a href="${escape(identity.runSite)}">${product}</a>, free and open source</p>`
+    : identity.manualSetupTokenClaim ? '<p class="credit">You’ll need the setup token from your install.</p>' : ''
   const title = claimed ? `${escape(identity.deployment)} · ${product}` : `Finish setup · ${product}`
   const art = identity.band ? `<div class="door-art" aria-hidden="true"><img src="${escape(identity.band)}" alt=""></div>` : ''
   return `<!doctype html><html lang="en" data-state="${state}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>`
     + `<link rel="icon" href="${escape(identity.mark)}">${identity.fonts ? `<link rel="stylesheet" href="${escape(identity.fonts)}">` : ''}<link rel="stylesheet" href="${escape(identity.theme)}"><style>${accentStyle(identity)}${STYLE}</style></head>`
-    + `<body><main class="door">${art}<section class="door-card"><h1><a class="lockup" href="/"><img class="mark" src="${escape(identity.mark)}" alt=""><span class="word">${product}</span></a></h1>`
-    + `<p class="line">${line}</p>${action}${credit}</section></main></body></html>`
+    + `<body><main class="door">${art}<section class="door-card"><h1><a class="lockup" href="/"><img class="mark" src="${escape(identity.mark)}" alt=""><span class="word" data-rer-name>${product}</span></a></h1>`
+    + `<p class="line">${line}</p>${action}${ownerHelp}${credit}</section></main></body></html>`
 }
 
 /**
@@ -59,12 +62,12 @@ export function lobbyHtml(identity: EditionIdentity, state: SetupState): string 
  * Returns null for every other path and when the edition keeps its own page
  * at / (installedHome: 'page').
  */
-export async function lobbyResponse(request: Request, bindings: LobbyBindings, identity: EditionIdentity, claimed: ClaimRead = baseFirstRun): Promise<Response | null> {
+export async function lobbyResponse(request: Request, bindings: LobbyBindings, identity: EditionIdentity, claimed: ClaimRead = baseOwnerClaim): Promise<Response | null> {
   if (new URL(request.url).pathname !== '/' || identity.installedHome !== 'lobby') return null
   const base = { 'cache-control': 'no-store', 'referrer-policy': 'no-referrer', 'x-content-type-options': 'nosniff', 'x-rer-document': 'lobby' }
   // Another origin or Host gets the app's ordinary document 404.
-  if (!admitted(request, bindings.AUTH_ORIGIN)) return new Response('Not found', { status: 404, headers: base })
-  if (request.method !== 'GET' && request.method !== 'HEAD') return new Response(null, { status: 405, headers: { ...base, allow: 'GET, HEAD' } })
+  if (!admitted(request, bindings.AUTH_ORIGIN)) return rejectedResponse(request, new Response('Not found', { status: 404, headers: base }))
+  if (request.method !== 'GET' && request.method !== 'HEAD') return rejectedResponse(request, new Response(null, { status: 405, headers: { ...base, allow: 'GET, HEAD' } }))
   let state: SetupState
   try { state = await setupState(bindings.DB, claimed) } catch { return Response.json({ error: 'setup_unavailable' }, { status: 503, headers: base }) }
   const style = accentStyle(identity) + STYLE

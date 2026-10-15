@@ -15,8 +15,8 @@ Each person's row shows their email, role and status, with two actions:
   signing in. **Reactivate identity** lets them back.
 - **Inspect sessions** lists their sign-ins, and you can revoke one at a time.
 
-While Chest runs on your computer, invitations go to the local outbox (see
-[Run Chest on your computer](/docs/run#use-your-own-email-as-the-owner)).
+While Chest runs on your computer it sends no email; try a staff role with
+`rer dev --as member` (see [Run Chest on your computer](/docs/run#use-your-own-email-as-the-owner)).
 
 ## Create a collection
 

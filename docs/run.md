@@ -54,9 +54,8 @@ rer setup --owner-email you@example.com
 rer dev
 ```
 
-While Chest runs on your computer it sends no real email. Sign-in links and
-staff invitations land in a private local outbox; `rer dev --login` prints its
-address as `RER_SIGN_IN`.
+While Chest runs on your computer it sends no email. To try Chest as a staff
+member, start it with `rer dev --as member`.
 
 ## Stop and start again
 

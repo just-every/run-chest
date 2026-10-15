@@ -6,7 +6,7 @@ fresh-clone browser journey checks the built interface at 1440 and 390 pixels.
 
 | Clause | Observable guarantee | Public proof |
 | --- | --- | --- |
-| CHEST-01 | One-time owner claim, ordinary staff invitation and return via local outbox, session revocation; development personas are separately gated. | `tests/chest/flows.mjs`, `tests/chest/journey.mjs` |
+| CHEST-01 | One-time owner claim, ordinary staff invitation and email-link return, session revocation; development personas are separately gated. | `tests/chest/flows.mjs`, `tests/chest/journey.mjs` |
 | CHEST-02 | Collections, owner-editable typed schemas, required fields, accountable people and groups. Schema changes retain authoritative values and report missing/invalid fields only on accessible records; new filings and uploads validate current definitions. | `flows.mjs` |
 | CHEST-03 | Validate actual uploaded bytes, checksum and size; durable R2 custody precedes atomic record admission. No failed upload appears in the library. | `flows.mjs` |
 | CHEST-04 | Supplier/customer/project filing preserves original filenames, typed values and accountable responsibility. Collection moves require current source-record and destination-collection editor access; inherited access follows the destination and versions/review survive unchanged. | `flows.mjs` |

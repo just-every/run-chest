@@ -12,15 +12,8 @@ export async function firstRunJourney(root, port) {
  try {
   browser = await chromium.launch({ channel: 'chromium', headless: true });
   await mkdir('test-results', { recursive: true });
-  assert.equal((await (await fetch(origin + '/setup/state')).json()).state, 'unclaimed');
-  for (const width of [1440, 390]) {
-   const page = await browser.newPage({ viewport: { width, height: width === 390 ? 844 : 900 } });
-   await page.goto(origin);
-   assert.equal(await page.getByRole('link', { name: 'Finish setup', exact: true }).getAttribute('href'), '/setup');
-   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-   await page.screenshot({ path: `test-results/lobby-unclaimed-${width}.png`, fullPage: true });
-   await page.close();
-  }
+  // rer dev claimed the owner before readiness: the Lobby offers Sign in while first-run setup waits at /setup.
+  assert.equal((await (await fetch(origin + '/setup/state')).json()).state, 'claimed');
   const owner = await browser.newPage();
   // A navigation failure may contain this credential; never let it reach a log.
   try {
@@ -36,7 +29,6 @@ export async function firstRunJourney(root, port) {
   await owner.getByRole('checkbox').check();
   await owner.getByRole('button', { name: 'Finish setup', exact: true }).click();
   await owner.waitForURL('**/app');
-  assert.equal((await (await fetch(origin + '/setup/state')).json()).state, 'claimed');
   for (const width of [1440, 390]) {
    await owner.setViewportSize({ width, height: width === 390 ? 844 : 900 });
    await owner.goto(origin);
@@ -50,5 +42,5 @@ export async function firstRunJourney(root, port) {
   }
  } finally { await browser?.close(); await server.stop(); }
  await command(root, ['reset', '--yes']);
- console.log('Fresh rer dev opened a usable owner; Lobby claim state and setup passed at 1440 and 390.');
+ console.log('Fresh rer dev opened a usable owner; Lobby and setup passed at 1440 and 390.');
 }

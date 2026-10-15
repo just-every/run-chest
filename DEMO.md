@@ -2,9 +2,11 @@
 
 After the ordinary `rer setup`, run `rer demo` (`rer dev --demo`) and open its
 private `RER_OPEN` link. It opens signed in as the saved owner, on a finished
-first run, in a lived-in sample library. `rer demo --stop`, Ctrl-C or the
-demo's end (one hour) deletes its folder `.rer/demo/<start>/`; a new demo starts
-afresh. The checkout's own `.wrangler/state` is never opened.
+first run, in a lived-in sample library. The product name in the nav and the
+page title read **Chest Demo** (**Chest Dev** under `rer dev`); nothing else is
+added to the page. `rer demo --stop`, Ctrl-C or the demo's end (one hour)
+deletes its folder `.rer/demo/<start>/`; a new demo starts afresh. The
+checkout's own `.wrangler/state` is never opened.
 
 ## Sample library
 
@@ -31,14 +33,15 @@ detail.
 
 ## What a demo sends
 
-Chest's only outbound effect is operator mail (sign-in links and staff
-invitations; Resend, SendGrid or Cloudflare in production). A demo sets
-`MAIL_PROVIDER=development`, so nothing is sent: locally the development outbox
-keeps it; on the hosted demo the development outbox is local-only, so mail is
-unconfigured. Base's guard (`src/modules/demo`, `withDemo` first in
-`src/server.ts`) answers loopback only for any other request, and the hosted
-container has no internet. The vendored OIDC and dependency modules are not
-wired into Chest.
+Every feature works in a demo. Chest's only outbound effect is operator mail
+(sign-in links and staff invitations; Resend, SendGrid or Cloudflare in
+production). Under `RER_DEMO`, `src/mail.server.mjs` uses Base mail's
+development sender, which validates each message and suppresses it silently:
+an invitation completes as it would in production and nothing is sent. Chest
+reads nothing from the public internet; Base's guard (`src/modules/demo`,
+`withDemo` first in `src/server.ts`) lets any public read run for real and
+answers any external write with a provider success. The vendored OIDC and
+dependency modules are not wired into Chest.
 
 ## Hosted demo
 
@@ -55,8 +58,7 @@ signed in through the signed owner claim at `/auth/owner-claim`, which
 
 ## Base copy
 
-`src/modules/demo` is Base `modules/demo` at tag `rer-v0.2.19`
-(`e17843562355e1b6e5068289c8e037951fbc8d3d`) with Base's
-`modules/operator-auth/csp.mjs` beside it as `csp.mjs`: Chest's operator-auth
-copy predates that file, so `index.mjs` imports `./csp.mjs` (its only change).
-`edition.json` maps both; the other files are unchanged.
+`src/modules/demo` is Base `modules/demo` at tag `rer-v0.2.20`
+(`38aa7efdb3cceec585d2344ed54dd559295b9059`), unchanged. It uses
+`src/modules/operator-auth/http.mjs` and `csp.mjs`, recorded with the other
+operator-auth copies in `base-copies.json` at the same revision.

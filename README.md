@@ -11,17 +11,16 @@ Chest is a private, owner-operated document library for supplier, customer and
 project evidence. It keeps immutable originals, an exact approved version,
 accountable review, typed metadata and enforced collection/document access.
 Phase one needs no provider account. Local D1 and R2 persist under
-`.wrangler/state`; ordinary sign-in and invitations use the private development
-outbox and send no external email.
+`.wrangler/state`; local runs send no email.
 
 The project site is at https://run-chest.com.
 
 Open the `RER_OPEN` link on this computer and finish first-run setup. Treat that
-link as a credential. Use `rer dev --login` for ordinary email-link sign-in. Create
-staff from **People & settings**, then open their invitation from the local
-outbox. Staff return through **Sign in**. Deactivation revokes their sessions;
-session inspection also supports individual revocation. `rer dev --as member` uses
-a separately gated development persona and does not replace ordinary identities.
+link as a credential. Create staff from **People & settings**; with outbound
+email configured they follow the emailed invitation and return through **Sign in**.
+Deactivation revokes their sessions; session inspection also supports individual
+revocation. Locally, `rer dev --as member` signs in as a separately gated
+development persona to try a staff role.
 
 Create a collection and a document type, then upload a record. The forms
 accept typed fields as JSON. Owners can edit document types in **People & settings**;
@@ -68,7 +67,7 @@ rer check --profile first-party
 Import requires an empty destination. Full local archives include originals,
 all versions, metadata, portable people/groups/roles/grants, responsibilities,
 review decisions, evidence, trash, audit and import custody. Authentication
-sessions, links, development credentials, outbox and provider secrets are
+sessions, links, development credentials and provider secrets are
 excluded. Run setup after restore to create new local credentials, then invite
 staff again using the same portable email identities. Old credentials cannot
 open the restored installation. Keep archives under `exports/`, outside served

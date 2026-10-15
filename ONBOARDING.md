@@ -36,9 +36,8 @@ RER aliases to avoid recursive calls.
 RER validates answers before effects. Setup preserves an existing owner, data
 and exact private settings on reruns; it does not create a second owner or
 rotate secrets. It performs the real build and local migrations, prepares the
-first owner through operator-auth, requests an ordinary sign-in message and
-checks the development outbox. The temporary Worker stops before setup exits.
-Sign-in uses the configured loopback origin and local outbox; no external mail
+first owner through operator-auth. The temporary Worker stops before setup exits.
+Local sign-in opens through `RER_OPEN` on the configured loopback origin; no mail
 is sent.
 
 The shared adapter lifecycle captures declared child commands, redacts

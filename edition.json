@@ -88,23 +88,21 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "e17843562355e1b6e5068289c8e037951fbc8d3d",
-          "path": ".",
+          "revision": "38aa7efdb3cceec585d2344ed54dd559295b9059",
+          "path": "modules/demo",
           "paths": [
-            "modules/demo",
-            "modules/operator-auth/csp.mjs"
+            "README.md",
+            "effects.mjs",
+            "index.d.mts",
+            "index.mjs",
+            "label.d.mts",
+            "label.mjs",
+            "responses.mjs",
+            "sockets.mjs",
+            "vite.d.mts",
+            "vite.mjs"
           ]
-        },
-        "mappings": [
-          {
-            "path": "src/modules/demo/csp.mjs",
-            "originPath": "modules/operator-auth/csp.mjs"
-          },
-          {
-            "path": "src/modules/demo/index.mjs",
-            "originPath": "modules/demo/index.mjs"
-          }
-        ]
+        }
       }
     }
   ]

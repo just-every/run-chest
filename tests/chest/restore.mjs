@@ -3,9 +3,9 @@ import {spawn} from 'node:child_process';
 import {mkdir,copyFile,readFile,writeFile,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {readArchive} from '@runeditrun/rer/modules/portability';
-import {command,serving,key,ordinaryLink} from './local.mjs';
+import {command,serving,key,devSession} from './local.mjs';
 async function archive(path){const data=await readFile(path),records=[];for await(const record of readArchive(new ReadableStream({start(c){c.enqueue(data);c.close()}})))records.push(record);return records}
-export async function restoreJourney({root,target,port,oldCookie,expected,oldMemberCookie,reviewerEmail,custody}){
+export async function restoreJourney({root,target,port,oldCookie,expected,oldMemberCookie,reviewerEmail,reviewerPersona,custody}){
  await command(root,['export','--output','public/exposure.rer'],{refuse:true});
  await command(root,['export','--output','exports/complete.rer']);const before=await archive(join(root,'exports/complete.rer'));
  const graph=before.filter(r=>r.kind==='part').flatMap(r=>r.items).filter(i=>i.kind==='row'&&i.table==='chest_records').map(i=>({...i.row,payload:JSON.parse(i.row.payload)}));
@@ -32,17 +32,19 @@ export async function restoreJourney({root,target,port,oldCookie,expected,oldMem
  const semantic=r=>r.filter(v=>v.kind==='part').flatMap(v=>v.items).map(({index,...item})=>item);
  assert.deepEqual(semantic(after),semantic(before),'all portable table cells and original byte chunks survive empty-target restore');
  const oldVars=await readFile(join(root,'.dev.vars'),'utf8');await command(target,['setup','--owner-email','owner@example.test','--port',String(port)]);const newVars=await readFile(join(target,'.dev.vars'),'utf8');const setting=(s,k)=>s.split('\n').find(l=>l.startsWith(k+'='));assert.ok(setting(oldVars,'SESSION_SECRET')!==setting(newVars,'SESSION_SECRET'),'restore regenerates local session secret');
- const server=await serving(target,'preview',port);const origin=`http://127.0.0.1:${port}`;
- try{assert.equal((await fetch(origin+'/api/chest/library',{headers:{cookie:oldCookie}})).status,401);assert.equal((await fetch(origin+'/api/chest/library',{headers:{cookie:oldMemberCookie}})).status,401);const link=new URL(await ordinaryLink(origin,await key(target),'owner@example.test'));const confirmed=await fetch(origin+'/auth/confirm',{method:'POST',redirect:'manual',headers:{origin,'content-type':'application/json'},body:JSON.stringify({token:link.searchParams.get('token')})});assert.equal(confirmed.status,303);const cookie=confirmed.headers.getSetCookie().map(v=>v.split(';')[0]).join('; ');
- const result=await(await fetch(origin+'/api/chest/library',{headers:{cookie}})).json();const doc=result.documents.find(r=>r.id===expected.id);assert.deepEqual(doc.payload,expected.payload);
+ // The restored target opens through its own dev identity; old sessions are gone even with its key.
+ const server=await serving(target,'dev',port);const origin=`http://127.0.0.1:${port}`,devKey=await key(target);
+ try{for(const old of [oldCookie,oldMemberCookie])assert.equal((await fetch(origin+'/api/chest/library',{headers:{cookie:old,'x-rer-dev-key':devKey}})).status,401);const cookie=await devSession(origin,devKey,'owner');
+ const result=await(await fetch(origin+'/api/chest/library',{headers:{cookie,'x-rer-dev-key':devKey}})).json();const doc=result.documents.find(r=>r.id===expected.id);assert.deepEqual(doc.payload,expected.payload);
  assert.deepEqual(result.groups.find(r=>r.id===custody.group.id).payload,custody.group.payload);
  assert.deepEqual(result.documents.find(r=>r.id===custody.imported.id).payload,custody.imported.payload);
- const trash=await(await fetch(origin+'/api/chest/documents/'+custody.trash.id,{headers:{cookie}})).json();assert.deepEqual(trash.payload,custody.trash.payload);
- const restoredJob=await(await fetch(origin+'/api/chest/archive/'+custody.jobId,{headers:{cookie}})).json();assert.equal(restoredJob.state,'completed');
- for(const v of doc.payload.versions){const r=await fetch(`${origin}/api/chest/documents/${doc.id}/bytes/${v.id}?download=true`,{headers:{cookie}});assert.equal(r.status,200);const bytes=new Uint8Array(await r.arrayBuffer());assert.equal(bytes.length,v.size)}
- const invited=await fetch(origin+'/api/chest/people',{method:'POST',headers:{cookie,origin,'content-type':'application/json'},body:JSON.stringify({action:'invite',email:reviewerEmail,name:'Restored reviewer'})});assert.equal(invited.status,200);const memberLink=new URL(await ordinaryLink(origin,await key(target),reviewerEmail,false));const memberResponse=await fetch(origin+'/auth/confirm',{method:'POST',redirect:'manual',headers:{origin,'content-type':'application/json'},body:JSON.stringify({token:memberLink.searchParams.get('token')})});assert.equal(memberResponse.status,303);const memberCookie=memberResponse.headers.getSetCookie().map(v=>v.split(';')[0]).join('; ');assert.equal((await fetch(origin+'/api/chest/documents/'+expected.id,{headers:{cookie:memberCookie}})).status,200);
- assert.equal((await fetch(origin+'/api/chest/documents/'+custody.trash.id,{headers:{cookie:memberCookie}})).status,404);
- assert.equal((await fetch(origin+'/api/chest/documents/'+custody.imported.id,{headers:{cookie:memberCookie}})).status,404);
+ const trash=await(await fetch(origin+'/api/chest/documents/'+custody.trash.id,{headers:{cookie,'x-rer-dev-key':devKey}})).json();assert.deepEqual(trash.payload,custody.trash.payload);
+ const restoredJob=await(await fetch(origin+'/api/chest/archive/'+custody.jobId,{headers:{cookie,'x-rer-dev-key':devKey}})).json();assert.equal(restoredJob.state,'completed');
+ for(const v of doc.payload.versions){const r=await fetch(`${origin}/api/chest/documents/${doc.id}/bytes/${v.id}?download=true`,{headers:{cookie,'x-rer-dev-key':devKey}});assert.equal(r.status,200);const bytes=new Uint8Array(await r.arrayBuffer());assert.equal(bytes.length,v.size)}
+ // Export suspends personas; once the owner reactivates the reviewer, its restored grants apply again.
+ const reactivated=await fetch(origin+'/api/chest/people',{method:'POST',headers:{cookie,'x-rer-dev-key':devKey,origin,'content-type':'application/json'},body:JSON.stringify({action:'reactivate',email:reviewerEmail})});assert.equal(reactivated.status,200);const memberCookie=await devSession(origin,devKey,reviewerPersona);assert.equal((await fetch(origin+'/api/chest/documents/'+expected.id,{headers:{cookie:memberCookie,'x-rer-dev-key':devKey}})).status,200);
+ assert.equal((await fetch(origin+'/api/chest/documents/'+custody.trash.id,{headers:{cookie:memberCookie,'x-rer-dev-key':devKey}})).status,404);
+ assert.equal((await fetch(origin+'/api/chest/documents/'+custody.imported.id,{headers:{cookie:memberCookie,'x-rer-dev-key':devKey}})).status,404);
 
  }finally{await server.stop()}
  console.log('CHEST-12 passed: real RER export, public-asset refusal, corrupt/nonempty refusal, fresh clone restore, complete semantic/byte equality and old credential refusal');

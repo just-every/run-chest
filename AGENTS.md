@@ -12,9 +12,10 @@ and [RUN-LOCALLY.md](RUN-LOCALLY.md). Chest owns its source and product policy.
 [Source provenance](SOURCE.md) identifies the pinned foundation and adopted D1
 import runtime. Preserve migrations already applied by an owner.
 
-Use ordinary local identities and development outbox for auth acceptance.
-`dev --as` personas are separately gated and are not ordinary identity proof.
-Never print dev keys, sign-in URLs, cookies, private settings or outbox bodies.
+Local runs suppress mail: the email-link path is proven by `tests/chest/flows.mjs`
+against the built Worker with mail received at the provider edge. Locally, staff
+roles use the separately gated `dev --as` personas.
+Never print dev keys, sign-in URLs, cookies or private settings.
 Stop `dev`/`preview` before build, verification and transfer. No provider accounts
 are needed for local product work. Real deployment and external mail are separate
 owner-account operations.
