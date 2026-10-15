@@ -58,7 +58,7 @@ signed in through the signed owner claim at `/auth/owner-claim`, which
 
 ## Base copy
 
-`src/modules/demo` is Base `modules/demo` at tag `rer-v0.2.20`
-(`38aa7efdb3cceec585d2344ed54dd559295b9059`), unchanged. It uses
+`src/modules/demo` is Base `modules/demo` at tag `rer-v0.2.22`
+(`1ce15dd8cbb7c8cf2d83ebfde2b4a8a130ff9d74`), unchanged. It uses
 `src/modules/operator-auth/http.mjs` and `csp.mjs`, recorded with the other
 operator-auth copies in `base-copies.json` at the same revision.
