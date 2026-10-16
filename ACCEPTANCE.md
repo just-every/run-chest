@@ -10,7 +10,7 @@ For a document-only contract change, check clause uniqueness, preservation of ex
 
 ## Installation acceptance
 
-Before moving records, reconcile representative incumbent originals, folders, versions, people, timestamps, rights and missing history. Source fixtures do not establish proprietary export fidelity or reduced costs. Each required provider/device journey below needs real test tenants/devices and recorded outcomes before being called accepted; deterministic fixtures can prove error behavior, not live integration availability. Use authorized test data with realistic US business folders, ordinary Office files, scans, a multi-GB creative asset, a vendor guest and a departing employee. Never place private archives or credentials in source/served assets.
+Before moving records, reconcile representative incumbent originals, folders, versions, people, timestamps, rights and missing history. Source fixtures do not establish proprietary export fidelity or reduced costs. Each required provider/device journey below needs real test tenants/devices and recorded outcomes before being called accepted; deterministic fixtures can prove error behavior, not live integration availability. Use authorized test data with realistic US business folders, ordinary Office files, scans, a multi-GB creative asset, a vendor guest and a departing employee, and run size-sensitive journeys at the SCALE-001 reference size or the buyer's MIGRATE-001 inventory plus 25% headroom, whichever is larger. Platform and format journeys run every cell of the matrix their clause names (TRANSFER-001, SYNC-001, MOBILE-001, PREVIEW-001, SEARCH-001); a cell not run is not accepted. Never place private archives or credentials in source/served assets.
 
 Before upgrading, back up privately and test the candidate on a populated prior-release copy. Check ordinary sessions, owner/settings, source records, history, rights and original bytes, then exercise rollback. Empty-target restore alone does not establish an in-place upgrade. For new browser/mobile/admin screens, use the full journey at 1440 and 390, keyboard/screen reader, and honest loading/failure/end states; desktop/native device behavior requires supported OS devices as well. Hosted mail, processing, identity, provider limits and independent backup acceptance use the owner's infrastructure/accounts. Read [ARCHIVE.md](ARCHIVE.md) for current bounded move-in and legacy-backup limitations.
 
@@ -68,21 +68,29 @@ Current evidence: `src/chest/archive.ts`; `src/chest/archive-target.ts`; `tests/
 
 Current evidence: `scripts/installer/local.mjs`; `scripts/check-public-assets.mjs`; `tests/chest/restore.mjs`; `tests/chest/journey.mjs`.
 
-**CHEST-13 — Reversible trash and mutation audit (done).** Trash and restore through the API and browser; prove disappearance for a reviewer, owner-only recovery with identical versions and a visible audit action.
+**CHEST-13 — Self-service reversible trash and mutation audit (partial).** Through the API and browser at 1440 and 390, a staff editor trashes a nested folder of their own in a team space and restores it from their own trash view, tree, hashes, version IDs and stable links identical, with no owner session involved. A space reader is refused restore (403) of that folder and a contributor is refused trash; a space manager restores an item another member trashed; a manager's permanent-delete request goes through ERASE-001 while an editor's is refused. The trashed item disappears from a reviewer's list/search/download, and each trash/restore appears once in the audit with actor and outcome.
 
-Current evidence: `src/chest/documents.ts`; `src/chest/store.ts`; `src/chest/api.ts`; `tests/chest/flows.mjs` (CHEST-13); `tests/chest/journey.mjs`.
+Current evidence: `src/chest/documents.ts`; `src/chest/store.ts`; `src/chest/api.ts`; `tests/chest/flows.mjs` (CHEST-13); `tests/chest/journey.mjs`. Remaining: Reversible indefinite trash, identical-version restore and audit exist, but trash and restore are owner-only (`src/chest/documents.ts` `owner_required`); self-service user restore, space-manager restore and folder-tree trash do not.
 
 ### The everyday business file system
 
-**SPACE-001 — Team spaces and ordinary files (partial).** As two staff and an admin, build a nested project tree, upload an ordinary file with no review configuration, edit/move it, restrict a subfolder and offboard its creator; the team retains content and stable links while the former user is denied. Repeat browser navigation at 1440 and 390.
+**SPACE-001 — Team spaces and ordinary files (partial).** As two staff and an admin, build a nested project tree, upload an ordinary file with no review configuration, edit/move it, restrict a subfolder and offboard its creator; the team retains content and stable links while the former user is denied. Repeat browser navigation at 1440 and 390, then repeat listing, move and restriction in a space loaded to the SCALE-001 reference size and record the SCALE-001 timings.
 
 Current evidence: `src/chest/metadata.ts`; `src/chest/access.ts`; `tests/chest/flows.mjs` (CHEST-02, CHEST-04). Remaining: Collections and access exist; folder trees, ordinary untyped files, team ownership and delegation do not.
 
-**TRANSFER-001 — Resumable files and whole-folder uploads (partial).** Upload a nested folder containing a large video and duplicate names, interrupt connectivity and restart the client, then resume and compare hashes/tree/counts; cancel another transfer and prove no false success or half-visible file. Test a quota refusal and retain completed files.
+**ROLE-001 — Five-level roles and delegated sharing (partial).** For each role, one public-door test through the HTTP API and one through the browser UI attempts open, download, comment, upload a new version, move, copy out, trash, restore, share and change membership on a space folder and a file; each permitted action succeeds and each other is refused with 403 and no state change. Turn on the no-download setting and prove viewer and commenter downloads, range requests, archive inclusion (BULK-001), sync hydration and API reads of the original are refused while pages still preview. Switch editor sharing off and prove an editor's share is refused while a manager's succeeds. Downgrade a role mid-session and prove the next request uses the new role.
+
+Current evidence: `src/chest/access.ts`; `src/chest/metadata.ts`; `tests/chest/flows.mjs` (CHEST-10). Remaining: Reader/editor/reviewer collection grants exist; commenter, contributor, content-manager and manager levels, file-level roles, delegated and editor sharing and no-download settings do not.
+
+**TRANSFER-001 — Resumable files and whole-folder uploads (partial).** Upload a nested folder containing a 50 GB video and duplicate names, interrupt connectivity and restart the client, then resume and compare hashes/tree/counts; cancel another transfer and prove no false success or half-visible file. Through the public API, upload a 5 TB sparse-pattern test object with resumable parts and verify its SHA-256; a 5 TB + 1 byte declaration is refused before any bytes are stored. Upload a 100,000-item folder and reconcile the per-item results. Test a quota refusal and retain completed files.
 
 Current evidence: `src/chest/blobs.ts`; `src/chest/documents.ts`; `src/chest/archive.ts`; `tests/chest/flows.mjs` (CHEST-03, CHEST-11). Remaining: Single bounded originals/archive admission only; no folder or resumable large transfer.
 
-**SYNC-001 — Windows and macOS filesystem clients (missing).** Install on real supported macOS and Windows devices, sign in, open an online-only Office file from Finder/Explorer, save and observe its new server version from a second device. Switch mirror/stream modes, pin a folder, sign out and uninstall with unsent edits; show exact disposition of local work.
+**BULK-001 — Multi-select actions and archive download (missing).** Multi-select 200 files across two subfolders, including 5 the actor may not download under a no-download setting, and download one archive in the browser at 1440 and on the mobile app; unzip it and reconcile tree, names and SHA-256 hashes against the manifest, with the 5 listed as excluded and absent. Bulk-move and bulk-share the same selection where 3 items are refused by role or policy and see 197 successes plus 3 per-item refusals. Restart the server mid-job and see it complete once without duplicate moves or audit entries. Download a 6 GB folder as a guest through a folder link and verify the ZIP64 archive.
+
+Current evidence: —.
+
+**SYNC-001 — Windows and macOS filesystem clients (missing).** Run the full journey on every matrix cell: macOS 13 and the current macOS release on Apple silicon, macOS 13 on Intel, Windows 10 22H2 x64, Windows 11 x64 and Windows 11 ARM64. On each, install (including one silent MDM install per OS), sign in, open an online-only Office file from Finder/Explorer, save and observe its new server version from a second device. Switch mirror/stream modes, pin a folder, sign out and uninstall with unsent edits; show exact disposition of local work.
 
 Current evidence: —.
 
@@ -90,7 +98,7 @@ Current evidence: —.
 
 Current evidence: —.
 
-**SYNC-003 — Visible sync operations and device control (partial).** Disconnect a device during transfer, exceed its cache/disk quota and revoke it; its tray and admin console show accurate unfinished work and last contact. Resolve the cause and verify hashes before showing up-to-date; an unreachable wipe stays unconfirmed.
+**SYNC-003 — Visible sync operations and device control (partial).** Disconnect a device during transfer, exceed its cache/disk quota and revoke it; its tray and admin console show accurate unfinished work and last contact. Resolve the cause and verify hashes before showing up-to-date; an unreachable wipe stays unconfirmed. In the SCALE-001 reference installation, take a device offline, apply 10,000 remote changes, reconnect and record catch-up time against the SCALE-001 target with final hashes matching.
 
 Current evidence: `src/chest/blobs.ts`; `src/chest/ui.ts`; `tests/chest/flows.mjs` (CHEST-03). Remaining: Upload success/error exists; device fleet, progress and sync queues are absent.
 
@@ -102,7 +110,11 @@ Current evidence: —.
 
 Current evidence: —.
 
-**MOBILE-001 — Native iOS and Android file access (partial).** On real iOS and Android devices, capture a multi-page scan, upload photos, share with a permitted recipient, open/save through a system picker, and edit a pinned file offline while another device changes it. Reconnect, resolve the conflict and revoke the device; show the limit of an unreachable cache wipe.
+**SYNC-006 — Computer folder backup (missing).** On macOS 13+ and Windows 11 from the SYNC-001 matrix, enrol Desktop and Documents (one by user choice, one by an enforced admin policy), create, edit and delete local files and see new versions and trashed items on the server with the device-named folder. Try to un-enrol the enforced folder as the user and be refused; block `*.tmp` and prove it is not uploaded. Wipe the laptop, sign in on a second computer, restore both folders to their original paths and reconcile tree and SHA-256 hashes, and restore a deleted file from trash. The admin console shows enrolled folders and last success for both devices.
+
+Current evidence: —.
+
+**MOBILE-001 — Native iOS and Android file access (partial).** Run the journey on an iPhone on iOS 17, an iPhone on the current iOS release, an iPad on the current iPadOS, an Android 10 device and an Android device on the current release. On each, capture a multi-page scan, upload photos, share with a permitted recipient, open/save through a system picker, and edit a pinned file offline while another device changes it. Reconnect, resolve the conflict and revoke the device; show the limit of an unreachable cache wipe.
 
 Current evidence: `src/chest/ui-library.ts`; `src/chest/documents.ts`; `tests/chest/journey.mjs`. Remaining: Responsive browser browse/upload exists; native apps, camera, background/offline sync and mobile sharing do not.
 
@@ -120,11 +132,23 @@ Current evidence: —.
 
 Current evidence: —.
 
-**PREVIEW-001 — Office, Google, video and design previews (partial).** Open representative Office, native Google, video, Photoshop and CAD files from the file page. Revoke access while a preview is open and request fresh pages/ranges; deny them. Test corrupt/malicious files and processor outage, expose the exact failure and keep the original downloadable to an authorized user.
+**SHARE-004 — Item sharing, Shared with me and access requests (missing).** Share a personal-area file with a colleague at commenter; they receive the notice and email, find it under Shared with me and can comment but not edit. An unauthorised colleague opens the link, sees Request access without the title, requests editor; the owner approves at viewer from the email link and the requester is told and can now view. A second request is declined from the share dialog and the requester is told. Deactivate the owner of a third file and request access; the request reaches the new content owner, and with none, a space manager. Repeat at 1440 and 390 and inspect the audit entries.
+
+Current evidence: —.
+
+**SHARE-005 — External collaborators who edit, comment and upload (missing).** Invite a guest at another domain with no Google or Microsoft account as editor on a DOCX and contributor on a folder, with a 3-day expiry and re-sharing off. The guest signs in by PIN, co-edits the DOCX with a staff member through EDIT-001 and uploads two files into the folder; version history and audit attribute each change to the guest's email. The guest's attempts to share onward, open a sibling folder, search the library and use the PIN from a second email address are refused. Advance a controlled clock past re-verification and see a new PIN required, then past expiry and see every door, including an open editor session's next save and a range request, refused.
+
+Current evidence: —.
+
+**POLICY-001 — Organisation sharing policy (missing).** Set an allowlist of one partner domain with public links off. As staff, a share to a non-allowlisted domain and a public link are refused in the UI and API with the policy named; a share to the allowlisted domain succeeds after the external-recipient warning. Create a public link and a non-allowlisted guest grant under a looser policy, tighten the policy and prove both are refused on the next request and listed as suspended. Set a space override that blocks sharing outside its members while the organisation allows it, and see a member's share to another colleague refused. Confirm the same refusals through the CONNECT-007 API and a CONNECT-009 action.
+
+Current evidence: —.
+
+**PREVIEW-001 — Office, Google, video and design previews (partial).** Open one fixture per matrix format from the file page in the browser at 1440 and 390 and in both mobile apps, checking page count, first-page thumbnail and, for video/audio, seek to a mid-file timestamp; a format outside the matrix shows the unsupported state with download. Revoke access while a preview is open and request fresh pages/ranges; deny them. Test corrupt/malicious files and processor outage, expose the exact failure and keep the original downloadable to an authorized user.
 
 Current evidence: `src/chest/blobs.ts`; `tests/chest/flows.mjs` (CHEST-05); `tests/chest/browser-preview.mjs`. Remaining: Only basic PDF/raster/text previews exist; no broad renderer or processor.
 
-**SEARCH-001 — Full-text and scanned-content search (partial).** Upload a scanned invoice, Office spreadsheet, Google document and encrypted PDF, find distinctive contents and filter by folder/version. Show OCR provenance and the encrypted-file gap; revoke a group before index refresh and prove zero leaked snippets/counts/autocomplete through search API and UI.
+**SEARCH-001 — Full-text and scanned-content search (partial).** Upload one fixture per matrix format, each holding a distinctive phrase (including a scanned English invoice, a scanned Spanish receipt, an Office spreadsheet, a Google document, an MSG with a DOCX attachment, a spoken-phrase MP4 and an encrypted PDF), find every phrase and filter by folder/version. Show OCR provenance and the encrypted-file gap; revoke a group before index refresh and prove zero leaked snippets/counts/autocomplete through search API and UI. Repeat a fixed query set in the SCALE-001 reference installation and record latency against the SCALE-001 search target.
 
 Current evidence: `src/chest/api.ts`; `src/chest/blobs.ts`; `tests/chest/flows.mjs` (CHEST-06). Remaining: Title/metadata and bounded admitted UTF-8 search only; OCR/broad extraction/indexing are absent.
 
@@ -142,7 +166,7 @@ Current evidence: `src/chest/reviews.ts`; `tests/chest/flows.mjs` (CHEST-08). Re
 
 ### Recovery, administration and operational trust
 
-**RECOVER-001 — Folder and account point-in-time recovery (partial).** Make a folder with multiple versions, rename/delete it and overwrite sibling files, then preview a time-based rewind and restore selected content. Compare every restored byte/path, retain later history and prove a formerly revoked external link and staff identity remain denied.
+**RECOVER-001 — Folder and account point-in-time recovery (partial).** Make a folder with multiple versions, rename/delete it and overwrite sibling files, then, as the space manager (not the installation owner), preview a time-based rewind and restore selected content. Compare every restored byte/path, retain later history and prove a formerly revoked external link and staff identity remain denied. A space viewer is refused the rewind; an editor rewinds only their own files.
 
 Current evidence: `src/chest/documents.ts`; `tests/chest/flows.mjs` (CHEST-07, CHEST-13). Remaining: Document versions/trash restore exist; folder/account rewind does not.
 
@@ -158,11 +182,23 @@ Current evidence: —.
 
 Current evidence: `src/chest/api.ts`; `src/chest/store.ts`; `tests/chest/flows.mjs` (CHEST-13). Remaining: Activity endpoint and logical byte total exist; comprehensive reports, cost/usage attribution and quotas do not.
 
+**ADMIN-003 — Several admins, delegated admin roles and owner transfer (partial).** As owner, promote a second super admin and grant a staff member help desk scoped to one group. The help-desk admin revokes a group member's sessions and resets their second factor, then is refused that member's file list, previews, downloads and search hits, a reset for a user outside the group, and a policy change. Transfer ownership to the second super admin; the former owner is refused owner-only actions (installation settings, owner transfer, super-admin changes) on the next request while the new owner succeeds. Try to demote the last super admin and be refused. Inspect the audit of each step.
+
+Current evidence: `src/chest/identity.ts`; `src/chest/access.ts`; `tests/chest/flows.mjs` (CHEST-01). Remaining: One owner with owner-only administration and invited member staff exist; additional super admins, delegated or custom admin roles, content-free admin scope and owner transfer do not.
+
+**ADMIN-004 — Enforced multi-factor sign-in without an identity provider (missing).** Enforce MFA for everyone with a 0-day grace period. An unenrolled staff member's next email-link sign-in is held at enrolment, enrols a TOTP factor and then opens the library; a second user enrols a passkey. Replay a captured valid email link from another browser without the factor and be refused. Require security keys for admins and prove an admin with only TOTP is refused the console. Set a 1-hour session length and see a session end. A user who has lost their factor is reset by a help-desk admin, enrols again through the single-use link, and the link fails on second use and after 24 hours.
+
+Current evidence: —.
+
 **SECURITY-001 — Scoped encryption and secret custody (partial).** Inspect public API, logs and archive output using a test canary credential, rotate/revoke a provider and device key, and retry old access. Submit a cross-origin mutation, unauthenticated request and stale grant race; all fail closed while authorized originals remain recoverable under the documented key policy.
 
 Current evidence: `src/chest/api.ts`; `src/chest/access.ts`; `scripts/installer/local.mjs`; `tests/chest/flows.mjs`; `tests/chest/restore.mjs`. Remaining: Private HTTP/ACL and archive exclusions exist; complete device/provider encryption and key rotation coverage does not.
 
 **SECURITY-002 — Content threats and classification policy (missing).** Submit a standard harmless malware-test specimen and a labeled sensitive document, simulate a burst through a test client and inspect quarantine/alert history. Try all preview/download/link/device doors, release only as an authorized reviewer and prove policy changes do not erase originals or silently expand access.
+
+Current evidence: —.
+
+**SECURITY-003 — Ransomware and mass-corruption protection (missing).** From a test client, rewrite 500 synced files with high-entropy content in under a minute. Upload pauses before any server current-version ID changes; the client, email and admin console show the event with device and file list. While paused, another device's legitimate edit to a different file syncs normally. Run the one-action restore and verify every affected file's current version and SHA-256 equals its last pre-incident version, with the 500 suspect versions retained as quarantined history. Repeat through the public API with a token and see the token paused. Release a deliberate false positive and see uploads resume with no loss.
 
 Current evidence: —.
 
@@ -176,11 +212,15 @@ Current evidence: `src/chest/store.ts`; `src/chest/api.ts`; `tests/chest/flows.m
 
 **ERASE-001 — Deliberate erasure separate from trash (missing).** Through an owner erasure workflow remove a populated file and a staff identity, inspect each storage/index/import/backup target and audit anonymization, restart and attempt search/download and restore of an older archive with the later erasure journal. Refuse resurrection; show an unreachable backup or held object as pending rather than complete.
 
-Current evidence: No Chest permanent-erasure public workflow; `src/chest/documents.ts` provides reversible trash only..
+Current evidence: No Chest permanent-erasure public workflow; `src/chest/documents.ts` provides reversible trash only.
 
-**OPS-001 — Responsive accessible and observable operation (partial).** Use realistic nested project data through store/open/share/search/recover at 1440 and 390, keyboard and a screen reader; disconnect each service and recover without fake success or lost edits. Install the documented stack in an owner test account and record its measured limits and actionable health signals.
+**OPS-001 — Responsive accessible and observable operation (partial).** Use realistic nested project data through store/open/share/search/recover at 1440 and 390, keyboard and a screen reader; disconnect each service and recover without fake success or lost edits. Install the documented stack in an owner test account and record its measured limits and actionable health signals; the SCALE-001 run supplies the size and timings.
 
 Current evidence: `src/chest/ui-shell.ts`; `src/chest/ui.ts`; `tests/chest/browser-flow.mjs`; `tests/chest/journey.mjs`. Remaining: Current library has responsive journeys; native/admin expansion, accessibility conformance and hosted acceptance are unproven.
+
+**SCALE-001 — Stated operating scale and responsiveness (missing).** Generate the reference installation (or the buyer's inventory plus 25%) with a seeded generator that records item, byte, depth, member and device counts. Run a fixed script of folder listings, deep-path opens, 50 search queries, a revocation and an offline-device catch-up, and publish the counts and p50/p95 timings for each against the targets above. Revoke a group during the run and prove the next request through list, search, download and sync is refused. Rerun against a buyer's MIGRATE-001 inventory and show the size used.
+
+Current evidence: —.
 
 ### Move-in from incumbents and challenger filespaces
 
@@ -188,7 +228,7 @@ Current evidence: `src/chest/ui-shell.ts`; `src/chest/ui.ts`; `tests/chest/brows
 
 Current evidence: `src/chest/archive.ts`; `src/chest/archive-target.ts`; `tests/chest/flows.mjs` (CHEST-11). Remaining: Reviewed bounded synthetic archive import exists; vendor discovery, complete histories and delta/cutover do not.
 
-**MIGRATE-002 — Google Drive and Shared Drives migration (missing).** Migrate a real test Workspace with Shared Drives, a departed owner, native Docs/Sheets/Slides, shortcuts, nested restricted folders and historical versions. Compare inventory, byte hashes, exported/native fidelity, principals and links; prove an external collaborator can use the replacement without access to forbidden folders.
+**MIGRATE-002 — Google Drive and Shared Drives migration (missing).** Migrate a real test Workspace with Shared Drives, a departed owner, native Docs/Sheets/Slides, shortcuts, nested restricted folders and historical versions, plus: a labelled file with a date field and a selection field; a shared drive with one member at each of the five roles and download-restricted viewers; a Vault hold and a retention rule over one shared drive; and an externally owned file shared into a shared drive and another in a staff member's Shared with me. Compare inventory, byte hashes, exported/native fidelity, principals and links; verify the label values as typed fields, run the ROLE-001 role tests against each migrated member, see the held content blocked until a GOVERN-001 policy is acknowledged, and see both external files reconciled by the chosen option or reported as named gaps requiring owner sign-off. Prove an external collaborator can use the replacement without access to forbidden folders.
 
 Current evidence: —.
 
@@ -238,6 +278,14 @@ Current evidence: —.
 
 Current evidence: `src/chest/api.ts`; `tests/chest/flows.mjs`. Remaining: Private session-bound Chest HTTP API exists; delegated public API/MCP and webhook product integration do not.
 
+**CONNECT-008 — Gmail and Outlook compose and save add-ins (missing).** In real Google Workspace and Microsoft 365 test tenants, insert a restricted file into a message to an allowlisted external recipient; see the warning naming them, grant viewer in one step, send, and find the grant and audit entry; repeat to a non-allowlisted recipient and see the grant refused with the policy named. Attach a 200 MB file and see it replaced by a transfer link that the recipient downloads. Save the same attachment twice from Gmail and from Outlook and find one Chest file each with message provenance. Revoke the add-in and see the next insert and save refused.
+
+Current evidence: —.
+
+**CONNECT-009 — Zapier and Make automation apps (missing).** In real Zapier and Make test accounts, connect Chest with a grant for one folder and build "new file in folder → move to a subfolder and share with a colleague"; drop a file in and see it moved and shared once, with audit entries under the grant. Replay the trigger and see no duplicate move. Point an action at a folder outside the grant and see it refused; attempt a public link with public links off under POLICY-001 and see the policy refusal. Revoke the grant and see the next trigger stop and the next action fail.
+
+Current evidence: —.
+
 **RULE-001 — Reversible arrival rules (missing).** Preview a rename/tag/move/convert/unzip rule over real-format test files, approve it, replay the same event and inspect one result per original. Submit a traversal/archive bomb and alter a destination grant between preview and execution; retain originals and show blocked items, then undo an untouched move.
 
 Current evidence: —.
@@ -278,6 +326,6 @@ Current evidence: —.
 
 ## Scope and acceptance limits
 
-The target includes sync/streaming clients, native mobile apps, external links and file requests, broad previews/OCR/search, co-authoring, automation and AI; their incomplete status never removes them from the job. Office, signature, CRM, chat, meeting, regulated archive and creative authoring engines are integrated under the named clauses with explicit licensing/data control. No source check alone proves legal sufficiency, certification, hosted delivery, human receipt or vendor migration fidelity. An unreachable device, missing source revision, unconfirmed provider outcome or incomplete erasure must remain visibly unresolved.
+The target includes sync/streaming clients and computer-folder backup, native mobile apps, external links, item sharing with access requests, guest collaborators under an organisation sharing policy, file requests, broad previews/OCR/search, co-authoring, automation and AI; their incomplete status never removes them from the job. Office, signature, CRM, chat, meeting, regulated archive and creative authoring engines are integrated under the named clauses with explicit licensing/data control. No source check alone proves legal sufficiency, certification, hosted delivery, human receipt or vendor migration fidelity. An unreachable device, missing source revision, unconfirmed provider outcome or incomplete erasure must remain visibly unresolved.
 
-Status total: **61 clauses — 13 done / 18 partial / 30 missing.**
+Status total: **73 clauses — 12 done / 21 partial / 40 missing.**
