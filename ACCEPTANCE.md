@@ -126,7 +126,7 @@ Current evidence: —.
 
 Current evidence: —.
 
-**MOBILE-001 — Native iOS and Android file access (partial).** Run the journey on an iPhone on iOS 17, an iPhone on the current iOS release, an iPad on the current iPadOS, an Android 10 device and an Android device on the current release. On each, capture a multi-page scan, upload photos, share with a permitted recipient, open/save through a system picker, create a blank spreadsheet from the New menu and co-edit it with a browser user (EDIT-001) until both edits appear as attributed versions, and edit a pinned file offline while another device changes it. Reconnect, resolve the conflict and revoke the device; show the limit of an unreachable cache wipe.
+**MOBILE-001 — Native iOS and Android file access (partial).** Run the journey on an iPhone on iOS 17, an iPhone on the current iOS release, an iPad on the current iPadOS, an Android 10 device and an Android device on the current release. On each, capture a multi-page scan, upload photos, share with a permitted recipient, open/save through a system picker, create a blank spreadsheet from the New menu and co-edit it in Collabora Online with a browser user (EDIT-001), with no participant holding a Microsoft or Google licence, until both edits appear as attributed versions, and edit a pinned file offline while another device changes it. Reconnect, resolve the conflict and revoke the device; show the limit of an unreachable cache wipe. On a Play-enabled Chromebook on current ChromeOS stable, install the Android app, open a Chest file from the ChromeOS Files app in a ChromeOS app, save it and see the new attributed version.
 
 Current evidence: `src/chest/ui-library.ts`; `src/chest/documents.ts`; `tests/chest/journey.mjs`. Remaining: Responsive browser browse/upload exists; native apps, camera, background/offline sync and mobile sharing do not.
 
@@ -148,7 +148,7 @@ Current evidence: —.
 
 Current evidence: —.
 
-**SHARE-005 — External collaborators who edit, comment and upload (missing).** Invite a guest at another domain with no Google or Microsoft account as editor on a DOCX and contributor on a folder, with a 3-day expiry and re-sharing off. The guest signs in by PIN, co-edits the DOCX with a staff member through EDIT-001 and uploads two files into the folder; version history and audit attribute each change to the guest's email. The guest's attempts to share onward, open a sibling folder, search the library and use the PIN from a second email address are refused. Advance a controlled clock past re-verification and see a new PIN required, then past expiry and see every door, including an open editor session's next save and a range request, refused.
+**SHARE-005 — External collaborators who edit, comment and upload (missing).** Invite a guest at another domain with no Google or Microsoft account as editor on a DOCX and contributor on a folder, with a 3-day expiry and re-sharing off. The guest signs in by PIN, co-edits the DOCX with a staff member in Collabora Online under EDIT-001, on an installation with no Microsoft or Google provider configured, and uploads two files into the folder; version history and audit attribute each change to the guest's email. The guest's attempts to share onward, open a sibling folder, search the library and use the PIN from a second email address are refused. Advance a controlled clock past re-verification and see a new PIN required, then past expiry and see every door, including an open editor session's next save and a range request, refused.
 
 Current evidence: —.
 
@@ -160,11 +160,27 @@ Current evidence: —.
 
 Current evidence: `src/chest/blobs.ts`; `tests/chest/flows.mjs` (CHEST-05); `tests/chest/browser-preview.mjs`. Remaining: Only basic PDF/raster/text previews exist; no broad renderer or processor.
 
-**SEARCH-001 — Full-text and scanned-content search (partial).** Upload one fixture per matrix format, each holding a distinctive phrase (including a scanned English invoice, a scanned Spanish receipt, an Office spreadsheet, a Google document, an MSG with a DOCX attachment, a spoken-phrase MP4 and an encrypted PDF), find every phrase and filter by folder/version. Show OCR provenance and the encrypted-file gap; revoke a group before index refresh and prove zero leaked snippets/counts/autocomplete through search API and UI. Repeat a fixed query set in the SCALE-001 reference installation and record latency against the SCALE-001 search target.
+**SEARCH-001 — Full-text and scanned-content search (partial).** Upload one fixture per matrix format, each holding a distinctive phrase (including a scanned English invoice, a scanned Spanish receipt, an Office spreadsheet, a Google document, an MSG with a DOCX attachment, a spoken-phrase MP4 and an encrypted PDF), find every phrase and filter by folder/version. Then seed files that all contain one shared phrase: PDFs, spreadsheets and images; files owned by two different people; files modified 3 days and 40 days ago; one PDF renamed `.txt`; and one matching PDF in a folder a test user cannot open.
+- Search the phrase with Type = PDF, People = owned by the second owner and Modified = last 30 days. Only the matching files come back, including the renamed PDF.
+- Combine each of Type, People, Modified and Version with Location = Shared with me, and again with Location = one space; check each result set against the seed. Use a custom date range, and a filter-only search with no text.
+- The test user never sees the PDF they cannot open, or a count or suggestion that includes it.
+- Repeat in the browser at 1440 and 390, in the iOS and Android apps and through the search API.
 
-Current evidence: `src/chest/api.ts`; `src/chest/blobs.ts`; `tests/chest/flows.mjs` (CHEST-06). Remaining: Title/metadata and bounded admitted UTF-8 search only; OCR/broad extraction/indexing are absent.
+Show OCR provenance and the encrypted-file gap; revoke a group before index refresh and prove zero leaked snippets/counts/autocomplete through search API and UI. Repeat a fixed query set in the SCALE-001 reference installation and record latency against the SCALE-001 search target.
 
-**EDIT-001 — Office and independent browser co-authoring (missing).** Two real accounts co-edit a document, spreadsheet and slide deck through Chest, verify concurrent changes and saved versions, then revoke one user mid-session and reject their next save. Round-trip tables/formulas/comments and test a provider outage and a review-gated file whose approved version must remain unchanged. Repeat one co-edit with one participant on the iOS app and one on the Android app, each save appearing as a version attributed to that participant, and revoke the Android participant mid-session to see their next save refused.
+Current evidence: `src/chest/api.ts`; `src/chest/blobs.ts`; `tests/chest/flows.mjs` (CHEST-06). Remaining: Title/metadata and bounded admitted UTF-8 text search (`q`) with a trash switch only; OCR/broad extraction/indexing and the Type, People, Modified, Location and Version filters are absent.
+
+**EDIT-001 — Office and independent browser co-authoring (missing).** On an installation with no Microsoft or Google provider configured, where no participant holds a Microsoft 365 or Google Workspace licence, using the shipped Collabora Online:
+- At setup, the console shows Collabora Online's edition, its document and connection limits and its USD cost before the owner confirms enabling it.
+- Two staff and one PIN-verified SHARE-005 guest co-edit a DOCX, an XLSX and a PPTX in the browser at 1440 and 390. Concurrent changes reach every participant, and each save is a version attributed to its author, the guest by verified email. Revoke the guest mid-session and see their next save refused.
+- Repeat one co-edit with one participant in the iOS app and one in the Android app on the MOBILE-001 current-release devices, each save attributed to that participant. Revoke the Android participant mid-session and see their next save refused.
+- Round-trip tables, formulas and comments in all three formats, then open the saved versions in desktop Word, Excel and PowerPoint and in LibreOffice with them intact. Edit a review-gated file and see its approved version unchanged. Stop the Collabora Online service and see the outage named, with the original still downloadable.
+- A contributor creates a blank spreadsheet from the EDIT-004 New menu, and it opens in Collabora Online.
+- Set the connection limit to 3 and open a fourth editing session: it is refused with `editor_capacity_reached`, naming the limit and current use, in the browser, a mobile app and the API. The file opens read-only, and the three open sessions continue.
+
+Then enable Microsoft 365 for one group in a CSPP test tenant:
+- Two licensed users co-edit a DOCX, an XLSX and a PPTX through Office for the web and desktop Office, with attributed saves. Revoke one mid-session and see their next save refused.
+- A group member without a qualifying licence opens the same DOCX and gets the read-only view with the licence named as the reason. No editing session is created, and no save from them is accepted. With no Microsoft session open on the file, they choose Edit in Collabora Online, and their saves are attributed to them.
 
 Current evidence: —.
 
@@ -176,7 +192,7 @@ Current evidence: —.
 
 Current evidence: `src/chest/reviews.ts`; `tests/chest/flows.mjs` (CHEST-08). Remaining: Exact-version review comments exist; annotation geometry, mentions, threads and task resolution do not.
 
-**EDIT-004 — New documents, spreadsheets and presentations from blank or templates (missing).** Through the browser at 1440 and 390 and in the iOS and Android apps on the MOBILE-001 current-release devices:
+**EDIT-004 — New documents, spreadsheets and presentations from blank or templates (missing).** Run these journeys on an installation with no Microsoft or Google provider configured, where new files open in the shipped Collabora Online (EDIT-001), through the browser at 1440 and 390 and in the iOS and Android apps on the MOBILE-001 current-release devices. Then enable Microsoft 365 for the web and repeat the first journey with a licensed contributor.
 - A contributor creates a blank spreadsheet in a restricted team-space folder. It opens in the EDIT-001 editor at once, and after two saved edits its version history shows versions 1–3 (created, then two editor saves) attributed to them. A colleague with folder access finds it in search and opens it; a staff member outside the folder finds nothing in search and gets 403 on its URL.
 - Create a blank document and a blank presentation; download each version 1 and open it in desktop Word, Excel or PowerPoint and in LibreOffice without a repair prompt. Switch the organisation creation format to ODF and see the next new document created as ODT; set a group override to Google types under EDIT-002 and see a group member's new document open as a Google Doc.
 - An admin publishes a DOCX organisation template to one group. A group member creates a document from it; a user outside the group does not see the template in the New menu, the gallery or the API listing. Editing the new document leaves the template's bytes and version unchanged, editing the template afterwards leaves the new document unchanged, and the new document's version 1 names the template and its version. A space manager publishes a space template that only that space's members see. Unpublish the organisation template and see documents made from it unchanged.
@@ -204,7 +220,7 @@ Current evidence: `scripts/installer/local.mjs`; `tests/chest/restore.mjs`. Rema
 
 Current evidence: —.
 
-**ADMIN-002 — Admin reporting and legible USD costs (partial).** Create activity from staff, guest, client and agent; reconcile a permission-scoped CSV report with source events and bytes including old versions/trash. Reach a QUOTA-001 test limit and trigger an estimated provider cost; show the warning and preserved originals, with no invented savings or live-price claim.
+**ADMIN-002 — Admin reporting and legible USD costs (partial).** Create activity from staff, guest, client and agent; reconcile a permission-scoped CSV report with source events and bytes including old versions/trash. Enable Collabora Online and see its edition, limits and USD cost before confirming; drive it to its connection limit and see the refusal counted in the report. Reach a QUOTA-001 test limit and trigger an estimated provider cost; show the warning and preserved originals, with no invented savings or live-price claim.
 
 Current evidence: `src/chest/api.ts`; `src/chest/store.ts`; `tests/chest/flows.mjs` (CHEST-13). Remaining: Activity endpoint and logical byte total exist; comprehensive reports, cost/usage attribution and quotas do not.
 
@@ -319,7 +335,7 @@ Current evidence: —.
 
 Current evidence: —.
 
-**CONNECT-007 — Public API, webhooks and scoped agents (partial).** Authorize a third-party test client and MCP agent for one folder, exercise paginated reads and idempotent upload, then attempt another folder and permission expansion. Revoke the grant mid-job, fail a signed webhook and inspect its durable outcome/manual replay without duplicated product mutations. Embed the file picker in a test web app: a user picks an accessible file and the app receives its stable ID and a link; a file the user cannot open never appears, and a revoked picker grant fails the next pick.
+**CONNECT-007 — Public API, webhooks and scoped agents (partial).** Authorize a third-party test client and MCP agent for one folder, exercise paginated reads and idempotent upload, then attempt another folder and permission expansion. Revoke the grant mid-job, fail a signed webhook and inspect its durable outcome/manual replay without duplicated product mutations. Embed the file picker in a test web app: a user picks an accessible file and the app receives its stable ID and a link; a file the user cannot open never appears, and a revoked picker grant fails the next pick. Set the policy to allowlist only: a staff member's attempt to authorize an app off the list is refused naming the policy, an app limited to read-only cannot upload, and blocking an already authorized app refuses its next call; the console lists each app with its users and scopes.
 
 Current evidence: `src/chest/api.ts`; `tests/chest/flows.mjs`. Remaining: Private session-bound Chest HTTP API exists; delegated public API/MCP and webhook product integration do not.
 
@@ -331,13 +347,14 @@ Current evidence: —.
 
 Current evidence: —.
 
-**CONNECT-010 — Google Meet, Calendar and Chat file companion (missing).** In a real Google Workspace test tenant with the connection covering one group:
+**CONNECT-010 — Google Meet, Calendar, Chat and Forms file companion (missing).** In a real Google Workspace test tenant with the connection covering one group:
 - A group member schedules an event linked through the Calendar add-on to a restricted team-space folder, with one internal attendee and one external attendee from an allowlisted domain, and records the Meet with transcript and notes on. The recording, transcript and notes document each appear once in the folder with meeting code, organizer, event ID and source Drive file ID. The internal attendee opens them, the external attendee opens them as a guest viewer, and a staff member who was not invited and has no folder access gets 403.
 - Replay the Workspace event notification and run the reconciliation sweep: there is no duplicate.
 - With "remove source after verification" on, the Drive copy goes to Drive trash only after the SHA-256 check passes. With the destination over its QUOTA-001 limit, the filing is refused with `storage_limit_exceeded`, the organizer and an admin are told, and the Drive copy is kept. An organizer outside the covered group has nothing filed.
 - Through the Calendar add-on, attach a restricted Chest file to an event with one guest who has access and one who doesn't. On save, the guest without access is named, gets viewer in one step, and the audit entry exists. Add a guest from a domain that isn't on the POLICY-001 allowlist: the grant is refused with the policy named.
 - Through the Chat app, share a restricted file into a space with mixed membership. The card shows no title. A member with access presses Preview and sees the file; a member without access sees Request access without the title. The sharer's private prompt names the members without access, and a one-step grant lets them open it. A subscribed comment notification reaches the space. Search through the app as two users returns only what each can open. Repeat the share in the Chat mobile app.
-- Revoke Meet filing, the Calendar add-on and the Chat app one at a time, then the whole connection. The next filing, attachment check, share and search are each refused, and files already filed keep their Chest permissions.
+- A covered user maps a form with a file-upload question to a restricted folder. Two respondents each submit a file; each file appears once in the folder with form, response and source Drive file provenance, and neither respondent can open it in Chest. Replay the response notification and run the sweep: there is no duplicate.
+- Revoke Meet filing, the Calendar add-on, the Chat app and Forms filing one at a time, then the whole connection. The next filing, attachment check, share and search are each refused, and files already filed keep their Chest permissions.
 
 Current evidence: —.
 
@@ -345,7 +362,7 @@ Current evidence: —.
 
 Current evidence: —.
 
-**FOLLOW-001 — Persistent collaboration follow-up (partial).** Assign a dated request and review, subscribe a collaborator, advance a controlled clock through due/reminder/escalation states and complete the exact task. Fail a provider, restart the worker and inspect the durable result; there is no duplicate reminder or forbidden content after completion/revocation.
+**FOLLOW-001 — Persistent collaboration follow-up (partial).** Assign a dated request and review, subscribe a collaborator, advance a controlled clock through due/reminder/escalation states and complete the exact task. Fail a provider, restart the worker and inspect the durable result; there is no duplicate reminder or forbidden content after completion/revocation. Reply by email to a comment notification and see the reply in the thread, attributed and without the quoted history; send the same reply from a different address, and from the original address after their access is revoked, and see neither posted and a bounce returned.
 
 Current evidence: `src/chest/ui-library.ts`; `src/chest/documents.ts`; `tests/chest/flows.mjs` (CHEST-09). Remaining: Due/upcoming work and evidence completion exist; background reminders, mobile push and provider outcomes do not.
 
@@ -381,6 +398,6 @@ Current evidence: —.
 
 ## Scope and acceptance limits
 
-The target includes sync/streaming clients and computer-folder backup, native mobile apps, external links, item sharing with access requests, guest collaborators under an organisation sharing policy, organisation links, expiring grants, version restore by editors, space-creation control, storage limits, Office desktop presence, built-in eSignature, migration link rewriting, an availability target with durability scrubs, new files from blank or templates, the Google Meet, Calendar and Chat companion, file requests, broad previews/OCR/search, co-authoring, automation and AI; their incomplete status never removes them from the job. Office, third-party signature (Docusign), CRM, chat, meeting, regulated archive and creative authoring engines are integrated under the named clauses with explicit licensing/data control. No source check alone proves legal sufficiency, certification, hosted delivery, human receipt or vendor migration fidelity. An unreachable device, missing source revision, unconfirmed provider outcome or incomplete erasure must remain visibly unresolved.
+The target includes sync/streaming clients and computer-folder backup, native mobile apps, external links, item sharing with access requests, guest collaborators under an organisation sharing policy, organisation links, expiring grants, version restore by editors, space-creation control, storage limits, Office desktop presence, built-in eSignature, migration link rewriting, an availability target with durability scrubs, new files from blank or templates, the Google Meet, Calendar, Chat and Forms companion, file requests, broad previews/OCR/search with type, people, date and location filters, co-authoring in the shipped Collabora Online editor without a Microsoft or Google licence, third-party app control, automation and AI; their incomplete status never removes them from the job. Office, third-party signature (Docusign), CRM, chat, meeting, regulated archive and creative authoring engines are integrated under the named clauses with explicit licensing/data control. No source check alone proves legal sufficiency, certification, hosted delivery, human receipt or vendor migration fidelity. An unreachable device, missing source revision, unconfirmed provider outcome or incomplete erasure must remain visibly unresolved.
 
 Status total: **82 clauses — 12 done / 23 partial / 47 missing.**
