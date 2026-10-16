@@ -5,8 +5,8 @@ import { repository } from './shell/repository'
 export const run: RunData = {
   name: 'Chest',
   repository,
-  clone: `git clone ${repository}.git chest`,
-  folder: 'chest',
+  clone: 'npx -y @runeditrun/rer dev just-every/run-chest',
+  folder: 'run-chest',
   requirements: 'Needs Node 22 or later and pnpm 10.12.4, on macOS, Linux or Windows with WSL2.',
   licence: 'MIT',
   docs: true,
