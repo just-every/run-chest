@@ -10,7 +10,7 @@ For a document-only contract change, check clause uniqueness, preservation of ex
 
 ## Installation acceptance
 
-Before moving records, reconcile representative incumbent originals, folders, versions, people, timestamps, rights and missing history. Source fixtures do not establish proprietary export fidelity or reduced costs. Each required provider/device journey below needs real test tenants/devices and recorded outcomes before being called accepted; deterministic fixtures can prove error behavior, not live integration availability. Use authorized test data with realistic US business folders, ordinary Office files, scans, a multi-GB creative asset, a vendor guest and a departing employee, and run size-sensitive journeys at the SCALE-001 reference size or the buyer's MIGRATE-001 inventory plus 25% headroom, whichever is larger. Platform and format journeys run every cell of the matrix their clause names (TRANSFER-001, SYNC-001, MOBILE-001, PREVIEW-001, SEARCH-001); a cell not run is not accepted. Never place private archives or credentials in source/served assets.
+Before moving records, reconcile representative incumbent originals, folders, versions, people, timestamps, rights and missing history. Source fixtures do not establish proprietary export fidelity or reduced costs. Each required provider/device journey below needs real test tenants/devices and recorded outcomes before being called accepted; deterministic fixtures can prove error behavior, not live integration availability. Use authorized test data with realistic US business folders, ordinary Office files, scans, a multi-GB creative asset, a vendor guest and a departing employee, and run size-sensitive journeys at the SCALE-001 reference size or the buyer's MIGRATE-001 inventory plus 25% headroom, whichever is larger. Platform and format journeys run every cell of the matrix their clause names (TRANSFER-001, SYNC-001, SYNC-007, MOBILE-001, PREVIEW-001, SEARCH-001); a cell not run is not accepted. Never place private archives or credentials in source/served assets.
 
 Before upgrading, back up privately and test the candidate on a populated prior-release copy. Check ordinary sessions, owner/settings, source records, history, rights and original bytes, then exercise rollback. Empty-target restore alone does not establish an in-place upgrade. For new browser/mobile/admin screens, use the full journey at 1440 and 390, keyboard/screen reader, and honest loading/failure/end states; desktop/native device behavior requires supported OS devices as well. Hosted mail, processing, identity, provider limits and independent backup acceptance use the owner's infrastructure/accounts. Read [ARCHIVE.md](ARCHIVE.md) for current bounded move-in and legacy-backup limitations.
 
@@ -78,11 +78,19 @@ Current evidence: `src/chest/documents.ts`; `src/chest/store.ts`; `src/chest/api
 
 Current evidence: `src/chest/metadata.ts`; `src/chest/access.ts`; `tests/chest/flows.mjs` (CHEST-02, CHEST-04). Remaining: Collections and access exist; folder trees, ordinary untyped files, team ownership and delegation do not.
 
-**ROLE-001 — Five-level roles and delegated sharing (partial).** For each role, one public-door test through the HTTP API and one through the browser UI attempts open, download, comment, upload a new version, move, copy out, trash, restore, share and change membership on a space folder and a file; each permitted action succeeds and each other is refused with 403 and no state change. Turn on the no-download setting and prove viewer and commenter downloads, range requests, archive inclusion (BULK-001), sync hydration and API reads of the original are refused while pages still preview. Switch editor sharing off and prove an editor's share is refused while a manager's succeeds. Downgrade a role mid-session and prove the next request uses the new role.
+**SPACE-002 — Space creation control and new-space defaults (missing).** Limit space creation to the group "Ops leads". A staff member outside it sees no create action, and a direct form post and an API call are each refused with the rule named; their space request reaches an admin. A group member creates a space. Set the defaults to external access off, non-member file access off, viewer and commenter download off and manager override off, then create a new space: it starts with those settings, and a space created earlier is unchanged. That space's manager tries to turn external access on through the UI and the API and is refused with the rule named; an admin changes it successfully. Turn manager override on and see the manager's change succeed. Inspect the audit with before and after values. Run the browser steps at 1440 and 390.
+
+Current evidence: —.
+
+**ROLE-001 — Five-level roles and delegated sharing (partial).** For each role, one public-door test through the HTTP API and one through the browser UI attempts open, download, comment, view version history, upload a new version, restore an earlier version, move, copy out, trash, restore, share and change membership on a space folder and a file; each permitted action succeeds and each other is refused with 403 and no state change. Turn on the no-download setting and prove viewer and commenter downloads, range requests, archive inclusion (BULK-001), sync hydration and API reads of the original are refused while pages still preview. Switch editor sharing off and prove an editor's share is refused while a manager's succeeds. Downgrade a role mid-session and prove the next request uses the new role.
 
 Current evidence: `src/chest/access.ts`; `src/chest/metadata.ts`; `tests/chest/flows.mjs` (CHEST-10). Remaining: Reader/editor/reviewer collection grants exist; commenter, contributor, content-manager and manager levels, file-level roles, delegated and editor sharing and no-download settings do not.
 
-**TRANSFER-001 — Resumable files and whole-folder uploads (partial).** Upload a nested folder containing a 50 GB video and duplicate names, interrupt connectivity and restart the client, then resume and compare hashes/tree/counts; cancel another transfer and prove no false success or half-visible file. Through the public API, upload a 5 TB sparse-pattern test object with resumable parts and verify its SHA-256; a 5 TB + 1 byte declaration is refused before any bytes are stored. Upload a 100,000-item folder and reconcile the per-item results. Test a quota refusal and retain completed files.
+**VERSION-001 — File version history and restore by editors (partial).** In a team space, staff A uploads an XLSX as version 1 and edits it to version 2; colleague B replaces it with version 3. Through the API and the browser at 1440 and 390, contributor C opens the version history and sees the author, time and size of each version. C downloads version 2 and checks its SHA-256, names it "Before Q3 edits" and restores it. Version 4 is created by C with bytes equal to version 2; versions 1, 2 and 3 remain downloadable; the stable ID and an existing share link are unchanged and now serve version 4. A synced client receives version 4 as a remote change. A viewer and a commenter see the history and download version 1, but their restore and rename are refused with 403 and no new version. With the no-download setting on, the viewer's download of version 1 is refused. On a governed file whose version 2 is approved, a restore of version 1 enters as a new submitted version while the approved pointer stays on version 2 until approval. The audit records each restore once with actor and source version.
+
+Current evidence: `src/chest/model.ts` (`Version` actor, time, size, checksum); `src/chest/api.ts` (per-version `bytes` route); `tests/chest/flows.mjs` (CHEST-07). Remaining: Immutable versions with author, time, size and per-version download exist; a version-history view, restore as current, version naming and the per-role restore rules do not.
+
+**TRANSFER-001 — Resumable files and whole-folder uploads (partial).** Upload a nested folder containing a 50 GB video and duplicate names, interrupt connectivity and restart the client, then resume and compare hashes/tree/counts; cancel another transfer and prove no false success or half-visible file. Through the public API, upload a 5 TB sparse-pattern test object with resumable parts and verify its SHA-256; a 5 TB + 1 byte declaration is refused before any bytes are stored. Upload a 100,000-item folder and reconcile the per-item results. Test a QUOTA-001 storage-limit refusal and retain completed files.
 
 Current evidence: `src/chest/blobs.ts`; `src/chest/documents.ts`; `src/chest/archive.ts`; `tests/chest/flows.mjs` (CHEST-03, CHEST-11). Remaining: Single bounded originals/archive admission only; no folder or resumable large transfer.
 
@@ -114,13 +122,17 @@ Current evidence: —.
 
 Current evidence: —.
 
+**SYNC-007 — Office desktop presence, newer-version alerts and locks (missing).** Two staff open the same XLSX from the mount, one on macOS (Microsoft 365 Apps) and one on Windows (Office 2016), and each run is repeated with the operating systems swapped. The second sees the first named under "Also open by" within 10 seconds. The first saves; the second is told a newer version exists, naming the first, before saving, and reloading keeps the second's unsaved changes as a named copy. On the lock path, the first takes the lock and the second's save is refused naming the holder, with no conflict copy created. Kill the holder's client: the lock lapses through SYNC-004 recovery with the holder's unsent changes retained. Open the file in an EDIT-001 browser session and see that person in desktop presence. Under the "lock on first open" policy, the second opener is offered read-only or browser co-authoring only.
+
+Current evidence: —.
+
 **MOBILE-001 — Native iOS and Android file access (partial).** Run the journey on an iPhone on iOS 17, an iPhone on the current iOS release, an iPad on the current iPadOS, an Android 10 device and an Android device on the current release. On each, capture a multi-page scan, upload photos, share with a permitted recipient, open/save through a system picker, and edit a pinned file offline while another device changes it. Reconnect, resolve the conflict and revoke the device; show the limit of an unreachable cache wipe.
 
 Current evidence: `src/chest/ui-library.ts`; `src/chest/documents.ts`; `tests/chest/journey.mjs`. Remaining: Responsive browser browse/upload exists; native apps, camera, background/offline sync and mobile sharing do not.
 
 ### External exchange, previews and collaboration
 
-**SHARE-001 — Policy-controlled external links (partial).** Share a restricted folder and pinned approved file with an external recipient; try wrong password, wrong domain, guessed child URLs, expired/revoked links and parallel downloads at the count limit. Confirm approved-only never reveals pending replacements and a revoked link fails on the next request.
+**SHARE-001 — Policy-controlled external links (partial).** Share a restricted folder and pinned approved file with an external recipient; try wrong password, wrong domain, guessed child URLs, expired/revoked links and parallel downloads at the count limit. Confirm approved-only never reveals pending replacements and a revoked link fails on the next request. A staff member sets a team-space file to organisation-with-link at commenter, not discoverable. A colleague with no grant opens it and comments, while a guest and a signed-out browser are refused. Before opening the link, that colleague's search does not show the file; after opening, it does. Switch the link to discoverable and see a third colleague find it by search. With the no-download setting on, the colleague's download is refused while the preview works. Remove the link and see the colleague refused on the next request. Change the admin default link audience from restricted to organisation and see the next new link start at organisation while existing links keep their audience. Run the browser steps at 1440 and 390.
 
 Current evidence: `src/chest/access.ts`; `src/chest/api.ts`; `tests/chest/flows.mjs` (CHEST-06, CHEST-10). Remaining: Private identity ACLs exist; external links and per-link policies are absent.
 
@@ -132,7 +144,7 @@ Current evidence: —.
 
 Current evidence: —.
 
-**SHARE-004 — Item sharing, Shared with me and access requests (missing).** Share a personal-area file with a colleague at commenter; they receive the notice and email, find it under Shared with me and can comment but not edit. An unauthorised colleague opens the link, sees Request access without the title, requests editor; the owner approves at viewer from the email link and the requester is told and can now view. A second request is declined from the share dialog and the requester is told. Deactivate the owner of a third file and request access; the request reaches the new content owner, and with none, a space manager. Repeat at 1440 and 390 and inspect the audit entries.
+**SHARE-004 — Item sharing, Shared with me and access requests (missing).** Share a personal-area file with a colleague at commenter; they receive the notice and email, find it under Shared with me and can comment but not edit. An unauthorised colleague opens the link, sees Request access without the title, requests editor; the owner approves at viewer from the email link and the requester is told and can now view. A second request is declined from the share dialog and the requester is told. Deactivate the owner of a third file and request access; the request reaches the new content owner, and with none, a space manager. Grant a colleague commenter on a space file with a 2-day expiry and advance a controlled clock. The one-day notice reaches the sharer and the grantee, and an extend from the notice moves the date once; let the new date pass. List, preview, download, sync hydration on the colleague's client, and comment are each refused on the next request, and the audit records the expiry. Repeat at 1440 and 390 and inspect the audit entries.
 
 Current evidence: —.
 
@@ -140,7 +152,7 @@ Current evidence: —.
 
 Current evidence: —.
 
-**POLICY-001 — Organisation sharing policy (missing).** Set an allowlist of one partner domain with public links off. As staff, a share to a non-allowlisted domain and a public link are refused in the UI and API with the policy named; a share to the allowlisted domain succeeds after the external-recipient warning. Create a public link and a non-allowlisted guest grant under a looser policy, tighten the policy and prove both are refused on the next request and listed as suspended. Set a space override that blocks sharing outside its members while the organisation allows it, and see a member's share to another colleague refused. Confirm the same refusals through the CONNECT-007 API and a CONNECT-009 action.
+**POLICY-001 — Organisation sharing policy (missing).** Set an allowlist of one partner domain with public links off. As staff, a share to a non-allowlisted domain and a public link are refused in the UI and API with the policy named; a share to the allowlisted domain succeeds after the external-recipient warning. Create a public link and a non-allowlisted guest grant under a looser policy, tighten the policy and prove both are refused on the next request and listed as suspended. Set a space override that blocks sharing outside its members while the organisation allows it, and see a member's share to another colleague refused. Confirm the same refusals through the CONNECT-007 API and a CONNECT-009 action. Set the organisation default link audience to restricted and a group default to organisation-with-link at viewer. A group member's new link starts at organisation viewer and a non-member's at restricted; links created before the change keep their audience. Turn organisation-link discovery off and see a request for a discoverable organisation link refused with the policy named.
 
 Current evidence: —.
 
@@ -164,9 +176,13 @@ Current evidence: —.
 
 Current evidence: `src/chest/reviews.ts`; `tests/chest/flows.mjs` (CHEST-08). Remaining: Exact-version review comments exist; annotation geometry, mentions, threads and task resolution do not.
 
+**SIGN-001 — Built-in eSignature on PDF and DOCX files (missing).** Through the browser at 1440 and 390 and the mobile app, send a two-signer PDF in order: first an external signer with no Chest or Google/Microsoft account, then a staff member. A reminder reaches the first signer on the set cadence. The external signer verifies by PIN, sees the consent disclosure and is refused any other file. Both sign. The signed PDF and the certificate appear as new versions linked to the source version, with before and after hashes and the full event log; the PAdES signature validates, and validation fails after one byte of the signed PDF is altered. Reminders stop. Send a DOCX request and see the fidelity report before sending. A declined request and an expired request each leave the source version unchanged and unsigned, with no signed version filed and the outcome recorded. A voided request stops further signing.
+
+Current evidence: —.
+
 ### Recovery, administration and operational trust
 
-**RECOVER-001 — Folder and account point-in-time recovery (partial).** Make a folder with multiple versions, rename/delete it and overwrite sibling files, then, as the space manager (not the installation owner), preview a time-based rewind and restore selected content. Compare every restored byte/path, retain later history and prove a formerly revoked external link and staff identity remain denied. A space viewer is refused the rewind; an editor rewinds only their own files.
+**RECOVER-001 — Folder and account point-in-time recovery (partial).** Make a folder with multiple versions, rename/delete it and overwrite sibling files, then, as the space manager (not the installation owner), preview a time-based rewind and restore selected content. Compare every restored byte/path, retain later history and prove a formerly revoked external link and staff identity remain denied. A space viewer is refused the rewind. An editor's folder rewind is limited to their own files, while the same editor restores a single earlier version of a colleague's file under VERSION-001.
 
 Current evidence: `src/chest/documents.ts`; `tests/chest/flows.mjs` (CHEST-07, CHEST-13). Remaining: Document versions/trash restore exist; folder/account rewind does not.
 
@@ -178,7 +194,7 @@ Current evidence: `scripts/installer/local.mjs`; `tests/chest/restore.mjs`. Rema
 
 Current evidence: —.
 
-**ADMIN-002 — Admin reporting and legible USD costs (partial).** Create activity from staff, guest, client and agent; reconcile a permission-scoped CSV report with source events and bytes including old versions/trash. Reach a test quota and trigger an estimated provider cost; show the warning and preserved originals, with no invented savings or live-price claim.
+**ADMIN-002 — Admin reporting and legible USD costs (partial).** Create activity from staff, guest, client and agent; reconcile a permission-scoped CSV report with source events and bytes including old versions/trash. Reach a QUOTA-001 test limit and trigger an estimated provider cost; show the warning and preserved originals, with no invented savings or live-price claim.
 
 Current evidence: `src/chest/api.ts`; `src/chest/store.ts`; `tests/chest/flows.mjs` (CHEST-13). Remaining: Activity endpoint and logical byte total exist; comprehensive reports, cost/usage attribution and quotas do not.
 
@@ -187,6 +203,10 @@ Current evidence: `src/chest/api.ts`; `src/chest/store.ts`; `tests/chest/flows.m
 Current evidence: `src/chest/identity.ts`; `src/chest/access.ts`; `tests/chest/flows.mjs` (CHEST-01). Remaining: One owner with owner-only administration and invited member staff exist; additional super admins, delegated or custom admin roles, content-free admin scope and owner transfer do not.
 
 **ADMIN-004 — Enforced multi-factor sign-in without an identity provider (missing).** Enforce MFA for everyone with a 0-day grace period. An unenrolled staff member's next email-link sign-in is held at enrolment, enrols a TOTP factor and then opens the library; a second user enrols a passkey. Replay a captured valid email link from another browser without the factor and be refused. Require security keys for admins and prove an admin with only TOTP is refused the console. Set a 1-hour session length and see a session end. A user who has lost their factor is reset by a help-desk admin, enrols again through the single-use link, and the link fails on second use and after 24 hours.
+
+Current evidence: —.
+
+**QUOTA-001 — Storage limits for users and spaces (missing).** Set a group user limit and a space limit below current usage; before saving, the console lists the affected users and spaces with their usage, and saving needs confirmation. Show that a group limit beats the organisation default, and that a user in two limited groups gets the larger. For the over-limit user, an upload is refused in the browser at 1440 and 390, in the SYNC-001 client on macOS and Windows and in the mobile app, and through the API with `storage_limit_exceeded`, each naming the limit; view, preview and download still work, and the client keeps the unsent file queued. In the over-limit space, a content manager trashes content and usage does not drop until a space manager erases it under ERASE-001; writes then resume on the next request, and the queued client upload completes without user action. Inspect the 90% warning emails and the audit entries for each limit change.
 
 Current evidence: —.
 
@@ -222,13 +242,17 @@ Current evidence: `src/chest/ui-shell.ts`; `src/chest/ui.ts`; `tests/chest/brows
 
 Current evidence: —.
 
+**OPS-002 — Availability target, durability of originals and incident status (partial).** Run the probes for 30 days against the SCALE-001 reference installation and publish each door's availability and minute history against the 99.9% target. Take one door down for a measured interval and see it counted. Corrupt one stored copy of an original and delete the second copy of another: the next scrub detects both, repairs each from its good copy, and records audit entries and the durability report. Make one object unrecoverable in both copies and see it shown as damaged, never served. Stop the API: an incident opens automatically, the banner shows in the browser at 1440 and 390, the macOS and Windows clients and both mobile apps within 2 minutes, the independent status page reports it and admins receive the email. Restore the API and see the banners clear and the duration recorded.
+
+Current evidence: `src/server.ts` (`/health`); `src/chest/blobs.ts` (SHA-256 verified at admission); `tests/chest/journey.mjs` (health check); `tests/chest/flows.mjs` (CHEST-03). Remaining: A health endpoint and admission checksums exist; external probes, availability measurement, second copies, scrubs and incident notices do not.
+
 ### Move-in from incumbents and challenger filespaces
 
-**MIGRATE-001 — Reconciled migration and controlled cutover (partial).** Through the migration wizard, inventory a representative source, change the source after preview, reject stale plans, resume an interrupted batch and reconcile every item and version. Approve delta/cutover, test internal and external collaborators and old-to-new links, then undo untouched work and preserve native edits as conflicts.
+**MIGRATE-001 — Reconciled migration and controlled cutover (partial).** Through the migration wizard, inventory a representative source, change the source after preview, reject stale plans, resume an interrupted batch and reconcile every item and version. Approve delta/cutover, test internal and external collaborators and old-to-new links (rewritten links and the resolver, under MIGRATE-007), then undo untouched work and preserve native edits as conflicts.
 
 Current evidence: `src/chest/archive.ts`; `src/chest/archive-target.ts`; `tests/chest/flows.mjs` (CHEST-11). Remaining: Reviewed bounded synthetic archive import exists; vendor discovery, complete histories and delta/cutover do not.
 
-**MIGRATE-002 — Google Drive and Shared Drives migration (missing).** Migrate a real test Workspace with Shared Drives, a departed owner, native Docs/Sheets/Slides, shortcuts, nested restricted folders and historical versions, plus: a labelled file with a date field and a selection field; a shared drive with one member at each of the five roles and download-restricted viewers; a Vault hold and a retention rule over one shared drive; and an externally owned file shared into a shared drive and another in a staff member's Shared with me. Compare inventory, byte hashes, exported/native fidelity, principals and links; verify the label values as typed fields, run the ROLE-001 role tests against each migrated member, see the held content blocked until a GOVERN-001 policy is acknowledged, and see both external files reconciled by the chosen option or reported as named gaps requiring owner sign-off. Prove an external collaborator can use the replacement without access to forbidden folders.
+**MIGRATE-002 — Google Drive and Shared Drives migration (missing).** Migrate a real test Workspace with Shared Drives, a departed owner, native Docs/Sheets/Slides, shortcuts, nested restricted folders and historical versions, plus: a labelled file with a date field and a selection field; a shared drive with one member at each of the five roles and download-restricted viewers; a Vault hold and a retention rule over one shared drive; and an externally owned file shared into a shared drive and another in a staff member's Shared with me. Compare inventory, byte hashes, exported/native fidelity, principals and links; verify the label values as typed fields, run the ROLE-001 role tests against each migrated member, see the held content blocked until a GOVERN-001 policy is acknowledged, and see both external files reconciled by the chosen option or reported as named gaps requiring owner sign-off. Prove an external collaborator can use the replacement without access to forbidden folders. Include the MIGRATE-007 link fixtures in the same tenant and pass that clause's acceptance.
 
 Current evidence: —.
 
@@ -245,6 +269,17 @@ Current evidence: —.
 Current evidence: —.
 
 **MIGRATE-006 — Egnyte, LucidLink, Nextcloud and file shares (missing).** Inventory a test filespace from each named challenger plus a NAS share, hydrate placeholders, migrate and reconcile hashes and rights; open a large creative file from the replacement mount and test a revoked collaborator. Any unexportable history remains a named gap requiring owner sign-off.
+
+Current evidence: —.
+
+**MIGRATE-007 — Embedded link rewriting and old-URL resolution (missing).** The MIGRATE-002 test tenant includes:
+- a Doc linking to a Sheet in another shared drive;
+- a Sheet with `IMPORTRANGE`, kept native in one run and converted to XLSX in another;
+- a PPTX and a PDF with Drive links;
+- a Drive shortcut and a `.url` file;
+- a link to a file excluded from the migration.
+
+After migration, every link except the excluded one opens the matching Chest item, and each rewritten file's prior version still matches the source hash. The excluded link appears in the unresolved report with file, location, target and reason. Migrate a newly linked file in a delta and see the final pass rewrite its link. An old Drive URL pasted into the resolver opens the item for a member, shows Request access without the title to a non-member, and is refused for a guest. Run an equivalent Dropbox, Box and SharePoint link fixture through MIGRATE-003–005.
 
 Current evidence: —.
 
@@ -326,6 +361,6 @@ Current evidence: —.
 
 ## Scope and acceptance limits
 
-The target includes sync/streaming clients and computer-folder backup, native mobile apps, external links, item sharing with access requests, guest collaborators under an organisation sharing policy, file requests, broad previews/OCR/search, co-authoring, automation and AI; their incomplete status never removes them from the job. Office, signature, CRM, chat, meeting, regulated archive and creative authoring engines are integrated under the named clauses with explicit licensing/data control. No source check alone proves legal sufficiency, certification, hosted delivery, human receipt or vendor migration fidelity. An unreachable device, missing source revision, unconfirmed provider outcome or incomplete erasure must remain visibly unresolved.
+The target includes sync/streaming clients and computer-folder backup, native mobile apps, external links, item sharing with access requests, guest collaborators under an organisation sharing policy, organisation links, expiring grants, version restore by editors, space-creation control, storage limits, Office desktop presence, built-in eSignature, migration link rewriting, an availability target with durability scrubs, file requests, broad previews/OCR/search, co-authoring, automation and AI; their incomplete status never removes them from the job. Office, third-party signature (Docusign), CRM, chat, meeting, regulated archive and creative authoring engines are integrated under the named clauses with explicit licensing/data control. No source check alone proves legal sufficiency, certification, hosted delivery, human receipt or vendor migration fidelity. An unreachable device, missing source revision, unconfirmed provider outcome or incomplete erasure must remain visibly unresolved.
 
-Status total: **73 clauses — 12 done / 21 partial / 40 missing.**
+Status total: **80 clauses — 12 done / 23 partial / 45 missing.**
