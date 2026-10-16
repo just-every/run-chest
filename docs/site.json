@@ -4,7 +4,7 @@
       "title": "Get started",
       "pages": [
         { "slug": "introduction", "title": "What Chest is", "file": "introduction.md", "summary": "How a document moves through Chest, from upload to the approved version everyone opens." },
-        { "slug": "run", "title": "Run Chest on your computer", "file": "run.md", "summary": "Install rer, get Chest, start it with rer dev and finish first-run setup." },
+        { "slug": "run", "title": "Run Chest on your computer", "file": "run.md", "summary": "Get Chest and start it with one line, then finish first-run setup." },
         { "slug": "set-up", "title": "Set up your library", "file": "set-up.md", "summary": "Invite your staff, then create collections, document types and groups before the first upload." }
       ]
     },
