@@ -149,7 +149,7 @@
       "executable": false
     },
     "AGENTS.md": {
-      "sha256": "deb8bddfb5a8423f78bcf4568eb69e198b3c69dd06fcecd1e6fb82a00b3e1a1f",
+      "sha256": "77f31698ce1c520da2ffc6f743aed9d485862bcca17c67b90735e340f6b29d13",
       "executable": false
     },
     "ARCHIVE.md": {
@@ -209,7 +209,7 @@
       "executable": false
     },
     "docs/run.md": {
-      "sha256": "8ed20af732c9b2442c9245bebe5a5751ccb6e8538fd45c46e33669bc668e7371",
+      "sha256": "d832d56b81d299e087032891300ff71731b78bc9c6130add2951884b56e4b978",
       "executable": false
     },
     "docs/set-up.md": {
@@ -313,11 +313,11 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "2828a2fbf23e3941fb19c12c588963169eb9887bf3fe3c7e1ff36772313beb36",
+      "sha256": "ffbde8df98f44380b92180af84d4e1aff731563743a22977245d9e6e2ad3a157",
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "67a21887c04f942a234576022e420d931499dc3c552b50203e5625f16ffb1b6e",
+      "sha256": "9cfc14338c8e41e7d9c655a1fa4158686cb02b920f1efdd92cbf19a70526bea1",
       "executable": false
     },
     "public/brand/band.svg": {
@@ -389,7 +389,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "64bc66af0df6207ee50eb745f3a766b157a409c4ab6f40db1d6bde10c11a32b1",
+      "sha256": "47136e90528cc8cf4fba1977fbbcb927cc7a7ecf036deedb164edd145273c587",
       "executable": false
     },
     "RELEASE.json": {
@@ -405,7 +405,7 @@
       "executable": false
     },
     "RUN-LOCALLY.md": {
-      "sha256": "6a642506649942a10e1fa1bed28d2203fa0fb7920069183b152daca6b73ed7f5",
+      "sha256": "c901ad71beb98171a1e3ec0ceb8ebdf735fde240e0c1616207ce703d7c25370c",
       "executable": false
     },
     "scripts/check-public-assets.mjs": {
@@ -545,7 +545,7 @@
       "executable": false
     },
     "src/base/run-site.ts": {
-      "sha256": "4c3a7cf208dd76b38b57f954ccf964db15b9eb7f43baa6f46ef0bf90008cc746",
+      "sha256": "53b3f379b9b35c7736ab7f62e36b2687c61ce135bfc0f3b7fc77f752092bc081",
       "executable": false
     },
     "src/base/setup-state.ts": {
@@ -2229,7 +2229,7 @@
       "executable": false
     },
     "src/site/run.ts": {
-      "sha256": "7d008cdc9c662ce42312c39d16bb55c21c17b07fde815e5bc15594ecc2922f13",
+      "sha256": "a1c662b1f9b5e5e6cec0b8b73447a68ede20d33f1ca17d1fe5f54805a51f54ff",
       "executable": false
     },
     "src/site/shell/Icon.tsx": {

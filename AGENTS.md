@@ -1,7 +1,7 @@
 # Run it locally
 
 ```sh
-npx -y @runeditrun/rer cli install
+curl -fsSL https://runeditrun.com/install.sh | sh
 rer install
 rer setup --owner-email you@example.com
 rer dev

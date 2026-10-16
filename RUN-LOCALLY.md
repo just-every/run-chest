@@ -1,6 +1,6 @@
 # Run it locally
 
-Install the command once with `npx -y @runeditrun/rer cli install`. Chest pins the published `@runeditrun/rer` 0.2.20; every verb runs that package. `rer demo` runs a throwaway demo with sample data; see [DEMO.md](DEMO.md).
+Install the command once with the installer, `curl -fsSL https://runeditrun.com/install.sh | sh` (it brings its own Node when there is none; with Node 22 or later already installed, `npx -y @runeditrun/rer cli install` does the same). Chest pins the published `@runeditrun/rer` 0.2.20; every verb runs that package. `rer demo` runs a throwaway demo with sample data; see [DEMO.md](DEMO.md).
 
 ## Launch with one command
 
