@@ -413,7 +413,7 @@
       "executable": false
     },
     "scripts/demo-observe.mjs": {
-      "sha256": "0ecbe5f504056d58febb70e978dd415085eae6db77b7279f8895bc75e25c944c",
+      "sha256": "7bd1b7c58e05aa8272e906ac98872fa03ff3059ee6c9c719ecba9a570f20d955",
       "executable": false
     },
     "scripts/edition-authoring/base-copies.mjs": {

@@ -7,7 +7,7 @@ if (account !== 'b20c0ca9cab0c2b70e13d7cf724b89bd') throw Error('Wrong demo acco
 const worker = JSON.parse(readFileSync('.rer/demo-host/wrangler.json', 'utf8')).name;
 const endpoint = `https://api.cloudflare.com/client/v4/accounts/${account}/workers/scripts/${worker}/tails`;
 const headers = { authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`, 'content-type': 'application/json' };
-const response = await fetch(endpoint, { method: 'POST', headers, body: '{}' });
+const response = await fetch(endpoint, { method: 'POST', headers, body: '{}', signal: AbortSignal.timeout(10_000) });
 const created = await response.json();
 if (!response.ok || !created.success) throw Error(`Demo tail creation failed (${response.status})`);
 const tail = created.result, socket = new WebSocket(tail.url, 'trace-v1');
@@ -44,6 +44,10 @@ try {
   console.log(JSON.stringify(summary));
 } finally {
   finished = true; clearInterval(timer); socket.close();
-  const removed = await fetch(endpoint + '/' + tail.id, { method: 'DELETE', headers });
+  const removed = await fetch(endpoint + '/' + tail.id, { method: 'DELETE', headers, signal: AbortSignal.timeout(10_000) });
   if (!removed.ok) throw Error(`Demo tail cleanup failed (${removed.status})`);
+  console.log('Demo tail removed');
 }
+// Node's native WebSocket can retain its close handshake after the provider has
+// deleted the tail. All resource cleanup above has completed.
+process.exit(0);
