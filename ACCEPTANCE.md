@@ -74,7 +74,7 @@ Current evidence: `src/chest/documents.ts`; `src/chest/store.ts`; `src/chest/api
 
 ### The everyday business file system
 
-**SPACE-001 — Team spaces and ordinary files (partial).** As two staff and an admin, build a nested project tree, upload an ordinary file with no review configuration, edit/move it, restrict a subfolder and offboard its creator; the team retains content and stable links while the former user is denied. Repeat browser navigation at 1440 and 390, then repeat listing, move and restriction in a space loaded to the SCALE-001 reference size and record the SCALE-001 timings.
+**SPACE-001 — Team spaces and ordinary files (partial).** As two staff and an admin, build a nested project tree, upload an ordinary file with no review configuration, edit/move it, restrict a subfolder and offboard its creator; the team retains content and stable links while the former user is denied. A staff member offers ownership of a personal-area file to a colleague: before acceptance the sender is still owner; after acceptance the file sits in the recipient's area with the same stable ID, versions and share link, the sender is editor, and a declined offer changes nothing; each step is audited. Repeat browser navigation at 1440 and 390, then repeat listing, move and restriction in a space loaded to the SCALE-001 reference size and record the SCALE-001 timings.
 
 Current evidence: `src/chest/metadata.ts`; `src/chest/access.ts`; `tests/chest/flows.mjs` (CHEST-02, CHEST-04). Remaining: Collections and access exist; folder trees, ordinary untyped files, team ownership and delegation do not.
 
@@ -106,7 +106,7 @@ Current evidence: —.
 
 Current evidence: —.
 
-**SYNC-003 — Visible sync operations and device control (partial).** Disconnect a device during transfer, exceed its cache/disk quota and revoke it; its tray and admin console show accurate unfinished work and last contact. Resolve the cause and verify hashes before showing up-to-date; an unreachable wipe stays unconfirmed. In the SCALE-001 reference installation, take a device offline, apply 10,000 remote changes, reconnect and record catch-up time against the SCALE-001 target with final hashes matching.
+**SYNC-003 — Visible sync operations and device control (partial).** Disconnect a device during transfer, exceed its cache/disk quota and revoke it; its tray and admin console show accurate unfinished work and last contact. Resolve the cause and verify hashes before showing up-to-date; an unreachable wipe stays unconfirmed. On macOS and Windows behind an authenticating proxy with direct egress blocked, the client syncs through the proxy; a wrong proxy password shows the proxy as the reason. Set an upload limit of 1,000 KB/s and measure sustained upload at or below it; an MDM cap of 500 KB/s overrides a user setting of 2,000 KB/s. In the SCALE-001 reference installation, take a device offline, apply 10,000 remote changes, reconnect and record catch-up time against the SCALE-001 target with final hashes matching.
 
 Current evidence: `src/chest/blobs.ts`; `src/chest/ui.ts`; `tests/chest/flows.mjs` (CHEST-03). Remaining: Upload success/error exists; device fleet, progress and sync queues are absent.
 
@@ -126,7 +126,7 @@ Current evidence: —.
 
 Current evidence: —.
 
-**MOBILE-001 — Native iOS and Android file access (partial).** Run the journey on an iPhone on iOS 17, an iPhone on the current iOS release, an iPad on the current iPadOS, an Android 10 device and an Android device on the current release. On each, capture a multi-page scan, upload photos, share with a permitted recipient, open/save through a system picker, and edit a pinned file offline while another device changes it. Reconnect, resolve the conflict and revoke the device; show the limit of an unreachable cache wipe.
+**MOBILE-001 — Native iOS and Android file access (partial).** Run the journey on an iPhone on iOS 17, an iPhone on the current iOS release, an iPad on the current iPadOS, an Android 10 device and an Android device on the current release. On each, capture a multi-page scan, upload photos, share with a permitted recipient, open/save through a system picker, create a blank spreadsheet from the New menu and co-edit it with a browser user (EDIT-001) until both edits appear as attributed versions, and edit a pinned file offline while another device changes it. Reconnect, resolve the conflict and revoke the device; show the limit of an unreachable cache wipe.
 
 Current evidence: `src/chest/ui-library.ts`; `src/chest/documents.ts`; `tests/chest/journey.mjs`. Remaining: Responsive browser browse/upload exists; native apps, camera, background/offline sync and mobile sharing do not.
 
@@ -164,7 +164,7 @@ Current evidence: `src/chest/blobs.ts`; `tests/chest/flows.mjs` (CHEST-05); `tes
 
 Current evidence: `src/chest/api.ts`; `src/chest/blobs.ts`; `tests/chest/flows.mjs` (CHEST-06). Remaining: Title/metadata and bounded admitted UTF-8 search only; OCR/broad extraction/indexing are absent.
 
-**EDIT-001 — Office and independent browser co-authoring (missing).** Two real accounts co-edit a document, spreadsheet and slide deck through Chest, verify concurrent changes and saved versions, then revoke one user mid-session and reject their next save. Round-trip tables/formulas/comments and test a provider outage and a review-gated file whose approved version must remain unchanged.
+**EDIT-001 — Office and independent browser co-authoring (missing).** Two real accounts co-edit a document, spreadsheet and slide deck through Chest, verify concurrent changes and saved versions, then revoke one user mid-session and reject their next save. Round-trip tables/formulas/comments and test a provider outage and a review-gated file whose approved version must remain unchanged. Repeat one co-edit with one participant on the iOS app and one on the Android app, each save appearing as a version attributed to that participant, and revoke the Android participant mid-session to see their next save refused.
 
 Current evidence: —.
 
@@ -175,6 +175,16 @@ Current evidence: —.
 **EDIT-003 — Contextual comments and collaborative tasks (partial).** Annotate page 2 of a PDF, mention an authorized colleague and an outsider, resolve a thread and upload a changed-page replacement. The old annotation remains anchored to its original, notifications contain no forbidden text and the outsider gains no access.
 
 Current evidence: `src/chest/reviews.ts`; `tests/chest/flows.mjs` (CHEST-08). Remaining: Exact-version review comments exist; annotation geometry, mentions, threads and task resolution do not.
+
+**EDIT-004 — New documents, spreadsheets and presentations from blank or templates (missing).** Through the browser at 1440 and 390 and in the iOS and Android apps on the MOBILE-001 current-release devices:
+- A contributor creates a blank spreadsheet in a restricted team-space folder. It opens in the EDIT-001 editor at once, and after two saved edits its version history shows versions 1–3 (created, then two editor saves) attributed to them. A colleague with folder access finds it in search and opens it; a staff member outside the folder finds nothing in search and gets 403 on its URL.
+- Create a blank document and a blank presentation; download each version 1 and open it in desktop Word, Excel or PowerPoint and in LibreOffice without a repair prompt. Switch the organisation creation format to ODF and see the next new document created as ODT; set a group override to Google types under EDIT-002 and see a group member's new document open as a Google Doc.
+- An admin publishes a DOCX organisation template to one group. A group member creates a document from it; a user outside the group does not see the template in the New menu, the gallery or the API listing. Editing the new document leaves the template's bytes and version unchanged, editing the template afterwards leaves the new document unchanged, and the new document's version 1 names the template and its version. A space manager publishes a space template that only that space's members see. Unpublish the organisation template and see documents made from it unchanged.
+- A viewer and a commenter see no New action, and their direct API create returns 403 with no file created. A guest contributor on a folder creates a blank document there, attributed to the guest's email.
+- An over-limit user's create in their personal area is refused with `storage_limit_exceeded` naming the limit in the browser, the mobile app and the API.
+- Repeat an API create with the same caller key and get one file. Inspect the audit entry for each create, publish and unpublish.
+
+Current evidence: —.
 
 **SIGN-001 — Built-in eSignature on PDF and DOCX files (missing).** Through the browser at 1440 and 390 and the mobile app, send a two-signer PDF in order: first an external signer with no Chest or Google/Microsoft account, then a staff member. A reminder reaches the first signer on the set cadence. The external signer verifies by PIN, sees the consent disclosure and is refused any other file. Both sign. The signed PDF and the certificate appear as new versions linked to the source version, with before and after hashes and the full event log; the PAdES signature validates, and validation fails after one byte of the signed PDF is altered. Reminders stop. Send a DOCX request and see the fidelity report before sending. A declined request and an expired request each leave the source version unchanged and unsigned, with no signed version filed and the outcome recorded. A voided request stops further signing.
 
@@ -214,7 +224,7 @@ Current evidence: —.
 
 Current evidence: `src/chest/api.ts`; `src/chest/access.ts`; `scripts/installer/local.mjs`; `tests/chest/flows.mjs`; `tests/chest/restore.mjs`. Remaining: Private HTTP/ACL and archive exclusions exist; complete device/provider encryption and key rotation coverage does not.
 
-**SECURITY-002 — Content threats and classification policy (missing).** Submit a standard harmless malware-test specimen and a labeled sensitive document, simulate a burst through a test client and inspect quarantine/alert history. Try all preview/download/link/device doors, release only as an authorized reviewer and prove policy changes do not erase originals or silently expand access.
+**SECURITY-002 — Content threats and classification policy (missing).** Submit a standard harmless malware-test specimen and a labeled sensitive document, simulate a burst through a test client and inspect quarantine/alert history. With the defaults, download 501 files in 10 minutes from one account and see the alert; trash 199 items and see none. Lower a group's download threshold to 100 files with pause on and see the 101st download in the window refused while the alert names the rule. Try all preview/download/link/device doors, release only as an authorized reviewer and prove policy changes do not erase originals or silently expand access.
 
 Current evidence: —.
 
@@ -226,7 +236,7 @@ Current evidence: —.
 
 Current evidence: —.
 
-**AUDIT-001 — Durable complete action history (partial).** Create success, refusal, provider failure and interrupted execution through public doors, restart and inspect/export more events than one UI page. Reconcile action/version IDs and outcomes and then erase an actor without losing the fact of their actions or exposing personal/secret fields.
+**AUDIT-001 — Durable complete action history (partial).** Create success, refusal, provider failure and interrupted execution through public doors, restart and inspect/export more events than one UI page. Reconcile action/version IDs and outcomes and then erase an actor without losing the fact of their actions or exposing personal/secret fields. On a space file, two colleagues view it; a contributor sees both names and times in the file's activity panel and a viewer sees edits but no view history. A colleague who hides their views disappears from the list, and turning view history off for the group removes it from the panel.
 
 Current evidence: `src/chest/store.ts`; `src/chest/api.ts`; `tests/chest/flows.mjs` (CHEST-13). Remaining: Read/mutation activity exists but endpoint is bounded; full execution history, durable jobs and anonymization are absent.
 
@@ -293,7 +303,7 @@ Current evidence: —.
 
 Current evidence: —.
 
-**CONNECT-003 — Salesforce record-linked files (missing).** Connect a Salesforce test org, attach a file to an opportunity, replace/approve it, change record/folder access and delete the CRM link; the original and provenance remain while unauthorized CRM users see no file content.
+**CONNECT-003 — Salesforce and HubSpot record-linked files (missing).** Connect a Salesforce test org, attach a file to an opportunity, replace/approve it, change record/folder access and delete the CRM link; the original and provenance remain while unauthorized CRM users see no file content. Repeat with a HubSpot test portal on a deal: the record card lists the linked folder's files for a user with Chest access and shows none to a HubSpot user without it.
 
 Current evidence: —.
 
@@ -309,7 +319,7 @@ Current evidence: —.
 
 Current evidence: —.
 
-**CONNECT-007 — Public API, webhooks and scoped agents (partial).** Authorize a third-party test client and MCP agent for one folder, exercise paginated reads and idempotent upload, then attempt another folder and permission expansion. Revoke the grant mid-job, fail a signed webhook and inspect its durable outcome/manual replay without duplicated product mutations.
+**CONNECT-007 — Public API, webhooks and scoped agents (partial).** Authorize a third-party test client and MCP agent for one folder, exercise paginated reads and idempotent upload, then attempt another folder and permission expansion. Revoke the grant mid-job, fail a signed webhook and inspect its durable outcome/manual replay without duplicated product mutations. Embed the file picker in a test web app: a user picks an accessible file and the app receives its stable ID and a link; a file the user cannot open never appears, and a revoked picker grant fails the next pick.
 
 Current evidence: `src/chest/api.ts`; `tests/chest/flows.mjs`. Remaining: Private session-bound Chest HTTP API exists; delegated public API/MCP and webhook product integration do not.
 
@@ -318,6 +328,16 @@ Current evidence: `src/chest/api.ts`; `tests/chest/flows.mjs`. Remaining: Privat
 Current evidence: —.
 
 **CONNECT-009 — Zapier and Make automation apps (missing).** In real Zapier and Make test accounts, connect Chest with a grant for one folder and build "new file in folder → move to a subfolder and share with a colleague"; drop a file in and see it moved and shared once, with audit entries under the grant. Replay the trigger and see no duplicate move. Point an action at a folder outside the grant and see it refused; attempt a public link with public links off under POLICY-001 and see the policy refusal. Revoke the grant and see the next trigger stop and the next action fail.
+
+Current evidence: —.
+
+**CONNECT-010 — Google Meet, Calendar and Chat file companion (missing).** In a real Google Workspace test tenant with the connection covering one group:
+- A group member schedules an event linked through the Calendar add-on to a restricted team-space folder, with one internal attendee and one external attendee from an allowlisted domain, and records the Meet with transcript and notes on. The recording, transcript and notes document each appear once in the folder with meeting code, organizer, event ID and source Drive file ID. The internal attendee opens them, the external attendee opens them as a guest viewer, and a staff member who was not invited and has no folder access gets 403.
+- Replay the Workspace event notification and run the reconciliation sweep: there is no duplicate.
+- With "remove source after verification" on, the Drive copy goes to Drive trash only after the SHA-256 check passes. With the destination over its QUOTA-001 limit, the filing is refused with `storage_limit_exceeded`, the organizer and an admin are told, and the Drive copy is kept. An organizer outside the covered group has nothing filed.
+- Through the Calendar add-on, attach a restricted Chest file to an event with one guest who has access and one who doesn't. On save, the guest without access is named, gets viewer in one step, and the audit entry exists. Add a guest from a domain that isn't on the POLICY-001 allowlist: the grant is refused with the policy named.
+- Through the Chat app, share a restricted file into a space with mixed membership. The card shows no title. A member with access presses Preview and sees the file; a member without access sees Request access without the title. The sharer's private prompt names the members without access, and a one-step grant lets them open it. A subscribed comment notification reaches the space. Search through the app as two users returns only what each can open. Repeat the share in the Chat mobile app.
+- Revoke Meet filing, the Calendar add-on and the Chat app one at a time, then the whole connection. The next filing, attachment check, share and search are each refused, and files already filed keep their Chest permissions.
 
 Current evidence: —.
 
@@ -361,6 +381,6 @@ Current evidence: —.
 
 ## Scope and acceptance limits
 
-The target includes sync/streaming clients and computer-folder backup, native mobile apps, external links, item sharing with access requests, guest collaborators under an organisation sharing policy, organisation links, expiring grants, version restore by editors, space-creation control, storage limits, Office desktop presence, built-in eSignature, migration link rewriting, an availability target with durability scrubs, file requests, broad previews/OCR/search, co-authoring, automation and AI; their incomplete status never removes them from the job. Office, third-party signature (Docusign), CRM, chat, meeting, regulated archive and creative authoring engines are integrated under the named clauses with explicit licensing/data control. No source check alone proves legal sufficiency, certification, hosted delivery, human receipt or vendor migration fidelity. An unreachable device, missing source revision, unconfirmed provider outcome or incomplete erasure must remain visibly unresolved.
+The target includes sync/streaming clients and computer-folder backup, native mobile apps, external links, item sharing with access requests, guest collaborators under an organisation sharing policy, organisation links, expiring grants, version restore by editors, space-creation control, storage limits, Office desktop presence, built-in eSignature, migration link rewriting, an availability target with durability scrubs, new files from blank or templates, the Google Meet, Calendar and Chat companion, file requests, broad previews/OCR/search, co-authoring, automation and AI; their incomplete status never removes them from the job. Office, third-party signature (Docusign), CRM, chat, meeting, regulated archive and creative authoring engines are integrated under the named clauses with explicit licensing/data control. No source check alone proves legal sufficiency, certification, hosted delivery, human receipt or vendor migration fidelity. An unreachable device, missing source revision, unconfirmed provider outcome or incomplete erasure must remain visibly unresolved.
 
-Status total: **80 clauses — 12 done / 23 partial / 45 missing.**
+Status total: **82 clauses — 12 done / 23 partial / 47 missing.**
