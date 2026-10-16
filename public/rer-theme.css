@@ -2,8 +2,10 @@
 /* Chest's theme: the one place its tokens are defined. Every Chest page links this file: the app (with
    public/chest.css), the run site (landing, docs, Run page), the Lobby, sign-in and first-run setup.
    The --chest-* tokens are Chest's own; the --rer-* tokens below map them for Base's shared documents
-   (Lobby, Run page, sign-in, setup), which read only --rer-*. Visual authority: the 12ui picks in
-   rer-consolidation/evidence/gr-chest-style (SPEC.md §2). */
+   (Lobby, Run page, sign-in, setup), which read only --rer-*.
+   Visual authority: the brand and run site follow the owner-approved desk images (desk-chest, 16 Oct 2026:
+   white grid paper, near-black ink, the violet chest mark, a violet-to-blue gradient). The app's own tokens
+   (paper, cobalt, manila, status chips) stay until the app screens move to that look. */
 :root {
   /* Colour. Chrome is ink on warm paper; cobalt is the one accent (current approved, approve, callouts,
      focus); manila belongs to folders and tabs. Status colours appear only on app status chips. */
@@ -36,29 +38,84 @@
   --chest-radius-input: 8px;
   --chest-focus: 3px solid var(--chest-cobalt);
 
-  /* Base's shared documents. */
-  --rer-font-body: var(--chest-font-sans);
-  --rer-font-heading: var(--chest-font-display);
+  /* Brand and run site (desk-chest). The violet, indigo, lilac and file blue are sampled from the approved
+     mark; the gradient from the hero's "where it should be."; the grid line from its paper. */
+  --chest-site-paper: #fcfcff;
+  --chest-site-grid: #e5e7fa;
+  --chest-site-ink: #0b0b12;
+  --chest-site-body: #434857;
+  --chest-site-muted: #6d7284;
+  --chest-site-line: #e7e8f2;
+  --chest-site-card: #ffffff;
+  --chest-violet: #7c48fd;
+  --chest-violet-deep: #5a2ce8;
+  --chest-indigo: #160252;
+  --chest-lilac: #ae82fc;
+  --chest-lilac-soft: #eeeaff;
+  --chest-file-blue: #3c9cfd;
+  --chest-blue: #0a6cff;
+  --chest-gradient: linear-gradient(104deg, #7b2cfb 0%, #6d33fc 34%, #5a41f6 56%, #1f63fe 74%, #006efe 100%);
+  --chest-ok: #2e8a4c;
+  --chest-ok-soft: #e1f5e6;
+  --chest-warn: #c7861a;
+  --chest-alert: #c93232;
+  --chest-alert-soft: #fdebeb;
+  --chest-font-ui: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --chest-font-doc: 'Times New Roman', Tinos, Times, serif;
+  --chest-font-type: 'Courier New', Courier, monospace;
+  --chest-card-radius: 16px;
+  --chest-card-shadow: 0 1px 2px rgba(22, 2, 82, 0.05), 0 22px 44px -22px rgba(38, 28, 110, 0.28);
+
+  /* Base's shared documents (Lobby, Run page, 404) take the brand: Inter on white grid paper, ink buttons,
+     the violet mark beside the name. Sign-in and setup keep their own rules below. */
+  --rer-font-body: var(--chest-font-ui);
+  --rer-font-heading: var(--chest-font-ui);
   --rer-font-mono: var(--chest-font-mono);
-  --rer-page: var(--chest-paper);
-  --rer-surface: var(--chest-surface);
-  --rer-text: var(--chest-ink);
-  --rer-muted: var(--chest-muted);
-  --rer-border: var(--chest-line);
-  --rer-focus: var(--chest-cobalt);
-  --rer-link: var(--chest-ink);
-  --rer-radius: var(--chest-radius);
-  --rer-button-radius: var(--chest-radius);
-  --rer-accent: var(--chest-ink);
-  --rer-accent-text: var(--chest-surface);
-  --rer-code-background: var(--chest-ink);
-  --rer-code-text: var(--chest-paper);
-  --rer-wordmark-weight: 800;
-  --rer-wordmark-tracking: -0.02em;
+  --rer-page: var(--chest-site-paper);
+  --rer-surface: var(--chest-site-card);
+  --rer-text: var(--chest-site-ink);
+  --rer-muted: var(--chest-site-body);
+  --rer-border: var(--chest-site-line);
+  --rer-focus: var(--chest-violet-deep);
+  --rer-link: var(--chest-site-ink);
+  --rer-radius: var(--chest-card-radius);
+  --rer-button-radius: 999px;
+  --rer-accent: var(--chest-site-ink);
+  --rer-accent-text: #ffffff;
+  --rer-code-background: #15141c;
+  --rer-code-text: #f4f3fb;
+  --rer-wordmark-weight: 750;
+  --rer-wordmark-tracking: -0.035em;
+  --rer-logo: url('/brand/mark.svg');
 }
 
-/* Run page (Base's run template): the wordmark and heading in the landing's heavy compact Archivo. */
-body > .bar .brand, body > main > .intro h1 { font-weight: 800; }
+
+/* Base's Run and not-found pages on the run site (src/base/run-site.ts): the landing's grid paper, lockup,
+   heavy Inter heading, white step cards, violet step numbers and the dark terminal code card. The :has()
+   prefix outranks the page's own <style>, which follows this stylesheet. */
+body:has(> header.bar) { background: url('/site/grid.svg') top center / 1536px auto repeat, var(--chest-site-paper); }
+body:has(> header.bar) > .bar { max-width: 1536px; padding: 22px clamp(16px, 5.73vw, 88px) 0; }
+body:has(> header.bar) > .bar .brand { gap: 12px; font-size: 28px; font-weight: 750; letter-spacing: -0.035em; }
+body:has(> header.bar) > .bar nav a { color: #3a3e4c; font-size: 18px; font-weight: 450; }
+body:has(> header.bar) h1 { font-weight: 860; letter-spacing: -0.05em; line-height: 1.02; }
+body:has(> header.bar) .intro h1 { font-size: 64px; }
+body:has(> header.bar) .intro h1::after { content: ""; display: block; width: 92px; height: 6px; margin: 22px auto 0; border-radius: 6px; background: var(--chest-gradient); }
+body:has(> header.bar) .sub { color: #4f5464; }
+body:has(> header.bar) .step { background: #fff; border-color: #e6e7f1; border-radius: 22px; box-shadow: var(--chest-card-shadow); backdrop-filter: none; }
+body:has(> header.bar) .num { background: linear-gradient(140deg, #7b2cfb, #3b54f6); color: #fff; font-weight: 750; box-shadow: 0 10px 20px -10px rgba(90, 44, 232, 0.7); }
+body:has(> header.bar) .step h2 { font-weight: 750; letter-spacing: -0.03em; }
+body:has(> header.bar) .code { background: #1a191f; color: #f1f0f6; border-radius: 14px; box-shadow: 0 22px 40px -26px rgba(20, 12, 60, 0.6); }
+body:has(> header.bar) .code pre { font-size: 15.5px; }
+body:has(> header.bar) .copy { border-color: rgba(174, 130, 252, 0.5); color: #e5dcff; }
+body:has(> header.bar) .copy:hover { background: rgba(124, 72, 253, 0.25); }
+body:has(> header.bar) .note code, body:has(> header.bar) .alt code { padding: 2px 6px; border-radius: 6px; background: var(--chest-lilac-soft); color: #2b1b8f; }
+body:has(> header.bar) .facts a, body:has(> header.bar) .link { text-decoration-color: rgba(90, 44, 232, 0.45); }
+@media (max-width: 760px) {
+  body:has(> header.bar) { background-size: 960px auto, auto; }
+  body:has(> header.bar) > .bar .brand { font-size: 23px; }
+  body:has(> header.bar) .intro h1 { font-size: 40px; }
+  body:has(> header.bar) .code pre { font-size: 13px; }
+}
 
 /* Sign-in and first-run setup (Base frames, html.rer-themed): the wordmark centred above one 1px ink card,
    compact heavy heading, ink buttons. html.rer-themed outranks the frames' own .rer-themed rules. */
@@ -66,9 +123,10 @@ html.rer-themed { background: var(--chest-paper); }
 html.rer-themed body { display: block; min-height: 100vh; margin: 0; padding: 24px 20px 64px; background: var(--chest-paper); color: var(--chest-ink); font: 400 16px/1.5 var(--chest-font-sans); -webkit-font-smoothing: antialiased; }
 html.rer-themed main { position: relative; box-sizing: border-box; width: 100%; max-width: 520px; margin: 116px auto 0; padding: 36px 40px 40px; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: var(--chest-radius); box-shadow: none; }
 html.rer-themed main > .brand,
-html.rer-themed main > .rer-brand { position: absolute; left: 0; right: 0; top: -84px; display: block; margin: 0; text-align: center; color: var(--chest-ink); font: 800 44px/1 var(--chest-font-display); letter-spacing: -0.02em; }
+html.rer-themed main > .rer-brand { position: absolute; left: 0; right: 0; top: -84px; display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0; color: var(--chest-site-ink); font: 750 40px/1 var(--chest-font-ui); letter-spacing: -0.035em; }
+/* The lockup: the violet chest mark (--rer-logo) beside the name. */
 html.rer-themed main > .brand::before,
-html.rer-themed main > .rer-brand::before,
+html.rer-themed main > .rer-brand::before { width: 46px; height: 46px; }
 html.rer-themed .mark { display: none; }
 html.rer-themed h1 { margin: 0 0 20px; color: var(--chest-ink); font: 800 44px/1.05 var(--chest-font-display); letter-spacing: -0.02em; text-wrap: balance; }
 html.rer-themed h2 { margin: 32px 0 12px; padding-top: 28px; border-top: 1px solid var(--chest-hairline); color: var(--chest-ink); font: 800 28px/1.1 var(--chest-font-display); letter-spacing: -0.02em; }
@@ -101,7 +159,9 @@ html.rer-themed form p { margin: 0 0 4px; color: var(--chest-ink); }
   html.rer-themed main { margin-top: 88px; }
   html.rer-themed main { padding: 28px 20px 28px; }
   html.rer-themed main > .brand,
-  html.rer-themed main > .rer-brand { top: -68px; font-size: 36px; }
+  html.rer-themed main > .rer-brand { top: -68px; font-size: 34px; }
+  html.rer-themed main > .brand::before,
+  html.rer-themed main > .rer-brand::before { width: 38px; height: 38px; }
   html.rer-themed h1 { font-size: 32px; line-height: 1.1; }
   html.rer-themed h2 { font-size: 24px; }
 }

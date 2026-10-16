@@ -31,7 +31,7 @@ revocation. Locally, `rer dev --as member` signs in as a separately gated
 development persona to try a staff role.
 
 Create a collection and a document type, then upload a record. The forms
-accept typed fields as JSON. Owners can edit document types in **People & settings**;
+show each document type's own fields. Owners can edit document types in **People & settings**;
 saved values remain unchanged, and affected records show missing or invalid fields.
 New uploads, replacements and filing changes validate against the current type.
 Moving a record requires editor access to both its current record and destination

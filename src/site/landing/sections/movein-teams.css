@@ -1,0 +1,30 @@
+/* Page 6: Move in (the import card) and For teams (SSO, user sync, team spaces, storage). */
+.import-card { height: 100%; padding: 1.4em 3.2em 0 3.2em; border-radius: 1.8em; }
+.import-row { gap: 1.2em; height: 7.6em; border-bottom: 0.1em solid #eceef4; }
+.import-row .brand-ico { display: grid; place-items: center; width: 4.4em; margin-right: 1.2em; }
+.brand-ico svg { width: 4em; height: 3.6em; }
+.box-word { color: #0061d5; font: 700 2.9em/1 var(--chest-font-ui); letter-spacing: -0.06em; }
+.done { display: grid; place-items: center; width: 3.6em; height: 3.6em; border-radius: 50%; background: #e3f6e8; color: #2b9a50; }
+.done .ico { width: 2em; height: 2em; stroke-width: 2.4; }
+.import-busy { height: 9.4em; display: grid; align-content: center; gap: 1.2em; }
+.import-busy .row { gap: 1.2em; }
+.bar { display: block; height: 1.3em; border-radius: 999px; background: #eceef5; overflow: hidden; }
+.import-busy .bar { margin-left: 6.8em; }
+.bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #5a2ff0, #3b54f6); }
+.import-links { gap: 1.6em; height: 7.6em; color: #3d4150; }
+.import-links .ico { width: 2.6em; height: 2.6em; }
+.stage .f19 { font-size: 1.9em; }
+.movein-sticky { font-size: 2.2em; line-height: 1.04; }
+
+.teams-card { height: 100%; padding: 2.2em 3em; border-radius: 1.8em; }
+.teams-row { gap: 2.4em; height: 5.8em; }
+.teams-row b { font-weight: 600; }
+.soft-ico { display: grid; place-items: center; width: 4.4em; height: 4.4em; border-radius: 1.1em; background: #f1f2f7; color: #2d303b; }
+.soft-ico .ico { width: 2.4em; height: 2.4em; }
+.teams-label { margin-top: 0.8em !important; padding-top: 1.4em; border-top: 0.1em solid #eceef4; }
+.spaces { margin-top: 1em; padding: 0 1.6em; border: 0.1em solid #e8e9f2; border-radius: 1em; }
+.space { gap: 2.6em; height: 4.1em; }
+.space + .space { border-top: 0.1em solid #eef0f5; }
+.space-folder { width: 2.8em; height: 2.4em; }
+.storage { display: grid; gap: 1.4em; margin-top: 1.6em; padding-top: 1.6em; border-top: 0.1em solid #eceef4; }
+.handnote { color: #4b2fe0; font: 500 2.5em/1 var(--chest-font-hand); }

@@ -31,8 +31,8 @@ are recorded at the current adopted Base revision.
 The installed root uses Base's Lobby and real `oa_first_run` claim state.
 Chest adopts hydration helpers, document `no-transform`, static-asset routing
 and deployment health. Chest owns `src/base/font-head.ts`, its font definitions,
-`public/brand/mark.svg`, `public/rer-theme.css`, `public/chest.css` and
-`public/chest-app.css`. Archivo, IBM Plex Mono and Caveat retain their licences.
+`public/brand/` (the mark, favicons and run-site art), `public/rer-theme.css`, `public/chest.css` and
+`public/chest-app.css`. Inter, Archivo, IBM Plex Mono and Caveat retain their licences.
 The run site in `src/site` renders the landing page, `/run` and `docs/*.md`.
 
 MIT applies to eligible source; adopted Base modules, fonts and dependencies

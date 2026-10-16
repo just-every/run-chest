@@ -14,7 +14,7 @@ export function DocsArticle({ slug }: { slug: string }) {
       <DocsMenu current={slug} label={page.title} />
       <article className="docs-article" aria-labelledby="docs-title">
         <header className="docs-page-head">
-          <p className="docs-eyebrow mono">{page.section}</p>
+          <p className="docs-eyebrow">{page.section}</p>
           <h1 id="docs-title" className="docs-title">{page.title}</h1>
           <p className="docs-lead">{page.summary}</p>
         </header>

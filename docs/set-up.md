@@ -4,7 +4,7 @@ which only the owner sees.
 
 ## Invite your staff
 
-In **People and local sign-in**, enter a **Name** and an **Email** and press
+In **People and sign-in**, enter a **Name** and an **Email** and press
 **Invite staff**. Chest sends that person an invitation; when they follow it
 they are signed in, and afterwards they return through **Sign in** with their
 email.

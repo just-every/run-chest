@@ -17,7 +17,7 @@
     "deploy": "rer deploy",
     "onboard": "node scripts/install.mjs",
     "build:app": "rer queue build:app -- sh -c \"node scripts/check-public-assets.mjs && vite build\"",
-    "verify:app": "rer queue verify:app -- sh -c \"pnpm run build && pnpm run typecheck && pnpm run test:chest\"",
+    "verify:app": "rer queue verify:app -- sh -c \"pnpm run build && pnpm run typecheck && pnpm run test:chest && pnpm run test:site\"",
     "reset": "rer reset",
     "export": "rer export",
     "import": "rer import",
@@ -28,7 +28,8 @@
     "deps": "rer install",
     "rer": "rer",
     "test:chest": "rer queue test:chest -- node tests/chest/flows.mjs",
-    "test:journey": "node tests/chest/journey.mjs"
+    "test:journey": "node tests/chest/journey.mjs",
+    "test:site": "node tests/chest/site.mjs"
   },
   "dependencies": {
     "@tanstack/react-router": "1.170.41",
@@ -41,7 +42,7 @@
     "@cloudflare/vite-plugin": "1.54.5",
     "@cloudflare/workers-types": "5.20260908.1",
     "@playwright/test": "1.56.1",
-    "@runeditrun/rer": "0.2.24",
+    "@runeditrun/rer": "0.2.37",
     "@types/node": "^22.20.5",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",

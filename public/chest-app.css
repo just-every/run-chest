@@ -15,7 +15,8 @@ body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: 
 /* Top bar: wordmark, nav with the current item on a manila pill, who is signed in; 1px rule below. */
 .app-bar { display: flex; align-items: center; gap: 48px; max-width: 1360px; margin: 0 auto; padding: 0 56px; height: 76px; position: relative; }
 .app-bar::after { content: ""; position: absolute; left: 56px; right: 56px; bottom: 0; height: 1px; background: var(--chest-line); }
-.wordmark { color: var(--chest-ink); font: 800 32px/1 var(--chest-font-sans); font-stretch: 80%; letter-spacing: -0.02em; text-decoration: none; }
+.wordmark { display: inline-flex; align-items: center; gap: 10px; color: var(--chest-site-ink); font: 750 28px/1 var(--chest-font-ui); letter-spacing: -0.035em; text-decoration: none; }
+.wordmark-mark { width: 34px; height: 34px; flex: none; }
 .app-menu { flex: 1; min-width: 0; }
 .app-menu > summary { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; font-size: 17px; cursor: pointer; list-style: none; }
 .app-menu > summary::-webkit-details-marker { display: none; }
@@ -265,7 +266,8 @@ body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: 
   .lede { font-size: 15px; }
   .app-bar { height: auto; min-height: 60px; flex-wrap: wrap; gap: 0 16px; padding: 8px 16px; }
   .app-bar::after { left: 16px; right: 16px; background: var(--chest-hairline); }
-  .wordmark { font-size: 28px; }
+  .wordmark { font-size: 24px; }
+  .wordmark-mark { width: 30px; height: 30px; }
   .app-menu { flex: 1; display: flex; justify-content: flex-end; }
   .app-menu > summary { padding: 0 12px; border: 1px solid transparent; border-radius: 10px; }
   .app-menu[open] > summary { border-color: var(--chest-line); background: var(--chest-surface); }

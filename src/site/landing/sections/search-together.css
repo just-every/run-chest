@@ -1,0 +1,49 @@
+/* Page 3: Search (results with a scanned excerpt) and Work together (the browser editor). */
+.search-card { height: 100%; padding: 2em 1.8em; border-radius: 2.2em; }
+.search-field { gap: 1.4em; height: 5em; padding: 0 1.8em; border: 0.1em solid #e3e4f2; border-radius: 1.4em; color: #3d4150; }
+.search-field .ico { width: 2.4em; height: 2.4em; }
+.search-count { margin: 1.1em 0 1.2em !important; }
+.search-hit { align-items: flex-start; gap: 1.8em; padding: 1.4em 1.6em; border: 0.1em solid #e8e9f3; border-radius: 1.4em; }
+.search-hit + .search-hit { margin-top: 1.6em; }
+.search-hit .tile { width: 4.6em; height: 4.6em; margin-top: 0.2em; }
+.search-hit .stack { gap: 0.6em; }
+.search-snippet { line-height: 1.5 !important; }
+.hl-search { padding: 0.05em 0.2em; border-radius: 0.25em; background: #e5dcff; color: #2c1aa6; font-weight: 500; }
+.scan-excerpt { height: auto; margin-top: 0.4em; padding: 1.2em 1.4em; }
+.scan-excerpt p { color: #26252b; font: 400 1.22em/1.4 var(--chest-font-type); letter-spacing: -0.01em; }
+.scan-excerpt p + p { margin-top: 0.3em !important; text-indent: 1.4em; }
+.clause-no { margin-left: 2.6em; }
+.scan-hit { padding: 0 0.3em; border: 0.12em solid #5a2ce8; border-radius: 0.2em; font-weight: 700; color: #111; }
+
+.editor { height: 100%; overflow: hidden; border-radius: 1.6em; }
+.editor-head { gap: 1.4em; height: 6.2em; padding: 0 2em; }
+.editor-head .tile { width: 4em; height: 4em; }
+.editor-head .avatars { align-self: center; margin-right: 3.6em; }
+.editor-head .avatars .avatar { width: 3.4em; height: 3.4em; }
+.share-btn { display: inline-flex; align-items: center; gap: 0.5em; height: 2.2em; padding: 0 0.85em; border-radius: 0.45em; background: #2468f2; color: #fff; font-weight: 500; }
+.share-btn .ico { width: 1.25em; height: 1.25em; }
+.editor-head > .ico { width: 2.4em; height: 2.4em; margin-left: 1.6em; color: #3d4150; }
+.editor-tools { gap: 1.1em; height: 4.4em; padding: 0 1.6em; border-top: 0.1em solid #eceef4; border-bottom: 0.1em solid #eceef4; color: #2d303b; }
+.editor-tools .ico { width: 1.7em; height: 1.7em; }
+.tool-select { display: inline-flex; align-items: center; gap: 0.5em; white-space: nowrap; }
+.tool-select .ico { width: 1.1em; height: 1.1em; }
+.tool-font { min-width: 4.6em; justify-content: space-between; }
+.tool-sep { width: 0.08em; height: 1.6em; background: #e1e3eb; }
+.editor-page { padding: 2.4em 4.2em 0; width: 57em; color: #1b1b22; font-family: var(--chest-font-doc); }
+.doc-title { font: 600 3.2em/1.1 var(--chest-font-doc); letter-spacing: -0.01em; }
+.doc-h { margin-top: 1.6em !important; font: 700 1.7em/1.2 var(--chest-font-doc); }
+.doc-h2 { margin-top: 1.8em !important; }
+.doc-p { margin-top: 0.45em !important; font: 400 1.5em/1.33 var(--chest-font-doc); color: #26262e; }
+.editor mark { position: relative; }
+.hl-blue { background: #dfe9ff; color: inherit; padding: 0 0.1em; }
+.hl-amber { background: #fdefc3; color: inherit; padding: 0 0.1em; }
+.cursor-doc { font-size: 0.645em; }
+.cursor-doc svg { width: 2.8em; height: 2.8em; }
+.hl-blue .cursor-doc { left: 6.6em; top: 1.4em; }
+.hl-blue .cursor-doc b { left: 1.6em; top: 2.6em; }
+.caret-at { position: relative; }
+.caret-at .cursor-doc { left: 0; top: 0.8em; }
+.caret-at .cursor-doc b { left: 0.6em; top: 2.8em; }
+.comment { position: absolute; left: 54.2em; top: 21.6em; width: 21.2em; white-space: nowrap; padding: 1.4em 1.6em; border-radius: 1.2em; }
+.comment-head { gap: 0.8em; margin-bottom: 0.8em; }
+.comment .avatar { width: 2.6em; height: 2.6em; font-size: 1.2em; border: 0; }

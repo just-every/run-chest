@@ -1,0 +1,27 @@
+/* Page 8: the quiet details. Cards 438 × 290 desk px in a 3 × 2 grid with 30 px gutters. */
+.details { position: relative; height: 102.4em; padding: 13.6em 8em 0 8.2em; }
+.details-eyebrow { margin-left: 1.2em; color: #4b2fe0; font: 500 1.6em/1 var(--chest-font-mono); letter-spacing: 0.24em; }
+.details h2 { margin: 0.26em 0 0 0.1em; font-size: 9.8em; letter-spacing: -0.05em; }
+.details h2 .dot { color: var(--chest-violet); }
+.detail-grid { list-style: none; padding: 0; margin: 5.4em 0 0; display: grid; grid-template-columns: repeat(3, 43.8em); gap: 2.9em 3em; }
+.detail { position: relative; height: 29em; padding: 2.9em 3.5em; background: rgba(255, 255, 255, 0.92); border: 0.1em solid #e5e6f3; border-radius: 1.8em; box-shadow: 0 0.1em 0.2em rgba(22, 2, 82, 0.03), 0 1.6em 3.2em -2em rgba(38, 28, 110, 0.18); }
+.detail-ico { display: grid; place-items: center; width: 9.4em; height: 9.4em; border-radius: 50%; }
+.detail-ico .ico { width: 4.4em; height: 4.4em; stroke-width: 1.8; }
+.tone-lilac { background: #ece7fe; color: #5a2ce8; }
+.tone-sky { background: #e2edfe; color: #2463eb; }
+.tone-peach { background: #fde4df; color: #c32a1c; }
+.detail-mark { position: absolute; left: 13.4em; top: 2.6em; width: 4.8em; height: 4.8em; fill: none; stroke: #5a2ce8; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.detail h3 { margin-top: 1.05em; color: var(--chest-site-ink); font: 780 3.05em/1.1 var(--chest-font-ui); letter-spacing: -0.04em; white-space: nowrap; }
+.detail p { margin-top: 0.45em; max-width: 13.9em; color: #4f5464; font: 400 2.45em/1.45 var(--chest-font-ui); letter-spacing: -0.01em; }
+@media (max-width: 999px) {
+  .details { height: auto; padding: 6.4em var(--gutter) 2em; }
+  .details-eyebrow { margin-left: 0; font-size: 1.35em; }
+  .details h2 { font-size: clamp(3.8em, 9.6vw, 6.4em); margin-left: 0; }
+  .detail-grid { grid-template-columns: repeat(auto-fill, minmax(28em, 1fr)); gap: 1.6em; margin-top: 3em; }
+  .detail { height: auto; padding: 2.4em 2.4em 2.6em; }
+  .detail-ico { width: 6.4em; height: 6.4em; }
+  .detail-ico .ico { width: 3em; height: 3em; }
+  .detail-mark { left: 9.6em; top: 2em; width: 3.4em; height: 3.4em; }
+  .detail h3 { font-size: 2.2em; margin-top: 1em; white-space: normal; }
+  .detail p { font-size: 1.75em; max-width: none; }
+}

@@ -7,8 +7,9 @@ export function DocsIndex() {
   return (
     <DocsFrame>
       <header className="docs-page-head">
-        <p className="docs-eyebrow mono">Chest</p>
+        <p className="docs-eyebrow">Chest</p>
         <h1 className="docs-title">Docs</h1>
+        <img className="docs-title-mark" src="/brand/mark.svg" alt="" width="88" height="88" />
         <p className="docs-lead">{docsLead}</p>
       </header>
       {docsSections.map((section, index) => (

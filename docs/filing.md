@@ -4,16 +4,15 @@ In the library, press **Upload a document** and fill in the form:
 
 | Field | What it is |
 | --- | --- |
-| Title | The record's name, such as *Public liability certificate*. |
+| Title | The record's name, such as *General liability certificate*. |
 | Collection | Where it is filed; the collection's grants apply to it. |
-| Document type | What it is; the type decides its required fields. |
-| Typed fields (JSON) | The type's field values, for example `{"policy number": "PL-448120"}`. |
 | Responsible owner | The person accountable for the record. |
 | Reviewer | The person who approves its versions. |
 | Business relationship | None, Supplier, Customer or Project. |
 | Relationship name | The supplier, customer or project, such as *Kestrel Freight*. |
 | Next review | Optional date it should be reviewed. |
 | Expiry | Optional date it expires. |
+| Document type | What it is. Choosing a type opens its own fields (text, number, date or Yes/No), each marked *required* or *optional*. |
 | Original file | The file itself, up to 8 MB. |
 
 Press **Upload and submit**. Chest checks the file's bytes, size and SHA-256

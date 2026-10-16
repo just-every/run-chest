@@ -11,7 +11,7 @@ checkout's own `.wrangler/state` is never opened.
 ## Sample library
 
 `src/demo.ts` (`seedDemo`, run once by Base's `withDemo` after the owner exists)
-loads `src/demo-sample.ts`: Harbourworks, a small fit-out contractor, using the
+loads `src/demo-sample.ts`: Harbourworks, a small build-out contractor, using the
 names from the run-chest.com drawings. Every date is relative to the demo's
 start.
 

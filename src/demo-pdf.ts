@@ -1,6 +1,6 @@
 // A one-page PDF of plain lines (Helvetica, A4), for the demo's sample originals.
 // Text is kept to printable ASCII so every byte offset in the cross-reference is exact.
-const ascii = (value: string) => value.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/£/g, 'GBP ').replace(/[^\x20-\x7e]/g, '')
+const ascii = (value: string) => value.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/[^\x20-\x7e]/g, '')
 const literal = (value: string) => `(${ascii(value).replace(/[\\()]/g, match => '\\' + match)})`
 
 export function pdf(title: string, lines: string[]): Uint8Array {
