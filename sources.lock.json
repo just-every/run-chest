@@ -209,7 +209,7 @@
       "executable": false
     },
     "docs/run.md": {
-      "sha256": "67fb477b732c03652241f81c6b460051bc773a10b31cc86ff4a06e1e2e27a348",
+      "sha256": "8ed20af732c9b2442c9245bebe5a5751ccb6e8538fd45c46e33669bc668e7371",
       "executable": false
     },
     "docs/set-up.md": {
@@ -217,7 +217,7 @@
       "executable": false
     },
     "docs/site.json": {
-      "sha256": "0afd124d05cc07484cfbc6718bc31122feea1fe243b399809cce08e887a7e7ae",
+      "sha256": "29324eb5f941b443154aff8919345d82c3037ad87462b4ae441452d155ebafe7",
       "executable": false
     },
     "docs/trash-and-audit.md": {
@@ -313,11 +313,11 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "a54b0e4234e95d215843aa108e8859be664ad894af698336df3686dca81dc626",
+      "sha256": "2828a2fbf23e3941fb19c12c588963169eb9887bf3fe3c7e1ff36772313beb36",
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "6e384715b119f8e9303afba2145c2d36a3cc59f727a32484d20c94f3c6fe42ed",
+      "sha256": "67a21887c04f942a234576022e420d931499dc3c552b50203e5625f16ffb1b6e",
       "executable": false
     },
     "public/brand/band.svg": {
@@ -389,7 +389,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "7333c38877716785db994aab1c873821ddbe5c81cd399c35f0df012675da9e3a",
+      "sha256": "64bc66af0df6207ee50eb745f3a766b157a409c4ab6f40db1d6bde10c11a32b1",
       "executable": false
     },
     "RELEASE.json": {
@@ -1585,7 +1585,7 @@
       "executable": false
     },
     "src/modules/mail/src/core/validation.mjs": {
-      "sha256": "fa1f79579a96fc7b12964d9515e98135993c18ea1af23922779139abc4221571",
+      "sha256": "dec5cdf68d24c1367b8d966f77ed0fba77785a8b60cf16d4d6abf23d51fe104d",
       "executable": false
     },
     "src/modules/mail/src/development/index.d.mts": {
@@ -1665,7 +1665,7 @@
       "executable": false
     },
     "src/modules/mail/src/inbound/headers.mjs": {
-      "sha256": "79673d562647f4e15e7fe10ca3b13241acd5b2cc25a651a32918cee45e02235c",
+      "sha256": "0dd79a1ef9404fd81b22d05adeae5d1c10ed268c207ece4ae387832e91803f66",
       "executable": false
     },
     "src/modules/mail/src/inbound/index.mjs": {
@@ -2229,7 +2229,7 @@
       "executable": false
     },
     "src/site/run.ts": {
-      "sha256": "f80f7bad21a2723bf23e1fc6d2753a4f5bdc678c738d5a31c61824cbf0ce164f",
+      "sha256": "7d008cdc9c662ce42312c39d16bb55c21c17b07fde815e5bc15594ecc2922f13",
       "executable": false
     },
     "src/site/shell/Icon.tsx": {

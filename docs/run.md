@@ -1,28 +1,13 @@
 Chest runs on your own computer with **rer**, the Run Edit Run command. You need
 Node 22 or later and pnpm 10.12.4, on macOS, Linux or Windows with WSL2.
 
-## Install rer
-
-Once per computer:
-
-```sh
-curl -fsSL https://runeditrun.com/install.sh | sh
-```
-
-or, with npm:
-
-```sh
-npm install -g @runeditrun/rer
-```
-
 ## Get Chest and start it
 
 ```sh
-git clone https://github.com/just-every/run-chest.git chest
-cd chest && rer dev
+npx -y @runeditrun/rer dev just-every/run-chest
 ```
 
-`rer dev` installs everything Chest needs, makes you the owner and starts the
+That one line installs `rer`, clones Chest, installs everything Chest needs, makes you the owner and starts the
 app. The first launch can take a few minutes and prints progress as it goes.
 When it is ready it prints three lines:
 
@@ -63,8 +48,8 @@ member, start it with `rer dev --as member`.
 rer dev --stop
 ```
 
-Run `rer dev` again to start Chest with everything you left in it. Your library
-lives in the `chest` folder on your computer.
+Run `cd run-chest && rer dev` again to start Chest with everything you left in it. Your library
+lives in the `run-chest` folder on your computer.
 
 ## Next
 

@@ -1,7 +1,12 @@
 # Run it locally
 
 ```sh
-npx -y @runeditrun/rer cli install
+npx -y @runeditrun/rer dev just-every/run-chest
+```
+
+To start it again later, run `cd run-chest && rer dev`. To be the owner under your own address, run these from the checkout instead:
+
+```sh
 rer install
 rer setup --owner-email you@example.com
 rer dev
