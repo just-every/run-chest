@@ -97,7 +97,7 @@ body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: 
 .search-field .icon { position: absolute; left: 14px; top: 50%; width: 20px; height: 20px; transform: translateY(-50%); }
 .app .search-field input { min-height: 48px; padding-left: 46px; }
 .search .btn { min-height: 48px; padding: 0 28px; }
-.lib-links { display: flex; gap: 10px; font-size: 15px; white-space: nowrap; }
+.lib-links { display: flex; flex-wrap: wrap; gap: 10px; font-size: 15px; white-space: nowrap; }
 .lib-upload { margin-left: auto; }
 .lib-upload > .disclosure > summary { min-height: 48px; padding: 0 32px; }
 .lib-upload > .disclosure > .disclosure-panel { position: absolute; z-index: 5; right: 0; top: calc(100% + 4px); width: min(820px, 100%); box-shadow: 8px 8px 0 -1px var(--chest-manila), 8px 8px 0 0 var(--chest-line); }
@@ -420,3 +420,6 @@ body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: 
 .read-actions .disclosure { flex-basis: auto; }
 @media (max-width: 960px) { .read-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 760px) { .ver .read-fields { padding: 16px; } }
+
+/* The email route is a sequence a space manager follows outside Chest. */
+.intake-steps { list-style: decimal; padding-left: 24px; }

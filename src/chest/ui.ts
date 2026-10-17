@@ -15,6 +15,7 @@ import { sweep } from './files/shares'
 import { kick } from './read/jobs'
 import { readerView } from './read/settings'
 import { readerCard,testReceipt } from './read/ui'
+import { filingPage,filingInput } from './filing/ui'
 import { documentReadings } from './read/api'
 import { card,esc } from './ui-shared'
 import { ssoView } from './organisation/settings'
@@ -36,6 +37,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   const file=fields.get('file');if(file&&typeof file!=='string'&&file.size){input.base64=Buffer.from(await file.arrayBuffer()).toString('base64');input.filename=file.name;input.size=file.size}
   const archiveFile=fields.get('archiveFile');if(archiveFile&&typeof archiveFile!=='string')input.archive=await archiveFile.text()
   if(input.path==='/archive/job')input.path=`/archive/${encodeURIComponent(input.job)}`
+  if(input.path.startsWith('/filing/'))filingInput(input)
   if(filesPath(input.path))filesInput(input)
   const result=await execute(env,request,s,'POST',input.path,input);kick(env,request)
   if(input.path==='/organisation/scim/tokens')return page(tokenReceipt(result),me,'/app/admin')
@@ -45,6 +47,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   if(input.path.startsWith('/archive/')||input.action==='sessions')return page(receiptPage(input,result),me,returnTo)
   const location=result?.kind==='document'?`/app/documents/${result.id}`:result?.kind==='item'&&input.path==='/items'?`/app/items/${result.id}`:returnTo;return new Response(null,{status:303,headers:{...headers,location:location.startsWith('/app')?location:'/app'}})
  }
+ const filing=await filingPage(env,s,url);if(filing)return page(filing,me,url.pathname)
  const files=await filesPage(env,request,s,url);if(files)return 'redirect' in files?new Response(null,{status:303,headers:{...headers,location:files.redirect}}):page(files.body,me,url.pathname)
  const data=await overview(env,s,url);let body=''
  if(url.pathname==='/app/sso-tested'){insist(s.kind==='oidc','company_signin_required',403);body=card('Company sign-in works',`<p>You are signed in as <strong>${esc(me.name)}</strong> (${esc(me.email)}). The identity provider connection has been tested.</p><p><a class="btn" href="/app/files">Open files</a></p>${me.role==='owner'?'<p><a class="link" href="/app/admin">Back to people &amp; settings</a></p>':'<p>The owner can now turn off email-link sign-in in People &amp; settings.</p>'}`)}

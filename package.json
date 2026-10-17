@@ -27,7 +27,7 @@
     "check": "rer check",
     "deps": "rer install",
     "rer": "rer",
-    "test:chest": "rer queue test:chest -- sh -c \"node tests/chest/flows.mjs && node tests/chest/files.mjs && node tests/chest/reading.mjs && node tests/chest/quota.mjs && node tests/chest/office.mjs\"",
+    "test:chest": "rer queue test:chest -- sh -c \"node tests/chest/flows.mjs && node tests/chest/files.mjs && node tests/chest/reading.mjs && node tests/chest/quota.mjs && node tests/chest/office.mjs && node tests/chest/filing.mjs\"",
     "test:browser": "node tests/chest/browser-files.mjs",
     "test:journey": "node tests/chest/journey.mjs",
     "test:site": "node tests/chest/site.mjs",
@@ -43,6 +43,7 @@
     "jose": "6.2.12",
     "jpeg-js": "0.4.4",
     "libheif-js": "1.23.5",
+    "postal-mime": "^4.0.7",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "unpdf": "1.9.0"

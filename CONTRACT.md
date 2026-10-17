@@ -741,7 +741,7 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 2 | "syncs" | SYNC-001, SYNC-002 | partial |
 | 3 | "shares your team's files" | SHARE-004, SHARE-001, CHEST-10 | partial |
 | 4 | "reads every scan" | SEARCH-001 | partial |
-| 5 | "quietly files what arrives" | AGENT-001, RULE-001, CONNECT-006 | missing |
+| 5 | "quietly files what arrives" | AGENT-001, RULE-001, CONNECT-006 | partial |
 | 6 | "100% free, open source" | OPEN-001 | partial |
 | 7 | "alternative to Google Drive, Dropbox and Box" | SPACE-001, SYNC-001, SHARE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 | partial |
 | 8 | Collage: contract co-edited by Dana and Luis | EDIT-001 | partial |
@@ -749,7 +749,7 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 10 | Collage: share link "expires Nov 30 · 3 of 10 downloads" | SHARE-001 | partial |
 | 11 | Collage: version stack v7 (approved), v6, v5 | CHEST-07, VERSION-001 | done |
 | 12 | Collage: scanned NDA with extracted fields boxed | SEARCH-002 | partial |
-| 13 | Collage: "Filed W-9 Acme Supply.pdf → Vendors / Acme / Tax · Undo" | AGENT-001, RULE-001 | missing |
+| 13 | Collage: "Filed W-9 Acme Supply.pdf → Vendors / Acme / Tax · Undo" | AGENT-001, RULE-001 | partial |
 | 14 | "Files stay in sync on Mac, Windows, iPhone and Android" | SYNC-001, SYNC-002, MOBILE-001 | partial |
 | 15 | "open on demand without filling your disk" | SYNC-001 | partial |
 | 16 | "Links with a password, an expiry and a download limit" | SHARE-001 | partial |
@@ -764,8 +764,8 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 25 | "or a whole folder" (and "Restore Clients / Harbor Freight to Oct 12") | RECOVER-001 | done |
 | 26 | "see who changed what" | AUDIT-001, VERSION-001 | partial |
 | 27 | "Approvals stay with the exact version signed off" | CHEST-07, CHEST-08 | done |
-| 28 | "Agents file what arrives from email and apps" | AGENT-001, CONNECT-006 | missing |
-| 29 | "merge duplicates" | AGENT-002 | missing |
+| 28 | "Agents file what arrives from email and apps" | AGENT-001, CONNECT-006 | partial |
+| 29 | "merge duplicates" | AGENT-002 | partial |
 | 30 | "flag links shared too widely" (and "Make private") | AGENT-005 | partial |
 | 31 | Mascot filing files from email, phone and laptop; "312 files filed this week" | AGENT-001, CONNECT-006, MOBILE-001 | partial |
 | 32 | "Move from Google Drive, Dropbox or Box with folders, permissions, versions and shared links" | MIGRATE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 | partial |
@@ -793,8 +793,8 @@ Office preview, editing and comment rows updated on 17 October 2026; see `docs/o
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 13 | 0 | 0 | 13 |
-| Target and push further | 3 | 31 | 38 | 72 |
-| All | 16 | 31 | 38 | 85 |
+| Target and push further | 3 | 35 | 34 | 72 |
+| All | 16 | 35 | 34 | 85 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -869,15 +869,15 @@ Office preview, editing and comment rows updated on 17 October 2026; see `docs/o
 | `CONNECT-003` | Salesforce and HubSpot record-linked files | target | missing |  | No delivered product workflow. |
 | `CONNECT-004` | Docusign execution and return custody | target | missing |  | No delivered product workflow. |
 | `CONNECT-005` | Zoom meeting file exchange | target | missing |  | No delivered product workflow. |
-| `CONNECT-006` | Email and app intake | target | missing |  | No delivered product workflow. |
+| `CONNECT-006` | Email and app intake | target | partial | `src/chest/filing/intake.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs` | Cloudflare Email Routing intake addresses per space deliver attachments into a chosen folder with message/sender/date provenance, replay protection and revocation by pausing intake or losing manager access. The setup page explains the route without an AI key. The built Worker email-event flow is exercised locally. Live QA delivery is blocked: SendGrid rejects the fleet QA sender with 403 for an unverified Sender Identity. Missing: Gmail/Outlook and app connectors, source policy scopes and durable queue reconciliation. |
 | `CONNECT-007` | Public API, webhooks and scoped agents | target | partial | `src/chest/api.ts`; `src/chest/files/sync-api.ts`; `src/chest/files/devices.ts`; `tests/chest/files.mjs` | The sync device protocol is a documented credentialed API for clients; OAuth apps, MCP, webhooks and app control do not. |
 | `CONNECT-008` | Gmail and Outlook compose and save add-ins | target | missing |  | No delivered product workflow. |
 | `CONNECT-009` | Zapier and Make automation apps | target | missing |  | No delivered product workflow. |
 | `CONNECT-010` | Google Meet, Calendar, Chat and Forms file companion | target | missing |  | No delivered product workflow. |
-| `RULE-001` | Reversible arrival rules | target | missing |  | No delivered product workflow. |
+| `RULE-001` | Reversible arrival rules | target | partial | `src/chest/filing/rules.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs` | Standing move rules match extension/MIME, sender and admitted text; live source/destination grants and conflicts are checked, originals and stable IDs remain, and activity explains every move with stale-safe Undo and replay protection. Local native email-to-rule-to-Undo and hosted PDF upload-to-rule-to-Undo pass without an AI key. Missing: naming/tagging/conversion/unzip and preview batches. |
 | `FOLLOW-001` | Persistent collaboration follow-up | target | partial | `src/chest/ui-library.ts`; `src/chest/documents.ts`; `src/chest/files/notify.ts`; `tests/chest/flows.mjs`; `tests/chest/files.mjs` | Due/upcoming work, evidence completion and share, request and expiry notices by in-app notice and email exist; background reminders, mobile push, provider outcomes, replies by email and personal notification settings do not. |
-| `AGENT-001` | File and classify authorized arrivals | push-further | missing |  | No delivered product workflow. |
-| `AGENT-002` | Reconcile duplicates and superseded versions | push-further | missing |  | No delivered product workflow. |
+| `AGENT-001` | File and classify authorized arrivals | push-further | partial | `src/chest/filing/agent.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs` | Deterministic arrival filing runs without a key; the AI agent uses the install’s sealed reader key for cited classification previews with explicit apply/decline, same-space access checks and reversible moves. Activity counts filed files this week including undone moves. Managed provider calls say not available yet. A hosted install using its Anthropic key/workspace passed cited preview, apply and Undo against a real model. Missing: standing automatic AI classification, taxonomy/responsibility proposals and separate notices. |
+| `AGENT-002` | Reconcile duplicates and superseded versions | push-further | partial | `src/chest/filing/duplicates.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs` | Exact hashes and complete extracted text propose identical/near-identical ordinary files. Owner-approved consolidation retains all originals, separate ACLs and versions, existing links and reversible membership. Combined history and alias hiding require current access to both files; Undo preserves intervening edits. Local merge/version/link/Undo and hosted merge/Undo pass. Missing: source-ID correlation, supersession and approval reconciliation, internal reference repair and external link repointing. |
 | `AGENT-003` | Repair permitted synchronization and verify bytes | push-further | missing |  | No delivered product workflow. |
 | `AGENT-004` | Finish collection and prove the right version arrived | push-further | missing |  | No delivered product workflow. |
 | `AGENT-005` | Continuously repair broken and over-shared links | push-further | partial | `src/chest/files/exposure.ts`; `src/chest/files/ui-links.ts`; `tests/chest/files.mjs` | The Links view flags public, long-lived and past-limit links and discoverable or long-lived organization links, naming each link and why, and Make private removes every broad link in one click while keeping named grants; the agent that scans ACLs, guests and outcomes, proposes repairs and runs preauthorized revocations does not. |

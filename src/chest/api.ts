@@ -15,6 +15,7 @@ import { syncRoute } from './files/sync-api'
 import { offboard } from './files/people'
 import { sweep } from './files/shares'
 import { everything,who } from './files/access'
+import { filingExecute } from './filing/api'
 import { readingExecute } from './read/api'
 import { kick,textHits } from './read/jobs'
 import { totalStorage } from './quota/storage'
@@ -43,6 +44,7 @@ export async function execute(env:Bindings,request:Request,s:Session,method:stri
  if(method==='POST'&&parts[0]==='collections'&&parts[2]==='grants')return grants(env,s,'collection',parts[1],input)
  if(method==='POST'&&parts[0]==='groups'&&parts[1])return updateGroup(env,s,parts[1],input)
  if(method==='POST'&&parts[0]==='schemas'&&parts.length===2)return updateSchema(env,s,parts[1],input)
+ const filing=await filingExecute(env,s,method,parts,input,url);if(filing!==undefined)return filing
  const reading=await readingExecute(env,s,method,parts,input,url);if(reading!==undefined)return reading
  if(path==='/documents'&&method==='POST')return upload(env,s,input)
  if(parts[0]==='documents'&&parts[1]){

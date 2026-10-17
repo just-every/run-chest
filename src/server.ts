@@ -12,6 +12,7 @@ import { lobbyResponse } from './base/lobby'
 import { setupStateResponse } from './base/setup-state'
 import { identity } from './identity'
 import { authResponse, runtimeBindings, type Bindings } from './auth.server'
+import { receiveIntake } from './chest/filing/intake'
 import { seedDemo } from './demo'
 
 const api = new Hono<{ Bindings: Bindings }>()
@@ -26,6 +27,7 @@ function documentResponse(response: Response): Response {
 }
 
 export default withDemo({
+  async email(message, env) { await receiveIntake(runtimeBindings(env), message) },
   async fetch(request, original, execution) {
     const asset = await staticAssetResponse(request, original)
     if (asset) return documentResponse(asset)

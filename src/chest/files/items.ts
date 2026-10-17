@@ -23,7 +23,7 @@ export async function admit(env: Bindings, bytes: Uint8Array, filename: string, 
  return { id: v.id, filename: v.filename, checksum: v.checksum, size: v.size, mediaType: v.mediaType, preview: v.preview, text: v.text, parser: v.parser, at: v.at, actor, arrival, name: '', ...extra }
 }
 // A resumable upload passes the version it already admitted, and the operations that close its session in the same batch.
-export type Admitted = { version?: FileVersion; ops?: (row: Row<Item>) => Op[] }
+export type Admitted = { sender?: string; version?: FileVersion; ops?: (row: Row<Item>) => Op[] }
 export async function createItem(env: Bindings, s: Session, w: Who, input: any, arrival: Arrival = 'upload', bytes?: Uint8Array, more: Admitted = {}) {
  const p = await place(env, w, input.space, input.parent), parent = folderOf(p), value = name(input.name), at = now()
  unique(await siblings(env, p.space.id, parent), value)
@@ -31,6 +31,7 @@ export async function createItem(env: Bindings, s: Session, w: Who, input: any, 
  if (type === 'file') versions.push(more.version ?? await admit(env, bytes ?? fromBase64(input.base64), value, s.operator.email, arrival, input, input.device ? { device: input.device } : {}))
  const row = fresh<Item>('item', { space: p.space.id, parent, type, name: value, createdBy: s.operator.email, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions, current: versions[0]?.id ?? null })
  await commit(env, s, [{ row }, ...more.ops?.(row) ?? []], { fences: p.fences, changes: [{ item: row.id, space: p.space.id, kind: 'create' }], audits: [{ action: type === 'folder' ? 'folder.create' : 'file.upload', object: row.id, detail: { space: p.space.id, parent, version: row.payload.current, arrival } }] })
+ if(type === 'file'){const {runArrival}=await import('../filing/rules');return (await runArrival(env,s,w,row,more.sender)).item}
  return row
 }
 export async function addVersion(env: Bindings, s: Session, w: Who, key: string, bytes: Uint8Array | null, input: any, arrival: Arrival = 'upload', more: Admitted = {}) {
@@ -99,7 +100,9 @@ export async function itemSettings(env: Bindings, s: Session, w: Who, key: strin
  return get<Item>(env, 'item', key)
 }
 export async function children(env: Bindings, w: Who, ctx: Ctx, parent: string | null) {
- return (await spaceItems(env, ctx.space.id)).filter(r => r.payload.parent === parent && !r.payload.trash).map(r => ({ row: r, state: descend(ctx.state, r, w, ctx.links) })).filter(c => c.state.role).sort((a, b) => (a.row.payload.type === b.row.payload.type ? 0 : a.row.payload.type === 'folder' ? -1 : 1) || a.row.payload.name.localeCompare(b.row.payload.name))
+ const entries=(await spaceItems(env, ctx.space.id)).filter(r => r.payload.parent === parent && !r.payload.trash).map(r => ({ row: r, state: descend(ctx.state, r, w, ctx.links) })).filter(c => c.state.role).sort((a, b) => (a.row.payload.type === b.row.payload.type ? 0 : a.row.payload.type === 'folder' ? -1 : 1) || a.row.payload.name.localeCompare(b.row.payload.name))
+ const {hiddenMerged}=await import('../filing/duplicate-view'), hidden=await hiddenMerged(env,w,entries.map(e=>({...e,space:ctx.space})))
+ return entries.filter(e=>!hidden.has(e.row.id))
 }
 // Original bytes: download needs download rights (the no-download setting refuses viewers and commenters); their
 // preview is limited to extracted text. Access is checked again after reading, before the bytes leave.

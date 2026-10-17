@@ -26,7 +26,7 @@ export async function harness({edge,bindings={}}={}){
  let worker,migrated=false;
  // The numbered migrations, in order, once; a restart keeps the persisted data.
  async function migrate(){const db=await worker.getD1Database('DB'),folder='migrations/core';for(const file of (await readdir(folder)).filter(f=>f.endsWith('.sql')).sort())for(const statement of splitSql(await readFile(join(folder,file),'utf8')))await db.prepare(statement).run();migrated=true}
- async function start(){worker=new Miniflare({...convertV4MiniflareOptions({host:'127.0.0.1',port,https:true,...options,bindings:vars,outboundService}),resourcePersistencePath:directory});await worker.ready;if(!migrated)await migrate()}
+ async function start(){worker=new Miniflare({...convertV4MiniflareOptions({host:'127.0.0.1',port,https:true,...options,bindings:vars,outboundService,unsafeTriggerHandlers:true}),resourcePersistencePath:directory});await worker.ready;if(!migrated)await migrate()}
  async function stop(){if(!worker)return;await worker.dispose();worker=null}
  // Miniflare's fetch has its own undici: send a form as its encoded multipart bytes.
  async function fetch(path,init={}){
@@ -44,5 +44,5 @@ export async function harness({edge,bindings={}}={}){
  }
  try{await start()}catch(e){await stop();await rm(directory,{recursive:true,force:true});throw e}// Time passing for expiry journeys: tests age stored timestamps; the Worker's clock is never faked.
  const sql=async(query,...params)=>(await worker.getD1Database('DB')).prepare(query).bind(...params).run();
- return {origin,vars,mails,fetch,raw,api,signIn,start,stop,directory,sql,async close(){await stop();await rm(directory,{recursive:true,force:true})}};
+ return {email:async(from,to,raw)=>{const response=await worker.dispatchFetch(origin+'/cdn-cgi/local/email?'+new URLSearchParams({from,to,format:'json'}),{method:'POST',body:raw});assert.equal(response.status,200,await response.clone().text());return response.json()},origin,vars,mails,fetch,raw,api,signIn,start,stop,directory,sql,async close(){await stop();await rm(directory,{recursive:true,force:true})}};
 }

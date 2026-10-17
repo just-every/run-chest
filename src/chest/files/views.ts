@@ -14,6 +14,7 @@ import { requestsOn } from './file-requests'
 import { personal, visibleSpaces } from './spaces'
 import type { Link, Prefs, Space } from './model'
 import { extraction, textHits } from '../read/jobs'
+import { mergeView,hiddenMerged } from '../filing/duplicate-view'
 import { summary } from '../read/api'
 import { storage } from '../quota/storage'
 // Read models for the files pages and API: what a person may see, with the actions their current role allows.
@@ -42,10 +43,11 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
  const path: { id: string; name: string }[] = []; let state = start(ctx.space.payload, w)
  for (const node of ctx.chain.slice(0, -1)) { state = descend(state, node, w, ctx.links); if (state.role) path.push({ id: node.id, name: node.payload.name }) }
  const sharer = allowed(ctx, 'share'), prefs = await prefsOf(env, w), currentVersion = item.payload.versions.find(v => v.id === item.payload.current)
+ const lineage=await mergeView(env,s,w,item)
  await recordAccess(env, s, item, 'item.read')
  return {
   id: key, item: { ...item.payload, versions: undefined, grants: undefined, trash: undefined }, revision: item.revision, role: ctx.state.role, can: can(ctx), space: { id: ctx.space.id, name: label(ctx.space.payload, w), kind: ctx.space.payload.kind, member: !!start(ctx.space.payload, w).role }, path,
-  versions: item.payload.versions.map(v => ({ ...v, text: undefined, textLength: v.text.length })).reverse(),
+  versions: lineage.versions.map(v => ({ ...v, text: undefined, textLength: v.text.length })), mergedInto:lineage.mergedInto, merges:lineage.merges,
   reading: currentVersion ? summary((await extraction(env, currentVersion.checksum))?.payload ?? null, currentVersion.mediaType) : null,
   children: item.payload.type === 'folder' ? (await children(env, w, ctx, key)).map(brief) : [],
   grants: sharer ? item.payload.grants : item.payload.grants.filter(g => w.principals.includes(g.principal)),
@@ -70,7 +72,9 @@ async function activity(env: Bindings, key: string, editor: boolean) {
 // hits, counts and snippets follow current access exactly.
 export async function search(env: Bindings, w: Who, url: URL) {
  const q = (url.searchParams.get('q') || '').trim().toLowerCase(), space = url.searchParams.get('space') || '', result: any[] = [], read = await textHits(env, q)
- for (const e of (await everything(env, w)).values()) {
+ const entries=[...(await everything(env,w)).values()], hidden=await hiddenMerged(env,w,entries)
+ for (const e of entries) {
+  if(hidden.has(e.row.id))continue
   if (!e.state.role || e.state.trash || (space && e.space.id !== space)) continue
   const v = e.row.payload.versions.find(v => v.id === e.row.payload.current), text = v?.text.toLowerCase() ?? '', inName = e.row.payload.name.toLowerCase().includes(q), at = q ? text.indexOf(q) : -1, inside = v ? read.get(v.checksum) : undefined
   if (q && !inName && at < 0 && inside === undefined) continue

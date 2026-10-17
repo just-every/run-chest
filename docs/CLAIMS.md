@@ -13,7 +13,7 @@ Status, as the contract defines it:
 
 ## Summary
 
-46 claims: **7 done**, **34 partial**, **5 missing**.
+46 claims: **7 done**, **38 partial**, **1 missing**.
 
 ## Claims
 
@@ -23,7 +23,7 @@ Status, as the contract defines it:
 | 2 | "syncs" | partial | SYNC-001 (partial), SYNC-002 (partial) | `src/chest/files/sync.ts`; `src/chest/files/devices.ts`; `tests/chest/files.mjs` |
 | 3 | "shares your team's files" | partial | SHARE-004 (done), SHARE-001 (partial), CHEST-10 (done) | `src/chest/files/shares.ts`; `src/chest/files/notify.ts`; `src/chest/files/people.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `src/chest/files/links.ts`; `src/chest/files/public-links.ts`; `src/chest/files/capability.ts`; `src/chest/files/public.ts`; `src/chest/files/ui-links.ts`; `src/chest/access.ts`; `src/chest/metadata.ts`; `tests/chest/flows.mjs`; `tests/chest/restore.mjs` |
 | 4 | "reads every scan" | partial | SEARCH-001 (partial) | `src/chest/read/jobs.ts`; `src/chest/read/pdf.ts`; `src/chest/read/office.ts`; `src/chest/read/heic.ts`; `src/chest/read/provider.ts`; `src/chest/files/views.ts`; `src/chest/api.ts`; `tests/chest/reading.mjs`; `tests/chest/files.mjs` |
-| 5 | "quietly files what arrives" | missing | AGENT-001 (missing), RULE-001 (missing), CONNECT-006 (missing) | — |
+| 5 | "quietly files what arrives" | partial | AGENT-001 (partial), RULE-001 (partial), CONNECT-006 (partial) | `src/chest/filing/intake.ts`; `src/chest/filing/rules.ts`; `src/chest/filing/agent.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs` |
 | 6 | "100% free, open source" | partial | OPEN-001 (partial) | `LICENSE` |
 | 7 | "alternative to Google Drive, Dropbox and Box" | partial | SPACE-001 (partial), SYNC-001 (partial), SHARE-001 (partial), MIGRATE-002 (missing), MIGRATE-003 (missing), MIGRATE-004 (missing) | `src/chest/files/spaces.ts`; `src/chest/files/items.ts`; `src/chest/files/uploads.ts`; `src/chest/files/ui-item.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `src/chest/files/sync.ts`; `src/chest/files/devices.ts`; `src/chest/files/links.ts`; `src/chest/files/public-links.ts`; `src/chest/files/capability.ts`; `src/chest/files/public.ts`; `src/chest/files/ui-links.ts` |
 | 8 | Collage: contract co-edited by Dana and Luis | partial | EDIT-001 (partial) | `src/chest/office/service.ts`; `src/chest/office/presence.ts`; `src/chest/office/ui.ts`; `tests/chest/office.mjs`; `docs/office.md` |
@@ -31,7 +31,7 @@ Status, as the contract defines it:
 | 10 | Collage: share link "expires Nov 30 · 3 of 10 downloads" | partial | SHARE-001 (partial) | `src/chest/files/links.ts`; `src/chest/files/public-links.ts`; `src/chest/files/capability.ts`; `src/chest/files/public.ts`; `src/chest/files/ui-links.ts`; `tests/chest/files.mjs` |
 | 11 | Collage: version stack v7 (approved), v6, v5 | done | CHEST-07 (done), VERSION-001 (done) | `src/chest/documents.ts`; `src/chest/reviews.ts`; `tests/chest/flows.mjs`; `tests/chest/journey.mjs`; `src/chest/files/items.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |
 | 12 | Collage: scanned NDA with extracted fields boxed | partial | SEARCH-002 (partial) | `src/chest/read/jobs.ts`; `src/chest/read/decide.ts`; `src/chest/read/provider.ts`; `src/chest/read/ui.ts`; `src/chest/ui-document.ts`; `tests/chest/reading.mjs` |
-| 13 | Collage: "Filed W-9 Acme Supply.pdf → Vendors / Acme / Tax · Undo" | missing | AGENT-001 (missing), RULE-001 (missing) | — |
+| 13 | Collage: "Filed W-9 Acme Supply.pdf → Vendors / Acme / Tax · Undo" | partial | AGENT-001 (partial), RULE-001 (partial) | `src/chest/filing/intake.ts`; `src/chest/filing/rules.ts`; `src/chest/filing/agent.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs` |
 | 14 | "Files stay in sync on Mac, Windows, iPhone and Android" | partial | SYNC-001 (partial), SYNC-002 (partial), MOBILE-001 (partial) | `src/chest/files/sync.ts`; `src/chest/files/devices.ts`; `tests/chest/files.mjs`; `src/chest/ui-library.ts`; `src/chest/files/ui-item.ts`; `public/chest-upload.js`; `tests/chest/journey.mjs`; `tests/chest/browser-files.mjs` |
 | 15 | "open on demand without filling your disk" | partial | SYNC-001 (partial) | `src/chest/files/sync.ts`; `src/chest/files/devices.ts`; `tests/chest/files.mjs` |
 | 16 | "Links with a password, an expiry and a download limit" | partial | SHARE-001 (partial) | `src/chest/files/links.ts`; `src/chest/files/public-links.ts`; `src/chest/files/capability.ts`; `src/chest/files/public.ts`; `src/chest/files/ui-links.ts`; `tests/chest/files.mjs` |
@@ -46,10 +46,10 @@ Status, as the contract defines it:
 | 25 | "or a whole folder" (and "Restore Clients / Harbor Freight to Oct 12") | done | RECOVER-001 (done) | `src/chest/files/rewind.ts`; `src/chest/files/ui-item.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |
 | 26 | "see who changed what" | partial | AUDIT-001 (partial), VERSION-001 (done) | `src/chest/store.ts`; `src/chest/api.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs`; `src/chest/files/items.ts`; `src/chest/documents.ts`; `tests/chest/browser-files.mjs` |
 | 27 | "Approvals stay with the exact version signed off" | done | CHEST-07 (done), CHEST-08 (done) | `src/chest/documents.ts`; `src/chest/reviews.ts`; `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |
-| 28 | "Agents file what arrives from email and apps" | missing | AGENT-001 (missing), CONNECT-006 (missing) | — |
-| 29 | "merge duplicates" | missing | AGENT-002 (missing) | — |
+| 28 | "Agents file what arrives from email and apps" | partial | AGENT-001 (partial), CONNECT-006 (partial) | `src/chest/filing/intake.ts`; `src/chest/filing/rules.ts`; `src/chest/filing/agent.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs` |
+| 29 | "merge duplicates" | partial | AGENT-002 (partial) | `src/chest/filing/duplicates.ts`; `src/chest/filing/duplicate-view.ts`; `tests/chest/filing.mjs` |
 | 30 | "flag links shared too widely" (and "Make private") | partial | AGENT-005 (partial) | `src/chest/files/exposure.ts`; `src/chest/files/ui-links.ts`; `tests/chest/files.mjs` |
-| 31 | Mascot filing files from email, phone and laptop; "312 files filed this week" | partial | AGENT-001 (missing), CONNECT-006 (missing), MOBILE-001 (partial) | `src/chest/ui-library.ts`; `src/chest/files/ui-item.ts`; `public/chest-upload.js`; `tests/chest/journey.mjs`; `tests/chest/browser-files.mjs` |
+| 31 | Mascot filing files from email, phone and laptop; "312 files filed this week" | partial | AGENT-001 (partial), CONNECT-006 (partial), MOBILE-001 (partial) | `src/chest/filing/intake.ts`; `src/chest/filing/rules.ts`; `src/chest/filing/agent.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs`; `src/chest/ui-library.ts`; `src/chest/files/ui-item.ts`; `public/chest-upload.js`; `tests/chest/journey.mjs`; `tests/chest/browser-files.mjs` |
 | 32 | "Move from Google Drive, Dropbox or Box with folders, permissions, versions and shared links" | partial | MIGRATE-001 (partial), MIGRATE-002 (missing), MIGRATE-003 (missing), MIGRATE-004 (missing) | `src/chest/archive.ts`; `src/chest/archive-target.ts`; `tests/chest/flows.mjs` |
 | 33 | "Old links forward to the new ones" (and "Shared links redirected · 214") (correction sent to br: vendor URLs cannot forward) | missing | MIGRATE-007 (missing) | — |
 | 34 | "Single sign-on" (Okta) | partial | ADMIN-001 (partial) | `src/chest/organisation/settings.ts`; `src/chest/organisation/oidc.ts`; `src/chest/organisation/saml.ts`; `src/chest/organisation/ui.ts`; `tests/chest/organisation.mjs`; `docs/organisation.md` |
