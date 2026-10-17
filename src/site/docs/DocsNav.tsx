@@ -25,6 +25,7 @@ export function DocsSidebar({ current }: { current?: string }) {
   return (
     <nav className="docs-sidebar" aria-label="Docs">
       <a className="docs-sidebar-home" href="/docs" aria-current={current === undefined ? 'page' : undefined}>All docs</a>
+      <a className="docs-sidebar-home" href="/contract">Contract</a>
       <DocsNavList current={current} idPrefix="docs-sidebar" />
     </nav>
   )
@@ -36,7 +37,7 @@ export function DocsMenu({ current, label }: { current: string; label: string })
     <nav className="docs-menu" aria-label="Docs menu">
       <details>
         <summary><span>Docs menu</span><span className="docs-menu-current">{label}</span></summary>
-        <div className="docs-menu-list"><a className="docs-sidebar-home" href="/docs">All docs</a><DocsNavList current={current} idPrefix="docs-menu" /></div>
+        <div className="docs-menu-list"><a className="docs-sidebar-home" href="/docs">All docs</a><a className="docs-sidebar-home" href="/contract">Contract</a><DocsNavList current={current} idPrefix="docs-menu" /></div>
       </details>
     </nav>
   )

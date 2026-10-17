@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { contractPageHtml } from '../base/contract-page'
 import { runPageHtml, siteNotFoundHtml, type SiteBuild, type SiteContext } from '../base/run-site'
 import { identity } from '../identity'
 import { DocsArticle } from './docs/DocsArticle'
@@ -15,7 +16,7 @@ import './shell/site.css'
  * `/run`; the docs at `/docs` and `/docs/<slug>`, rendered from docs/site.json and docs/*.md; and the not-found page.
  * Every page is static, needs no script and links no instance-only route. The installed app's `/` is the Lobby.
  */
-export function sitePages({ styles }: SiteContext): SiteBuild {
+export function sitePages({ styles, contract }: SiteContext): SiteBuild {
   const document = ({ title, description, path }: { title: string; description: string; path: string }, body: ReactElement) => '<!doctype html>' + renderToStaticMarkup(
     <html lang="en">
       <head>
@@ -44,10 +45,11 @@ export function sitePages({ styles }: SiteContext): SiteBuild {
   return {
     pages: [
       { path: '/', html: document({ title: 'Chest · Every file, where it should be', description: identity.tagline, path: '/' }, <Landing />) },
-      { path: '/run', html: withChestIcons(runPageHtml(identity, run)) },
+      { path: '/run', html: withChestIcons(runPageHtml(identity, run, contract)) },
+      ...(contract ? [{ path: '/contract', html: withChestIcons(contractPageHtml(identity, run, contract)) }] : []),
       { path: '/docs', html: document({ ...docsHead(), path: '/docs' }, <DocsIndex />) },
       ...docsPages.filter(page => page.slug).map(page => ({ path: `/docs/${page.slug}`, html: document({ ...docsHead(page.slug), path: `/docs/${page.slug}` }, <DocsArticle slug={page.slug} />) })),
-      { path: '/404', html: withChestIcons(siteNotFoundHtml(identity, run)) },
+      { path: '/404', html: withChestIcons(siteNotFoundHtml(identity, run, contract)) },
     ],
     assets: ['rer-theme.css', 'fonts', 'brand', 'site'],
   }
