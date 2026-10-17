@@ -5,6 +5,7 @@ import { ChestError, insist, now, type Row } from '../model'
 import { commit, fresh, next, spaceItems, type Op } from './repo'
 import { chain, context, demand, descend, everything, isAdmin, level, start, type Who } from './access'
 import { type Expiry, type Item, type Link, type Space } from './model'
+import { eraseReading } from '../read/jobs'
 // Trash is self-service and reversible (CHEST-13): whoever trashed an item restores it while they still hold the role
 // that let them trash it; space managers restore anything in their space and admins restore across spaces without
 // opening content. Trashed originals and history stay until a manager (or a personal area's owner) erases them.
@@ -57,7 +58,7 @@ export async function erase(env: Bindings, s: Session, w: Who, key: string) {
  const removed: string[] = [], shared: string[] = []
  for (const sum of checksums) {
   const used = await env.DB.prepare("SELECT 1 FROM chest_records WHERE kind<>'erasure' AND instr(payload,?)>0 LIMIT 1").bind(sum).first()
-  if (used) shared.push(sum); else { await env.BLOBS.delete(`sha256/${sum}`); removed.push(sum) }
+  if (used) shared.push(sum); else { await env.BLOBS.delete(`sha256/${sum}`); await eraseReading(env, sum); removed.push(sum) }
  }
  const done = next(receipt, { ...receipt.payload, originals: { pending: [], removed, shared }, state: 'complete' })
  await commit(env, s, [{ row: done, previous: receipt }], { audits: [{ action: 'erasure.complete', object: receipt.id, detail: { removed: removed.length, shared: shared.length } }] })

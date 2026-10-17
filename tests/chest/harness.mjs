@@ -8,16 +8,18 @@ import {createServer} from 'node:net';
 const require=createRequire(import.meta.url);
 const {unstable_getMiniflareWorkerOptions:workerOptions,unstable_splitSqlQuery:splitSql}=require('wrangler');
 const {Miniflare,convertV4MiniflareOptions}=createRequire(require.resolve('wrangler'))('miniflare');
-// The built Worker runs as deployed (production mail, https origin). Its only
-// network edge is the mail provider: the test receives each message there.
-export async function harness(){
+// The built Worker runs as deployed (production mail, https origin). Its network
+// edges are the mail provider, where the test receives each message, and, when a
+// test passes `edge`, that test's fake of a paid provider (an AI model).
+export async function harness({edge}={}){
  const socket=createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r));
  const origin=`https://127.0.0.1:${port}`,directory=await mkdtemp(join(tmpdir(),'chest-http-')),secret=()=>randomBytes(32).toString('base64url'),mails=[];
  const vars={AUTH_LOCAL:'false',AUTH_ORIGIN:origin,OWNER_EMAIL:'owner@example.test',SESSION_SECRET:secret(),SETUP_TOKEN:secret(),MAIL_PROVIDER:'resend',MAIL_API_KEY:'test-only-mail-provider-key',MAIL_FROM:'Chest <auth@example.test>'};
  const {compatibilityDate,compatibilityFlags,assets,d1Databases,r2Buckets}=workerOptions('dist/server/wrangler.json').workerOptions,root=join(process.cwd(),'dist/server');
- const modules=['index.js',...(await readdir(join(root,'assets'))).map(f=>`assets/${f}`)].map(f=>({type:'ESModule',path:join(root,f)}));
+ const modules=['index.js',...(await readdir(join(root,'assets'))).map(f=>`assets/${f}`)].map(f=>({type:f.endsWith('.wasm')?'CompiledWasm':'ESModule',path:join(root,f)}));
  const options={modulesRoot:root,modules,compatibilityDate,compatibilityFlags,assets,d1Databases,r2Buckets};
  const outboundService=async request=>{
+  const answer=await edge?.(request);if(answer)return answer;
   assert.equal(request.url,'https://api.resend.com/emails','the Worker reaches only the mail provider');
   mails.push(await request.json());return Response.json({id:`test-receipt-${mails.length}`});
  };

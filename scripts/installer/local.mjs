@@ -21,7 +21,7 @@ export const adapter = lifecycle;
 export const { install } = lifecycle;
 export const commandAdapter = createCommandAdapter(lifecycle, {
  dev: developmentTarget, preview: previewTarget, verify: ['pnpm', ['run', 'verify:app']], deploy: ownerDeploy('deploy.json', lifecycle),
- portability: localPortability({ database: 'foundation', buckets: { originals: 'BLOBS' }, policy: { product: 'documents/chest', excludeTables: ['chest_assert', 'chest_device_credentials'], buckets: { originals: { prefix: 'sha256/' } }, requiredConfiguration: ['OWNER_EMAIL', 'SESSION_SECRET', 'SETUP_TOKEN', 'AUTH_ORIGIN', 'MAIL_PROVIDER', 'MAIL_FROM'] }, transient: ['local runtime caches and logs'] }),
+ portability: localPortability({ database: 'foundation', buckets: { originals: 'BLOBS' }, policy: { product: 'documents/chest', excludeTables: ['chest_assert', 'chest_device_credentials', 'chest_reader'], buckets: { originals: { prefix: 'sha256/' } }, requiredConfiguration: ['OWNER_EMAIL', 'SESSION_SECRET', 'SETUP_TOKEN', 'AUTH_ORIGIN', 'MAIL_PROVIDER', 'MAIL_FROM'] }, transient: ['local runtime caches and logs'] }),
  publicPages: ['/', '/signin'],
  site: { entry: 'src/site/pages.tsx', output: 'dist/site', declaration: 'deploy-site.json', config: 'vite.site.config.ts' },
  setup: { manifestFile: 'rer-setup.json' }, browserModule: 'scripts/installer/ui/seed.mjs',

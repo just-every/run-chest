@@ -11,6 +11,8 @@ export function signature(bytes:Uint8Array):{mediaType:string,preview:string}|nu
  if(bytes[0]===255&&bytes[1]===216&&bytes[2]===255)return {mediaType:'image/jpeg',preview:'image'}
  if(prefix.startsWith('GIF87a')||prefix.startsWith('GIF89a'))return {mediaType:'image/gif',preview:'image'}
  if(prefix.slice(0,4)==='RIFF'&&prefix.slice(8,12)==='WEBP')return {mediaType:'image/webp',preview:'image'}
+ // HEIC/HEIF photos are read (src/chest/read) but most browsers cannot show them, so the original is a download.
+ if(prefix.slice(4,8)==='ftyp'&&['heic','heix','heim','heis','mif1','msf1'].includes(prefix.slice(8,12)))return {mediaType:'image/heic',preview:'unsupported'}
  return null
 }
 export async function inspect(bytes:Uint8Array,filename:string,actor:string,reviewer:string):Promise<Version> {

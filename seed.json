@@ -45,6 +45,16 @@
         "documents"
       ],
       "adapters": []
+    },
+    {
+      "id": "ai-model",
+      "required": false,
+      "why": "Optional: reads scans and photos for search and proposed typed fields with the installation's own AI provider key (Anthropic or OpenAI-compatible); PDF and Office text is read without it",
+      "data": [
+        "page images of scans and photos",
+        "typed field names"
+      ],
+      "adapters": []
     }
   ],
   "env": [],

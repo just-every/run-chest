@@ -51,7 +51,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (path === '/app/files/trash') return { body: trashPage(await trashView(env, s, w)) }
  if (parts[1] === 'spaces' && parts[2]) return { body: spacePage(await spaceView(env, w, parts[2]), people, groups) }
  if (parts[1] === 'items' && parts[2]) {
-  try { return { body: itemPage({ ...await itemView(env, s, w, parts[2]), me: s.operator.email }, { people, groups, destinations: await destinations(env, w) }) } }
+  try { return { body: itemPage({ ...await itemView(env, s, w, parts[2]), me: s.operator.email, ownerRole: s.operator.role === 'owner' }, { people, groups, destinations: await destinations(env, w) }) } }
   catch (e) { if (e instanceof ChestError && e.code === 'access_required') return { body: requestAccessPage(parts[2]) }; throw e }
  }
  if (path === '/app/shared') return { body: sharedPage(await sharedWithMe(env, w, url.searchParams), url.searchParams) }

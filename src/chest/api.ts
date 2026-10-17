@@ -15,10 +15,13 @@ import { syncRoute } from './files/sync-api'
 import { offboard } from './files/people'
 import { sweep } from './files/shares'
 import { everything,who } from './files/access'
+import { readingExecute } from './read/api'
+import { kick,textHits } from './read/jobs'
 export const headers={'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'same-origin'}
 export async function overview(env:Bindings,s:Session,url:URL){
- const rows=await documents(env,s,url.searchParams.get('trash')==='true'),q=(url.searchParams.get('q')||'').toLowerCase()
- const filtered=rows.filter(r=>JSON.stringify([r.payload.title,r.payload.fields,r.payload.reference,...r.payload.versions.map(v=>v.text)]).toLowerCase().includes(q))
+ const rows=await documents(env,s,url.searchParams.get('trash')==='true'),q=(url.searchParams.get('q')||'').toLowerCase(),read=await textHits(env,q)
+ // Titles, fields, relationship and the text of every version, including text read from PDFs and scans.
+ const filtered=rows.filter(r=>JSON.stringify([r.payload.title,r.payload.fields,r.payload.reference,...r.payload.versions.map(v=>v.text)]).toLowerCase().includes(q)||r.payload.versions.some(v=>read.has(v.checksum)))
  const collections=await list(env,'collection'),groups=await list(env,'group'),schemas=await list<Schema>(env,'schema')
  const principals=[s.operator.email,...groups.filter(g=>g.payload.members.includes(s.operator.email)).map(g=>g.id)]
  const visible=collections.filter(c=>s.operator.role==='owner'||c.payload.grants.some((g:any)=>principals.includes(g.principal)))
@@ -33,6 +36,7 @@ export async function execute(env:Bindings,request:Request,s:Session,method:stri
  if(method==='POST'&&parts[0]==='collections'&&parts[2]==='grants')return grants(env,s,'collection',parts[1],input)
  if(method==='POST'&&parts[0]==='groups'&&parts[1])return updateGroup(env,s,parts[1],input)
  if(method==='POST'&&parts[0]==='schemas'&&parts.length===2)return updateSchema(env,s,parts[1],input)
+ const reading=await readingExecute(env,s,method,parts,input,url);if(reading!==undefined)return reading
  if(path==='/documents'&&method==='POST')return upload(env,s,input)
  if(parts[0]==='documents'&&parts[1]){
   // Lifecycle decides access itself, so a trashed record can be restored by whoever may restore it.
@@ -67,5 +71,5 @@ export async function apiResponse(request:Request,original:Bindings){const pathn
  // Sync clients authenticate with their device credential, never a browser cookie.
  if(pathname.startsWith('/api/chest/sync/'))try{insist(Number(request.headers.get('content-length')||0)<20_000_000,'request_too_large',413);const result=await syncRoute(env,request,pathname.slice('/api/chest'.length));return result instanceof Response?result:Response.json(result,{headers})}catch(e){return failure(e)}
  try{const s=await authenticated(env,request);await syncPeople(env,request,s);await sweep(env);insist(Number(request.headers.get('content-length')||0)<20_000_000,'request_too_large',413);let input={};if(request.method==='POST'){insist(request.headers.get('content-type')?.includes('application/json'),'json_required');try{input=await request.json()}catch{throw new ChestError('invalid_json')}insist(input&&typeof input==='object'&&!Array.isArray(input),'invalid_input')}
- const result=await execute(env,request,s,request.method,new URL(request.url).pathname.slice('/api/chest'.length),input);return result instanceof Response?result:Response.json(result,{headers})}catch(e){return failure(e)}
+ const result=await execute(env,request,s,request.method,new URL(request.url).pathname.slice('/api/chest'.length),input);kick(env,request);return result instanceof Response?result:Response.json(result,{headers})}catch(e){return failure(e)}
 }

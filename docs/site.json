@@ -13,6 +13,7 @@
       "pages": [
         { "slug": "files", "title": "Folders and files", "file": "files.md", "summary": "Team spaces and folders, uploads that resume, and going back to an earlier version or date." },
         { "slug": "filing", "title": "File and find documents", "file": "filing.md", "summary": "Upload an original, file it with a type, an owner and a relationship, then search, preview and download." },
+        { "slug": "reading", "title": "Text inside files and scans", "file": "reading.md", "summary": "How Chest reads PDFs, Office files, scans and photos so search finds the words inside, and how values read from a scan are accepted." },
         { "slug": "versions", "title": "Versions and approval", "file": "versions.md", "summary": "Submit a replacement, review the exact version, and see what stays current while you decide." },
         { "slug": "access", "title": "People and access", "file": "access.md", "summary": "Grant reader, editor and reviewer roles to people and groups, keep a record private, and remove access everywhere at once." },
         { "slug": "dates", "title": "Review and expiry dates", "file": "dates.md", "summary": "Schedule reviews and expiries, see what is due, and record who checked it with evidence." },

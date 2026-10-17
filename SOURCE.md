@@ -36,7 +36,9 @@ and deployment health. Chest owns `src/base/font-head.ts`, its font definitions,
 The run site in `src/site` renders the landing page, `/run` and `docs/*.md`.
 
 MIT applies to eligible source; adopted Base modules, fonts and dependencies
-retain their licences. Logical edition, package and infrastructure identities
+retain their licences. Reading (`src/chest/read`) bundles pdf.js through unpdf (Apache-2.0
+and MIT), jpeg-js (BSD-3-Clause) and libheif-js (LGPL-3.0). libheif ships as its own
+WebAssembly module (`libheif.wasm`), loaded unchanged, so it can be replaced. Logical edition, package and infrastructure identities
 remain `documents/chest`, `@documents/chest`, `documents-chest`, `foundation` and
 `chest-originals`. The public repository is
 [just-every/run-chest](https://github.com/just-every/run-chest).

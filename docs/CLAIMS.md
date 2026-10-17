@@ -14,12 +14,13 @@ Status:
 
 ## Summary
 
-46 claims (rows below): **24 in code**, **3 partial**, **19 contract, not yet in code**.
+46 claims (rows below): **27 in code**, **2 partial**, **17 contract, not yet in code**.
 
 Rows 1, 9, 24, 25, 36, 39c and 40 were re-read against `just-every/run-chest` main on 17 October 2026 after
 the folders, uploads and restore work (sd-chest-folders), and rows 3, 10, 16, 17, 18, 30, 39b and 39f after the
 sharing work (links for anyone, revoke, file requests and Shared too widely; sd-chest-sharing); the other rows are as
-the desk built them.
+the desk built them. Rows 4, 12 and 19 were re-read after the reading work (PDF, Office and scan text, search
+and fields read from scans; sd-chest-read).
 
 ## Hero (page 1)
 
@@ -28,7 +29,7 @@ the desk built them.
 | 1 | "Chest stores … your team's files" | in code | Ordinary files in team spaces and personal areas, in nested folders, with no type, reviewer or approval (`src/chest/files/items.ts`, `spaces.ts`); dropped, picked or photographed on a phone and uploaded with progress, resumably, up to 4 GB per file (`src/chest/files/uploads.ts`, `public/chest-upload.js`). Every original is kept as an immutable version and SHA-256 checked on write and on every read, streamed for large files (`src/chest/blobs.ts`). Tests: `tests/chest/files.mjs` (SPACE-001, TRANSFER-001), `tests/chest/browser-files.mjs` at 1440 and 390. |
 | 2 | "syncs" | contract | No sync client (`seed.json` nonGoals: "Signed desktop and phone sync clients"). |
 | 3 | "shares your team's files" | in code | Share a file or folder with colleagues or groups at viewer, commenter or editor, with a message and an optional expiry, notice and email (`src/chest/files/shares.ts`); organisation links (`links.ts`); and links for anyone with no account, behind an optional password, expiry and download limit (`src/chest/files/public-links.ts`, `public.ts`). Access is recomputed on every request through every door, including the creator's current right to share. Tests: `tests/chest/files.mjs` SHARE-004, "SHARE-001 links for anyone". |
-| 4 | "reads every scan" | contract | No OCR or PDF text; only UTF-8 text files are extracted (`src/chest/api.ts` search, `ui-document.ts` "Extraction: chest:signature-only:1" for PDFs). |
+| 4 | "reads every scan" | in code | Scanned PDFs (each page's picture, through pdf.js) and JPEG, PNG, WebP, GIF and HEIC photos (HEIC decoded in the Worker with libheif) are read in the background by the installation's own AI model key, entered by the owner on People & settings (Reading scans; sealed, never shown again, excluded from exports; "Test the key"). Progress on the file page; uploads never wait (`src/chest/read/jobs.ts`, `heic.ts`, `pdf.ts`, `provider.ts`, `settings.ts`, `ui.ts`, `public/chest-read.js`). Limits: without a key, scans wait and the page and card say so; on RER Managed the card says "not available yet" (no egress relay), so the claim holds on self-hosted installs; TIFF and encrypted PDFs are not read; up to 60 scanned pages per file. Tests: `tests/chest/reading.mjs` (model faked at api.anthropic.com). |
 | 5 | "quietly files what arrives" | contract | No automatic filing ("AI jobs (phase two)" in `seed.json`). |
 | 6 | "100% free, open source" | in code | `LICENSE` (MIT); nothing charges or meters seats. |
 | 7 | "alternative to Google Drive, Dropbox and Box" | contract | The positioning is the contract's; today Chest is a governed document library (UI-REFERENCE §0). |
@@ -36,7 +37,7 @@ the desk built them.
 | 9 | Collage: receipt "Uploading 62%" | in code | Each file being uploaded shows its percentage, bytes received, Pause and Cancel; a lost connection shows "Connection lost at 61% · resumes by itself", and after a reload choosing the same file continues from the parts Chest holds (`public/chest-upload.js`, `src/chest/files/uploads.ts`). On a phone the drop area offers "Take a photo" (camera) next to the file picker. Browser only: native apps are row 14. |
 | 10 | Collage: share link "expires Nov 30 · 3 of 10 downloads" | in code | Each link for anyone is listed on the item's page and under Links as, for example, "Expires Nov 30 · 3 of 10 downloads · password" (`src/chest/files/public-links.ts` `linkSummary`, `ui-item.ts`, `ui-links.ts`); the recipient sees "Open until … · 7 of 10 downloads left". Test: `tests/chest/files.mjs` "SHARE-001 links for anyone" asserts the summary after three downloads. |
 | 11 | Collage: version stack v7 (approved), v6, v5 | in code | Every version kept; approval binds one exact version (`src/chest/reviews.ts:12-13`, `ui-document.ts` "Current approved"). |
-| 12 | Collage: scanned NDA with extracted fields boxed | contract | Typed fields exist but are typed in by people (`src/chest/fields.ts`, `ui-fields.ts`); nothing reads a scan. |
+| 12 | Collage: scanned NDA with extracted fields boxed | in code | On a scanned Library record whose document type has fields, the model reads each field's value, page, box and confidence; the record page draws numbered boxes on the page image beside the values. An editor accepts, corrects or rejects each one; nothing is written without that yes, a value a person saved is never replaced (the reading shows beside it), unreadable fields stay empty, readers get no controls (API 403), and every decision is audited with version, page, box and model (`src/chest/read/jobs.ts`, `decide.ts`, `ui.ts`, `ui-document.ts`). Limits: Library records only (everyday folders have no document types yet); no W-9 TIN masking. Test: `tests/chest/reading.mjs`. |
 | 13 | Collage: "Filed W-9 Acme Supply.pdf → Vendors / Acme / Tax · Undo" | contract | No automatic filing, no folder paths. |
 
 ## Sync, Sharing (page 2)
@@ -53,7 +54,7 @@ the desk built them.
 
 | # | Claim | Status | Code / gap |
 |---|---|---|---|
-| 19 | "Chest reads every document and scan, so search finds the words inside" | partial | Plain substring search over titles, typed fields, relationship and the text of UTF-8 files up to 500 kB (`src/chest/api.ts`, `ui-library.ts` "Search titles, fields and extracted UTF-8 text"). No PDF text, Office text, OCR or ranking. |
+| 19 | "Chest reads every document and scan, so search finds the words inside" | in code | Files search and Library search cover names, typed fields and the words inside: UTF-8 text, PDF text layers and Word, Excel, PowerPoint and OpenDocument text (read in the Worker, no key), and scans and photos (row 4), up to 900,000 characters per file, with a snippet; every hit, count, snippet, status, text and page image follows current access (`src/chest/read/jobs.ts` `textHits`, `office.ts`, `src/chest/files/views.ts`, `src/chest/api.ts`, `src/chest/read/api.ts`). Limits: substring match without ranking; no search filters; email, RTF, Apple iWork and audio/video transcripts are not read. Tests: `tests/chest/reading.mjs` (scan to searchable text; access filtering of read text). |
 | 20 | "and only shows what you are allowed to see" | in code | Lists, counts, search, detail, previews and downloads check current access; no access is a 404 (`src/chest/access.ts`, `src/chest/api.ts`, `tests/chest/flows.mjs`). |
 | 21 | "Word, Excel and PowerPoint files open right in the browser" | contract | Previews are PDF, PNG, JPEG, GIF, WebP and UTF-8 text only (`src/chest/blobs.ts`). |
 | 22 | "Edit at the same time, comment" | contract | No editing; comments exist only on a version's review (`src/chest/reviews.ts`). |

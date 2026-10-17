@@ -62,3 +62,15 @@ instructions under `node_modules/@runeditrun/rer/modules/deploy-kit`; account sc
 resource ownership, migrations, receipt and health checks are defined there.
 Local validation does not prove hosted acceptance, provider delivery or remote
 health.
+
+## Reading scans
+
+PDF and Office text is read inside the Worker with no outside service. Scans
+and photos are read by the AI provider whose key the owner saves on People &
+settings (Reading scans); see [docs/reading.md](docs/reading.md). The key is
+sealed under `SESSION_SECRET` in the `chest_reader` table, which exports
+exclude, so a restored or moved Chest needs the key entered again. Reading runs
+in the background after requests, a page at a time, and needs the Workers paid
+plan's CPU allowance for large PDFs and HEIC photos. On RER Managed hosting the
+card says reading scans is not available yet, because Managed has no outbound
+connection for AI providers.
