@@ -1,6 +1,6 @@
 # Chest homepage: every capability claim and the code behind it
 
-Generated from `CONTRACT.md` on `just-every/run-chest` main (`1822c22`): its "Homepage claims" table, with each
+Maintained from `CONTRACT.md` on `just-every/run-chest` (17 Oct 2026): its "Homepage claims" table, with each
 clause's status and evidence files from its "Status" table. Every file named below exists on this checkout.
 
 Status, as the contract defines it:
@@ -13,7 +13,7 @@ Status, as the contract defines it:
 
 ## Summary
 
-46 claims: **7 done**, **32 partial**, **7 missing**.
+46 claims: **7 done**, **34 partial**, **5 missing**.
 
 ## Claims
 
@@ -26,7 +26,7 @@ Status, as the contract defines it:
 | 5 | "quietly files what arrives" | missing | AGENT-001 (missing), RULE-001 (missing), CONNECT-006 (missing) | — |
 | 6 | "100% free, open source" | partial | OPEN-001 (partial) | `LICENSE` |
 | 7 | "alternative to Google Drive, Dropbox and Box" | partial | SPACE-001 (partial), SYNC-001 (partial), SHARE-001 (partial), MIGRATE-002 (missing), MIGRATE-003 (missing), MIGRATE-004 (missing) | `src/chest/files/spaces.ts`; `src/chest/files/items.ts`; `src/chest/files/uploads.ts`; `src/chest/files/ui-item.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `src/chest/files/sync.ts`; `src/chest/files/devices.ts`; `src/chest/files/links.ts`; `src/chest/files/public-links.ts`; `src/chest/files/capability.ts`; `src/chest/files/public.ts`; `src/chest/files/ui-links.ts` |
-| 8 | Collage: contract co-edited by Dana and Luis | missing | EDIT-001 (missing) | — |
+| 8 | Collage: contract co-edited by Dana and Luis | partial | EDIT-001 (partial) | `src/chest/office/service.ts`; `src/chest/office/presence.ts`; `src/chest/office/ui.ts`; `tests/chest/office.mjs`; `docs/office.md` |
 | 9 | Collage: receipt "Uploading 62%" | partial | TRANSFER-001 (partial), MOBILE-001 (partial) | `src/chest/files/uploads.ts`; `src/chest/blobs.ts`; `public/chest-upload.js`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `src/chest/ui-library.ts`; `src/chest/files/ui-item.ts`; `tests/chest/journey.mjs` |
 | 10 | Collage: share link "expires Nov 30 · 3 of 10 downloads" | partial | SHARE-001 (partial) | `src/chest/files/links.ts`; `src/chest/files/public-links.ts`; `src/chest/files/capability.ts`; `src/chest/files/public.ts`; `src/chest/files/ui-links.ts`; `tests/chest/files.mjs` |
 | 11 | Collage: version stack v7 (approved), v6, v5 | done | CHEST-07 (done), VERSION-001 (done) | `src/chest/documents.ts`; `src/chest/reviews.ts`; `tests/chest/flows.mjs`; `tests/chest/journey.mjs`; `src/chest/files/items.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |
@@ -39,9 +39,9 @@ Status, as the contract defines it:
 | 18 | "ask anyone to upload with a file request" | partial | SHARE-002 (partial) | `src/chest/files/file-requests.ts`; `src/chest/files/public.ts`; `src/chest/files/ui-public.ts`; `tests/chest/files.mjs` |
 | 19 | "Chest reads every document and scan, so search finds the words inside" | partial | SEARCH-001 (partial) | `src/chest/read/jobs.ts`; `src/chest/read/pdf.ts`; `src/chest/read/office.ts`; `src/chest/read/heic.ts`; `src/chest/read/provider.ts`; `src/chest/files/views.ts`; `src/chest/api.ts`; `tests/chest/reading.mjs`; `tests/chest/files.mjs` |
 | 20 | "and only shows what you are allowed to see" | done | CHEST-06 (done) | `src/chest/access.ts`; `src/chest/api.ts`; `src/chest/blobs.ts`; `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs` |
-| 21 | "Word, Excel and PowerPoint files open right in the browser" | partial | PREVIEW-001 (partial), EDIT-001 (missing) | `src/chest/blobs.ts`; `tests/chest/flows.mjs`; `tests/chest/browser-preview.mjs` |
-| 22 | "Edit at the same time, comment" | partial | EDIT-001 (missing), EDIT-003 (partial) | `src/chest/files/comments.ts`; `src/chest/reviews.ts`; `tests/chest/files.mjs` |
-| 23 | "and keep one copy" | missing | EDIT-001 (missing) | — |
+| 21 | "Word, Excel and PowerPoint files open right in the browser" | partial | PREVIEW-001 (partial), EDIT-001 (partial) | `src/chest/office/codec.ts`; `src/chest/office/word.ts`; `src/chest/office/sheets.ts`; `src/chest/office/slides.ts`; `src/chest/office/service.ts`; `tests/chest/office.mjs`; `docs/office.md` |
+| 22 | "Edit at the same time, comment" | partial | EDIT-001 (partial), EDIT-003 (partial) | `src/chest/office/service.ts`; `src/chest/office/presence.ts`; `src/chest/files/comments.ts`; `src/chest/files/notify.ts`; `tests/chest/office.mjs`; `docs/office.md` |
+| 23 | "and keep one copy" | partial | EDIT-001 (partial) | `src/chest/office/service.ts`; `src/chest/files/items.ts`; `tests/chest/office.mjs`; `docs/office.md` |
 | 24 | "Go back to any earlier version of a file" | done | VERSION-001 (done) | `src/chest/files/items.ts`; `src/chest/documents.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |
 | 25 | "or a whole folder" (and "Restore Clients / Harbor Freight to Oct 12") | done | RECOVER-001 (done) | `src/chest/files/rewind.ts`; `src/chest/files/ui-item.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |
 | 26 | "see who changed what" | partial | AUDIT-001 (partial), VERSION-001 (done) | `src/chest/store.ts`; `src/chest/api.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs`; `src/chest/files/items.ts`; `src/chest/documents.ts`; `tests/chest/browser-files.mjs` |

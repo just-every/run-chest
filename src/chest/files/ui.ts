@@ -1,6 +1,7 @@
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { list } from '../store'
+import { esc } from '../ui-shared'
 import { ChestError, type Group, type Person } from '../model'
 import { allowed, everything, start, who } from './access'
 import { home, itemView, search, spaceView } from './views'
@@ -16,6 +17,7 @@ import { linksView } from './exposure'
 import type { Space } from './model'
 import { quotas, quotaView } from '../quota/api'
 import { quotaPage, quotasPage } from '../quota/ui'
+import { readOffice } from '../office/service'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
 export const filesPath = (path: string) => /^\/(items|spaces|links|public-links|file-requests|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
@@ -23,6 +25,7 @@ export function filesInput(input: any) {
  for (const key of ['noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
  if (input.path === '/items' && input.type === 'file' && !input.name) input.name = input.filename
  if (typeof input.destination === 'string') { const [kind, id] = input.destination.split(':'); if (kind === 'space') { input.space = id; input.parent = null } else input.parent = id }
+ if (/^\/items\/[^/]+\/office$/.test(input.path)) input.changes = Object.fromEntries(Object.entries(input).filter(([k]) => k.startsWith('office:')).map(([k, v]) => [k.slice(7), v]))
  if (input.expires === '') delete input.expires
  // The restore preview's checkboxes name the items to restore.
  if (input.path === '/rewind/apply') input.items = Object.keys(input).filter(k => k.startsWith('item:')).map(k => k.slice(5))
@@ -33,6 +36,7 @@ export function filesReceipt(input: any, result: any) {
  if (/^\/items\/[^/]+\/links$/.test(input.path)) return secretPage('Organization link created', result.url, 'Copy this link now. Chest keeps only a fingerprint of it and cannot show it again.', input.returnTo || '/app/files')
  if (/^\/items\/[^/]+\/public-links$/.test(input.path)) return secretPage('Link created', result.url, `Copy this link now and send it to the people who need the ${result.link.password ? 'file; send the password separately' : 'file'}. Chest keeps only a fingerprint of it and cannot show it again. Revoke it any time from the file's page or Links.`, input.returnTo || '/app/links')
  if (/^\/items\/[^/]+\/file-requests$/.test(input.path)) return secretPage('File request created', result.url, `Send this link to the people who should upload. They need no account and see nothing else in the folder. ${result.email === 'available' ? 'You get an email and a notice for every upload.' : 'Email is not available yet on this installation; every upload appears in your Notices.'} Close the request any time from Links.`, input.returnTo || '/app/links')
+ if (/^\/items\/[^/]+\/comments$/.test(input.path) && result.email && !/^(accepted|sent)/.test(result.email)) return `<p>${esc(result.email.startsWith('Not available yet') ? result.email : 'Email notification is not available yet on this installation.')}</p><p><a href="${esc(input.returnTo || '/app/files')}">Back to the file</a></p>`
  if (input.path === '/rewind/preview') return rewindPage(input, result)
  if (input.path === '/rewind/apply') return rewindDonePage(input, result)
  if (/^\/rewind\/[^/]+\/undo$/.test(input.path)) return rewindUndonePage(input, result)
@@ -56,7 +60,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (path === '/app/files/trash') return { body: trashPage(await trashView(env, s, w)) }
  if (parts[1] === 'spaces' && parts[2]) return { body: spacePage({ ...await spaceView(env, w, parts[2]), quotaOwner: s.operator.role === 'owner' }, people, groups) }
  if (parts[1] === 'items' && parts[2]) {
-  try { return { body: itemPage({ ...await itemView(env, s, w, parts[2]), me: s.operator.email, ownerRole: s.operator.role === 'owner' }, { people, groups, destinations: await destinations(env, w) }) } }
+  try { const officeEdit = url.searchParams.get('edit') === '1' ? await readOffice(env, w, parts[2], undefined, true) : null; return { body: itemPage({ ...await itemView(env, s, w, parts[2]), officeEdit, me: s.operator.email, ownerRole: s.operator.role === 'owner' }, { people, groups, destinations: await destinations(env, w) }) } }
   catch (e) { if (e instanceof ChestError && e.code === 'access_required') return { body: requestAccessPage(parts[2]) }; throw e }
  }
  if (path === '/app/shared') return { body: sharedPage(await sharedWithMe(env, w, url.searchParams), url.searchParams) }

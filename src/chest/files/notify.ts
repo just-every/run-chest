@@ -7,6 +7,7 @@ import type { Notice } from './model'
 // In-app notices are records; each is also emailed through the installation's mail provider. The notice keeps the
 // provider's real outcome: accepted, suppressed (local runs), not configured, or the failure code.
 export const notice = (to: string, type: string, item: string | null, from: string, message: string, request?: string) => fresh<Notice>('notice', { to, type, item, from, message, at: now(), read: false, email: 'queued', ...(request ? { request } : {}) })
+export const MAIL_MANAGED_LINE = 'Not available yet on RER Managed hosting: email notifications need an outbound connection.'
 function compose(env: Bindings, n: Notice) {
  const base = env.AUTH_ORIGIN, open = n.item ? `${base}/app/items/${n.item}` : `${base}/app/files`
  if (n.type === 'share') return { subject: `${n.from} shared a file with you`, text: `${n.message}\n\nOpen it in Chest: ${open}\nFind everything shared with you: ${base}/app/shared` }
@@ -14,12 +15,13 @@ function compose(env: Bindings, n: Notice) {
  if (n.type === 'request.decision' || n.type === 'request.expired') return { subject: 'Your access request', text: `${n.message}\n\n${open}` }
  if (n.type === 'file-request.upload') return { subject: 'New files from your file request', text: `${n.message}\n\nOpen them in Chest: ${open}` }
  if (n.type === 'share.expiring') return { subject: 'Access expires tomorrow', text: `${n.message}\n\nOpen the item to extend access: ${open}` }
+ if (n.type === 'comment') return { subject: `${n.from} commented on your file`, text: `${n.message}\n\nOpen the comment in Chest: ${open}` }
  return { subject: 'Chest notice', text: `${n.message}\n\n${open}` }
 }
 export async function deliver(env: Bindings, actor: Session | null, rows: Row<Notice>[]) {
- const sender = operatorMail(env), updated: { row: Row<Notice>; previous: Row<Notice> }[] = []
+ const managed = String(env.MAIL_PROVIDER) === 'rer', sender = managed ? undefined : operatorMail(env), updated: { row: Row<Notice>; previous: Row<Notice> }[] = []
  for (const row of rows) {
-  let outcome = 'not_configured'
+  let outcome = managed ? MAIL_MANAGED_LINE : 'not_configured'
   if (sender && env.MAIL_FROM) {
    try { const message = compose(env, row.payload), result = await sender.send({ deliveryId: row.id, from: env.MAIL_FROM, to: [row.payload.to], subject: message.subject, text: message.text, html: `<p>${message.text.replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`).replace(/\n/g, '<br>')}</p>`, headers: { 'Auto-Submitted': 'auto-generated' } }); outcome = result.status === 'development' ? 'suppressed' : `${result.status}${result.providerMessageId ? ':' + result.providerMessageId : ''}` }
    catch (e: any) { outcome = `failed:${typeof e?.code === 'string' ? e.code : 'send_error'}` }
@@ -27,4 +29,5 @@ export async function deliver(env: Bindings, actor: Session | null, rows: Row<No
   updated.push({ row: next(row, { ...row.payload, email: outcome }), previous: row })
  }
  if (updated.length) await commit(env, actor, updated)
+ return updated.map(change => change.row)
 }

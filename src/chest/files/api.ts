@@ -17,6 +17,8 @@ import { home, itemView, search, spaceView } from './views'
 import { sharingPolicy } from './people'
 import { list } from '../store'
 import { comment } from './comments'
+import { readOffice, saveOffice, officeDocument } from '../office/service'
+import { presence } from '../office/presence'
 import { apply, plan, undo } from './rewind'
 import { begin, cancel, complete, receive, status, unfinished } from './uploads'
 import type { AccessRequest } from './model'
@@ -54,6 +56,10 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
  if (head === 'items') {
   if (post && !key) return createItem(env, s, w, input)
   if (get && key && !sub) return itemView(env, s, w, key)
+  if (get && sub === 'office-preview') return officeDocument((await readOffice(env, w, key, version)).html)
+  if (get && sub === 'office') { const result = await readOffice(env, w, key, undefined, url.searchParams.get('edit') === 'true'); return { ...result, fields: url.searchParams.get('edit') === 'true' ? result.fields : undefined } }
+  if (post && sub === 'office') return saveOffice(env, s, w, key, input)
+  if (sub === 'presence' && (get || post)) return presence(env, s, key, post ? input : undefined)
   if (get && sub === 'bytes' && version) return bytes(env, s, w, key, version, url.searchParams.get('download') === 'true', request.headers.get('range'))
   if (post && sub === 'versions' && !version) return addVersion(env, s, w, key, fromBase64(input.base64), input)
   if (post && sub === 'versions' && verb === 'name') return nameVersion(env, s, w, key, version, input)

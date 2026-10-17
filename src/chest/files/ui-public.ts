@@ -2,6 +2,7 @@ import { headers } from '../api'
 import { head, policy } from '../ui-shell'
 import { esc } from '../ui-shared'
 import { size } from './ui-item'
+import { isOffice } from '../office/service'
 // Pages for people without a Chest account: a link for anyone and a file request. They read like sign-in (the
 // wordmark above one card), carry no script, and never show more than the link itself reveals.
 // Request limits are set in decimal megabytes, so they read back that way.
@@ -23,9 +24,9 @@ const until = (link: { expires: string | null; limit: number | null; downloads: 
 export function linkPage(base: string, link: { expires: string | null; limit: number | null; downloads: number }, root: { name: string; type: string }, files: { id: string; path: string; name: string; size: number; mediaType: string }[], downloads: boolean) {
  const terms = until(link)
  const facts = (f: { size: number; mediaType: string }) => `${esc(size(f.size))} · ${esc(f.mediaType)}`
- const rows = root.type === 'folder' ? files.map(f => `<p><strong>${esc(f.path)}${esc(f.name)}</strong><br><span class="mono">${facts(f)}</span>${downloads ? ` · <a href="${esc(`${base}/f/${f.id}`)}" download>Download</a>` : ''}</p>`).join('') : files[0] ? `<p class="mono">${facts(files[0])}</p>` : ''
+ const rows = root.type === 'folder' ? files.map(f => `<p><strong>${esc(f.path)}${esc(f.name)}</strong><br><span class="mono">${facts(f)}</span>${downloads && isOffice(f.name) ? ` · <a href="${esc(`${base}/p/${f.id}`)}">Preview</a>` : ''}${downloads ? ` · <a href="${esc(`${base}/f/${f.id}`)}" download>Download</a>` : ''}</p>`).join('') : files[0] ? `<p class="mono">${facts(files[0])}</p>` : ''
  const lede = root.type === 'folder' ? `<p>A folder shared with you. ${files.length ? `${files.length} file${files.length === 1 ? '' : 's'} you can download.` : 'It has no files yet.'}</p>` : '<p>A file shared with you. You do not need an account to download it.</p>'
- return publicPage(root.name, `${lede}${terms ? `<p class="mono">${terms}</p>` : ''}${rows}${downloads ? root.type === 'file' && files[0] ? `<p><a class="action" href="${esc(`${base}/f/${files[0].id}`)}" download>Download</a></p>` : '' : `<p class="notice">${esc(gone.download_off[1])}</p>`}`)
+ return publicPage(root.name, `${lede}${terms ? `<p class="mono">${terms}</p>` : ''}${rows}${downloads && root.type === 'file' && files[0] && isOffice(files[0].name) ? `<p><a class="action" href="${esc(`${base}/p/${files[0].id}`)}">Preview</a></p>` : ''}${downloads ? root.type === 'file' && files[0] ? `<p><a class="action" href="${esc(`${base}/f/${files[0].id}`)}" download>Download</a></p>` : '' : `<p class="notice">${esc(gone.download_off[1])}</p>`}`)
 }
 export const closedRequest = () => publicPage('File request closed', '<p>This file request is no longer accepting files. Ask the person who sent it whether they still need them.</p>', 410)
 export const missingRequest = () => publicPage('File request not found', '<p>This file request does not exist. Check that you copied all of the link.</p>', 404)

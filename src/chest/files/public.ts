@@ -1,5 +1,7 @@
 import { runtimeBindings, type Bindings } from '../../auth.server'
-import { serve } from '../blobs'
+import { serve, digest } from '../blobs'
+import { officePreview } from '../office/codec'
+import { officeDocument } from '../office/service'
 import { ChestError, insist, type Person, type Version } from '../model'
 import { failure } from '../api'
 import { commit, maybe, next } from './repo'
@@ -18,6 +20,7 @@ export async function publicResponse(request: Request, original: Bindings): Prom
   if (request.method === 'POST') insist(request.headers.get('origin') === env.AUTH_ORIGIN && request.headers.get('sec-fetch-site') !== 'cross-site', 'invalid_origin', 403)
   else insist(request.method === 'GET' || request.method === 'HEAD', 'method_not_allowed', 405)
   if (door === 'l' && !sub) return request.method === 'POST' ? unlock(env, request, secret) : open(env, request, secret)
+  if (door === 'l' && sub === 'p' && key && request.method === 'GET') return preview(env, request, secret, key)
   if (door === 'l' && sub === 'f' && key && request.method === 'GET') return download(env, request, secret, key)
   if (door === 'r' && !sub) return request.method === 'POST' ? upload(env, request, secret) : ask(env, secret)
   return refusedLink('not_found')
@@ -30,6 +33,18 @@ async function open(env: Bindings, request: Request, secret: string) {
  const files = (await reachable(env, r)).map(({ row, path }) => { const v = row.payload.versions.find(v => v.id === row.payload.current)!; return { id: row.id, path, name: row.payload.name, size: v.size, mediaType: v.mediaType } })
  await commit(env, null, [], { by: anyone, audits: [{ action: 'link.view', object: r.root.id, detail: { link: r.link.id } }] })
  return linkPage(base, r.link.payload, r.root.payload, files, !r.state.noDownload)
+}
+async function preview(env: Bindings, request: Request, secret: string, key: string) {
+ const r = await resolveLink(env, secret); if ('refused' in r) return refusedLink(r.refused)
+ if (await locked(env, request, r)) return passwordPage(`/l/${secret}`, false, 401)
+ const file = await fileThrough(env, r, key); if (!file) return refusedLink('unavailable')
+ const v = file.row.payload.versions.find(v => v.id === file.row.payload.current); insist(v, 'version_not_found', 404)
+ insist(v.size <= 8_000_000, 'office_file_too_large', 413)
+ const blob = await env.BLOBS.get(`sha256/${v.checksum}`); insist(blob, 'blob_missing', 503)
+ const bytes = new Uint8Array(await blob.arrayBuffer()); insist(bytes.length === v.size && await digest(bytes) === v.checksum, 'blob_integrity', 503)
+ const result = await officePreview(bytes); insist(result, 'office_format_unsupported', 415)
+ await commit(env, null, [], { by: anyone, fences: file.fences, audits: [{ action: 'link.preview', object: file.row.id, detail: { link: r.link.id, version: v.id } }] })
+ return officeDocument(result.html)
 }
 // Ten wrong passwords for one link in 15 minutes pause it; every refusal is audited without the attempt itself.
 async function unlock(env: Bindings, request: Request, secret: string) {

@@ -744,7 +744,7 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 5 | "quietly files what arrives" | AGENT-001, RULE-001, CONNECT-006 | missing |
 | 6 | "100% free, open source" | OPEN-001 | partial |
 | 7 | "alternative to Google Drive, Dropbox and Box" | SPACE-001, SYNC-001, SHARE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 | partial |
-| 8 | Collage: contract co-edited by Dana and Luis | EDIT-001 | missing |
+| 8 | Collage: contract co-edited by Dana and Luis | EDIT-001 | partial |
 | 9 | Collage: receipt "Uploading 62%" | TRANSFER-001, MOBILE-001 | partial |
 | 10 | Collage: share link "expires Nov 30 · 3 of 10 downloads" | SHARE-001 | partial |
 | 11 | Collage: version stack v7 (approved), v6, v5 | CHEST-07, VERSION-001 | done |
@@ -759,7 +759,7 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 20 | "and only shows what you are allowed to see" | CHEST-06 | done |
 | 21 | "Word, Excel and PowerPoint files open right in the browser" | PREVIEW-001, EDIT-001 | partial |
 | 22 | "Edit at the same time, comment" | EDIT-001, EDIT-003 | partial |
-| 23 | "and keep one copy" | EDIT-001 | missing |
+| 23 | "and keep one copy" | EDIT-001 | partial |
 | 24 | "Go back to any earlier version of a file" | VERSION-001 | done |
 | 25 | "or a whole folder" (and "Restore Clients / Harbor Freight to Oct 12") | RECOVER-001 | done |
 | 26 | "see who changed what" | AUDIT-001, VERSION-001 | partial |
@@ -788,11 +788,13 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 
 Judged from the code and tests at commit `506ad550417537048ed74c928fdab4b8946197ea` (17 October 2026).
 
+Office preview, editing and comment rows updated on 17 October 2026; see `docs/office.md`.
+
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 13 | 0 | 0 | 13 |
-| Target and push further | 3 | 30 | 39 | 72 |
-| All | 16 | 30 | 39 | 85 |
+| Target and push further | 3 | 31 | 38 | 72 |
+| All | 16 | 31 | 38 | 85 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -829,12 +831,12 @@ Judged from the code and tests at commit `506ad550417537048ed74c928fdab4b8946197
 | `SHARE-004` | Item sharing, Shared with me and access requests | target | done | `src/chest/files/shares.ts`; `src/chest/files/notify.ts`; `src/chest/files/people.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
 | `SHARE-005` | External collaborators who edit, comment and upload | target | missing |  | No delivered product workflow. |
 | `POLICY-001` | Organization sharing policy | target | missing |  | No delivered product workflow. |
-| `PREVIEW-001` | Office, Google, video and design previews | target | partial | `src/chest/blobs.ts`; `tests/chest/flows.mjs`; `tests/chest/browser-preview.mjs` | Only basic PDF/raster/text previews exist; no broad renderer or processor. |
+| `PREVIEW-001` | Office, Google, video and design previews | target | partial | `src/chest/office/codec.ts`; `src/chest/office/word.ts`; `src/chest/office/sheets.ts`; `src/chest/office/slides.ts`; `src/chest/office/service.ts`; `tests/chest/office.mjs`; `docs/office.md`; `src/chest/blobs.ts`; `tests/chest/browser-preview.mjs` | In-install DOCX text/tables/basic formatting/raster images, XLSX sheets and saved values, and PPTX slides in relationship order now preview at phone and desktop widths; current access and public-link restrictions gate previews. Advanced Office layouts/themes/charts, Google formats, video and design rendering remain incomplete. |
 | `SEARCH-001` | Full-text and scanned-content search | target | partial | `src/chest/read/jobs.ts`; `src/chest/read/pdf.ts`; `src/chest/read/office.ts`; `src/chest/read/heic.ts`; `src/chest/read/provider.ts`; `src/chest/files/views.ts`; `src/chest/api.ts`; `tests/chest/reading.mjs`; `tests/chest/files.mjs` | Names, typed fields and the text of every current version are searched with snippets under current access: UTF-8 text, PDF text layers, DOCX/XLSX/PPTX/ODT/ODS/ODP text, and OCR of image-only PDF pages and JPEG, PNG, WebP, GIF and HEIC images with the installation's own AI model key (language and confidence recorded per page, truncation shown with its offset, encrypted PDFs shown as unread). Missing: TIFF OCR, RTF, Apple iWork, Google export, EML/MSG, audio/video transcripts, the named filters, ranking, earlier-version search and the SCALE-001 search target; OCR is unavailable on RER Managed until an egress relay exists. |
 | `SEARCH-002` | Typed fields read from scans and shown where they were found | target | partial | `src/chest/read/jobs.ts`; `src/chest/read/decide.ts`; `src/chest/read/provider.ts`; `src/chest/read/ui.ts`; `src/chest/ui-document.ts`; `tests/chest/reading.mjs` | On a scanned Library record, the CHEST-02 fields of its type are proposed with page, box (drawn on the page image) and confidence; an editor confirms, corrects or rejects each (readers 403), saved values are never overwritten (the reading shows beside them), unreadable fields stay empty, and decisions are audited with version, page, region and reader; a new version is read again with earlier decisions kept on their version. Missing: folder types for everyday files, W-9 TIN masking, mobile apps, and owner-selected spend and retention under AGENT-007. |
-| `EDIT-001` | Office and independent browser co-authoring | target | missing |  | No delivered product workflow. |
+| `EDIT-001` | Office and independent browser co-authoring | target | partial | `src/chest/office/service.ts`; `src/chest/office/codec.ts`; `src/chest/office/presence.ts`; `src/chest/office/ui.ts`; `src/chest/files/items.ts`; `tests/chest/office.mjs`; `docs/office.md` | Built-in DOCX text and XLSX value editing saves attributed immutable versions of the same file, preserves untouched package parts, supports restoration, refuses conflicting saves and merges structurally unchanged independent fields. Current-session presence and viewer/editor gates exist. Live shared typing, full layout/formula editing, PPTX editing, shipped Collabora, tracked suggestions and the full review loop remain unimplemented. |
 | `EDIT-002` | Google-format collaboration without hidden loss | target | missing |  | No delivered product workflow. |
-| `EDIT-003` | Contextual comments and collaborative tasks | target | partial | `src/chest/files/comments.ts`; `src/chest/reviews.ts`; `tests/chest/files.mjs` | Version-bound file comments (commenter and above) and exact-version review comments exist; mentions, threads, tasks and annotations do not. |
+| `EDIT-003` | Contextual comments and collaborative tasks | target | partial | `src/chest/files/comments.ts`; `src/chest/files/notify.ts`; `src/chest/office/presence.ts`; `src/chest/reviews.ts`; `tests/chest/office.mjs`; `tests/chest/files.mjs`; `docs/office.md` | Version-bound file comments notify the file owner by in-app notice and the installation mail provider; presence rechecks live sessions and access. Managed email reports one unavailable line pending outbound support. In-document anchors, mentions, threads, assignments, tasks, tracked suggestions and email replies/resolution remain unimplemented. |
 | `EDIT-004` | New documents, spreadsheets and presentations from blank or templates | target | missing |  | No delivered product workflow. |
 | `SIGN-001` | Built-in eSignature on PDF and DOCX files | target | missing |  | No delivered product workflow. |
 | `RECOVER-001` | Folder and account point-in-time recovery | target | done | `src/chest/files/rewind.ts`; `src/chest/files/ui-item.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
