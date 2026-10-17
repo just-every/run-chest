@@ -13,7 +13,7 @@ Status, as the contract defines it:
 
 ## Summary
 
-46 claims: **7 done**, **30 partial**, **9 missing**.
+46 claims: **7 done**, **32 partial**, **7 missing**.
 
 ## Claims
 
@@ -52,10 +52,10 @@ Status, as the contract defines it:
 | 31 | Mascot filing files from email, phone and laptop; "312 files filed this week" | partial | AGENT-001 (missing), CONNECT-006 (missing), MOBILE-001 (partial) | `src/chest/ui-library.ts`; `src/chest/files/ui-item.ts`; `public/chest-upload.js`; `tests/chest/journey.mjs`; `tests/chest/browser-files.mjs` |
 | 32 | "Move from Google Drive, Dropbox or Box with folders, permissions, versions and shared links" | partial | MIGRATE-001 (partial), MIGRATE-002 (missing), MIGRATE-003 (missing), MIGRATE-004 (missing) | `src/chest/archive.ts`; `src/chest/archive-target.ts`; `tests/chest/flows.mjs` |
 | 33 | "Old links forward to the new ones" (and "Shared links redirected · 214") (correction sent to br: vendor URLs cannot forward) | missing | MIGRATE-007 (missing) | — |
-| 34 | "Single sign-on" (Okta) | missing | ADMIN-001 (missing) | — |
-| 35 | "automatic user setup" (User sync · 42 people) | missing | ADMIN-001 (missing) | — |
+| 34 | "Single sign-on" (Okta) | partial | ADMIN-001 (partial) | `src/chest/organisation/settings.ts`; `src/chest/organisation/oidc.ts`; `src/chest/organisation/saml.ts`; `src/chest/organisation/ui.ts`; `tests/chest/organisation.mjs`; `docs/organisation.md` |
+| 35 | "automatic user setup" (User sync · 42 people) | partial | ADMIN-001 (partial) | `src/chest/organisation/scim.ts`; `src/chest/organisation/scim-resources.ts`; `src/chest/organisation/scim-tokens.ts`; `tests/chest/organisation.mjs`; `docs/organisation.md` |
 | 36 | "team spaces" | partial | SPACE-001 (partial), SPACE-002 (missing) | `src/chest/files/spaces.ts`; `src/chest/files/items.ts`; `src/chest/files/uploads.ts`; `src/chest/files/ui-item.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |
-| 37 | "storage limits" (1.2 TB of 5 TB) | partial | QUOTA-001 (missing), ADMIN-002 (partial) | `src/chest/api.ts`; `src/chest/store.ts`; `tests/chest/flows.mjs` |
+| 37 | "storage limits" (1.2 TB of 5 TB) | partial | QUOTA-001 (partial), ADMIN-002 (partial) | `src/chest/quota/api.ts`; `src/chest/quota/storage.ts`; `src/chest/quota/ui.ts`; `src/chest/files/repo.ts`; `public/chest-upload.js`; `tests/chest/quota.mjs`; `src/chest/api.ts`; `src/chest/store.ts`; `tests/chest/flows.mjs` |
 | 38 | "Run Chest on your own computer or server and keep every file. Export everything, any time." (Your own storage · Your own computer or server · Export any time; terminal: `npx -y @runeditrun/rer dev just-every/run-chest`) | partial | OWN-001 (partial), CHEST-12 (done), RECOVER-002 (partial) | `docs/run.md`; `scripts/installer/local.mjs`; `deploy.json`; `tests/chest/first-run.mjs`; `scripts/check-public-assets.mjs`; `tests/chest/restore.mjs`; `tests/chest/journey.mjs` |
 | 39a | "Exact-version approvals: Sign-off sticks to the version that was approved." | done | CHEST-07 (done), CHEST-08 (done) | `src/chest/documents.ts`; `src/chest/reviews.ts`; `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |
 | 39b | "File requests: Anyone can upload to the folder you choose." | partial | SHARE-002 (partial) | `src/chest/files/file-requests.ts`; `src/chest/files/public.ts`; `src/chest/files/ui-public.ts`; `tests/chest/files.mjs` |

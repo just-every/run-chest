@@ -4,6 +4,7 @@ import { createOperatorAuth, createAuthHandler, createSignInHandler, devGate, de
 import { operatorMail } from './mail.server.mjs'
 import { createOwnerClaimHandler, OwnerClaimError } from './modules/owner-claim/index.mjs'
 import branding from './branding.json'
+import { companyResponse } from './chest/organisation/routes'
 
 // The edition's declared theme (public/rer-theme.css), as Base frames link it.
 const theme = { href: '/rer-theme.css', productName: branding.name, accentColor: branding.primaryColor }
@@ -52,6 +53,8 @@ export async function authResponse(request: Request, original: Bindings): Promis
   const gate = devGate({ key: env.RER_DEV_KEY, origin: env.AUTH_ORIGIN, local: env.AUTH_LOCAL === 'true' })
   return gate ? await gate.exchange(request) ?? devNotFound() : devNotFound()
  }
+ const company = await companyResponse(request, env)
+ if (company) return fontDocumentResponse(company)
  // The shared server-rendered sign-in page: plain forms that work before any script.
  if (url.pathname === '/signin') {
   // A signed-in person who opens sign-in goes to the library instead of an empty form.

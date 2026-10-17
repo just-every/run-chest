@@ -15,6 +15,7 @@ import { personal, visibleSpaces } from './spaces'
 import type { Link, Prefs, Space } from './model'
 import { extraction, textHits } from '../read/jobs'
 import { summary } from '../read/api'
+import { storage } from '../quota/storage'
 // Read models for the files pages and API: what a person may see, with the actions their current role allows.
 const can = (ctx: { space: any; state: any }) => Object.fromEntries((['download', 'comment', 'contribute', 'manage', 'share', 'administer'] as const).map(a => [a, allowed(ctx, a)]))
 const label = (space: Space, w: Who) => space.kind === 'personal' ? (space.owner !== w.email ? 'Shared with me' : space.formerOwner ? space.name : 'My files') : space.name
@@ -34,7 +35,7 @@ export async function spaceView(env: Bindings, w: Who, key: string) {
  const space = await get<Space>(env, 'space', key), state = start(space.payload, w); insist(state.role, 'not_found', 404)
  const ctx: Ctx = { space, chain: [], state, links: [], fences: [] }
  const manager = state.role === 'manager' || state.role === 'owner'
- return { id: space.id, name: label(space.payload, w), kind: space.payload.kind, role: state.role, can: can(ctx), settings: space.payload.settings, members: space.payload.kind === 'team' ? space.payload.members : [], children: (await children(env, w, ctx, null)).map(brief), uploads: await unfinished(env, w, { space: space.id, parent: null }), rewinds: manager ? await rewinds(env, `space:${space.id}`) : [] }
+ return { id: space.id, name: label(space.payload, w), kind: space.payload.kind, role: state.role, can: can(ctx), settings: space.payload.settings, storage: { id: space.id, limitBytes: space.payload.storageLimitBytes ?? null, ...await storage(env, space.id) }, members: space.payload.kind === 'team' ? space.payload.members : [], children: (await children(env, w, ctx, null)).map(brief), uploads: await unfinished(env, w, { space: space.id, parent: null }), rewinds: manager ? await rewinds(env, `space:${space.id}`) : [] }
 }
 export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'view')

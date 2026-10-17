@@ -1,3 +1,4 @@
+import {setQuota,quotaView} from '../quota/api'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { fromBase64 } from '../blobs'
@@ -43,6 +44,8 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && sub === 'cancel') return cancel(env, s, w, key)
  }
  if (head === 'spaces') {
+  if (get && sub === 'quota') return quotaView(env,s,key)
+  if (post && sub === 'quota') return setQuota(env,s,key,input)
   if (post && !key) return createSpace(env, s, input)
   if (get && key && !sub) return spaceView(env, w, key)
   if (post && sub === 'members') return members(env, s, w, key, input)

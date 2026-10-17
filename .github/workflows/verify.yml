@@ -2,13 +2,16 @@ name: Verify
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: '31 16 * * *'
 permissions:
   contents: read
 jobs:
-  # Three parallel shards keep the push gate well under 15 minutes: the RER check and HTTP verify, the files browser
-  # journey against the built Worker, and the fresh-clone setup/dev/export/import journey.
+  # Three parallel push shards cover the RER/HTTP checks, files browser journey, and Auth organisation integration.
+  # The fresh-clone installer journey retains coverage on release tags, nightly and manual runs.
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -88,6 +91,7 @@ jobs:
           name: chest-files-pages
           path: test-results/*.png
   journey:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -130,3 +134,29 @@ jobs:
         with:
           name: chest-browser-pages
           path: test-results/*.png
+
+  organisation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: just-every/run-auth
+          ref: ba5db7d3747fc6a8ecbfb82e0e5c55f81b45b0f3
+          path: .test-auth
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.20.0'
+      - run: npm install --global pnpm@10.12.4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run build
+      - run: pnpm install --frozen-lockfile && pnpm exec vite build
+        working-directory: .test-auth
+      - run: pnpm run test:organisation
+        env:
+          CHEST_AUTH_CHECKOUT: .test-auth

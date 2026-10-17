@@ -17,6 +17,9 @@ import { sweep } from './files/shares'
 import { everything,who } from './files/access'
 import { readingExecute } from './read/api'
 import { kick,textHits } from './read/jobs'
+import { totalStorage } from './quota/storage'
+import { saveSso,localPolicy,ssoView } from './organisation/settings'
+import { issueScimToken,revokeScimToken,scimView } from './organisation/scim'
 export const headers={'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'same-origin'}
 export async function overview(env:Bindings,s:Session,url:URL){
  const rows=await documents(env,s,url.searchParams.get('trash')==='true'),q=(url.searchParams.get('q')||'').toLowerCase(),read=await textHits(env,q)
@@ -26,10 +29,14 @@ export async function overview(env:Bindings,s:Session,url:URL){
  const principals=[s.operator.email,...groups.filter(g=>g.payload.members.includes(s.operator.email)).map(g=>g.id)]
  const visible=collections.filter(c=>s.operator.role==='owner'||c.payload.grants.some((g:any)=>principals.includes(g.principal)))
  const diagnosed=filtered.map(row=>({...row,fieldIssues:fieldIssues(schemas.find(schema=>schema.id===row.payload.schema)!.payload,row.payload.fields)}))
- return {me:{email:s.operator.email,name:s.operator.displayName,role:s.operator.role},documents:diagnosed,count:filtered.length,collections:visible,schemas,people:await list<Person>(env,'person'),groups:s.operator.role==='owner'?groups:[],storage:s.operator.role==='owner'?{logicalBytes:(await list<Document>(env,'document')).reduce((n,r)=>n+r.payload.versions.reduce((a,v)=>a+v.size,0),0)}:null}
+ return {me:{email:s.operator.email,name:s.operator.displayName,role:s.operator.role},documents:diagnosed,count:filtered.length,collections:visible,schemas,people:await list<Person>(env,'person'),groups:s.operator.role==='owner'?groups:[],storage:s.operator.role==='owner'?{logicalBytes:await totalStorage(env)}:null}
 }
 export async function execute(env:Bindings,request:Request,s:Session,method:string,path:string,input:any):Promise<any>{
  const parts=path.split('/').filter(Boolean),url=new URL(request.url)
+ if(path==='/organisation/sso') {owner(s);return method==='POST'?saveSso(env,s,input):ssoView(env)}
+ if(path==='/organisation/policy'&&method==='POST')return localPolicy(env,s,input)
+ if(path==='/organisation/scim/tokens') {owner(s);return method==='POST'?issueScimToken(env,request,s,input):scimView(env)}
+ if(path==='/organisation/scim/revoke'&&method==='POST')return revokeScimToken(env,request,s,input.id)
  if(method==='GET'&&path==='/library')return overview(env,s,url)
  if(path==='/people'&&method==='POST')return input.action==='offboard'?offboard(env,request,s,input):peopleAction(env,request,s,input)
  if(method==='POST'&&['/collections','/schemas','/groups'].includes(path))return createMetadata(env,s,{'/collections':'collection','/schemas':'schema','/groups':'group'}[path]!,input)
@@ -65,7 +72,7 @@ export function failure(error:unknown){
  const symbolic=typeof e?.code==='string'&&/^[A-Za-z][A-Za-z0-9_]+$/.test(e.code)?e.code:typeof e?.message==='string'?e.message.match(/^([A-Z][A-Z0-9_]+)(?::|$)/)?.[1]:undefined
  const code=error instanceof ChestError?e.code:symbolic||'service_unavailable'
  const status=error instanceof ChestError?e.status:Number.isInteger(e?.status)&&e.status>=400&&e.status<600?e.status:code.startsWith('INVALID_')?400:symbolic&&code!=='D1_ERROR'?409:503
- return Response.json({error:code,...(code==='NATIVE_EDIT_CONFLICT'?{message:'The imported record was edited. Undo preserves that edit. Recover the earlier library from a separate pre-import snapshot.'}:{})},{status,headers})
+ return Response.json({error:code,...(code==='test_company_signin_first'?{message:'Save an identity provider and complete Test company sign-in before turning off email links.'}:{}),...(code==='storage_limit_exceeded'?{message:'This space has reached its storage limit. Ask the owner to raise the limit or permanently erase retained files.'}:{}),...(code==='provider_not_available_yet'?{message:'Provider connections are not available yet on RER Managed.'}:{}),...(code==='NATIVE_EDIT_CONFLICT'?{message:'The imported record was edited. Undo preserves that edit. Recover the earlier library from a separate pre-import snapshot.'}:{})},{status,headers})
 }
 export async function apiResponse(request:Request,original:Bindings){const pathname=new URL(request.url).pathname;if(!pathname.startsWith('/api/chest/'))return null;const env=runtimeBindings(original)
  // Sync clients authenticate with their device credential, never a browser cookie.

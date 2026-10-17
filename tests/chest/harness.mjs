@@ -11,10 +11,10 @@ const {Miniflare,convertV4MiniflareOptions}=createRequire(require.resolve('wrang
 // The built Worker runs as deployed (production mail, https origin). Its network
 // edges are the mail provider, where the test receives each message, and, when a
 // test passes `edge`, that test's fake of a paid provider (an AI model).
-export async function harness({edge}={}){
+export async function harness({edge,bindings={}}={}){
  const socket=createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r));
  const origin=`https://127.0.0.1:${port}`,directory=await mkdtemp(join(tmpdir(),'chest-http-')),secret=()=>randomBytes(32).toString('base64url'),mails=[];
- const vars={AUTH_LOCAL:'false',AUTH_ORIGIN:origin,OWNER_EMAIL:'owner@example.test',SESSION_SECRET:secret(),SETUP_TOKEN:secret(),MAIL_PROVIDER:'resend',MAIL_API_KEY:'test-only-mail-provider-key',MAIL_FROM:'Chest <auth@example.test>'};
+ const vars={AUTH_LOCAL:'false',AUTH_ORIGIN:origin,OWNER_EMAIL:'owner@example.test',SESSION_SECRET:secret(),SETUP_TOKEN:secret(),MAIL_PROVIDER:'resend',MAIL_API_KEY:'test-only-mail-provider-key',MAIL_FROM:'Chest <auth@example.test>',...bindings};
  const {compatibilityDate,compatibilityFlags,assets,d1Databases,r2Buckets}=workerOptions('dist/server/wrangler.json').workerOptions,root=join(process.cwd(),'dist/server');
  const modules=['index.js',...(await readdir(join(root,'assets'))).map(f=>`assets/${f}`)].map(f=>({type:f.endsWith('.wasm')?'CompiledWasm':'ESModule',path:join(root,f)}));
  const options={modulesRoot:root,modules,compatibilityDate,compatibilityFlags,assets,d1Databases,r2Buckets};
@@ -30,8 +30,8 @@ export async function harness({edge}={}){
  async function stop(){if(!worker)return;await worker.dispose();worker=null}
  // Miniflare's fetch has its own undici: send a form as its encoded multipart bytes.
  async function fetch(path,init={}){
-  if(!(init.body instanceof FormData))return worker.dispatchFetch(origin+path,{redirect:'manual',...init});
-  const encoded=new Response(init.body);return worker.dispatchFetch(origin+path,{redirect:'manual',...init,headers:{...init.headers,'content-type':encoded.headers.get('content-type')},body:await encoded.arrayBuffer()});
+  if(!(init.body instanceof FormData))return worker.dispatchFetch(origin+path,{redirect:'manual',...init,headers:{host:new URL(origin).host,...init.headers}});
+  const encoded=new Response(init.body);return worker.dispatchFetch(origin+path,{redirect:'manual',...init,headers:{host:new URL(origin).host,...init.headers,'content-type':encoded.headers.get('content-type')},body:await encoded.arrayBuffer()});
  }
  const raw=(path,cookie,body)=>fetch(path,{method:body===undefined?'GET':'POST',headers:{...(cookie?{cookie}:{}),...(body===undefined?{}:{origin,'content-type':'application/json'})},...(body===undefined?{}:{body:JSON.stringify(body)})});
  async function api(path,cookie,body,status=200){const r=await raw('/api/chest'+path,cookie,body);assert.equal(r.status,status,`${path}: ${r.status===status?'':await r.text()}`);return r.json()}

@@ -17,3 +17,5 @@ exports/
 test-results/
 .rer/demo/
 .rer/demo-host/
+
+.test-auth/

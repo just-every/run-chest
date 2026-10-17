@@ -1,0 +1,5 @@
+/* Organisation settings use the existing Chest cards. Provider URLs must fit a phone. */
+.organisation-settings { overflow-wrap: anywhere; min-width: 0; }
+.organisation-settings ol { padding-left: 22px; }
+.organisation-settings li + li { margin-top: 12px; }
+.organisation-settings .mono { font-size: 13px; }

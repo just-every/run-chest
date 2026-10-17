@@ -8,7 +8,7 @@ import { esc } from './ui-shared'
 // on a manila pill), who is signed in and "Sign out" (a form: signing out revokes the session server-side); at phone
 // width all of it sits behind one "Menu".
 export const policy="default-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; script-src 'self'; connect-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'"
-export const head=(title:string)=>`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${iconHead}${fontHead}<link rel="stylesheet" href="/rer-theme.css"><link rel="stylesheet" href="/chest.css"><link rel="stylesheet" href="/chest-app.css"><script src="/chest-upload.js" defer></script><script src="/chest-read.js" defer></script>`
+export const head=(title:string)=>`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${iconHead}${fontHead}<link rel="stylesheet" href="/rer-theme.css"><link rel="stylesheet" href="/chest.css"><link rel="stylesheet" href="/chest-app.css"><link rel="stylesheet" href="/chest-organisation.css"><script src="/chest-upload.js" defer></script><script src="/chest-read.js" defer></script>`
 const titles={files:'Files',library:'Library',admin:'People & settings',archive:'Move-in',audit:'Audit'}
 const section=(path:string):keyof typeof titles=>path.startsWith('/app/admin')?'admin':path.startsWith('/app/archive')?'archive':path.startsWith('/app/audit')?'audit':/^\/app\/(files|spaces|items|shared|requests|notices|devices|links)(\/|$)/.test(path)?'files':'library'
 export function page(body:string,me:{name:string,email:string,role:string},path='/app'){

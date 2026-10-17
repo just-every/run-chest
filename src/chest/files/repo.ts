@@ -1,8 +1,9 @@
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { decode, sessionPredicate, snapshot } from '../store'
-import { id, now, type Row } from '../model'
+import { ChestError, id, now, type Row } from '../model'
 import type { Item } from './model'
+import { storageGuards } from '../quota/storage'
 // Files share Chest's record table. One commit is one D1 batch: the actor's live session (or device), snapshots of
 // every record the decision read, the writes, the sync journal and the audit rows succeed or fail together.
 export type Op = { row: Row; previous?: Row; remove?: boolean }
@@ -16,14 +17,20 @@ export async function commit(env: Bindings, actor: Session | null, ops: Op[], { 
  const statement = (sql: string, params: unknown[] = []) => env.DB.prepare(sql).bind(...params)
  const written = new Set(ops.map(o => o.row.id)), predicates = [...(actor ? [sessionPredicate(actor)] : []), ...fences.filter(f => !written.has(f.id)).map(snapshot), ...ops.map(o => o.previous ? snapshot(o.previous) : { sql: 'NOT EXISTS(SELECT 1 FROM chest_records WHERE id=?)', params: [o.row.id] })]
  const at = now(), who = actor?.operator.email ?? by
- await env.DB.batch([
+ const quotas = storageGuards(ops)
+ try { await env.DB.batch([
   ...predicates.map(p => statement(`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${p.sql}) THEN 1 ELSE 0 END`, p.params)),
+  ...quotas.map(p => statement(p.sql, p.params)),
   ...ops.map(o => o.remove ? statement('DELETE FROM chest_records WHERE id=?', [o.row.id]) : o.previous ? statement('UPDATE chest_records SET payload=?,revision=? WHERE id=?', [JSON.stringify(o.row.payload), o.row.revision, o.row.id]) : statement('INSERT INTO chest_records(payload,revision,id,kind) VALUES(?,?,?,?)', [JSON.stringify(o.row.payload), o.row.revision, o.row.id, o.row.kind])),
   ...changes.map(c => statement('INSERT INTO chest_changes(item,space,kind,at) VALUES(?,?,?,?)', [c.item, c.space, c.kind, at])),
   ...audits.map(a => statement('INSERT INTO chest_audit VALUES(?,?,?,?,?,?)', [id(), who, a.action, a.object, JSON.stringify(a.detail ?? {}), at])),
   ...statements.map(x => statement(x.sql, x.params)),
   statement('DELETE FROM chest_assert'),
- ])
+  ...(quotas.length ? [statement('DELETE FROM chest_storage_assert')] : []),
+ ]) } catch (error) {
+  if (String(error).includes('storage_limit_exceeded')) throw new ChestError('storage_limit_exceeded', 413)
+  throw error
+ }
 }
 export const fresh = <T>(kind: string, payload: T, key: string = id()): Row<T> => ({ id: key, kind, payload, revision: id() })
 export const next = <T>(row: Row<T>, payload: T): Row<T> => ({ ...row, payload, revision: id() })

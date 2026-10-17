@@ -61,6 +61,7 @@ async function ask(env: Bindings, secret: string) {
 }
 async function asker(env: Bindings, email: string) { return (await maybe<Person>(env, 'person', email))?.payload.name || email }
 const plain: Record<string, (r: { types: string[]; maxBytes: number }) => string> = {
+ storage_limit_exceeded: () => 'This space has reached its storage limit. Ask the person who sent this request to contact the owner before uploading again.',
  type_not_allowed: r => `That type of file is not accepted here. Accepted: ${r.types.join(', ')}.`,
  file_too_large: r => `A file is larger than this request accepts (${megabytes(r.maxBytes)} each).`,
  file_size: () => 'Files must have content and be at most 8 MB each.',

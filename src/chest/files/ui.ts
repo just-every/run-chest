@@ -14,9 +14,12 @@ import { devicesPage, homePage, noticesPage, requestPage, requestsPage, searchPa
 import { linksPage } from './ui-links'
 import { linksView } from './exposure'
 import type { Space } from './model'
+import { quotas, quotaView } from '../quota/api'
+import { quotaPage, quotasPage } from '../quota/ui'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
 export const filesPath = (path: string) => /^\/(items|spaces|links|public-links|file-requests|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
+ if (typeof input.storageLimitBytes === 'string') input.storageLimitBytes = input.storageLimitBytes.trim() === '' ? null : Number(input.storageLimitBytes)
  for (const key of ['noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
  if (input.path === '/items' && input.type === 'file' && !input.name) input.name = input.filename
  if (typeof input.destination === 'string') { const [kind, id] = input.destination.split(':'); if (kind === 'space') { input.space = id; input.parent = null } else input.parent = id }
@@ -44,12 +47,14 @@ async function destinations(env: Bindings, w: Awaited<ReturnType<typeof who>>) {
 export async function filesPage(env: Bindings, request: Request, s: Session, url: URL): Promise<{ body: string } | { redirect: string } | null> {
  const path = url.pathname, parts = path.split('/').filter(Boolean)
  if (parts[0] === 's' && parts[1]) return { redirect: `/app/items/${(await openLink(env, s, parts[1])).item}` }
- if (parts[0] !== 'app' || !['files', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links'].includes(parts[1])) return null
+ if (parts[0] !== 'app' || !['files', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage'].includes(parts[1])) return null
+ if (path === '/app/storage') return { body: quotasPage(await quotas(env, s)) }
+ if (parts[1] === 'spaces' && parts[2] && parts[3] === 'quota') return { body: quotaPage(await quotaView(env, s, parts[2])) }
  const w = await who(env, s), people = (await list<Person>(env, 'person')).filter(p => p.payload.status !== 'inactive'), groups = await list<Group>(env, 'group')
  if (path === '/app/files') return { body: homePage(await home(env, s, w)) }
  if (path === '/app/files/search') return { body: searchPage(url.searchParams.get('q') || '', await search(env, w, url)) }
  if (path === '/app/files/trash') return { body: trashPage(await trashView(env, s, w)) }
- if (parts[1] === 'spaces' && parts[2]) return { body: spacePage(await spaceView(env, w, parts[2]), people, groups) }
+ if (parts[1] === 'spaces' && parts[2]) return { body: spacePage({ ...await spaceView(env, w, parts[2]), quotaOwner: s.operator.role === 'owner' }, people, groups) }
  if (parts[1] === 'items' && parts[2]) {
   try { return { body: itemPage({ ...await itemView(env, s, w, parts[2]), me: s.operator.email, ownerRole: s.operator.role === 'owner' }, { people, groups, destinations: await destinations(env, w) }) } }
   catch (e) { if (e instanceof ChestError && e.code === 'access_required') return { body: requestAccessPage(parts[2]) }; throw e }
