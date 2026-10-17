@@ -1,4 +1,4 @@
-/* Page 7: Ownership. The terminal shows the desk's five commands; they are the real start from a clone. */
+/* Page 7: Ownership. The terminal shows the one command that clones and starts Chest, and lines rer prints. */
 .own-list { list-style: none; padding: 0; margin-top: 4.6em; display: grid; gap: 4em; }
 .own-list li { display: flex; align-items: center; gap: 3.9em; color: #4f5464; font: 400 2.2em/1 var(--chest-font-ui); }
 .own-list .ico { width: 2em; height: 2em; margin-left: 0.2em; color: var(--chest-violet-deep); stroke-width: 1.7; }

@@ -3,13 +3,14 @@ import { prose } from '../Prose'
 import { Icon, type IconName } from '../art/icons'
 import { Arrow, Sticky, Ticks } from '../art/marks'
 import { Place, Stage } from '../art/Place'
-import { repository } from '../../shell/repository'
 import './ownership.css'
 
 const icons: IconName[] = ['database', 'monitor', 'share']
-const commands = [`git clone ${repository}.git chest`, 'cd chest', 'rer install', 'rer setup', 'rer dev']
+const command = 'npx -y @runeditrun/rer dev just-every/run-chest'
+/** Lines rer prints on a first start (rer 0.2.38: Restart, two of its progress lines, then the ready line). */
+const output = ['Restart: cd run-chest && rer dev', 'rer dev: installing dependencies', 'RER_READY http://127.0.0.1:8787']
 
-/** Page 7: "Yours, start to finish." with the five commands that start Chest on your own computer. */
+/** Page 7: "Yours, start to finish." with the one command that starts Chest on your own computer. */
 export function Ownership() {
   const copy = featureCopy.ownership
   return (
@@ -25,11 +26,11 @@ export function Ownership() {
         </ul>
       </div>
       <div className="feature-art" style={{ left: '74em', top: '24em' }}>
-        <Stage w={780} h={520} crop={{ x: 20, y: 40, w: 730, h: 440 }} label="A terminal: git clone the Chest repository, cd chest, rer install, rer setup, rer dev; a sticky note says that's it.">
+        <Stage w={780} h={520} crop={{ x: 20, y: 40, w: 730, h: 440 }} label={`A terminal: ${command}, which prints ${output.join(', ')}; a sticky note says that's it.`}>
           <Place x={30} y={66} w={686} h={372} r={-2}>
             <div className="terminal">
               <div className="terminal-bar"><i /><i /><i /></div>
-              <pre className="terminal-body">{commands.map(line => <span key={line}><b>$</b> {line}{'\n'}</span>)}</pre>
+              <pre className="terminal-body"><span><b>$</b> {command}{'\n'}</span>{output.map(line => <span key={line}>{line}{'\n'}</span>)}</pre>
             </div>
           </Place>
           <Place x={556} y={282} w={190} h={184} r={4} z={2}><Sticky tone="butter" className="own-sticky" underline>that’s it</Sticky></Place>

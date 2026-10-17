@@ -14,7 +14,7 @@ export const featureCopy = {
   together: { eyebrow: 'Work together', ink: 'Open it and\n', grad: 'edit together.', lead: 'Word, Excel and PowerPoint files open right\nin the browser. Edit at the same time, comment,\nand keep one copy.' },
   versions: { eyebrow: 'Versions', ink: 'Every', grad: 'version,\nkept.', lead: 'Go back to any earlier version of a file or a whole\nfolder, and see who changed what. Approvals stay\nwith the exact version signed off.' },
   agents: { eyebrow: 'Agents', ink: 'Files that\n', grad: 'file themselves.', lead: 'Agents file what arrives from email and apps,\nmerge duplicates, and flag links shared too widely.' },
-  moveIn: { eyebrow: 'Move in', ink: 'Bring', grad: 'everything\nwith you.', lead: 'Move from Google Drive, Dropbox or Box with\nfolders, permissions, versions and shared links.\nOld links forward to the new ones.' },
+  moveIn: { eyebrow: 'Move in', ink: 'Bring', grad: 'everything\nwith you.', lead: 'Move from Google Drive, Dropbox or Box with\nfolders, permissions, versions and shared links.\nLinks inside your files point to the new copies, and\nany old link opens its new home in Chest.' },
   teams: { eyebrow: 'For teams', ink: 'Your team,\n', grad: 'your rules.', lead: 'Single sign-on, automatic user setup,\nteam spaces and storage limits, all in one place.' },
   ownership: { eyebrow: 'Ownership', ink: 'Yours,\n', grad: 'start to finish.', lead: 'Run Chest on your own computer or server\nand keep every file. Export everything, any time.' },
 } as const
@@ -25,7 +25,7 @@ export const details = [
   { icon: 'fileCheck', tone: 'lilac', title: 'Exact-version approvals', body: 'Sign-off sticks to the version that was approved.', mark: 'ticks' },
   { icon: 'upload', tone: 'sky', title: 'File requests', body: 'Anyone can upload to the folder you choose.', mark: 'curl' },
   { icon: 'cloudUp', tone: 'peach', title: 'Large files', body: 'Big uploads resume where they stopped.', mark: 'ticks' },
-  { icon: 'trash', tone: 'sky', title: 'Trash you can undo', body: 'Deleted files come back for 30 days.', mark: 'undo' },
+  { icon: 'trash', tone: 'sky', title: 'Trash you can undo', body: 'Deleted files come back until you choose to erase them.', mark: 'undo' },
   { icon: 'eye', tone: 'lilac', title: 'Previews', body: 'Documents, video and design files open in the browser.', mark: 'ticks' },
   { icon: 'list', tone: 'peach', title: 'Activity log', body: 'Every view, share and change, recorded.', mark: 'ticks' },
 ] as const
