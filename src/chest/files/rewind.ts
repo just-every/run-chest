@@ -13,7 +13,7 @@ import type { FileVersion, Item, Link, Role, Space, Trash } from './model'
 // Every applied rewind leaves a receipt with each item's state just before it, so the rewind can be undone.
 type Change = { id: string; name: string; kinds: string[]; version?: string; versionAt?: string; renameTo?: string; moveTo?: { space: string; parent: string | null }; trash?: boolean }
 type Event = { action: string; detail: any; at: string }
-const point = (value: unknown) => { insist(typeof value === 'string' && Number.isFinite(Date.parse(value)), 'invalid_point'); const at = new Date(value).toISOString(); insist(Date.parse(at) <= Date.now(), 'invalid_point'); return at }
+const point = (value: unknown) => { insist(typeof value === 'string' && Number.isFinite(Date.parse(value)), 'invalid_point'); const at = new Date(value).toISOString(); insist(Date.parse(at) <= Date.now(), 'future_point'); return at }
 async function scope(env: Bindings, s: Session, w: Who, input: any, at: string): Promise<{ space: Row<Space>; items: Row<Item>[]; label: string; role: Role }> {
  if (typeof input.space === 'string') {
   const space = await get<Space>(env, 'space', input.space), role = start(space.payload, w).role

@@ -423,3 +423,29 @@ body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: 
 
 /* The email route is a sequence a space manager follows outside Chest. */
 .intake-steps { list-style: decimal; padding-left: 24px; }
+/* Members and access rows: who and their role, with Change role and Remove on the row. */
+.members li.member { display: grid; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--chest-line); font-size: 15px; overflow-wrap: anywhere; }
+.members li.member:last-child { border-bottom: 0; }
+.member-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.member .form-inline { gap: 8px; }
+.member .form-inline .field { flex: 1 1 160px; }
+.member .form-inline .btn { min-height: 38px; padding: 6px 14px; font-size: 14px; }
+/* Document type fields: one row per field. */
+.field-rows { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; min-width: 0; }
+.field-rows legend { font-weight: 700; margin-bottom: 6px; }
+.field-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+@media (max-width: 760px) { .field-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .field-row .check { grid-column: 1 / -1; } }
+.plain-list { display: grid; gap: 8px; padding-left: 20px; overflow-wrap: anywhere; }
+/* Move in: the three services' steps side by side, then the importer. */
+.movein-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.movein-steps h3 { font-size: 18px; margin-bottom: 6px; }
+.movein-steps ol { display: grid; gap: 6px; padding-left: 20px; font-size: 15px; }
+.movein-steps .quiet { margin-top: 8px; font-size: 14px; }
+.movein-pick { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 16px; align-items: end; margin: 12px 0; }
+.movein-pick input[type=file] { max-width: 100%; }
+.movein-or { padding-bottom: 10px; }
+[data-movein] progress { width: 100%; }
+@media (max-width: 960px) { .movein-steps, .movein-pick { grid-template-columns: minmax(0, 1fr); } .movein-or { padding: 0; } }
+[data-movein] [hidden], [data-movein][hidden], [data-movein-needs-script][hidden] { display: none !important; }
+[data-movein], [data-movein-needs-script] { margin-top: 24px; }
+.movein-list-head { font-size: 18px; margin: 16px 0 6px; }

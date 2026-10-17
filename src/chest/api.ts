@@ -5,7 +5,7 @@ import { fieldIssues } from './fields'
 import { get,list,recordAccess } from './store'
 import { documents,access,owner,roles } from './access'
 import { syncPeople,peopleAction } from './identity'
-import { createMetadata,grants,updateFiling,updateGroup,updateSchema } from './metadata'
+import { createMetadata,grants,groupMember,oneGrant,updateFiling,updateGroup,updateSchema } from './metadata'
 import { upload,lifecycle,restoreVersion,nameVersion } from './documents'
 import { review } from './reviews'
 import { serve } from './blobs'
@@ -42,6 +42,8 @@ export async function execute(env:Bindings,request:Request,s:Session,method:stri
  if(path==='/people'&&method==='POST')return input.action==='offboard'?offboard(env,request,s,input):peopleAction(env,request,s,input)
  if(method==='POST'&&['/collections','/schemas','/groups'].includes(path))return createMetadata(env,s,{'/collections':'collection','/schemas':'schema','/groups':'group'}[path]!,input)
  if(method==='POST'&&parts[0]==='collections'&&parts[2]==='grants')return grants(env,s,'collection',parts[1],input)
+ if(method==='POST'&&parts[0]==='collections'&&parts[2]==='grant')return oneGrant(env,s,'collection',parts[1],input)
+ if(method==='POST'&&parts[0]==='groups'&&parts[2]==='members')return groupMember(env,s,parts[1],input)
  if(method==='POST'&&parts[0]==='groups'&&parts[1])return updateGroup(env,s,parts[1],input)
  if(method==='POST'&&parts[0]==='schemas'&&parts.length===2)return updateSchema(env,s,parts[1],input)
  const filing=await filingExecute(env,s,method,parts,input,url);if(filing!==undefined)return filing
@@ -56,6 +58,7 @@ export async function execute(env:Bindings,request:Request,s:Session,method:stri
   if(method==='POST'&&parts[2]==='versions')return upload(env,s,input,row)
   if(method==='POST'&&parts[2]==='filing')return updateFiling(env,s,row,input)
   if(method==='POST'&&parts[2]==='grants')return grants(env,s,'document',row.id,input)
+  if(method==='POST'&&parts[2]==='grant')return oneGrant(env,s,'document',row.id,input)
   if(method==='POST'&&parts[2]==='lifecycle')return lifecycle(env,s,row,input)
   if(method==='POST'&&parts[2]==='review')return review(env,s,row,parts[3],input)
   if(method==='POST'&&parts[2]==='history'&&parts[4]==='restore')return restoreVersion(env,s,row,parts[3])

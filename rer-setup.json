@@ -32,7 +32,7 @@
     {
       "name": "OWNER_EMAIL",
       "label": "Owner email",
-      "help": "Sign-in links for this address appear in the local development outbox; no email is sent.",
+      "help": "The owner of this Chest. On your computer rer signs you in as the owner; a hosted Chest emails sign-in links to this address.",
       "kind": "email",
       "required": true,
       "prefill": "account-email",

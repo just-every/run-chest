@@ -27,8 +27,10 @@ Open the `RER_OPEN` link on this computer and finish first-run setup. Treat that
 link as a credential. Create staff from **People & settings**; with outbound
 email configured they follow the emailed invitation and return through **Sign in**.
 Deactivation revokes their sessions; session inspection also supports individual
-revocation. Locally, `rer dev --as member` signs in as a separately gated
-development persona to try a staff role.
+revocation. Locally no email is sent: `rer dev --as their@email` opens Chest as
+someone you invited, and `rer dev --as member` as a separately gated development
+persona. Space members, groups, Library access and document types are all set
+with ordinary forms.
 
 **Files.** Team spaces with viewer, commenter, contributor, content manager and
 manager roles, each person's **My files**, and nested folders. Uploads are
@@ -51,7 +53,7 @@ current access.
 
 **The Library.** For records that need sign-off: create a collection and a
 document type, then upload a record; the forms show each type's own fields.
-Grant `reader`, `editor` and/or `reviewer` roles by person email or group ID. A
+Grant `reader`, `editor` and/or `reviewer` roles to people (by email) or groups. A
 reviewer must be assigned to the exact version and have current reviewer
 access. Uploading B leaves approved A current; approving B cannot approve a
 later C. Review and expiry dates have separate completion evidence. Only the
@@ -60,12 +62,20 @@ originals and history. Library originals are limited to 8 MB.
 
 PDF and raster previews use browser viewers. UTF-8 text is served as sandboxed
 plain text. Other formats, including Office files, download; there is no
-in-browser editor and no desktop or phone sync app yet. HTML and SVG never
-render as active content.
+in-browser editor and no desktop or phone sync app yet (**Sync devices** says
+so and points to browser and phone uploads). HTML and SVG never render as
+active content.
 
 ## Move-in and recovery
 
-[ARCHIVE.md](ARCHIVE.md) describes the supported owner-created archive. Preview
+**Move in** brings a folder from your computer, or the `.zip` downloads from
+Google Takeout (Drive), Dropbox and Box, into any space or folder with their
+folder tree, through the same checked, resumable upload as any file; running it
+again skips what arrived. Sharing, shared links, comments and earlier versions
+from those services are not carried over yet. Steps for each service:
+[docs/move-in.md](docs/move-in.md).
+
+For the Library, [ARCHIVE.md](ARCHIVE.md) describes the supported owner-created archive. Preview
 shows exact bytes, hashes, duplicate paths/bytes, mapping and unresolved people
 or historical decisions. Applying the reviewed fingerprint creates private,
 unapproved records. The Base D1 import journal supports restart, explicit resume,
@@ -100,8 +110,37 @@ Protect host storage and keep a separate backup copy under owner custody.
 `rer reset --yes` removes local data and settings; review its inventory and export
 first if data should survive. Setup reruns preserve saved identity, private
 settings and data. See [RUN-LOCALLY.md](RUN-LOCALLY.md) for command flags and
-recovery. Real deployment requires owner infrastructure and mail configuration;
-local checks and dry-run are not provider acceptance.
+recovery.
+
+## Host it on Cloudflare
+
+A hosted Chest runs on your own Cloudflare account (a Worker, a D1 database and
+an R2 bucket for the originals) and signs people in by email through SendGrid
+or Resend. The full guide is [docs/hosting.md](docs/hosting.md)
+(https://run-chest.com/docs/hosting). In short, from a checkout set up with
+`rer setup --owner-email you@example.com`, put the settings in an owner-only
+file (`chmod 600 chest.env`):
+
+```sh
+CLOUDFLARE_ACCOUNT_ID=your-account-id
+CLOUDFLARE_API_TOKEN=token-with-workers-scripts-d1-and-r2-edit
+MAIL_PROVIDER=sendgrid            # or resend; optional when only one key is set
+MAIL_FROM=files@example.com   # a sender your provider has verified
+SENDGRID_API_KEY=SG.your-key      # or RESEND_API_KEY
+```
+
+```sh
+rer deploy --environment production --env-file chest.env --dry-run
+rer deploy --environment production --env-file chest.env
+```
+
+Mail is chosen with these settings, never by editing `deploy.json`. Open the
+printed address, **Sign in** with your setup email and follow the emailed link.
+Back up the hosted Chest (database and every original) with
+`node scripts/hosted-backup.mjs --environment production --env-file chest.env`;
+`rer export` saves only the local copy. `scripts/hosted-restore.mjs` restores a
+backup into a fresh deployment. Remove it with
+`rer deploy --environment production --env-file chest.env --remove --yes`, after a backup.
 
 ## Docs and run site
 

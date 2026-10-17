@@ -24,7 +24,7 @@ signs in whoever opens it, so do not paste it into a chat or a ticket.
 
 The first time you open Chest it shows **Finish setup**. Check the owner's name
 and email, tick **I confirm this owner account is ready to use.** and press
-**Finish setup**. The library opens.
+**Finish setup**. **Files** opens.
 
 From then on, the Chest address shows a small front page with one button,
 **Sign in**. Sign-in works by an emailed link: enter your email, press
@@ -41,8 +41,10 @@ cd run-chest
 rer dev
 ```
 
-While Chest runs on your computer it sends no email. To try Chest as a staff
-member, start it with `rer dev --as member`.
+While Chest runs on your computer it sends no email. To use Chest as someone
+you invited, start it with `rer dev --as their@email`; to try a staff role
+without inviting anyone, use `rer dev --as member`. To put Chest on the web for
+your team, see [Host Chest on Cloudflare](/docs/hosting).
 
 ## Stop and start again
 

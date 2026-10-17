@@ -1,0 +1,22 @@
+import { select, card } from '../ui-shared'
+// Move in: what Chest brings in today, the exact download steps for Google Drive, Dropbox and Box, and the importer
+// (/chest-zip.js reads the zips, /chest-movein.js makes the folders and uploads each file). Without scripts the page
+// says to upload from a folder page instead.
+const steps = card('Get your files out first', `<div class="movein-steps">
+ <section><h3>Google Drive</h3><ol><li>Go to <span class="mono">takeout.google.com</span> and sign in.</li><li>Choose <strong>Deselect all</strong>, then tick <strong>Drive</strong> only. To take only some folders, choose <strong>All Drive data included</strong> and pick them.</li><li>Choose <strong>Next step</strong>: Export once, file type <strong>.zip</strong>, the largest file size offered.</li><li>Choose <strong>Create export</strong>. Google emails you when it is ready; download every .zip it lists.</li></ol><p class="quiet">Google Docs, Sheets and Slides arrive as Word, Excel and PowerPoint files. Takeout includes what is in My Drive, not shared drives or files others own.</p></section>
+ <section><h3>Dropbox</h3><ol><li>Go to <span class="mono">dropbox.com</span> and open <strong>All files</strong>.</li><li>Tick the folders you want (or open a folder), then choose <strong>Download</strong>.</li><li>Dropbox gives you a .zip. Each download must be under 250 GB and fewer than 10,000 files, so take big folders one at a time.</li></ol><p class="quiet">With the Dropbox desktop app, you can instead choose its folder on this computer below.</p></section>
+ <section><h3>Box</h3><ol><li>Go to <span class="mono">app.box.com</span> and open <strong>All Files</strong>.</li><li>Tick the folders you want, then choose <strong>Download</strong>.</li><li>Box gives you a .zip. Box refuses very large downloads (about 15 GB), so take big folders one at a time.</li></ol><p class="quiet">With Box Drive, you can instead choose its folder on this computer below.</p></section>
+</div>`)
+export function moveInPage(destinations: { id: string; label: string }[], owner: boolean) {
+ const importer = `<section class="card" data-movein hidden><h2>Bring them into Chest</h2>
+ ${select('Put them in', 'destination', destinations, destinations[0]?.id).replace('<select ', '<select data-destination ')}
+ <div class="movein-pick"><label class="field"><span class="field-label">The .zip files you downloaded</span><input type="file" accept=".zip,application/zip" multiple data-zips></label><p class="quiet movein-or">or</p><label class="field"><span class="field-label">A folder on this computer</span><input type="file" webkitdirectory multiple data-folder></label></div>
+ <p><button type="button" class="btn" data-start>Start move-in</button> <button type="button" class="btn btn-outline" data-stop hidden>Stop</button></p>
+ <div data-report hidden><p class="mono" data-state role="status"></p><progress max="100" value="0" data-bar></progress><p class="mono" data-bytes></p><p data-counts></p>
+ <div hidden><h3 class="movein-list-head">Not added</h3><ul class="plain-list" data-failed></ul></div><div hidden><h3 class="movein-list-head">Skipped</h3><ul class="plain-list quiet" data-skipped></ul></div><p><a class="btn btn-outline" data-open hidden href="/app/files">Open where they went</a></p></div>
+ <p class="quiet">Leave this page open while it runs. If it stops (a closed tab, a lost connection), choose the same files and start again: what already arrived is skipped and a half-sent file carries on.</p></section>
+ <section class="card" data-movein-needs-script><h2>Bring them into Chest</h2><p>Move in runs in the browser, and this browser is not running Chest's page scripts. Open a folder in <a class="link" href="/app/files">Files</a> and upload from there instead.</p></section>`
+ const library = owner ? `<p class="quiet">The Library (records with sign-off) has its own importer for a Chest archive file: <a class="link" href="/app/archive">Library archive move-in</a>.</p>` : ''
+ return `<div class="page-head"><h1>Move in</h1><p class="lede">Bring your files into Chest with their folders: a folder from this computer, or the .zip downloads that Google Drive, Dropbox and Box give you. What arrives is the files and their folder tree. Sharing settings, shared links, comments and earlier versions from those services are not carried over yet; files take the access of the place you put them.</p></div>
+ ${steps}${importer}${library}<script src="/chest-zip.js" defer></script><script src="/chest-movein.js" defer></script>`
+}

@@ -10,7 +10,7 @@ try{
   assert.equal((await (await h.raw('/setup/state')).json()).state,'unclaimed');
   assert.equal((await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Owner'})).status,303);
   assert.notEqual((await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Second'})).status,303);
-  owner=await h.signIn(h.vars.OWNER_EMAIL);assert.equal((await h.raw('/__dev/outbox')).status,404);const signedIn=await h.raw('/signin',owner);assert.equal(signedIn.status,303);assert.equal(signedIn.headers.get('location'),'/app','a signed-in visit to sign-in opens the library');assert.equal((await h.raw('/missing')).status,404);assert.equal((await h.raw('/')).status,200);
+  owner=await h.signIn(h.vars.OWNER_EMAIL);assert.equal((await h.raw('/__dev/outbox')).status,404);const signedIn=await h.raw('/signin',owner);assert.equal(signedIn.status,303);assert.equal(signedIn.headers.get('location'),'/app/files','a signed-in visit to sign-in opens Files');assert.equal((await h.raw('/missing')).status,404);assert.equal((await h.raw('/')).status,200);
   assert.equal((await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes',redirect:'manual'})).status,303);
   assert.equal((await (await h.raw('/setup/state')).json()).state,'claimed');
   await h.api('/people',owner,{action:'invite',email:'reviewer@example.test',name:'Reviewer'});member=await h.signIn('reviewer@example.test',true);
@@ -31,7 +31,7 @@ try{
   assert.deepEqual((await h.api('/library',owner)).schemas.find(r=>r.id===typed.id),typed);
   const changed={name:'Updated evidence',fields:[{name:'amount',type:'text',required:true},{name:'effective',type:'date',required:true},{name:'covered',type:'boolean',required:true},{name:'expires',type:'date',required:true}]};
   // Exercise the ordinary owner form, which dispatches through the same public API.
-  const form=new FormData();form.set('path',`/schemas/${typed.id}`);form.set('returnTo','/app/admin');form.set('name',changed.name);form.set('fields',JSON.stringify(changed.fields));
+  const form=new FormData();form.set('path',`/schemas/${typed.id}`);form.set('returnTo','/app/admin');form.set('name',changed.name);changed.fields.forEach((f,n)=>{form.set(`f.${n}.name`,f.name);form.set(`f.${n}.type`,f.type);if(f.required)form.set(`f.${n}.required`,'true')});form.set('f.9.name','');
   assert.equal((await h.fetch('/app/action',{method:'POST',headers:{cookie:owner,origin:h.origin},body:form,redirect:'manual'})).status,303);
   assert.deepEqual((await h.api('/library',owner)).schemas.find(r=>r.id===typed.id).payload,changed);
   const diagnosed=await h.api(`/documents/${record.id}`,member);assert.deepEqual(diagnosed.payload,record.payload);assert.equal(diagnosed.revision,record.revision);

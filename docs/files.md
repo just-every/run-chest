@@ -4,8 +4,9 @@ owner or a reviewer before it goes in.
 
 ## Team spaces and folders
 
-Open **Files** and create a team space; you become its manager. Add members as
-viewer, commenter, contributor, content manager or manager. Every folder and
+Open **Files** and create a team space; you become its manager. Add members
+from the space's **Members** card as viewer, commenter, contributor, content
+manager or manager. Every folder and
 file in the space inherits those roles; a folder marked **Restricted** keeps
 inherited members out, except managers.
 
@@ -47,7 +48,9 @@ versions stay.
 ## Restore a folder to a date
 
 On a folder (or, for a space's manager, the whole space) open **Restore to a
-date**, choose the date and time, and press **Preview restore**. The preview
+date**, choose the date and time as your own clock shows it, check the **Time
+zone** (Chest fills in your computer's), and press **Preview restore**. A time
+that has not happened yet is refused with a plain message. The preview
 lists each file and folder that would change: an earlier version, its old name
 or place, a deleted item brought back, and items added since, which go to
 trash. Nothing changes until you press **Restore selected items**. Untick

@@ -5,8 +5,9 @@ export async function createReviewerGroup(owner,origin,email,width){
  await owner.goto(origin+'/app/admin');
  const form=owner.locator('form').filter({has:owner.getByRole('button',{name:'Create group',exact:true})});
  await form.getByLabel('Group name').fill(`Review team ${width}`);
- await form.getByLabel('Member emails (JSON array)').fill(JSON.stringify([email]));
- await form.getByRole('button',{name:'Create group',exact:true}).click();
+ await Promise.all([owner.waitForNavigation(),form.getByRole('button',{name:'Create group',exact:true}).click()]);
+ const row=owner.locator('li.row-tabbed').filter({has:owner.locator('.row-name',{hasText:`Review team ${width}`})});await row.locator('summary').click();
+ await row.getByLabel('Add a member (email)').fill(email);await Promise.all([owner.waitForNavigation(),row.getByRole('button',{name:'Add member'}).click()]);
  const group=(await json(owner,origin,'/library')).groups.find(r=>r.payload.name===`Review team ${width}`);
  assert.deepEqual(group.payload.members,[email]);return group;
 }
@@ -19,7 +20,7 @@ export async function chooseType(page,typeName,values){
 }
 
 export async function retainRecoveryRecords({owner,reviewer,origin,collection,schema,email,width,archive,group}){
- await owner.goto(origin+'/app');await owner.getByText('Upload a document',{exact:true}).click();
+ await owner.goto(origin+'/app/library');await owner.getByText('Upload a document',{exact:true}).click();
  await owner.getByLabel('Title',{exact:true}).fill(`Retained trash ${width}`);
  await owner.getByLabel(/^Collection/).selectOption(collection.id);
  await chooseType(owner,schema.payload.name,{reference:'TRASH-EVIDENCE'});

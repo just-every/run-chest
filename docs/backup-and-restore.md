@@ -4,6 +4,10 @@ Library's typed fields and review decisions, completed work, trash, the audit
 trail and move-in history. Sign-in sessions, links and
 local passwords are not included.
 
+This page is for Chest on your computer. A hosted Chest is backed up with its own
+command; see [Host Chest on Cloudflare](/docs/hosting#back-up-a-hosted-chest).
+`rer export` saves only the copy on this computer and refuses a hosted address.
+
 ## Export
 
 Stop Chest, then export into the `exports` folder inside your Chest folder:
@@ -12,6 +16,12 @@ Stop Chest, then export into the `exports` folder inside your Chest folder:
 rer dev --stop
 rer export --output exports/library.rer
 ```
+
+Export and restore take time in proportion to your files: on a busy computer,
+about half an hour for each gigabyte (1.2 GB took 29 minutes to export and 37 to
+restore). They print nothing while they work, so leave them running until they
+print `Exported` or `import: complete`. Stop Chest first; it stays stopped
+while they run.
 
 The file holds your private originals and records. Keep it somewhere safe, and
 keep a second copy away from this computer.
@@ -27,9 +37,14 @@ rer install
 rer import --input exports/library.rer --yes
 ```
 
-Copy the archive into the new copy's `exports` folder first. Chest checks the
-whole archive before it writes anything, and refuses a damaged archive or a
-Chest that already holds data.
+Copy the archive into the new copy's `exports` folder first. rer reads the whole
+archive and checks every part before it restores anything, and refuses a damaged
+archive or a Chest that already holds data.
+
+If a restore stops partway (an error, a closed terminal, a restart), run the same
+`rer import` command again in the same copy: it starts over. If it is refused
+because the copy now holds data, clear that copy with `rer reset --yes` and run
+the import again. Your archive is never changed by a restore.
 
 ## After a restore
 

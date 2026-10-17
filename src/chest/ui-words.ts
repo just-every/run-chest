@@ -1,0 +1,26 @@
+// What each recorded event and notice means, in words a person reads in Activity, Notices and the Audit trail.
+// The recorded codes stay unchanged in storage and the API.
+const events: Record<string, string> = {
+ 'item.read': 'opened it', 'version.download': 'downloaded it', 'version.preview': 'previewed it', 'file.upload': 'uploaded it', 'folder.create': 'created the folder',
+ 'version.upload': 'uploaded a new version', 'version.restore': 'restored an earlier version', 'version.name': 'named a version', 'version.submit': 'submitted a version for review',
+ 'item.rename': 'renamed it', 'item.move': 'moved it', 'item.copy': 'copied it', 'item.trash': 'moved it to trash', 'item.restore': 'brought it back from trash', 'item.erase': 'erased it permanently',
+ 'item.settings': 'changed its settings', 'item.make-private': 'made it private', 'item.star': 'starred it', 'item.shortcut': 'added a shortcut to it',
+ 'share.grant': 'shared it', 'share.remove': 'removed someone\'s access', 'share.extend': 'extended someone\'s access', 'share.expired': 'access ran out', 'share.expiring': 'access is about to run out',
+ 'access.request': 'asked for access', 'request.decision': 'decided an access request', 'request.expired': 'an access request ran out', 'access.change': 'changed who has access', 'access.expired': 'access ran out',
+ 'link.create': 'made an organization link', 'link.change': 'changed an organization link', 'link.remove': 'turned off an organization link', 'link.open': 'opened it from a link',
+ 'link.view': 'someone opened a link for anyone', 'link.download': 'someone downloaded through a link for anyone', 'link.password.refused': 'someone typed a wrong link password', 'link.revoke': 'turned off a link for anyone',
+ 'file-request.create': 'asked for files with a file request', 'file-request.upload': 'files arrived through a file request', 'file-request.close': 'closed a file request',
+ 'comment.add': 'commented', 'rewind.apply': 'restored the folder to a date', 'rewind.item': 'restored it to a date', 'rewind.undo': 'undid a restore to a date', 'rewind.undo.item': 'undid a restore to a date',
+ 'upload.begin': 'started an upload', 'upload.cancel': 'cancelled an upload', 'sync.hydrate': 'downloaded it to a device', 'device.enrol': 'added a device', 'device.revoke': 'revoked a device',
+ 'space.create': 'created the team space', 'space.personal': 'opened their personal area', 'space.members': 'changed the members', 'space.settings': 'changed the space settings',
+ 'policy.sharing': 'changed the sharing policy', 'person.offboard': 'offboarded someone', 'identity.sync': 'updated someone\'s sign-in details', 'erasure.complete': 'erased data permanently',
+ 'document.upload': 'added the record', 'document.read': 'opened the record', 'document.file': 'changed its filing', 'document.trash': 'moved the record to trash', 'document.restore': 'brought the record back from trash', 'document.complete': 'recorded a completed review or expiry check',
+ 'review.approve': 'approved a version', 'review.submit': 'submitted a version', 'review.submitted': 'submitted a version', 'review.changes': 'asked for changes', 'review.comment': 'commented on a version', 'review.assign': 'assigned a reviewer',
+ 'collection.create': 'created a collection', 'schema.create': 'created a document type', 'schema.update': 'changed a document type', 'group.create': 'created a group', 'group.update': 'changed a group',
+ 'field.accept': 'accepted a value read from a scan', 'field.correct': 'corrected a value read from a scan', 'field.reject': 'rejected a value read from a scan', 'reader.save': 'changed the scan-reading settings', 'reader.remove': 'removed the scan-reading key',
+ 'archive.apply': 'moved an archive in', 'archive.undo': 'undid an archive move-in',
+}
+// An unlisted code still reads as words: "thing.done-now" becomes "thing done now".
+export const eventWords = (code: string) => events[code] ?? code.replace(/[._-]+/g, ' ')
+const notices: Record<string, string> = { share: 'Shared with you', 'share.expiring': 'Access ending soon', request: 'Access request', 'request.decision': 'Your access request', 'request.expired': 'Access request ran out', 'file-request.upload': 'Files received' }
+export const noticeWords = (type: string) => notices[type] ?? eventWords(type)

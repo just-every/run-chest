@@ -1,11 +1,12 @@
 // Everyday files in a real browser at 1440 and 390 against the built Worker, with every person signed in through the
 // ordinary email link received at the mail provider edge: self-service trash (CHEST-13), version history and restore
-// (VERSION-001), item sharing, access requests and expiry (SHARE-004), and sync device keys.
+// (VERSION-001), item sharing, access requests and expiry (SHARE-004), move-in from a Takeout zip, and sync device keys.
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {mkdir,readFile} from 'node:fs/promises';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
+import {zip} from './fixtures.mjs';
 const h=await harness(),sha=v=>createHash('sha256').update(v).digest('hex'),day=86_400_000,cookies={},b64=v=>Buffer.from(v).toString('base64');
 let browser;
 const people=['ana','ben','cy','mo','dee','eve'];
@@ -36,8 +37,21 @@ async function journey(width){
  // Mo creates a team space and its members in the browser; Ana builds a nested tree with an ordinary file.
  await go(p.mo,'/app/files');await p.mo.getByLabel('New team space name').fill(`Projects ${width}`);await press(p.mo,'Create team space');
  await p.mo.getByRole('link',{name:`Projects ${width}`}).click();const space=id(p.mo);
- await open(p.mo,'Change members');await p.mo.getByLabel(/^Members \(JSON/).fill(JSON.stringify([{principal:'mo@example.test',role:'manager'},{principal:'ana@example.test',role:'content_manager'},{principal:'ben@example.test',role:'viewer'},{principal:'cy@example.test',role:'contributor'},{principal:'eve@example.test',role:'commenter'}]));await press(p.mo,'Save members');
+ for(const [email,role] of [['ana@example.test','content_manager'],['ben@example.test','viewer'],['cy@example.test','contributor'],['eve@example.test','commenter']]){await open(p.mo,'Add a person');const add=p.mo.locator('form').filter({has:p.mo.getByRole('button',{name:'Add to space'})});await add.getByLabel('Email').fill(email);await add.getByLabel('Role').selectOption(role);await press(add,'Add to space')}
+ // A manager changes a role and removes a member on their row; the change is the space's real membership.
+ const benRow=()=>p.mo.locator('li.member').filter({hasText:'ben@example.test'});await benRow().getByLabel(/^Role for/).selectOption('commenter');await press(benRow(),'Change role');await press(benRow(),'Remove');
+ await open(p.mo,'Add a person');{const add=p.mo.locator('form').filter({has:p.mo.getByRole('button',{name:'Add to space'})});await add.getByLabel('Email').fill('ben@example.test');await add.getByLabel('Role').selectOption('viewer');await press(add,'Add to space')}
+ assert.deepEqual((await json(p.mo,`/spaces/${space}`)).members.map(m=>[m.principal,m.role]),[['mo@example.test','manager'],['ana@example.test','content_manager'],['cy@example.test','contributor'],['eve@example.test','commenter'],['ben@example.test','viewer']]);
  await fit(p.mo,'space',width);
+ // Move in (MIGRATE-002 partial): a Takeout zip arrives with its folder tree under "Google Drive"; running it again adds nothing.
+ const takeout={name:`takeout-${width}.zip`,mimeType:'application/zip',buffer:zip([['Takeout/archive_browser.html','<p>index</p>'],[`Takeout/Drive/Clients ${width}/Harbor/MSA.txt`,'Master services '+width],[`Takeout/Drive/Budget ${width}.txt`,'Budget '.repeat(3000)]])};
+ const moveIn=async()=>{await go(p.mo,'/app/move-in');await p.mo.locator('[data-destination]').selectOption({label:'My files'});await p.mo.locator('[data-zips]').setInputFiles(takeout);await p.mo.getByRole('button',{name:'Start move-in'}).click();await p.mo.getByText('Move-in finished').waitFor({timeout:60_000});return `${await p.mo.locator('[data-counts]').innerText()}${await p.mo.locator('[data-failed]').innerText()}`};
+ // The second width's move-in reuses the Google Drive folder the first one made.
+ assert.match(await moveIn(),/^2 file\(s\) and [23] folder\(s\) added · 0 already there · 0 not added$/);await fit(p.mo,'move-in',width);
+ const myFiles=(await json(p.mo,'/files')).personal,drive=(await json(p.mo,`/spaces/${myFiles}`)).children.find(c=>c.name==='Google Drive'),inDrive=(await json(p.mo,`/items/${drive.id}`)).children;
+ assert.ok(inDrive.some(c=>c.name===`Budget ${width}.txt`&&c.type==='file')&&inDrive.some(c=>c.name===`Clients ${width}`&&c.type==='folder'));const harbor=(await json(p.mo,`/items/${(await json(p.mo,`/items/${inDrive.find(c=>c.name===`Clients ${width}`).id}`)).children[0].id}`)).children;
+ assert.equal(sha(await (await call(p.mo,`/items/${harbor[0].id}/bytes/${(await json(p.mo,`/items/${harbor[0].id}`)).item.current}?download=true`)).body()),sha('Master services '+width));
+ assert.match(await moveIn(),/^0 file\(s\) and 0 folder\(s\) added · 2 already there · 0 not added$/);
  await go(p.ana,`/app/spaces/${space}`);await open(p.ana,'New folder');await p.ana.getByLabel('Folder name').fill('Client');await press(p.ana,'Create folder');const client=id(p.ana);
  await open(p.ana,'New folder');await p.ana.getByLabel('Folder name').fill('Contracts');await press(p.ana,'Create folder');const contracts=id(p.ana);
  await pick(p.ana,{name:'terms.txt',mimeType:'text/plain',buffer:Buffer.from(`Payment terms ${width}`)});const terms=id(p.ana);
@@ -91,20 +105,21 @@ async function journey(width){
  await go(p.ana,`/app/items/${plan}`);const was=(await json(p.ana,`/items/${plan}`)).grants.find(g=>g.principal==='eve@example.test').expires;await press(row(p.ana,'eve@example.test · commenter'),'Extend by 7 days');
  assert.equal(Date.parse((await json(p.ana,`/items/${plan}`)).grants.find(g=>g.principal==='eve@example.test').expires)-Date.parse(was),7*day);
  await age(-1000);await go(p.eve,`/app/items/${plan}`);await p.eve.getByRole('heading',{name:'Request access'}).waitFor();assert.equal((await audit('share.expired',plan)).length,1);
- // Sync devices: a key is shown once and works for the sync protocol until revoked.
- await go(p.ana,'/app/devices');await p.ana.getByLabel('Device name').fill(`Ana laptop ${width}`);await p.ana.getByLabel('Platform').selectOption('macos');await press(p.ana,'Create device key');
- const token=(await p.ana.locator('pre').innerText()).trim(),tree2=()=>h.fetch('/api/chest/sync/tree',{headers:{authorization:`Bearer ${token}`}});assert.equal((await tree2()).status,200);
+ // Sync devices: no sync app ships, so the page says so and hands out no key; a key made through the API for a
+ // future client is listed and revoked from the page, and stops working for the sync protocol.
+ await go(p.ana,'/app/devices');await p.ana.getByText('Chest has no desktop or phone sync app yet',{exact:false}).waitFor();assert.equal(await p.ana.getByRole('button',{name:'Create device key'}).count(),0);
+ const token=(await json(p.ana,'/devices',{name:`Ana laptop ${width}`,platform:'macos'})).token,tree2=()=>h.fetch('/api/chest/sync/tree',{headers:{authorization:`Bearer ${token}`}});assert.equal((await tree2()).status,200);
  await go(p.ana,'/app/devices');await fit(p.ana,'devices',width);await press(row(p.ana,`Ana laptop ${width}`),'Revoke device');assert.equal((await tree2()).status,401);
  // RECOVER-001 from the browser: the space manager previews a restore to a date; nothing changes until it is applied,
  // and the applied restore is undone from its receipt.
  const minute=new Date(Date.now()-60_000).toISOString().slice(0,16),items=(await json(p.mo,`/spaces/${space}`)).children.length;
- await go(p.mo,`/app/spaces/${space}`);await open(p.mo,'Restore to a date');await p.mo.getByLabel('Date and time (UTC)').fill(minute);await press(p.mo,'Preview restore');
+ await go(p.mo,`/app/spaces/${space}`);await open(p.mo,'Restore to a date');await p.mo.getByLabel('Date and time',{exact:true}).fill(minute);await p.mo.getByLabel('Time zone').selectOption('UTC');await press(p.mo,'Preview restore');
  await p.mo.getByRole('heading',{name:'Restore preview'}).waitFor();await p.mo.getByText('added since',{exact:false}).first().waitFor();await fit(p.mo,'rewind',width);assert.equal((await json(p.mo,`/spaces/${space}`)).children.length,items);
  await press(p.mo,'Restore selected items');await p.mo.getByRole('heading',{name:/^Restored to /}).waitFor();assert.ok((await json(p.mo,`/spaces/${space}`)).children.length<items);
  await press(p.mo,'Undo this restore');await p.mo.getByRole('heading',{name:'Restore undone'}).waitFor();assert.equal((await json(p.mo,`/spaces/${space}`)).children.length,items);
  await go(p.ana,'/app/files');await fit(p.ana,'home',width);
  for(const page of Object.values(p))await page.context().close();
- console.log(`Files browser journey passed at ${width}: trash/restore/erase, version history and restore, sharing, access requests, expiry and device keys`);
+ console.log(`Files browser journey passed at ${width}: trash/restore/erase, version history and restore, sharing, access requests, expiry, members, move-in and device keys`);
 }
 try{
  await mkdir('test-results',{recursive:true});await staff();

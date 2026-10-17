@@ -58,7 +58,7 @@ export async function authResponse(request: Request, original: Bindings): Promis
  // The shared server-rendered sign-in page: plain forms that work before any script.
  if (url.pathname === '/signin') {
   // A signed-in person who opens sign-in goes to the library instead of an empty form.
-  if (request.method === 'GET' && await operatorAuth(env).getSession(request)) return new Response(null, { status: 303, headers: { location: '/app', 'cache-control': 'no-store' } })
+  if (request.method === 'GET' && await operatorAuth(env).getSession(request)) return new Response(null, { status: 303, headers: { location: '/app/files', 'cache-control': 'no-store' } })
   const page = await createSignInHandler(operatorAuth(env), { defaultReturnTo: '/setup' })(request)
   if (page) return fontDocumentResponse(page)
  }

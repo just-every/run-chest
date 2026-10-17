@@ -12,7 +12,7 @@ import { createPublicLink, revokePublicLink } from './public-links'
 import { closeFileRequest, createFileRequest } from './file-requests'
 import { linksView, makePrivate } from './exposure'
 import { devices, enrol, revoke } from './devices'
-import { createSpace, members, settings } from './spaces'
+import { createSpace, member, members, settings } from './spaces'
 import { home, itemView, search, spaceView } from './views'
 import { sharingPolicy } from './people'
 import { list } from '../store'
@@ -51,6 +51,7 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && !key) return createSpace(env, s, input)
   if (get && key && !sub) return spaceView(env, w, key)
   if (post && sub === 'members') return members(env, s, w, key, input)
+  if (post && sub === 'member') return member(env, request, s, w, key, input)
   if (post && sub === 'settings') return settings(env, s, w, key, input)
  }
  if (head === 'items') {

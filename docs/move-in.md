@@ -1,61 +1,77 @@
-Move-in brings an existing set of documents into Chest from one archive file. It
-is under **Move-in** in the top bar, for the owner only.
+**Move in** (in the top bar) brings your files into Chest with their folders.
+Today it takes:
 
-## Prepare the archive
+- the `.zip` files that Google Drive (Google Takeout), Dropbox and Box give you
+  when you download, or
+- a folder on your computer, such as your Dropbox, Google Drive or Box Drive
+  folder.
 
-Move-in reads one JSON file in the documented `chest-archive-1` format. Each item
-carries its original bytes (base64), their SHA-256 and their size, plus the
-fields for the document type you will file it under:
+What arrives is every file and its folder tree. Sharing settings, shared links,
+comments and earlier versions from those services are **not carried over yet**:
+the files take the access of the place you put them in, so share them again in
+Chest once they are in. Chest has no direct connection to those services yet, so
+you download first, then move in.
 
-```json
-{
-  "format": "chest-archive-1",
-  "source": "supplier-records-2026-10",
-  "items": [{
-    "path": "Acme/certificate.txt",
-    "title": "Acme certificate",
-    "base64": "aGVsbG8=",
-    "sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
-    "size": 5,
-    "fields": {"reference": "CERT-1"},
-    "reference": {"kind": "supplier", "name": "Acme"},
-    "reviewDate": "2026-12-01",
-    "expiryDate": "2027-01-01",
-    "principals": ["someone@example.com"],
-    "decisions": [{"actor": "source reviewer", "decision": "approved"}]
-  }]
-}
-```
+## Get your files out
 
-An archive holds up to 100 items and 16 MB; each original up to 8 MB. Chest does
-not read exports from other products directly: convert them to this format
-first, and keep the source system until you have checked the result.
+### Google Drive
 
-## Preview it
+1. Go to [takeout.google.com](https://takeout.google.com) and sign in.
+2. Choose **Deselect all**, then tick **Drive** only. To take only some folders,
+   choose **All Drive data included** and pick them.
+3. Choose **Next step**: **Export once**, file type **.zip**, and the largest file
+   size offered.
+4. Choose **Create export**. Google emails you when it is ready; download every
+   `.zip` it lists.
 
-Choose the **Archive JSON file**, the **Destination collection**, the
-**Document type**, the **Responsible owner** and the **Reviewer**, then press
-**Preview archive**. Preview writes nothing. **Review archive mapping** lists
-every item as admitted, skipped or rejected with its reason, along with
-duplicate paths or bytes and the people and decisions Chest cannot carry over.
-Unsafe paths or bytes that do not match their SHA-256 reject the archive.
+Google Docs, Sheets and Slides arrive as Word, Excel and PowerPoint files.
+Takeout includes what is in My Drive, not shared drives or files other people own.
+In Chest the files arrive in a folder named **Google Drive**.
 
-## Apply it
+### Dropbox
 
-If the preview is right, press **Apply this reviewed fingerprint**. Chest applies
-exactly what you reviewed and shows an **Operation receipt** with a job ID. Keep
-that ID.
+1. Go to [dropbox.com](https://www.dropbox.com) and open **All files**.
+2. Tick the folders you want, or open a folder, then choose **Download**.
+3. Dropbox gives you a `.zip`. Each download must be under 250 GB and fewer than
+   10,000 files, so take big folders one at a time.
 
-Every imported record starts **private** and **unapproved**: people and approvals
-from the source are kept as history, not turned into Chest access or Chest
-approvals. Grant access and approve each record as you would a new one.
+With the Dropbox desktop app you can instead choose its folder on your computer.
 
-## Resume or undo a batch
+### Box
 
-Under **Resume or undo a batch**, enter the **Job ID** and choose an action, then
-press **Run batch action**:
+1. Go to [app.box.com](https://app.box.com) and open **All Files**.
+2. Tick the folders you want, then choose **Download**.
+3. Box gives you a `.zip`. Box refuses very large downloads (about 15 GB), so take
+   big folders one at a time.
 
-- **Inspect** shows the batch's progress.
-- **Resume** continues a batch that stopped.
-- **Undo untouched batch** removes the records it created, as long as nobody has
-  edited them. If someone has, Chest keeps that edit and tells you.
+With Box Drive you can instead choose its folder on your computer.
+
+## Bring them in
+
+1. Open **Move in**.
+2. Under **Put them in**, choose **My files**, a team space or a folder you can
+   add to.
+3. Choose **The .zip files you downloaded** (you can pick several Takeout parts at
+   once), or **A folder on this computer**.
+4. Choose **Start move-in**.
+
+Chest makes each folder, then uploads each file with the same checked upload as
+any other, showing the progress, what was added, what was skipped and anything
+it could not take. Leave the page open while it runs. If it stops (a closed tab,
+a lost connection, or **Stop**), choose the same files and start again: files
+already there are skipped and a half-sent file carries on where it was.
+
+Chest skips a file whose name is already taken in that folder, and empty
+files. It keeps a file in a folder of the same name that is already there, so a
+second move-in merges into the first. A file damaged inside the zip, or one
+compressed in a way Chest cannot read, is listed under **Not added**; unzip the
+download on your computer and choose the folder instead.
+
+## The Library's archive move-in
+
+The Library (records with sign-off) has its own importer, for the owner, under
+**Move in › Library archive move-in**. It reads one JSON file in the documented
+`chest-archive-1` format ([ARCHIVE.md](https://github.com/just-every/run-chest/blob/main/ARCHIVE.md)),
+previews every item before anything is written, and files each record private
+and unapproved. Use it only when you are moving records that need an owner, a
+reviewer and an approved version.

@@ -17,16 +17,27 @@ Each person's row shows their email, role and status, with two actions:
   signing in. **Reactivate identity** lets them back.
 - **Inspect sessions** lists their sign-ins, and you can revoke one at a time.
 
-While Chest runs on your computer it sends no email; try a staff role with
-`rer dev --as member` (see [Run Chest on your computer](/docs/run#use-your-own-email-as-the-owner)).
+While Chest runs on your computer it sends no email, so an invitation is not
+delivered. To use Chest as someone you invited, stop Chest and start it as them:
+
+```sh
+rer dev --stop
+rer dev --as sam@example.com
+```
+
+`rer dev` on its own signs you back in as the owner. On a hosted Chest
+([Host Chest on Cloudflare](/docs/hosting)) the invitation arrives by email.
 
 ## Create a team space
 
 In **Files**, enter a name under **Team spaces** and press
 **Create team space**. Anyone signed in can create one and becomes its
-manager. Open the space to add members as viewer, commenter, contributor,
-content manager or manager; every folder and file inside inherits those roles.
-See [Folders and files](/docs/files).
+manager. Open the space: its **Members** card lists everyone with their role.
+Choose **Add a person**, type their email, choose a **Role** and press
+**Add to space**. When the owner adds someone not yet in Chest, Chest invites
+them by email first. **Add a group** adds a whole group. On each member's row,
+choose another role and press **Change role**, or press **Remove**. Every folder
+and file inside inherits those roles. See [Folders and files](/docs/files).
 
 ## For the Library: collections and document types
 
@@ -46,19 +57,13 @@ it. See [People and access](/docs/access) for how grants work.
 ### Create a document type
 
 A document type says what a record is and which fields it must carry. Enter a
-**Type name** and a **Field schema (JSON)**, then press **Create document type**.
-Each field has a name, a type (`text`, `number`, `date` or `boolean`) and
-whether it is required:
+**Type name**, then fill one row per field: its name, its **Kind** (Text,
+Number, Date or Yes or no) and whether it is **Required**, for example
+*policy number* (Text, required), *insurer* (Text, required) and *cover*
+(Number). Press **Create document type**.
 
-```json
-[
-  { "name": "policy number", "type": "text", "required": true },
-  { "name": "insurer", "type": "text", "required": true },
-  { "name": "cover", "type": "number", "required": false }
-]
-```
-
-You can change a type later and press **Save document type**. Values already
+You can change a type later: open it, edit the rows (blank rows add fields;
+clearing a name removes that field) and press **Save document type**. Values already
 saved stay as they are; records that no longer meet the type show
 **Fields need attention** until someone edits their filing. New uploads and
 filing changes must meet the current type.
@@ -66,10 +71,11 @@ filing changes must meet the current type.
 ## Create a group
 
 Groups let you grant access once to a team, in a team space, a share or a
-Library grant. Enter a **Group name** and the
-**Member emails (JSON array)**, for example `["maria@example.com", "dan@example.com"]`,
-then press **Create group**. Each group shows its ID; use that ID in grants.
-Change members later with **Save group membership**.
+Library grant. Enter a **Group name** and press **Create group**. Open the
+group, type a member's email under **Add a member (email)** and press
+**Add member**; **Remove** on a member's row takes them out, and
+**Rename group** changes its name. Groups then appear by name wherever you
+add people.
 
 ## Next
 

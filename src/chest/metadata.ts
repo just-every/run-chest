@@ -2,13 +2,13 @@ import type { Bindings } from '../auth.server'
 import type { Session } from '../modules/operator-auth/index.mjs'
 import { owner,validPerson,access } from './access'
 import { get,write,changed } from './store'
-import { insist,id,text,date,type Document,type Schema,type Collection,type Row } from './model'
+import { insist,id,text,date,type Document,type Schema,type Collection,type Group,type Row } from './model'
 import { schemaDefinition,validateFields } from './fields'
 export async function createMetadata(env:Bindings,s:Session,kind:string,input:any) {
  owner(s);let payload:any
  if(kind==='collection')payload={name:text(input.name,'name'),grants:[]}
  else if(kind==='schema') payload=schemaDefinition(input)
- else if(kind==='group'){insist(Array.isArray(input.members),'invalid_members');for(const p of input.members)await validPerson(env,p);payload={name:text(input.name,'name'),members:input.members}}
+ else if(kind==='group'){input.members??=[];insist(Array.isArray(input.members),'invalid_members');for(const p of input.members)await validPerson(env,p);payload={name:text(input.name,'name'),members:input.members}}
  else throw new Error('invalid_metadata_kind')
  return write(env,s,{id:id(),kind,payload,revision:id()},`${kind}.create`)
 }
@@ -42,4 +42,21 @@ export async function grants(env:Bindings,s:Session,kind:string,key:string,input
  return write(env,s,changed(row,payload),'access.change',row)
 }
 
-export async function updateGroup(env:Bindings,s:Session,key:string,input:any){owner(s);const row=await get(env,'group',key);insist(Array.isArray(input.members),'invalid_members');for(const p of input.members)await validPerson(env,p);return write(env,s,changed(row,{name:text(input.name,'name'),members:input.members}),'group.update',row)}
+export async function updateGroup(env:Bindings,s:Session,key:string,input:any){owner(s);const row=await get<Group>(env,'group',key);input.members??=row.payload.members;insist(Array.isArray(input.members),'invalid_members');for(const p of input.members)await validPerson(env,p);return write(env,s,changed(row,{name:text(input.name,'name'),members:input.members}),'group.update',row)}
+// The Groups card's forms add one member by email or remove one; the collection card's add or remove one grant.
+const principalOf=(value:unknown)=>{const v=typeof value==='string'?value.trim():'';insist(v,'invalid_person');return v.includes('@')?v.toLowerCase():v}
+export async function groupMember(env:Bindings,s:Session,key:string,input:any){
+ owner(s);const row=await get<Group>(env,'group',key),email=principalOf(input.email),members=[...row.payload.members]
+ if(input.action==='add'){insist(!members.includes(email),'already_member',409);members.push(await validPerson(env,email))}
+ else{insist(input.action==='remove','invalid_action');insist(members.includes(email),'not_a_member',404);members.splice(members.indexOf(email),1)}
+ return write(env,s,changed(row,{...row.payload,members}),'group.update',row)
+}
+// A collection's or document's access card adds or removes one grant; a document's Private switch is its own form.
+export async function oneGrant(env:Bindings,s:Session,kind:'collection'|'document',key:string,input:any){
+ owner(s);const row=await get<Collection|Document>(env,kind,key),current=row.payload.grants.map((g:any)=>({principal:g.principal,role:g.role}))
+ if(input.action==='private')return grants(env,s,kind,key,{grants:current,private:input.private===true})
+ const principal=principalOf(input.principal),same=(g:any)=>g.principal===principal&&g.role===input.role
+ if(input.action==='add'){insist(!current.some(same),'already_granted',409);current.push({principal,role:input.role})}
+ else{insist(input.action==='remove','invalid_action');insist(current.some(same),'not_granted',404);current.splice(current.findIndex(same),1)}
+ return grants(env,s,kind,key,{grants:current})
+}

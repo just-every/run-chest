@@ -85,7 +85,9 @@
       ],
       "inputs": [
         "package.json",
-        "scripts/installer/local.mjs"
+        "scripts/installer/local.mjs",
+        "scripts/installer/deploy.mjs",
+        "deploy.json"
       ],
       "effects": "See SEED-COMMAND-CONTRACT.md for deploy effects."
     },

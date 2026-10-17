@@ -7,7 +7,7 @@ either; owners keep their own supported operations and integration choices.
 
 ## Commands and flags
 
-Chest pins published `@runeditrun/rer` 0.2.40. Run from the project root, or use `--cwd PATH`. Every new verb accepts `--help`, `--cwd PATH`, `--non-interactive` and `--json`. Help exits before tools, configuration, adapters or effects run. Unknown flags, missing flag values and invalid values fail before effects. A single `--` separator is accepted for package-script forwarding. Flags belong only to the verbs listed below; there is no catch-all pass-through in the first-party profile.
+Chest pins published `@runeditrun/rer` 0.2.45. Run from the project root, or use `--cwd PATH`. Every new verb accepts `--help`, `--cwd PATH`, `--non-interactive` and `--json`. Help exits before tools, configuration, adapters or effects run. Unknown flags, missing flag values and invalid values fail before effects. A single `--` separator is accepted for package-script forwarding. Flags belong only to the verbs listed below; there is no catch-all pass-through in the first-party profile.
 
 | Required verb | Additional flags | Successful end state |
 | --- | --- | --- |

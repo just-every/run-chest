@@ -18,6 +18,9 @@ import type { Space } from './model'
 import { quotas, quotaView } from '../quota/api'
 import { quotaPage, quotasPage } from '../quota/ui'
 import { readOffice } from '../office/service'
+import { moveInPage } from './ui-movein'
+import { zoned } from './zone'
+import { personal } from './spaces'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
 export const filesPath = (path: string) => /^\/(items|spaces|links|public-links|file-requests|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
@@ -28,6 +31,7 @@ export function filesInput(input: any) {
  if (/^\/items\/[^/]+\/office$/.test(input.path)) input.changes = Object.fromEntries(Object.entries(input).filter(([k]) => k.startsWith('office:')).map(([k, v]) => [k.slice(7), v]))
  if (input.expires === '') delete input.expires
  // The restore preview's checkboxes name the items to restore.
+ if (input.path === '/rewind/preview' && input.local !== undefined) input.at = zoned(input.local, input.zone)
  if (input.path === '/rewind/apply') input.items = Object.keys(input).filter(k => k.startsWith('item:')).map(k => k.slice(5))
  return input
 }
@@ -38,9 +42,9 @@ export function filesReceipt(input: any, result: any) {
  if (/^\/items\/[^/]+\/file-requests$/.test(input.path)) return secretPage('File request created', result.url, `Send this link to the people who should upload. They need no account and see nothing else in the folder. ${result.email === 'available' ? 'You get an email and a notice for every upload.' : 'Email is not available yet on this installation; every upload appears in your Notices.'} Close the request any time from Links.`, input.returnTo || '/app/links')
  if (/^\/items\/[^/]+\/comments$/.test(input.path) && result.email && !/^(accepted|sent)/.test(result.email)) return `<p>${esc(result.email.startsWith('Not available yet') ? result.email : 'Email notification is not available yet on this installation.')}</p><p><a href="${esc(input.returnTo || '/app/files')}">Back to the file</a></p>`
  if (input.path === '/rewind/preview') return rewindPage(input, result)
+ if (input.path === '/rewind/preview' && input.local !== undefined) input.at = zoned(input.local, input.zone)
  if (input.path === '/rewind/apply') return rewindDonePage(input, result)
  if (/^\/rewind\/[^/]+\/undo$/.test(input.path)) return rewindUndonePage(input, result)
- if (input.path === '/devices') return secretPage('Device key created', result.token, `Enter this key in the Chest client on ${result.device.name}. It is shown once; revoke the device to stop it.`, '/app/devices')
  return null
 }
 async function destinations(env: Bindings, w: Awaited<ReturnType<typeof who>>) {
@@ -51,7 +55,7 @@ async function destinations(env: Bindings, w: Awaited<ReturnType<typeof who>>) {
 export async function filesPage(env: Bindings, request: Request, s: Session, url: URL): Promise<{ body: string } | { redirect: string } | null> {
  const path = url.pathname, parts = path.split('/').filter(Boolean)
  if (parts[0] === 's' && parts[1]) return { redirect: `/app/items/${(await openLink(env, s, parts[1])).item}` }
- if (parts[0] !== 'app' || !['files', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage'].includes(parts[1])) return null
+ if (parts[0] !== 'app' || !['files', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in'].includes(parts[1])) return null
  if (path === '/app/storage') return { body: quotasPage(await quotas(env, s)) }
  if (parts[1] === 'spaces' && parts[2] && parts[3] === 'quota') return { body: quotaPage(await quotaView(env, s, parts[2])) }
  const w = await who(env, s), people = (await list<Person>(env, 'person')).filter(p => p.payload.status !== 'inactive'), groups = await list<Group>(env, 'group')
@@ -69,5 +73,6 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (path === '/app/notices') return { body: noticesPage(await notices(env, w)) }
  if (path === '/app/links') return { body: linksPage(await linksView(env, s, w)) }
  if (path === '/app/devices') return { body: devicesPage(await devices(env, s)) }
+ if (path === '/app/move-in') { await personal(env, s); return { body: moveInPage(await destinations(env, w), s.operator.role === 'owner') } }
  throw new ChestError('not_found', 404)
 }

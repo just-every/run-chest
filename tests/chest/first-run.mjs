@@ -28,7 +28,7 @@ export async function firstRunJourney(root, port) {
   }
   await owner.getByRole('checkbox').check();
   await owner.getByRole('button', { name: 'Finish setup', exact: true }).click();
-  await owner.waitForURL('**/app');
+  await owner.waitForURL('**/app/files');
   for (const width of [1440, 390]) {
    await owner.setViewportSize({ width, height: width === 390 ? 844 : 900 });
    await owner.goto(origin);

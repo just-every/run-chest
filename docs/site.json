@@ -29,8 +29,9 @@
     {
       "title": "Move in and keep it safe",
       "pages": [
-        { "slug": "move-in", "title": "Move an archive into Chest", "file": "move-in.md", "summary": "Prepare a Chest archive file, preview every item before anything is written, then apply, resume or undo the batch." },
-        { "slug": "backup-and-restore", "title": "Backup and restore", "file": "backup-and-restore.md", "summary": "Export everything to one file and restore it into a fresh Chest." }
+        { "slug": "move-in", "title": "Move in from Google Drive, Dropbox or Box", "file": "move-in.md", "summary": "Download your files from Google Drive, Dropbox or Box, or choose a folder, and bring them into Chest with their folders." },
+        { "slug": "backup-and-restore", "title": "Backup and restore", "file": "backup-and-restore.md", "summary": "Export everything to one file and restore it into a fresh Chest." },
+        { "slug": "hosting", "title": "Host Chest on Cloudflare", "file": "hosting.md", "summary": "Deploy to your own Cloudflare account, choose the mail provider and sender, sign in, back up, restore and remove." }
       ]
     }
   ]

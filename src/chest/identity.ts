@@ -10,7 +10,7 @@ export async function syncPeople(env:Bindings,request:Request,s:Session) {
 }
 export async function peopleAction(env:Bindings,request:Request,s:Session,input:any) {
  owner(s);const auth=operatorAuth(env)
- if(input.action==='invite'){await auth.invite(request,{email:input.email,displayName:input.name,role:'member',returnTo:'/app'});await syncPeople(env,request,s);return {invited:true}}
+ if(input.action==='invite'){await auth.invite(request,{email:input.email,displayName:input.name,role:'member',returnTo:'/app/files'});await syncPeople(env,request,s);return {invited:true}}
  const operators=await auth.listOperators(request);const op=operators.find(p=>p.email===input.email);insist(op,'person_not_found',404)
  if(input.action==='sessions')return auth.listSessions(request,op.id)
  if(input.action==='revoke'){await auth.revokeSession(request,String(input.session));return {revoked:true}}

@@ -14,24 +14,19 @@ reviewer role on it.
 
 ## Grant access to a collection
 
-In **People & settings → Collections and access**, each collection has its
-grants as a JSON list. Each grant names a principal (a person's email or a
-group's ID) and a role:
-
-```json
-[
-  { "principal": "maria@example.com", "role": "reviewer" },
-  { "principal": "group-id-from-groups", "role": "reader" }
-]
-```
-
-Press **Save collection access**. Every record in the collection follows it.
+In **People & settings → Collections and access**, open a collection. It lists
+each person or group with access and their role, each with **Remove**. To add
+one, type the person's email under **Person (email)** (the box suggests the
+people in this Chest), choose a **Role** and press **Give access**; for a group,
+choose it under **Group** and press **Give group access**. Every record in the
+collection follows it.
 
 ## Grant access to one document
 
-The owner sees **Document access** on each record: its own grants, in the same
-form, and **Private: ignore collection grants**. A private record is visible only
-through its own grants. Press **Save access**.
+The owner sees **Document access** on each record: its own grants, added and
+removed the same way, and **Private: only the people above, not the whole
+collection** with **Save privacy**. A private record is visible only through its
+own grants.
 
 ## See who can read a record
 
@@ -40,7 +35,7 @@ read it right now, by name and email, with the roles that give them access.
 
 ## Remove access
 
-Change or remove the grant and save. The change reaches every door at once:
+Press **Remove** on the grant. The change reaches every door at once:
 the library list, counts, search, the record, previews and downloads. To stop
 someone entirely, use **Deactivate and revoke sessions** in **People & settings**;
 their sessions end immediately.
