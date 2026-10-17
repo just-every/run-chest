@@ -15,7 +15,7 @@
 .contract-head { gap: 1.4em; }
 .contract-head .tile { width: 4.6em; height: 4.6em; }
 .avatars { display: flex; align-self: flex-start; }
-.avatars .avatar { width: 3em; height: 3em; margin-left: -0.6em; font-size: 1.4em; }
+.avatars .avatar { width: 3em; height: 3em; margin-left: -0.6em; font-size: max(1.4em, 11px); }
 .avatars .avatar-grey { font-weight: 400; font-size: 1.8em; }
 .clause { margin-top: 2.4em !important; color: #3d4150; font-weight: 500; }
 .clause-2 { margin-top: 3.4em !important; }
@@ -51,11 +51,11 @@
 .nda-card { height: 100%; padding: 2em 2em 2.4em; border-radius: 1.8em; }
 .nda-head { gap: 1.4em; }
 .scan { position: relative; margin-top: 1.8em; height: 26.4em; padding: 2.6em 2.4em 0 2.6em; background: #f1efea url("/site/scan-paper.webp") center / cover; border-radius: 0.4em; box-shadow: inset 0 0 3em rgba(80, 70, 50, 0.08); }
-.scan-title { color: #23222a; font: 400 1.6em/1 var(--chest-font-type); letter-spacing: 0.02em; text-transform: uppercase; text-align: center; }
+.scan-title { color: #23222a; font: 400 max(1.6em, 11px)/1 var(--chest-font-type); letter-spacing: 0.02em; text-transform: uppercase; text-align: center; }
 .scan-text { margin-top: 1.4em !important; color: #3a3840; font: 400 max(1.22em, 11px)/1.4 var(--chest-font-type); letter-spacing: -0.01em; }
 .scan-fields { display: grid; gap: 1.1em; margin: 1.6em 0 0; }
 .scan-fields div { display: flex; align-items: center; gap: 1.2em; }
-.scan-fields dt { width: 5.6em; color: #2b2a30; font: 400 1.35em/1 var(--chest-font-doc); }
+.scan-fields dt { width: 5.6em; color: #2b2a30; font: 400 max(1.35em, 11px)/1 var(--chest-font-doc); }
 .scan-fields dd { margin: 0; }
 .field { display: inline-block; min-width: 7em; padding: 0.15em 0.55em; border: 0.08em solid #4b2fe6; border-radius: 0.15em; color: #18163a; font: 500 2em/1.15 var(--chest-font-hand); box-shadow: 0 0 0 0.05em rgba(75, 47, 230, 0.35); }
 .field-wide { min-width: 8.6em; }
@@ -81,7 +81,48 @@
 .hero-sticky { font-size: 2.9em; padding: 0.5em 0.55em; place-items: start; line-height: 1.12; }
 .hero-sticky span { padding-top: 0.2em; }
 
+/* 1000-1279 px: the collage keeps at least three quarters of the desk's scale (a 7.5 px em), where its 11 px labels
+   still fit their cards. It hangs from the right edge as on the desk, and the copy takes the width left of the
+   contract, its desk sizes scaled to that width (the same as the desk's from 1152 px, where the two scales meet). */
+@media (min-width: 1000px) and (max-width: 1279px) {
+  .hero { --k: max(var(--desk), 7.5px); --copy-w: calc(100vw - var(--k) * 83.2 - var(--gutter) - var(--desk) * 4); height: calc(var(--k) * 94); }
+  .hero-art { left: auto; right: 0; }
+  .hero-art .stage { --art: var(--k); }
+  .hero-copy { left: var(--gutter); width: var(--copy-w); font-size: calc(var(--copy-w) / 57.6); }
+  .hero-sub { font-size: max(2.5em, 15px); white-space: normal; }
+  .hero-sub .desk-br { display: none; }
+  .hero-free { font-size: max(1.8em, 12px); }
+  .hero-free strong { white-space: nowrap; }
+  .hero-actions { flex-wrap: wrap; gap: 1.2em 3em; }
+  .hero-actions .btn { font-size: max(2.05em, 14px); }
+  .hero-actions .text-link { font-size: max(1.75em, 13px); }
+  /* The cards (here and in the closing) make room for labels that stop at 11 px: tighter clause and receipt lines,
+     a closer scan, and the share link's count under its expiry. */
+  .share-link .then { display: block; }
+  .share-link .sep { display: none; }
+  .clause-text { line-height: 1.6 !important; }
+  .clause-2 { margin-top: 2.8em !important; }
+  .receipt-print { left: 9%; right: 6%; top: 11%; line-height: 1.2; }
+  .receipt-name { margin-bottom: 0.3em !important; }
+  .receipt-print dl { margin-top: 0.6em; }
+  .scan { padding-top: 2em; }
+  .scan-fields { gap: 0.8em; margin-top: 1.2em; }
+}
+/* Under 1280 px (and in the phone column) the version's date no longer fits beside its chip at 11 px, so the chip
+   sits beside the version number and the date runs under both. */
 @media (max-width: 1279px) {
+  .version-row { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 0 1.2em; }
+  .version-row .stack { display: contents; }
+  .version-row .tile { grid-row: span 2; }
+  .version-row .stack > b { grid-column: 2; grid-row: 1; }
+  .version-row .stack > span { grid-column: 2 / 4; grid-row: 2; }
+  .version-row .chip { grid-column: 3; grid-row: 1; margin-left: 0; padding-block: 0.15em; }
+  .version-row .ico.more { grid-column: 4; grid-row: 1 / span 2; }
+}
+@media (min-width: 1000px) and (max-width: 1279px) {
+  .version-row { padding-block: 0.8em; }
+}
+@media (max-width: 999px) {
   .hero { height: auto; display: flex; flex-direction: column; gap: 2em; padding: 4.4em var(--gutter) 2em; }
   .hero-copy, .hero-art { position: static; width: auto; }
   .hero h1 { font-size: clamp(5em, 13.6vw, 8.6em); }
@@ -91,7 +132,8 @@
   .hero-actions .btn { font-size: 1.8em; }
   .hero-actions .text-link { font-size: 1.6em; }
   .hero-art { margin-top: 1.2em; }
-  .stage-flow .contract { padding: 2em 2em 2.4em; }
+  .stage-flow .contract { padding: 2em 1.4em 2.4em; }
+  .stage-flow .contract .cursor-luis { left: 71%; }
   .stage-flow .contract-head .avatar-grey { display: none; }
   .stage-flow .contract-head .avatars .avatar { width: 2.4em; height: 2.4em; }
   .stage-flow .contract-head b.nowrap { white-space: normal; }

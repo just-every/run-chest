@@ -1,7 +1,7 @@
 /* The homepage's frame. The desk drew it at 1536 px wide; .landing's 1em is 10 of those pixels, so every
-   section keeps the desk's proportions from 1280 px up (and stops growing past 1536). Below 1280 px the desk's
-   smallest labels would fall under 11 px, so each section reflows to a column: copy, then its drawing as whole
-   cards. */
+   section keeps the desk's proportions from 1000 px up (and stops growing past 1536). Labels the scale would take
+   under 11 px stop at 11 px (art.css). Below 1000 px each section reflows to a column: copy, then its drawing as
+   whole cards. */
 .landing { --desk: min(10px, calc(100vw / 153.6)); font-size: var(--desk); max-width: 153.6em; margin: 0 auto; }
 .landing .stage { --art: var(--desk); }
 
@@ -14,15 +14,15 @@
 .feature-art { z-index: 1; }
 .panel { position: absolute; border: 1px solid #e3e5f8; border-radius: 2.4em; background: rgba(255, 255, 255, 0.55); }
 
-.eyebrow { color: #575c6c; font: 600 1.45em/1 var(--chest-font-ui); letter-spacing: 0.16em; text-transform: uppercase; }
+.eyebrow { color: #575c6c; font: 600 max(1.45em, 11px)/1 var(--chest-font-ui); letter-spacing: 0.16em; text-transform: uppercase; }
 .eyebrow-wide { letter-spacing: 0.32em; color: #3e4250; }
 /* Tight tracking narrows the space too; word-spacing gives the words back the desk's gap. */
 .feature h2, .hero h1, .closing h2, .details h2 { color: var(--chest-site-ink); font-weight: 860; letter-spacing: -0.05em; word-spacing: 0.06em; line-height: 0.98; text-wrap: balance; }
 .feature h2 { margin-top: 0.3em; white-space: nowrap; }
-.lead { white-space: nowrap; margin-top: 1.25em; color: #4f5464; font-weight: 400; line-height: 1.5; letter-spacing: -0.005em; text-wrap: pretty; }
+.lead { text-wrap: pretty; white-space: nowrap; margin-top: 1.25em; color: #4f5464; font-weight: 400; line-height: 1.5; letter-spacing: -0.005em; }
 .feature .lead { margin-top: 1.1em; }
 
-@media (max-width: 1279px) {
+@media (max-width: 999px) {
   .landing { --desk: 10px; font-size: 10px; }
   .desk-br { display: none; }
   .lead, .hero-sub { white-space: normal; }
@@ -46,8 +46,4 @@
      every separator goes, so no line starts or ends on a dot. */
   .stage-flow .then { display: block; }
   .stage-flow .sep { display: none; }
-}
-/* On a small laptop the column keeps a tablet's measure, centred. */
-@media (min-width: 1000px) and (max-width: 1279px) {
-  .landing { max-width: 86em; }
 }

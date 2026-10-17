@@ -33,7 +33,7 @@
 .doc-title { font: 600 3.2em/1.1 var(--chest-font-doc); letter-spacing: -0.01em; }
 .doc-h { margin-top: 1.6em !important; font: 700 1.7em/1.2 var(--chest-font-doc); }
 .doc-h2 { margin-top: 1.8em !important; }
-.doc-p { margin-top: 0.45em !important; font: 400 1.5em/1.33 var(--chest-font-doc); color: #26262e; }
+.doc-p { margin-top: 0.45em !important; font: 400 max(1.5em, 11px)/1.33 var(--chest-font-doc); color: #26262e; }
 .editor mark { position: relative; }
 .hl-blue { background: #dfe9ff; color: inherit; padding: 0 0.1em; }
 .hl-amber { background: #fdefc3; color: inherit; padding: 0 0.1em; }
@@ -42,12 +42,42 @@
 .hl-blue .cursor-doc { left: 6.6em; top: 1.4em; }
 .hl-blue .cursor-doc b { left: 1.6em; top: 2.6em; }
 .caret-at { position: relative; }
-.caret-at .cursor-doc { left: 0; top: 0.6em; }
-.caret-at .cursor-doc b { left: 0.6em; top: 2.4em; }
+/* Luis's caret: the arrow's tip on the line's lower edge under the point of "1.5%", clear of the digits, and his tag
+   below and right of it, inside the card's last margin. */
+.caret-at .cursor-doc { left: 0; top: 100%; }
+.caret-at .cursor-doc svg { top: -0.3em; }
+.caret-at .cursor-doc b { left: 1.1em; top: 1.1em; }
+.cursor-inline { display: none; }
 .comment { position: absolute; left: 54.2em; top: 21.6em; width: 21.2em; white-space: nowrap; padding: 1.4em 1.6em; border-radius: 1.2em; }
 .comment-head { gap: 0.8em; margin-bottom: 0.8em; }
 .comment .avatar { width: 2.6em; height: 2.6em; font-size: max(1.2em, 11px); border: 0; }
-@media (max-width: 1279px) {
+/* 1000-1279 px: the search keeps at least three quarters of the desk's scale, where the scanned excerpt's 11 px lines
+   (12.2 on the desk) still fit the card with a little less leading and air. The drawing hangs from its desk right edge (x 1500,
+   760 wide, its arrow 10 in); the copy (x 100, 640 wide) ends 20 before the arrow and scales to that width. */
+@media (min-width: 1000px) and (max-width: 1279px) {
+  #search { --k: max(var(--desk), 7.5px); --art-x: calc(var(--desk) * 150 - var(--k) * 76); --copy-w: calc(var(--art-x) + var(--k) - var(--desk) * 12); height: calc(var(--desk) * 6 + var(--k) * 47) !important; }
+  #search .stage { --art: var(--k); }
+  #search .panel { height: calc(var(--desk) * 2.4 + var(--k) * 47) !important; }
+  #search .feature-art { left: var(--art-x) !important; }
+  #search .feature-copy { left: calc(var(--desk) * 10) !important; width: 64em !important; top: calc(var(--desk) * 10.6) !important; font-size: calc(var(--copy-w) / 63); }
+  .search-count { margin: 0.7em 0 0.8em !important; }
+  .scan-excerpt { padding-block: 1em; }
+  .scan-excerpt p { line-height: 1.3; }
+}
+/* 1000-1279 px: the editor keeps at least 11/15 of the desk's scale, so its 15 px document text stays 11 px or more
+   and wraps exactly as drawn, cursors and all. The copy moves right by what the editor gained and scales to the width
+   left (desk geometry: editor at x 84, 771 wide, copy at x 958 to 1498 of a 494 px section; sections/index.tsx).
+   From 1127 px the drawing is the desk's; the copy sets 2.7% under it so its lead stays inside the panel. Dana's
+   comment stops at 11 px and wraps inside its card. */
+@media (min-width: 1000px) and (max-width: 1279px) {
+  #together { --k: max(var(--desk), 7.34px); --copy-x: calc(var(--desk) * 8.4 + var(--k) * 87.4); --copy-w: calc(100vw - var(--desk) * 3.8 - var(--copy-x)); height: calc(var(--desk) * 5.4 + var(--k) * 44) !important; }
+  #together .stage { --art: var(--k); }
+  #together .panel { height: calc(var(--desk) * 3 + var(--k) * 44) !important; }
+  #together .feature-copy { left: var(--copy-x) !important; top: calc(var(--desk) * 9) !important; width: var(--copy-w) !important; font-size: calc(var(--copy-w) / 55.5); }
+  .comment { white-space: normal; }
+  .editor-tools { gap: 0.8em; }
+}
+@media (max-width: 999px) {
   .stage-flow .search-card { padding: 1.6em 1.4em; }
   .stage-flow .search-hit { gap: 1.2em; padding: 1.2em; }
   .stage-flow .search-hit .tile { width: 3.8em; height: 3.8em; }
@@ -60,10 +90,11 @@
   .stage-flow .editor-page { width: auto; padding: 2em 2em 3.6em; }
   .stage-flow .doc-title { font-size: 2.6em; }
   .stage-flow .comment { position: relative; left: auto; top: auto; width: auto; margin: 0 2em 2em; white-space: normal; }
-  /* Where the text wraps is up to the phone, so each cursor takes room in its own line: the arrow hangs below the
-     words it points at and the tag hangs left of it. */
-  .stage-flow .editor-page .cursor-doc { position: relative; left: auto; top: auto; display: inline-block; width: 0; height: 6.6em; vertical-align: top; }
-  .stage-flow .editor-page .cursor-doc svg { top: 2.2em; left: -0.6em; }
-  .stage-flow .editor-page .cursor-doc b { left: auto; right: 0.6em; top: 2.9em; }
-  .stage-flow .hl-blue, .stage-flow .hl-amber { white-space: nowrap; }
+  /* Where the text wraps is up to the phone, so each cursor rides in the line as a tag right after the words it
+     points at, the arrow tucked before the tag: it never leaves the card or opens a gap between lines. */
+  .stage-flow .editor-page .cursor-doc { display: none; }
+  .stage-flow .editor-page .cursor-inline { position: relative; display: inline-block; margin-left: 0.3em; padding-left: 2em; vertical-align: 0.15em; }
+  .stage-flow .editor-page .cursor-inline svg { top: -0.35em; left: 0; width: 2.3em; height: 2.3em; }
+  .stage-flow .editor-page .cursor-inline b { position: static; display: block; padding: 0.1em 0.6em; line-height: 1.25; }
+  .stage-flow .hl-blue, .stage-flow .hl-amber, .stage-flow .bind { white-space: nowrap; }
 }

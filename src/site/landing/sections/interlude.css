@@ -23,7 +23,7 @@
 .flying-pdf { width: 100% !important; height: 100% !important; background: transparent !important; }
 .flying-pdf svg { width: 5em !important; height: 5em !important; }
 
-@media (max-width: 1279px) {
+@media (max-width: 999px) {
   .interlude { height: auto; padding: 3.2em var(--gutter) 2em; }
   .interlude-art { position: static; display: grid; justify-items: center; }
   .interlude .stage-flow > .stage { align-items: center; }

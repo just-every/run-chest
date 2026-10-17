@@ -9,7 +9,7 @@ export function VersionsArt() {
       <Place x={23} y={13} w={470} h={367}>
         <div className="card versions-card">
           <div className="row versions-head"><FileTile kind="doc" /><b className="f18 ink grow">Acme Supply Contract.pdf</b><More /></div>
-          <div className="row ver-row ver-current"><FileTile kind="doc" className="tile-sm" /><span className="f145 mid grow nowrap"><b className="ink">v7</b> · Oct 14<span className="then"><span className="sep"> · </span>approved by Dana Ortiz</span></span><span className="chip chip-ok f135">approved</span></div>
+          <div className="row ver-row ver-current"><FileTile kind="doc" className="tile-sm" /><span className="f14 mid grow nowrap ver-meta"><b className="ink">v7</b> · Oct 14<span className="then"><span className="sep"> · </span>approved by Dana Ortiz</span></span><span className="chip chip-ok f135">approved</span></div>
           <div className="row ver-row"><FileTile kind="doc" className="tile-sm" /><span className="f15 mid grow"><b className="ink">v6</b> · Oct 10</span></div>
           <div className="row ver-row"><FileTile kind="doc" className="tile-sm" /><span className="f15 mid grow"><b className="ink">v5</b> · Oct 3</span></div>
           <span className="restore-btn f17">Restore</span>

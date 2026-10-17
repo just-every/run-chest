@@ -2505,7 +2505,7 @@
       "executable": false
     },
     "src/site/landing/art/art.css": {
-      "sha256": "41662a01fd7a3cc5f80165a562a46011c26617f9e859e4aec0f82d815617cd81",
+      "sha256": "b5947b41879aba8a92184fad0282cea637ac15bd8a0cc81808f62713293621e3",
       "executable": false
     },
     "src/site/landing/art/icons.tsx": {
@@ -2533,7 +2533,7 @@
       "executable": false
     },
     "src/site/landing/hero/hero.css": {
-      "sha256": "5f68629a636d4ad563debe25668d7a879e1b8d4d5323f787264f70791a546979",
+      "sha256": "0156a9ab8cc4613e46bdc2b2167a24b8f3b6e17a7ce5e5da84b811b0cd3d22bb",
       "executable": false
     },
     "src/site/landing/hero/Hero.tsx": {
@@ -2553,7 +2553,7 @@
       "executable": false
     },
     "src/site/landing/landing.css": {
-      "sha256": "240e408425e18753fd6ccbe863b2e1f8261c08461c6a023062a67ead1d5b5e68",
+      "sha256": "fb85f7f2e2faa4f7e8c567266fff4d4d74a9ee5edf61343ce4bd333c3a19387a",
       "executable": false
     },
     "src/site/landing/Landing.tsx": {
@@ -2569,7 +2569,7 @@
       "executable": false
     },
     "src/site/landing/sections/closing.css": {
-      "sha256": "64665e81b3626e3a56394463f486279e7a1b52edde2bb0a89ca3b38de0a50822",
+      "sha256": "659ec56505cd465b6b2aeb58bd4c94d1b6448bc3d4fca61269a8b196c7b66f65",
       "executable": false
     },
     "src/site/landing/sections/Closing.tsx": {
@@ -2577,7 +2577,7 @@
       "executable": false
     },
     "src/site/landing/sections/details.css": {
-      "sha256": "46b82115e95b5449ba037f56da8fc79082b4abf8a8bd6a3bf2546fec481f3659",
+      "sha256": "e7edc15c2b13a141f82972ad1f299ea93302ee33218d0c400454a438db83f022",
       "executable": false
     },
     "src/site/landing/sections/Details.tsx": {
@@ -2589,7 +2589,7 @@
       "executable": false
     },
     "src/site/landing/sections/interlude.css": {
-      "sha256": "f61dcf1fafe207ab0d3dcbe6d4c82160a9799a0cc74fc854672f2b1f12cbb567",
+      "sha256": "33586f4f5be7c4fa4352d4535ddee921034af5b8826b2ccfcb653850cab148c8",
       "executable": false
     },
     "src/site/landing/sections/Interlude.tsx": {
@@ -2597,7 +2597,7 @@
       "executable": false
     },
     "src/site/landing/sections/movein-teams.css": {
-      "sha256": "f0a9d1b348903ccc241c9136af30f4145b777f5dd631cae1bf06a711364a9532",
+      "sha256": "04eec321bfd4eecdadf9430a67402952f751afdfc0acd4bdff742d184bf0dd5b",
       "executable": false
     },
     "src/site/landing/sections/MoveInArt.tsx": {
@@ -2605,7 +2605,7 @@
       "executable": false
     },
     "src/site/landing/sections/ownership.css": {
-      "sha256": "16a47a5c2d39d4934f832055abc9ba6dda777a6978721358668f614e123c290e",
+      "sha256": "2b0ffcaa47d13dda781e174e028eff6716981be31ab6b3d3a6d99c0acebecb23",
       "executable": false
     },
     "src/site/landing/sections/Ownership.tsx": {
@@ -2613,7 +2613,7 @@
       "executable": false
     },
     "src/site/landing/sections/search-together.css": {
-      "sha256": "9d2ee1bc2c0497225ed32b22fc166edf8299a89a9d46cddfb7dbee3356dbfa84",
+      "sha256": "63540006bd1bdd1835e6d580281dfb5160c32ad1278222e968baf2639c138bf2",
       "executable": false
     },
     "src/site/landing/sections/SearchArt.tsx": {
@@ -2625,7 +2625,7 @@
       "executable": false
     },
     "src/site/landing/sections/sync-share.css": {
-      "sha256": "66682a2a4d9e990008d00d9f239d6947391b56a321e08cb01769041609343ac7",
+      "sha256": "25f6fb1d7600bfdd631134b42663b5a17f1b297bfb010505136311c0bdf66a02",
       "executable": false
     },
     "src/site/landing/sections/SyncArt.tsx": {
@@ -2637,15 +2637,15 @@
       "executable": false
     },
     "src/site/landing/sections/TogetherArt.tsx": {
-      "sha256": "7617a20698a2aaf22e053da5cb374558d8dd737ac06764e4467126cafbd28c03",
+      "sha256": "6611911dadd77cf7cd1a7a4270749fbada5a4f1042f535f14237c8a28aeba0c9",
       "executable": false
     },
     "src/site/landing/sections/versions-agents.css": {
-      "sha256": "56fa7106187ec9a2753c6451f37e874a3ee9aff543522b61891ae74bcc78ab28",
+      "sha256": "e767c549b6d798d8da25bbd27bc5f5a138ac5885c6e0a5eac6ab277c73e1b058",
       "executable": false
     },
     "src/site/landing/sections/VersionsArt.tsx": {
-      "sha256": "ba53b1093792bd7cca0cb8ac9c40846bbc3d7722ce4da7c86eb230da1be60711",
+      "sha256": "8c1f9aea536f21155ffc7435a78e08fe2ad82893ce8772d002fc1052e1c94622",
       "executable": false
     },
     "src/site/pages.tsx": {

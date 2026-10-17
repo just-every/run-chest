@@ -6,12 +6,12 @@
 .terminal-bar { display: flex; gap: 1.2em; height: 7em; align-items: center; padding: 0 2.6em; background: #232229; }
 .terminal-bar i { width: 1.6em; height: 1.6em; border-radius: 50%; background: #f25f58; }
 .terminal-bar i:nth-child(2) { background: #f7be3d; } .terminal-bar i:nth-child(3) { background: #3ec95a; }
-.terminal-body { margin: 0; padding: 2.2em 2.6em; color: #f1f0f6; font: 400 1.68em/2.55 var(--chest-font-mono); white-space: pre; }
+.terminal-body { margin: 0; padding: 2.2em 2.6em; color: #f1f0f6; font: 400 max(1.68em, 11px)/2.55 var(--chest-font-mono); white-space: pre; }
 .terminal-body b { color: #9b7cff; font-weight: 500; margin-right: 0.3em; }
 .own-sticky { font-size: 4.6em; place-content: center; }
 .fold-phone { display: none; }
 .own-sticky span { margin-top: -0.2em; }
-@media (max-width: 1279px) {
+@media (max-width: 999px) {
   .own-list { margin-top: 2.6em; gap: 2.2em; }
   .own-list li { font-size: 1.8em; gap: 1.2em; }
   .ownership .stage-flow .terminal-bar { height: 4.4em; }

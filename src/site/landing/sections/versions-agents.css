@@ -3,10 +3,11 @@
 .versions-head { gap: 1.6em; height: 5.8em; margin-bottom: 1.6em; }
 .versions-head .tile { width: 5.6em; height: 5.6em; border-radius: 1.2em; }
 .versions-head .tile svg { width: 3.2em; height: 3.2em; }
-.ver-row { gap: 1.8em; height: 5.8em; margin-top: 0.9em; padding: 0 1.4em; border: 0.1em solid #ebecf4; border-radius: 1em; }
+.ver-row { gap: 1.8em; height: 5.8em; margin-top: 0.9em; padding: 0 1em 0 1.4em; border: 0.1em solid #ebecf4; border-radius: 1em; }
 .ver-row .tile-sm { width: 3.6em; height: 3.6em; }
 .ver-current { border-color: #c9c2f6; background: #f7f5ff; box-shadow: 0 0 0 0.1em #e2dcfd; }
-.stage .f145 { font-size: 1.45em; }
+/* The desk letters v7's line narrower than the web font sets it; tracked in, it keeps the desk's air before the chip. */
+.ver-meta { letter-spacing: -0.01em; }
 .restore-btn { position: absolute; right: 6.3em; bottom: 1.2em; display: grid; place-items: center; height: 2.6em; padding: 0 1.5em; border-radius: 0.7em; background: #5b2ff0; color: #fff; font-weight: 500; box-shadow: 0 0.6em 1.4em -0.6em rgba(70, 30, 220, 0.7); }
 .restore-toast { height: 100%; gap: 1.8em; padding: 0 2em; border-radius: 1.6em; }
 .restore-toast .round-ico { width: 5.6em; height: 5.6em; border-radius: 1.2em; }
@@ -23,7 +24,13 @@
 .agents-card .undo { color: #2c3ad8; text-decoration: underline; text-underline-offset: 0.2em; }
 .private-btn { display: grid; place-items: center; height: 2.7em; padding: 0 1.45em; border-radius: 0.7em; background: #5b2ff0; color: #fff; font-weight: 500; white-space: nowrap; }
 .agents-sticky { font-size: 2.2em; line-height: 1.06; }
-@media (max-width: 1279px) {
+/* Under 1248 px v7's line, nearing its 11 px floor, would close the air before the chip, so "approved by Dana Ortiz"
+   takes a second line. */
+@media (min-width: 1000px) and (max-width: 1247px) {
+  .ver-current .then { display: block; }
+  .ver-current .sep { display: none; }
+}
+@media (max-width: 999px) {
   .stage-flow .versions-card { padding: 1.8em 1.6em; }
   .stage-flow .ver-row { height: auto; min-height: 5.8em; padding: 1em 1.2em; gap: 1.2em; }
   .stage-flow .restore-btn { position: static; width: fit-content; margin: 1.6em 0 0 auto; }

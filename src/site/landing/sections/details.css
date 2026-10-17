@@ -1,6 +1,6 @@
 /* Page 8: the quiet details. Cards 438 × 290 desk px in a 3 × 2 grid with 30 px gutters. */
 .details { position: relative; height: 102.4em; padding: 13.6em 8em 0 8.2em; }
-.details-eyebrow { margin-left: 1.2em; color: #4b2fe0; font: 500 1.6em/1 var(--chest-font-mono); letter-spacing: 0.24em; }
+.details-eyebrow { margin-left: 1.2em; color: #4b2fe0; font: 500 max(1.6em, 11px)/1 var(--chest-font-mono); letter-spacing: 0.24em; }
 .details h2 { margin: 0.26em 0 0 0.1em; font-size: 9.8em; letter-spacing: -0.05em; }
 .details h2 .dot { color: var(--chest-violet); }
 .detail-grid { list-style: none; padding: 0; margin: 5.4em 0 0; display: grid; grid-template-columns: repeat(3, 43.8em); gap: 2.9em 3em; }
@@ -13,7 +13,7 @@
 .detail-mark { position: absolute; left: 13.4em; top: 2.6em; width: 4.8em; height: 4.8em; fill: none; stroke: #5a2ce8; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .detail h3 { margin-top: 1.05em; color: var(--chest-site-ink); font: 780 3.05em/1.1 var(--chest-font-ui); letter-spacing: -0.04em; white-space: nowrap; }
 .detail p { margin-top: 0.45em; max-width: 13.9em; color: #4f5464; font: 400 2.45em/1.45 var(--chest-font-ui); letter-spacing: -0.01em; }
-@media (max-width: 1279px) {
+@media (max-width: 999px) {
   .details { height: auto; padding: 6.4em var(--gutter) 2em; }
   .details-eyebrow { margin-left: 0; font-size: 1.35em; }
   .details h2 { font-size: clamp(3.8em, 9.6vw, 6.4em); margin-left: 0; }
