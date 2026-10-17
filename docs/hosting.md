@@ -147,7 +147,8 @@ again by email. If you read scans with an AI model key, enter the key again
 under **People & settings**. Company sign-in is locked to the deployment it was
 saved in, so the restore switches it off: if you used it, enter your provider's
 details again under **People & settings › Company sign-in** and test it. SCIM
-tokens, links and file requests keep working.
+tokens, links and file requests keep working. Invitations sent before the backup
+stop working: invite anyone who had not accepted yet again, with the same email.
 
 ## Remove a hosted Chest
 
