@@ -29,14 +29,14 @@
 /* File-type tiles: a coloured glyph on a soft square. */
 .tile { display: grid; place-items: center; width: 4.4em; height: 4.4em; border-radius: 1em; flex: none; }
 .tile svg { width: 2.6em; height: 2.6em; }
-.tile-doc { background: #e8efff; color: #2f6df6; }
+.tile-doc { background: var(--chest-kind-doc-soft); color: var(--chest-kind-doc); }
 .tile-word { background: #fff; }
 .tile-word svg { width: 3.4em; height: 3.4em; }
-.tile-sheet { background: #e6f6ec; color: #1e9e57; }
-.tile-slides { background: #fff0e6; color: #f06a1d; }
-.tile-pdf { background: #fdecec; color: #e0312b; }
-.tile-image { background: #e8efff; color: #2f6df6; }
-.tile-folder { background: transparent; color: #4c9bf8; }
+.tile-sheet { background: var(--chest-kind-sheet-soft); color: var(--chest-kind-sheet); }
+.tile-slides { background: var(--chest-kind-slides-soft); color: var(--chest-kind-slides); }
+.tile-pdf { background: var(--chest-kind-pdf-soft); color: var(--chest-kind-pdf); }
+.tile-image { background: var(--chest-kind-doc-soft); color: var(--chest-kind-doc); }
+.tile-folder { background: transparent; color: var(--chest-kind-folder); }
 .tile-folder svg { width: 3.4em; height: 3.4em; }
 .tile-sm { width: 3.6em; height: 3.6em; border-radius: 0.9em; }
 .tile-sm svg { width: 2.2em; height: 2.2em; }

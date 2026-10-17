@@ -1,0 +1,142 @@
+/* The document library and its administration: library rows and the review and expiry list, a record's page
+   (facts, typed fields, versions with their decisions), People & settings, Move-in and the audit trail. Visual
+   authority: the desk-app pick settings B, with the file page's version rows for records. */
+
+/* Library rows: tile, status pill, title and relationship, then four fact columns that line up down the list. */
+.lib-links { display: flex; flex-wrap: wrap; gap: 8px; font-size: 15px; white-space: nowrap; }
+.lib-upload { margin-left: auto; position: relative; }
+.lib-upload > .disclosure > .disclosure-panel { position: absolute; z-index: 5; right: 0; top: calc(100% + 6px); width: min(820px, calc(100vw - 340px)); box-shadow: var(--chest-card-shadow); }
+.lib-upload > .quiet { max-width: 260px; font-size: 14px; }
+.records { display: grid; gap: 10px; min-width: 0; align-content: start; }
+.rec-card { position: relative; display: grid; grid-template-columns: minmax(240px, 1fr) minmax(0, 2.2fr) 20px; align-items: center; gap: 16px; padding: 16px 20px; background: var(--chest-site-card); border: 1px solid var(--chest-site-line); border-radius: var(--chest-card-radius); box-shadow: var(--chest-card-quiet); transition: border-color .15s ease; }
+.rec-card:hover { border-color: #d8d3fb; }
+.rec-name { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
+.rec-name > div { display: grid; gap: 3px; min-width: 0; }
+.rec-state { margin-bottom: 2px !important; }
+.rec-name h2 { font-size: 16px; font-weight: 650; line-height: 1.3; }
+.rec-name h2 a { text-decoration: none; }
+.rec-name h2 a::after { content: ""; position: absolute; inset: 0; }
+.rec-name h2 a:hover { text-decoration: underline; text-decoration-color: rgba(90, 44, 232, 0.4); text-underline-offset: 4px; }
+.rec-rel { color: var(--chest-site-muted); font-size: 14px; }
+.rec-facts { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 118px 118px; }
+.rec-facts > div { min-width: 0; padding: 0 12px; border-left: 1px solid var(--chest-site-line); }
+.rec-facts dt { color: var(--chest-site-muted); font-size: 12.5px; }
+.rec-facts dd { font-size: 13.5px; line-height: 1.5; }
+.rec-facts .one-line { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rec-facts .mono { font-size: 12.5px; }
+.rec-facts > div:nth-child(n+3) dd { white-space: nowrap; }
+.rec-issue, .rec-match { grid-column: 2 / 3; position: relative; }
+.rec-match { color: var(--chest-site-muted); font-size: 13px; }
+.side-card > h2 { font-size: 17px; }
+.work-list { display: grid; padding: 0; list-style: none; }
+.work-list li { display: grid; gap: 4px; justify-items: start; padding: 12px 0; border-top: 1px solid var(--chest-site-line); }
+.work-list li:first-child { padding-top: 0; border-top: 0; }
+.work-list a { font: 600 15px/1.3 var(--chest-font-ui); text-decoration: none; }
+.work-list a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.work-when { color: var(--chest-site-muted); font-size: 13.5px; }
+
+/* A record: relationship and dates, typed fields, then its versions with their decisions. */
+.doc-facts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 24px; padding: 18px 22px; background: var(--chest-site-card); border: 1px solid var(--chest-site-line); border-radius: var(--chest-card-radius); box-shadow: var(--chest-card-quiet); }
+.doc-rel .quiet { font-size: 13.5px; }
+.doc-rel-name { margin-top: 4px !important; font-size: 17px; }
+.doc-dates { display: grid; gap: 6px; padding-left: 24px; border-left: 1px solid var(--chest-site-line); }
+.doc-dates div { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 12px; }
+.doc-dates dt { color: var(--chest-site-muted); font-size: 14px; }
+.doc-dates dd { font-size: 14.5px; overflow-wrap: anywhere; }
+.doc-typed { display: flex; flex-wrap: wrap; gap: 8px; }
+.doc-typed div { display: flex; gap: 8px; padding: 6px 12px; background: var(--chest-panel); border-radius: 999px; font-size: 13.5px; }
+.doc-typed dt { color: var(--chest-site-muted); }
+.doc-typed dd { color: var(--chest-site-ink); overflow-wrap: anywhere; }
+.doc .card-issue { margin-top: 0; }
+.ver-card { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); background: var(--chest-site-card); border: 1px solid var(--chest-site-line); border-radius: var(--chest-card-radius); box-shadow: var(--chest-card-quiet); }
+.ver:not(.file-ver) + .ver:not(.file-ver) { margin-top: 14px; }
+.ver-current .ver-card { border-color: #cdeed6; }
+.ver-card > .ver-facts { padding: 18px 20px; }
+.ver-card > .ver-decide { padding: 18px 20px; border-left: 1px solid var(--chest-site-line); }
+.ver-card .ver-name { font-size: 15.5px; font-weight: 600; }
+.ver-approve .btn { min-height: 46px; font-size: 16px; }
+.ver-decide > .disclosure > .link-summary { font-size: 14.5px; }
+.ver-decide > .disclosure[open] > .disclosure-panel { margin-top: 12px; }
+.ver-decide textarea { min-height: 64px; }
+.readers { display: grid; gap: 8px; padding: 0; list-style: none; font-size: 14px; overflow-wrap: anywhere; }
+
+/* People & settings: two columns of cards; folding rows for collections, types and groups; Local custody below. */
+.admin-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.admin-col { display: grid; gap: 20px; min-width: 0; }
+.admin-grid .person { flex-wrap: wrap; }
+.admin-grid .person .row-main { flex: 1 1 220px; }
+.admin-grid .person .row-actions { flex-basis: 100%; padding-left: 48px; }
+.row-fold { display: block; }
+.row-sum { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 12px 0; list-style: none; cursor: pointer; }
+.row-sum::-webkit-details-marker { display: none; }
+.row-sum > .icon { width: 18px; height: 18px; margin-left: auto; color: var(--chest-site-muted); transition: transform .12s ease; }
+.row-fold[open] > .row-sum > .icon { transform: rotate(180deg); }
+.row-sum .row-text { gap: 6px; }
+.row-name { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.row-facts { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.row-facts .chip { max-width: 100%; font-size: 12.5px; }
+.row-facts .quiet { font-size: 13px; align-self: center; }
+.row-id { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-body { padding: 4px 0 16px 48px; }
+@media (prefers-reduced-motion: reduce) { .row-sum > .icon { transition: none; } }
+.custody { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 24px; margin-top: 20px; }
+.custody > h2 { margin: 0; }
+.custody-body { display: grid; gap: 10px; margin-top: 0 !important; color: var(--chest-site-body); }
+.app .custody code.cmd { display: inline-block; margin: 2px 0; padding: 4px 10px; background: #1a191f; border-radius: 8px; color: #f1f0f6; font-size: 13px; }
+
+/* Move-in: the archive form beside the batch actions. */
+.movein { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.movein-side { display: grid; gap: 14px; }
+
+/* Audit: a quiet table in a card. */
+.table-scroll { overflow-x: auto; }
+.audit { width: 100%; border-collapse: collapse; font-size: 14px; }
+.audit th, .audit td { padding: 11px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--chest-site-line); }
+.audit th { background: var(--chest-panel); color: var(--chest-site-muted); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.audit td.mono { font-size: 12.5px; overflow-wrap: anywhere; }
+.audit td:nth-child(-n+2) { white-space: nowrap; }
+.audit tbody tr:hover { background: var(--chest-row-hover); }
+.audit tr:last-child td { border-bottom: 0; }
+
+@media (max-width: 1180px) {
+  .rec-card { grid-template-columns: minmax(0, 1fr) 20px; }
+  .rec-facts { grid-column: 1 / -1; grid-row: 2; padding-top: 12px; border-top: 1px solid var(--chest-site-line); }
+  .rec-facts > div:first-child { padding-left: 0; border-left: 0; }
+  .rec-open { grid-column: 2; grid-row: 1; align-self: start; }
+  .rec-issue, .rec-match { grid-column: 1 / -1; }
+  .admin-grid { grid-template-columns: minmax(0, 1fr); }
+  .ver-card { grid-template-columns: minmax(0, 1fr); }
+  .ver-card > .ver-decide { border-left: 0; border-top: 1px solid var(--chest-site-line); }
+  .lib-upload > .disclosure > .disclosure-panel { width: min(820px, calc(100vw - 300px)); }
+}
+@media (max-width: 960px) {
+  .movein { grid-template-columns: minmax(0, 1fr); }
+  .doc-facts { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .doc-dates { padding-left: 0; border-left: 0; }
+  .custody { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+}
+@media (max-width: 760px) {
+  .lib-links { flex: 1; }
+  .lib-upload { margin-left: 0; }
+  .lib-upload > .disclosure > .disclosure-panel { left: 0; width: auto; }
+  .rec-card { gap: 12px; padding: 14px; }
+  .rec-facts { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 0; }
+  .rec-facts > div { padding: 0 10px; }
+  .rec-facts > div:nth-child(odd) { padding-left: 0; border-left: 0; }
+  .doc-facts { padding: 16px; }
+  .doc-dates div { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .ver-card > .ver-facts, .ver-card > .ver-decide { padding: 16px; }
+  .admin-grid .person .row-actions { padding-left: 0; }
+  .row-body { padding-left: 0; }
+}
+/* Phone audit: each entry is a card of labelled lines (When, Who, Action, Record, Detail); each value carries its
+   column name, and long ids and details wrap inside the card. */
+@media (max-width: 640px) {
+  .audit thead { display: none; }
+  .audit, .audit tbody { display: block; }
+  .audit tr { display: grid; gap: 6px; padding: 14px 16px; border-bottom: 1px solid var(--chest-site-line); }
+  .audit tr:last-child { border-bottom: 0; }
+  .audit td, .audit td:nth-child(-n+2) { display: block; padding: 0; border: 0; white-space: normal; overflow-wrap: anywhere; }
+  .audit td::before { content: attr(data-label); display: block; color: var(--chest-site-muted); font: 400 12.5px/1.4 var(--chest-font-ui); }
+  .audit td:first-child { white-space: nowrap; }
+}

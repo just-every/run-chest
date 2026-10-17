@@ -1,7 +1,7 @@
 import { headers } from '../api'
 import { head, policy } from '../ui-shell'
 import { esc } from '../ui-shared'
-import { size } from './ui-item'
+import { size } from './ui-list'
 // Pages for people without a Chest account: a link for anyone and a file request. They read like sign-in (the
 // wordmark above one card), carry no script, and never show more than the link itself reveals.
 // Request limits are set in decimal megabytes, so they read back that way.

@@ -1,17 +1,76 @@
-// Chest's line icons and the folder tab outline, as SVG markup: the app's server-rendered pages and the
-// run site's React drawings both insert these strings, so each shape is drawn once. Decorative only.
-const svg = (body: string, viewBox = '0 0 24 24') => `<svg viewBox="${viewBox}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${body}</svg>`
+// Chest's one set of drawn shapes, as data and SVG markup: the line icons (24 px grid, round 1.8 px strokes) and the
+// coloured file-type glyphs. The app's server-rendered pages insert the markup strings; the run site's React drawings
+// (src/site/landing/art/icons.tsx) render the same paths and glyphs. Decorative only. Tile colours are tokens in
+// public/rer-theme.css (--chest-kind-*).
 
-export const icons = {
-  document: svg('<path d="M6.5 2.75h7.25l4.5 4.5v13a1 1 0 0 1-1 1h-10.75a1 1 0 0 1-1-1V3.75a1 1 0 0 1 1-1z"/><path d="M13.5 2.75v4.75h4.75"/><path d="M8.75 12.5h6.5M8.75 16h6.5"/>'),
-  building: svg('<path d="M4.5 21.25V3.75a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v17.5"/><path d="M14.5 9.25h4a1 1 0 0 1 1 1v11"/><path d="M3 21.25h18"/><path d="M7.75 6.5h1.5M10.75 6.5h1.5M7.75 10h1.5M10.75 10h1.5M7.75 13.5h1.5M10.75 13.5h1.5M8.5 21.25V17.5h3v3.75M16.75 13h.5M16.75 16.5h.5"/>'),
-  person: svg('<circle cx="12" cy="7.75" r="4"/><path d="M4.25 21.25a7.75 7.75 0 0 1 15.5 0z"/>'),
-  people: svg('<circle cx="9" cy="8" r="3.5"/><path d="M2.75 20.25a6.25 6.25 0 0 1 12.5 0z"/><path d="M15 4.75a3.5 3.5 0 0 1 0 6.5M17.5 14.25a6.25 6.25 0 0 1 3.75 6h-3"/>'),
-  calendar: svg('<rect x="3.25" y="4.75" width="17.5" height="16.5" rx="1.5"/><path d="M3.25 9.75h17.5M8 2.75v4M16 2.75v4"/><path d="M7.5 13.5h1M11.5 13.5h1M15.5 13.5h1M7.5 17h1M11.5 17h1M15.5 17h1"/>'),
-  search: svg('<circle cx="10.5" cy="10.5" r="6.75"/><path d="m15.5 15.5 5.25 5.25"/>'),
-  chevron: svg('<path d="m9 5.5 6.5 6.5L9 18.5"/>'),
-  alert: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/>'),
+export const lines = {
+  link: 'M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2',
+  lock: 'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
+  calendar: 'M4.5 6.5h15v13h-15zM4.5 10.5h15M8.5 4v4M15.5 4v4',
+  download: 'M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14',
+  upload: 'M12 16V5M7.5 9.5 12 5l4.5 4.5M5 19.5h14',
+  arrowUp: 'M12 19V5M6 11l6-6 6 6',
+  search: 'M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM15.5 15.5 20 20',
+  close: 'M6 6l12 12M18 6 6 18',
+  check: 'M5 12.5l4.5 4.5L19 7.5',
+  clock: 'M12 20.5a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17zM12 7.5V12l3 2.5M3.5 12H2',
+  history: 'M4.5 12a7.5 7.5 0 1 0 2.2-5.3L4.5 9M4.5 4.5V9H9M12 8v4l3 2',
+  merge: 'M7 5.5a2 2 0 1 0 0 .01M17 5.5a2 2 0 1 0 0 .01M12 19a2 2 0 1 0 0 .01M7 7.5c0 4 5 4 5 9.5M17 7.5c0 4-5 4-5 9.5',
+  shield: 'M12 3.5 5 6v5.5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z',
+  users: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM3 20c.5-3.5 3-5.5 6-5.5s5.5 2 6 5.5M16 4.3a3.5 3.5 0 0 1 0 6.4M18 14.8c1.7.7 2.8 2.5 3 5.2',
+  user: 'M12 11.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5c.6-4 3.6-6.5 7.5-6.5s6.9 2.5 7.5 6.5',
+  database: 'M12 3.5c4.4 0 7.5 1.3 7.5 3s-3.1 3-7.5 3-7.5-1.3-7.5-3 3.1-3 7.5-3zM4.5 6.5v11c0 1.7 3.1 3 7.5 3s7.5-1.3 7.5-3v-11M4.5 12c0 1.7 3.1 3 7.5 3s7.5-1.3 7.5-3',
+  monitor: 'M3.5 4.5h17v11h-17zM12 15.5v4M8 19.5h8',
+  share: 'M12 15V3.5M7.5 8 12 3.5 16.5 8M6 11H4.5v9.5h15V11H18',
+  eye: 'M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+  trash: 'M4.5 6.5h15M9.5 6.5V4h5v2.5M6.5 6.5l1 14h9l1-14M10 10.5v6.5M14 10.5v6.5',
+  list: 'M9 6.5h11M9 12h11M9 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01',
+  cloudUp: 'M7 18.5a4.5 4.5 0 0 1-.6-9 6 6 0 0 1 11.5 1.6A3.8 3.8 0 0 1 17.5 18.5M12 20v-7.5M9 15l3-3 3 3',
+  fileCheck: 'M14 3.5H7a1.5 1.5 0 0 0-1.5 1.5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8zM14 3.5V8h4.5M9 14l2 2 4-4',
+  file: 'M14 3.5H7a1.5 1.5 0 0 0-1.5 1.5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8zM14 3.5V8h4.5M9 13h6M9 16.5h6',
+  undo: 'M9 14 4.5 9.5 9 5M4.5 9.5h9a5.5 5.5 0 0 1 0 11H11',
+  wifi: 'M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01',
+  chevronDown: 'M6 9.5l6 6 6-6',
+  chevronRight: 'M9.5 6l6 6-6 6',
+  plus: 'M12 5v14M5 12h14',
+  arrowRight: 'M4.5 12h14M13.5 7l5 5-5 5',
+  alert: 'M12 4 2.8 19.5h18.4zM12 10v4.5M12 17.2h.01',
+  comment: 'M4.5 5h15v11h-9l-4.5 3.5V16h-1.5z',
+  bold: 'M7 4.5h6a3.5 3.5 0 0 1 0 7H7zM7 11.5h7a3.8 3.8 0 0 1 0 7.5H7z',
+  italic: 'M14 4.5h-4M14 19.5h-4M14.5 4.5l-5 15',
+  underline: 'M7 4.5v6a5 5 0 0 0 10 0v-6M5.5 20h13',
+  alignLeft: 'M4 6h16M4 10h10M4 14h16M4 18h10',
+  alignCenter: 'M4 6h16M7 10h10M4 14h16M7 18h10',
+  alignRight: 'M4 6h16M10 10h10M4 14h16M10 18h10',
+  bullets: 'M9 6.5h11M9 12h11M9 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01',
+  image: 'M4 5h16v14H4zM4 15.5l4.5-4.5 4 4 3-3 4.5 4.5M15.5 9.5h.01',
+  folder: 'M3.5 6.5h6l2 2h9v10h-17z',
+  cloud: 'M7 18.5a4.5 4.5 0 0 1-.6-9 6 6 0 0 1 11.5 1.6 3.8 3.8 0 0 1-.4 7.4z',
+  dots: 'M5.5 12h.01M12 12h.01M18.5 12h.01',
+  bell: 'M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 2h-14zM10 20.5h4',
+  sync: 'M19.5 11a7.5 7.5 0 0 0-13.4-4.2L4.5 8.5M4.5 4v4.5H9M4.5 13a7.5 7.5 0 0 0 13.4 4.2l1.6-1.7M19.5 20v-4.5H15',
+  book: 'M4.5 5.5c2.5-1 5-1 7.5.5 2.5-1.5 5-1.5 7.5-.5v13c-2.5-1-5-1-7.5.5-2.5-1.5-5-1.5-7.5-.5zM12 6v13',
+  gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1',
+  inbox: 'M4.5 13.5h4l1.5 2.5h4l1.5-2.5h4M4.5 13.5 7 5.5h10l2.5 8v5h-15z',
+  logout: 'M14.5 7.5V5a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 5v14A1.5 1.5 0 0 0 6 20.5h7a1.5 1.5 0 0 0 1.5-1.5v-2.5M10 12h10M17 9l3 3-3 3',
+  star: 'M12 3.8l2.5 5.2 5.7.8-4.1 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4.1-4 5.7-.8z',
+  menu: 'M4.5 7h15M4.5 12h15M4.5 17h15',
+} as const
+
+export type LineName = keyof typeof lines
+
+/** A line icon's markup: one stroked path on the 24 px grid. */
+export const lineSvg = (name: LineName) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${name === 'dots' ? 3.2 : 1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="${lines[name]}"/></svg>`
+
+export type FileKind = 'doc' | 'word' | 'sheet' | 'slides' | 'pdf' | 'image' | 'folder'
+
+/** The file-type glyphs: a coloured page (or folder) drawn in currentColor, set on a soft tile. */
+export const fileGlyphs: Record<FileKind, string> = {
+  doc: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 2.5h8l5 5v13a1 1 0 0 1-1 1h-12a1 1 0 0 1-1-1v-17a1 1 0 0 1 1-1z" fill="currentColor"/><path d="M14.5 2.5v4a1 1 0 0 0 1 1h4" fill="#fff" fill-opacity=".45"/><path d="M8.5 12h7M8.5 15h7M8.5 18h4.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  word: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 2.5h9l4 4v14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-17a1 1 0 0 1 1-1z" fill="#fff" stroke="#c9d6f3"/><path d="M11 10h7M11 13h7M11 16h7" stroke="#9db6ea" stroke-width="1.2" stroke-linecap="round"/><rect x="2.5" y="7" width="10" height="10" rx="1.6" fill="#2b5fd9"/><path d="M4.6 9.4l1.1 5.2 1.8-4.4 1.8 4.4 1.1-5.2" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  sheet: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="17" height="17" rx="3" fill="currentColor"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>',
+  slides: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="17" height="17" rx="3" fill="currentColor"/><rect x="8" y="7.5" width="8" height="6" rx="1" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M12 13.5V17M9.5 17h5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  pdf: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12.2 4.2c-1.4 0-1.2 3 .5 6.3 1.4 2.8 3.4 5 5.4 5.6 2.1.6 2.7-1.1.9-1.6-2.6-.7-7.8.2-11.1 2.2-2.6 1.6-2.4 3.4-.8 2.8 1.8-.7 4.2-5.6 5.1-9.5.6-2.8.8-5.8 0-5.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  image: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="currentColor"/><path d="M5.5 17.5l4.5-5 3.5 3.5 2.5-2.5 3 4" fill="#fff" fill-opacity=".9"/><circle cx="15.5" cy="9" r="1.6" fill="#fff"/></svg>',
+  folder: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2.5 6.5a1.5 1.5 0 0 1 1.5-1.5h5l2 2h9a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5z" fill="currentColor"/><path d="M2.5 9.5h19" stroke="#fff" stroke-opacity=".35"/></svg>',
 }
-
-/** The manila folder's index tab: shoulders at 45°, top corners rounded; stretched to its box. */
-export const folderTab = '<svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 31V30c3 0 4.2-1.6 5-3.6L12.4 4C13.3 1.6 15 0 18 0h64c3 0 4.7 1.6 5.6 4l7.4 22.4c.8 2 2 3.6 5 3.6v1"/></svg>'

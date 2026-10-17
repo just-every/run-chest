@@ -1,45 +1,18 @@
 @import url('/fonts/fonts.css');
 /* Chest's theme: the one place its tokens are defined. Every Chest page links this file: the app (with
-   public/chest.css), the run site (landing, docs, Run page), the Lobby, sign-in and first-run setup.
-   The --chest-* tokens are Chest's own; the --rer-* tokens below map them for Base's shared documents
-   (Lobby, Run page, sign-in, setup), which read only --rer-*.
-   Visual authority: the brand and run site follow the owner-approved desk images (desk-chest, 16 Oct 2026:
-   white grid paper, near-black ink, the violet chest mark, a violet-to-blue gradient). The app's own tokens
-   (paper, cobalt, manila, status chips) stay until the app screens move to that look. */
+   public/chest.css and the app stylesheets), the run site (landing, docs, Run page), the Lobby, sign-in, first-run
+   setup and the pages behind links for anyone. The --chest-* tokens are Chest's own; the --rer-* tokens below map
+   them for Base's shared documents (Lobby, Run page, sign-in, setup), which read only --rer-*.
+   Visual authority: the owner-approved desk images (desk-chest, 16 Oct 2026: white grid paper, near-black ink,
+   the violet chest mark, a violet-to-blue gradient) and the app picks drawn from them (evidence/br-chest/desk-app). */
 :root {
-  /* Colour. Chrome is ink on warm paper; cobalt is the one accent (current approved, approve, callouts,
-     focus); manila belongs to folders and tabs. Status colours appear only on app status chips. */
-  --chest-paper: #fdfcf8;
-  --chest-surface: #ffffff;
-  --chest-ink: #181818;
-  --chest-muted: #55524c;
-  --chest-line: #2a2a2a;
-  --chest-hairline: #e4e0d6;
-  --chest-manila: #ead6b4;
-  --chest-manila-deep: #d9c296;
-  --chest-cobalt: #004be9;
-  --chest-cobalt-ink: #ffffff;
-  --chest-chip: #d2d6da;
-  --chest-due: #f6d7cf;
-  --chest-due-ink: #7a2414;
-  --chest-upcoming: #f4e3b8;
-  --chest-upcoming-ink: #5c4300;
-  --chest-issue: #9a2a12;
-
-  /* Type. Archivo carries headings (compact width 80, weight 800) and body (width 100); exact facts are
-     IBM Plex Mono; Caveat is only for the hand-inked callouts inside drawings. */
-  --chest-font-sans: Archivo, 'Helvetica Neue', Arial, sans-serif;
-  --chest-font-display: 'Archivo Compact', Archivo, 'Arial Narrow', Arial, sans-serif;
+  /* Type. Inter carries everything (display cuts at headline sizes); exact facts are IBM Plex Mono; Caveat is only
+     for the hand-inked notes inside the run site's drawings. */
   --chest-font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
   --chest-font-hand: Caveat, 'Bradley Hand', cursive;
 
-  /* Shape. */
-  --chest-radius: 10px;
-  --chest-radius-input: 8px;
-  --chest-focus: 3px solid var(--chest-cobalt);
-
-  /* Brand and run site (desk-chest). The violet, indigo, lilac and file blue are sampled from the approved
-     mark; the gradient from the hero's "where it should be."; the grid line from its paper. */
+  /* Colour and shape, shared by the brand, the run site and the app. The violet, indigo, lilac and file blue are
+     sampled from the approved mark; the gradient from the hero's "where it should be."; the grid line from its paper. */
   --chest-site-paper: #fcfcff;
   --chest-site-grid: #e5e7fa;
   --chest-site-ink: #0b0b12;
@@ -65,6 +38,31 @@
   --chest-font-type: 'Courier New', Courier, monospace;
   --chest-card-radius: 16px;
   --chest-card-shadow: 0 1px 2px rgba(22, 2, 82, 0.05), 0 22px 44px -22px rgba(38, 28, 110, 0.28);
+
+  /* The app on the same paper: quiet 1px fields that turn violet on focus, a pale violet for the current place
+     (nav item, hovered row), and soft tints behind status pills. */
+  --chest-field-line: #dcdeea;
+  --chest-field-hover: #c3c6da;
+  --chest-focus: 0 0 0 3px rgba(124, 72, 253, 0.24);
+  --chest-row-hover: #f8f7ff;
+  --chest-panel: #f7f8fc;
+  --chest-blue-soft: #e8f1ff;
+  --chest-warn-soft: #fdf2df;
+  --chest-warn-ink: #8a5300;
+  --chest-ok-ink: #1f6b3a;
+  --chest-radius: 12px;
+  --chest-radius-field: 10px;
+  /* File-type tiles (the site's drawings and the app's file rows): a glyph colour on its soft square. */
+  --chest-kind-doc: #2f6df6;
+  --chest-kind-doc-soft: #e8efff;
+  --chest-kind-sheet: #1e9e57;
+  --chest-kind-sheet-soft: #e6f6ec;
+  --chest-kind-slides: #f06a1d;
+  --chest-kind-slides-soft: #fff0e6;
+  --chest-kind-pdf: #e0312b;
+  --chest-kind-pdf-soft: #fdecec;
+  --chest-kind-folder: #4c9bf8;
+  --chest-card-quiet: 0 1px 2px rgba(22, 2, 82, 0.04), 0 10px 28px -18px rgba(38, 28, 110, 0.22);
 
   /* Base's shared documents (Lobby, Run page, 404) take the brand: Inter on white grid paper, ink buttons,
      the violet mark beside the name. Sign-in and setup keep their own rules below. */
@@ -117,51 +115,80 @@ body:has(> header.bar) .facts a, body:has(> header.bar) .link { text-decoration-
   body:has(> header.bar) .code pre { font-size: 13px; }
 }
 
-/* Sign-in and first-run setup (Base frames, html.rer-themed): the wordmark centred above one 1px ink card,
-   compact heavy heading, ink buttons. html.rer-themed outranks the frames' own .rer-themed rules. */
-html.rer-themed { background: var(--chest-paper); }
-html.rer-themed body { display: block; min-height: 100vh; margin: 0; padding: 24px 20px 64px; background: var(--chest-paper); color: var(--chest-ink); font: 400 16px/1.5 var(--chest-font-sans); -webkit-font-smoothing: antialiased; }
-html.rer-themed main { position: relative; box-sizing: border-box; width: 100%; max-width: 520px; margin: 116px auto 0; padding: 36px 40px 40px; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: var(--chest-radius); box-shadow: none; }
+/* Sign-in, first-run setup, refusals and the pages behind links for anyone (html.rer-themed: Base's frames and
+   Chest's public pages). The lockup centred above one white card on the grid paper; a heavy centred heading; quiet
+   1px fields that turn violet on focus; the one action as a violet-to-blue pill. html.rer-themed outranks the
+   frames' own .rer-themed rules. Sign-in adds three product cards at the page's edges (public/brand/signin-cards.svg);
+   setup adds the chest peeking over the card (public/brand/peek.svg) and a gradient rule under its heading. */
+html.rer-themed { background: url('/site/grid.svg') top center / 1536px auto repeat, var(--chest-site-paper); }
+html.rer-themed body { display: block; min-height: 100vh; margin: 0; padding: 24px 20px 64px; background: transparent; color: var(--chest-site-ink); font: 400 16px/1.55 var(--chest-font-ui); -webkit-font-smoothing: antialiased; box-sizing: border-box; }
+html.rer-themed body:has(form[action="/auth/magic-link"]) { background: url('/brand/signin-cards.svg') top center / 1536px auto no-repeat; }
+html.rer-themed main { position: relative; box-sizing: border-box; width: 100%; max-width: 560px; margin: 168px auto 0; padding: 44px 48px 48px; background: var(--chest-site-card); border: 1px solid var(--chest-site-line); border-radius: 20px; box-shadow: var(--chest-card-shadow); }
 html.rer-themed main > .brand,
-html.rer-themed main > .rer-brand { position: absolute; left: 0; right: 0; top: -84px; display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0; color: var(--chest-site-ink); font: 750 40px/1 var(--chest-font-ui); letter-spacing: -0.035em; }
+html.rer-themed main > .rer-brand { position: absolute; left: 0; right: 0; top: -104px; display: flex; align-items: center; justify-content: center; gap: 14px; margin: 0; color: var(--chest-site-ink); font: 750 44px/1 var(--chest-font-ui); letter-spacing: -0.035em; }
 /* The lockup: the violet chest mark (--rer-logo) beside the name. */
 html.rer-themed main > .brand::before,
-html.rer-themed main > .rer-brand::before { width: 46px; height: 46px; }
+html.rer-themed main > .rer-brand::before { width: 54px; height: 54px; }
 html.rer-themed .mark { display: none; }
-html.rer-themed h1 { margin: 0 0 20px; color: var(--chest-ink); font: 800 44px/1.05 var(--chest-font-display); letter-spacing: -0.02em; text-wrap: balance; }
-html.rer-themed h2 { margin: 32px 0 12px; padding-top: 28px; border-top: 1px solid var(--chest-hairline); color: var(--chest-ink); font: 800 28px/1.1 var(--chest-font-display); letter-spacing: -0.02em; }
-html.rer-themed p { margin: 0 0 20px; color: var(--chest-muted); font-size: 16px; }
-html.rer-themed .notice { border-left: 3px solid var(--chest-ink); color: var(--chest-ink); }
+html.rer-themed h1 { margin: 0 0 24px; color: var(--chest-site-ink); font: 860 46px/1.04 var(--chest-font-ui); letter-spacing: -0.045em; text-align: center; text-wrap: balance; }
+html.rer-themed h2 { margin: 32px 0 12px; padding-top: 28px; border-top: 1px solid var(--chest-site-line); color: var(--chest-site-ink); font: 800 26px/1.15 var(--chest-font-ui); letter-spacing: -0.03em; }
+html.rer-themed p { margin: 0 0 20px; color: var(--chest-site-body); font-size: 16px; }
+html.rer-themed .notice { padding: 12px 16px; border: 0; border-radius: var(--chest-radius-field); background: var(--chest-lilac-soft); color: var(--chest-indigo); }
 html.rer-themed .secondary-link { margin: 20px 0 0; text-align: center; font-size: 15px; }
+html.rer-themed .divider { color: var(--chest-site-muted); }
 html.rer-themed .divider::before,
-html.rer-themed .divider::after { border-color: var(--chest-hairline); }
-html.rer-themed label { margin: 0 0 8px; color: var(--chest-ink); font-size: 15px; font-weight: 500; }
-html.rer-themed input:not([type=checkbox]):not([type=hidden]) { box-sizing: border-box; width: 100%; min-height: 48px; margin: 0 0 16px; padding: 10px 14px; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: var(--chest-radius-input); color: var(--chest-ink); font: 400 15px/1.4 var(--chest-font-mono); }
-html.rer-themed input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--chest-ink); }
+html.rer-themed .divider::after { border-color: var(--chest-site-line); }
+html.rer-themed label { display: block; margin: 0 0 8px; color: var(--chest-site-ink); font-size: 15px; font-weight: 600; }
+html.rer-themed input:not([type=checkbox]):not([type=hidden]) { box-sizing: border-box; width: 100%; min-height: 52px; margin: 0 0 20px; padding: 12px 16px; background: var(--chest-site-card); border: 1px solid var(--chest-field-line); border-radius: var(--chest-radius-field); box-shadow: none; color: var(--chest-site-ink); font: 400 16px/1.4 var(--chest-font-ui); transition: border-color .15s ease, box-shadow .15s ease; }
+html.rer-themed input:not([type=checkbox]):not([type=hidden]):hover { border-color: var(--chest-field-hover); }
+html.rer-themed input:not([type=checkbox]):not([type=hidden]):focus { border-color: var(--chest-violet); box-shadow: var(--chest-focus); outline: none; }
+html.rer-themed input::placeholder { color: var(--chest-site-muted); }
+html.rer-themed input[type=checkbox] { flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--chest-violet-deep); }
 html.rer-themed label:has(input[type=checkbox]) { display: flex; gap: 12px; align-items: flex-start; margin: 0; font-weight: 400; }
 html.rer-themed button,
-html.rer-themed .action { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; padding: 12px 20px; background: var(--chest-ink); border: 1px solid var(--chest-ink); border-radius: var(--chest-radius); box-shadow: none; color: var(--chest-surface); font: 600 16px/1.2 var(--chest-font-sans); text-decoration: none; cursor: pointer; }
+html.rer-themed .action { box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 56px; padding: 14px 24px; background: var(--chest-gradient); border: 0; border-radius: 999px; box-shadow: 0 14px 28px -16px rgba(90, 44, 232, 0.75); color: #ffffff; font: 650 17px/1.2 var(--chest-font-ui); letter-spacing: -0.01em; text-decoration: none; cursor: pointer; transition: filter .15s ease, transform .15s ease; }
 html.rer-themed button:hover,
-html.rer-themed .action:hover { background: #2f2f2f; box-shadow: none; }
-html.rer-themed button.secondary { background: transparent; color: var(--chest-ink); border-color: var(--chest-line); }
-html.rer-themed a { color: var(--chest-ink); text-decoration-thickness: 1px; text-underline-offset: 4px; }
-html.rer-themed a:hover { text-decoration-thickness: 2px; }
+html.rer-themed .action:hover { filter: brightness(1.08); box-shadow: 0 16px 30px -16px rgba(90, 44, 232, 0.85); }
+html.rer-themed button:active,
+html.rer-themed .action:active { transform: translateY(1px); }
+html.rer-themed button.secondary { background: var(--chest-site-card); border: 1px solid var(--chest-field-line); box-shadow: none; color: var(--chest-site-ink); }
+html.rer-themed button.secondary:hover { filter: none; background: var(--chest-row-hover); border-color: var(--chest-field-hover); }
+html.rer-themed a { color: var(--chest-site-ink); text-decoration-color: rgba(90, 44, 232, 0.45); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+html.rer-themed a:hover { text-decoration-color: currentColor; }
 html.rer-themed :focus-visible,
 html.rer-themed button:focus-visible,
-html.rer-themed input:focus-visible { outline: var(--chest-focus); outline-offset: 2px; }
-/* First-run setup: the owner facts between hairlines, in mono. */
-html.rer-themed dl { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px 16px; margin: 0 0 24px; padding: 20px 0; border-top: 1px solid var(--chest-hairline); border-bottom: 1px solid var(--chest-hairline); }
-html.rer-themed dt { color: var(--chest-ink); font-size: 15px; }
-html.rer-themed dd { margin: 0; color: var(--chest-ink); font: 400 15px/1.5 var(--chest-font-mono); overflow-wrap: anywhere; }
-html.rer-themed form p { margin: 0 0 4px; color: var(--chest-ink); }
-@media (max-width: 480px) {
+html.rer-themed input:focus-visible { outline: 2px solid var(--chest-violet-deep); outline-offset: 3px; }
+html.rer-themed .mono { font-family: var(--chest-font-mono); font-size: 14px; }
+/* First-run setup: the chest peeks over the card, a gradient rule under the heading, the owner facts between
+   hairlines. */
+html.rer-themed main:has(form[action="/setup"]) { margin-top: 236px; }
+html.rer-themed main:has(form[action="/setup"]) > .rer-brand { top: -186px; }
+html.rer-themed main:has(form[action="/setup"])::before { content: ""; position: absolute; z-index: 1; left: 50%; top: -86px; width: 168px; height: 92px; transform: translateX(-50%); background: url('/brand/peek.svg') center bottom / contain no-repeat; }
+html.rer-themed main:has(form[action="/setup"]) h1::after { content: ""; display: block; width: 160px; height: 5px; margin: 22px auto 0; border-radius: 5px; background: var(--chest-gradient); }
+html.rer-themed main:has(form[action="/setup"]) h1 + p { max-width: 380px; margin: 0 auto 28px; text-align: center; font-size: 18px; }
+html.rer-themed dl { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 0; margin: 0 0 24px; border-top: 1px solid var(--chest-site-line); }
+html.rer-themed dt,
+html.rer-themed dd { padding: 16px 0; border-bottom: 1px solid var(--chest-site-line); }
+html.rer-themed dt { color: var(--chest-site-muted); font-size: 15px; }
+html.rer-themed dd { margin: 0; color: var(--chest-site-ink); font: 500 16px/1.5 var(--chest-font-ui); overflow-wrap: anywhere; }
+html.rer-themed form p { margin: 0 0 22px; color: var(--chest-site-ink); }
+@media (max-width: 1100px) {
+  html.rer-themed body:has(form[action="/auth/magic-link"]) { background: url('/brand/signin-cards-phone.svg') top center / 430px auto no-repeat; }
+}
+@media (max-width: 560px) {
+  html.rer-themed { background-size: 960px auto, auto; }
   html.rer-themed body { padding: 16px 16px 40px; }
-  html.rer-themed main { margin-top: 88px; }
-  html.rer-themed main { padding: 28px 20px 28px; }
+  html.rer-themed main { margin-top: 112px; padding: 32px 22px 28px; border-radius: 18px; }
   html.rer-themed main > .brand,
-  html.rer-themed main > .rer-brand { top: -68px; font-size: 34px; }
+  html.rer-themed main > .rer-brand { top: -80px; font-size: 34px; gap: 10px; }
   html.rer-themed main > .brand::before,
-  html.rer-themed main > .rer-brand::before { width: 38px; height: 38px; }
-  html.rer-themed h1 { font-size: 32px; line-height: 1.1; }
-  html.rer-themed h2 { font-size: 24px; }
+  html.rer-themed main > .rer-brand::before { width: 42px; height: 42px; }
+  html.rer-themed h1 { font-size: 34px; margin-bottom: 20px; }
+  html.rer-themed h2 { font-size: 22px; }
+  html.rer-themed main:has(form[action="/setup"]) { margin-top: 196px; }
+  html.rer-themed body:has(form[action="/auth/magic-link"]) main { margin-top: 184px; }
+  html.rer-themed main:has(form[action="/setup"]) > .rer-brand { top: -168px; }
+  html.rer-themed main:has(form[action="/setup"])::before { top: -72px; width: 140px; height: 77px; }
+  html.rer-themed main:has(form[action="/setup"]) h1 + p { font-size: 16px; }
+  html.rer-themed dl { grid-template-columns: 76px minmax(0, 1fr); }
 }
