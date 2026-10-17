@@ -1,16 +1,15 @@
 Chest runs on your own computer with **rer**, the Run Edit Run command. It runs
-on macOS, Linux or Windows with WSL2, with git; the installer brings Node when it is missing, and rer brings pnpm.
+on macOS, Linux or Windows with WSL2, with git and Node 22 or later (the installer form below brings its own Node), and rer brings pnpm.
 
 ## Get Chest and start it
 
 ```sh
-curl -fsSL https://runeditrun.com/install.sh | sh
-rer dev just-every/run-chest
+npx -y @runeditrun/rer dev just-every/run-chest
 ```
 
-The first line installs `rer` for you alone, with its own Node if you have none. It changes no shell settings: if it prints an `export PATH=…` line, run that line before the second. Already have Node 22 or later? `npx -y @runeditrun/rer dev just-every/run-chest` does both lines in one.
+No Node? `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-chest` does the same and brings its own Node; it changes no shell settings, so if it prints an `export PATH=…` line, run that line to use `rer` again later. To set Chest up without starting it, use `setup` in place of `dev`.
 
-The two lines install `rer`, clone Chest, install everything Chest needs, make you the owner and start the
+The line installs `rer`, clones Chest, install everything Chest needs, make you the owner and start the
 app. The first launch can take a few minutes and prints progress as it goes.
 When it is ready it prints three lines:
 
@@ -34,11 +33,11 @@ From then on, the Chest address shows a small front page with one button,
 ## Use your own email as the owner
 
 `rer dev` on a fresh copy makes a local owner for you. To be the owner under
-your real address instead, set it up yourself before the first `rer dev`:
+your real address instead, set it up first with the set-up-only line, then start it:
 
 ```sh
-rer install
-rer setup --owner-email you@example.com
+npx -y @runeditrun/rer setup just-every/run-chest --owner-email you@example.com
+cd run-chest
 rer dev
 ```
 

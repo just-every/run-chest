@@ -209,7 +209,7 @@
       "executable": false
     },
     "docs/run.md": {
-      "sha256": "d832d56b81d299e087032891300ff71731b78bc9c6130add2951884b56e4b978",
+      "sha256": "84f84c66235d81ccbd4e33dd2642f0a88caf52c5fe5e1585049f74eb3a589386",
       "executable": false
     },
     "docs/set-up.md": {
@@ -453,7 +453,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "b19358cad48ac7acedae4afc35b188e3eb8f13ca665a56b87831c5df1f076198",
+      "sha256": "2f0f03903eb5930abae3c97e0ce6eaca3358cd6601b74425481b926e6303be83",
       "executable": false
     },
     "RELEASE.json": {
@@ -469,7 +469,7 @@
       "executable": false
     },
     "RUN-LOCALLY.md": {
-      "sha256": "c901ad71beb98171a1e3ec0ceb8ebdf735fde240e0c1616207ce703d7c25370c",
+      "sha256": "81fefd34e31a05ec3e48447bed7600e516813f0cda70996d6afa85fe46a1b75b",
       "executable": false
     },
     "scripts/check-public-assets.mjs": {
