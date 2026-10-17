@@ -16,7 +16,7 @@ export function reasons(l: { audience: 'public' | 'organisation'; at: string; ex
  if (l.state === 'limit reached') return ['Download limit used up but not revoked']
  return ['Anyone with the link can open it without signing in', ...(!l.expires ? ['Never expires'] : Date.parse(l.expires) - at > longLived ? ['Stays open for more than 90 more days'] : [])]
 }
-const pathOf = (all: Map<string, Entry>, key: string): string => { const e = all.get(key); return e ? (e.row.payload.parent ? `${pathOf(all, e.row.payload.parent)} / ` : `${e.space.payload.kind === 'personal' ? `Personal · ${e.space.payload.owner}` : e.space.payload.name} / `) + e.row.payload.name : '' }
+export const pathOf = (all: Map<string, Entry>, key: string): string => { const e = all.get(key); return e ? (e.row.payload.parent ? `${pathOf(all, e.row.payload.parent)} / ` : `${e.space.payload.kind === 'personal' ? `Personal · ${e.space.payload.owner}` : e.space.payload.name} / `) + e.row.payload.name : '' }
 export async function linksView(env: Bindings, s: Session, w: Who) {
  const all = await everything(env, w), admin = isAdmin(s), mine = (by: string) => by === s.operator.email
  const manages = (key: string) => { const e = all.get(key); return admin || (!!e && !e.state.trash && allowed(e, 'share')) }
@@ -24,11 +24,11 @@ export async function linksView(env: Bindings, s: Session, w: Who) {
  const pub = (await list<PublicLink>(env, 'public-link')).filter(l => mine(l.payload.createdBy) || manages(l.payload.item)).map(l => ({ ...describe(l), ...named(l.payload.item), manage: manages(l.payload.item) }))
  const org = (await list<Link>(env, 'link')).filter(l => mine(l.payload.createdBy) || manages(l.payload.item)).map(l => ({ id: l.id, audience: 'organisation' as const, role: l.payload.role, discoverable: l.payload.discoverable, createdBy: l.payload.createdBy, at: l.payload.at, expires: null, state: 'active', ...named(l.payload.item), manage: manages(l.payload.item) }))
  const requests = (await list<FileRequest>(env, 'file-request')).filter(r => mine(r.payload.createdBy) || manages(r.payload.folder)).map(r => ({ ...describeRequest(r), ...named(r.payload.folder) }))
- const flagged = new Map<string, { item: string; name: string; path: string; type: string; manage: boolean; links: { id: string; audience: string; summary: string; reasons: string[] }[] }>()
+ const flagged = new Map<string, { item: string; name: string; path: string; type: string; manage: boolean; links: { id: string; audience: string; summary: string; reasons: string[]; link?: ReturnType<typeof describe> }[] }>()
  for (const l of [...pub.filter(l => l.state !== 'revoked'), ...org]) {
   const why = reasons(l); if (!why.length) continue
   const entry = flagged.get(l.item) ?? { item: l.item, name: l.name, path: l.path, type: l.type, manage: l.manage, links: [] }
-  entry.links.push({ id: l.id, audience: l.audience, summary: 'summary' in l ? l.summary : `${l.role} · ${l.discoverable ? 'discoverable' : 'not discoverable'}`, reasons: why }); flagged.set(l.item, entry)
+  entry.links.push({ id: l.id, audience: l.audience, summary: 'summary' in l ? l.summary : `${l.role} · ${l.discoverable ? 'discoverable' : 'not discoverable'}`, reasons: why, ...('summary' in l ? { link: l } : {}) }); flagged.set(l.item, entry)
  }
  return { wide: [...flagged.values()], public: pub.sort((a, b) => b.at.localeCompare(a.at)), organisation: org.sort((a, b) => b.at.localeCompare(a.at)), requests: requests.sort((a, b) => b.at.localeCompare(a.at)) }
 }

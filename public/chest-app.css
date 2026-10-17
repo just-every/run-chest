@@ -437,6 +437,10 @@ body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: 
 .field-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; }
 @media (max-width: 760px) { .field-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .field-row .check { grid-column: 1 / -1; } }
 .plain-list { display: grid; gap: 8px; padding-left: 20px; overflow-wrap: anywhere; }
+.disclosure-panel h3 { margin: 24px 0 8px; }
+.disclosure-panel h3:first-child { margin-top: 0; }
+.field-hinted { display: grid; gap: 4px; min-width: 0; }
+.field-hinted > p { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
 /* Move in: the three services' steps side by side, then the importer. */
 .movein-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 .movein-steps h3 { font-size: 18px; margin-bottom: 6px; }

@@ -2,24 +2,72 @@
 
 The installation owner opens **People & settings**. All setup forms work without JavaScript.
 
-## Single sign-on
+## Company sign-in
 
-Under **Company sign-in**, copy the callback address into the identity provider's application, then paste the provider settings into Chest:
+**Company sign-in** lets people sign in with their work account from your
+company's sign-in service, called the *identity provider* (Okta, Google
+Workspace, Microsoft Entra ID and others), instead of an emailed link. Chest lets
+in only people who already have a Chest account with the same email: invite them
+under **People**, or turn on automatic user setup below. Company sign-in needs
+Chest hosted at an https address (see [Host Chest](/docs/hosting)).
 
-- **OpenID Connect:** the exact issuer, client ID and client secret. Choose the provider's client-secret authentication method. Use authorization code, PKCE S256, and `openid email profile`. The provider must sign ID tokens with RS256 or ES256 and provide a verified email claim matching an existing Chest identity.
-- **SAML 2.0:** Chest shows the entity ID and HTTP-POST ACS address. Paste the provider's entity ID, single sign-on URL and PEM signing certificate. Choose persistent NameID, map `email`, and sign both the response and assertion with SHA-256. HTTPS is required for the browser correlation cookie. Chest also serves SP metadata at `/auth/company/metadata` after SAML is saved.
+Open **People & settings › Company sign-in › Set up company sign-in**. It shows:
 
-Assign people to the provider app and provision or invite their Chest accounts. **Test company sign-in** completes a real provider sign-in and ends on the sign-in confirmation page. The owner can then set **Email-link sign-in → Off**. Other local sessions and unused email links are revoked. The current owner session is retained; the install operator can use `rer signin --environment NAME` for owner recovery if the provider is down.
+- **Chest's details for your provider**: the addresses your provider asks for
+  when you create an app for Chest (the sign-in redirect URI for OpenID Connect;
+  the reply URL and identifier for SAML; the SCIM base URL).
+- **Step-by-step guides** for **Okta** and **Google Workspace** (OpenID Connect)
+  and **Microsoft Entra ID** (SAML), naming each provider screen and which value
+  goes where.
+- **Your provider's details**, each with a line saying what it is: sign-in
+  method, button name, provider address, client ID and client secret (OpenID
+  Connect), how Chest sends the secret, the provider sign-in page and the
+  provider certificate (SAML).
 
-A changed provider configuration must be tested again. Client secrets are encrypted at rest and never returned by the settings API. Transactions are browser-bound, expire after ten minutes and can be consumed once. OIDC verifies the signature, issuer, audience, nonce, times and access-token hash; SAML verifies signatures, audience, time and request correlation. Inactive identities cannot acquire a new session.
+After **Save identity provider**, **Test company sign-in** signs you in through
+the provider and comes back to Chest. Then you may set **Email-link sign-in →
+Off**: everyone else is signed out and unused links stop working. You stay signed
+in, and `rer signin --environment NAME --env-file chest.env` on the computer that
+deployed Chest still gets the owner in if the provider is down.
 
-RER Managed has no seed-integration egress relay yet. Provider connections there say **not available yet**. Self-hosted installations can connect to their provider. HTTP loopback OIDC providers are allowed only in local development.
+What Chest checks, for your security team: OpenID Connect uses the authorization
+code flow with PKCE (S256) and `openid email profile`, ID tokens signed RS256 or
+ES256, and needs `email_verified` true. SAML needs a persistent NameID, an `email`
+(or the standard emailaddress) attribute, and both the response and the assertion
+signed with SHA-256. Client secrets are stored encrypted and never returned.
+Sign-in attempts are tied to the browser, expire after ten minutes and work once.
+A changed provider configuration must be tested again. Chest also serves its
+SAML metadata at `/auth/company/metadata` once SAML is saved.
+
+RER Managed has no seed-integration egress relay yet, so provider connections
+there say **not available yet**.
+
+The provider guides follow each provider's admin pages as of October 2026. The
+OpenID Connect, SAML and SCIM flows are proven end to end against Run Edit Run's
+own identity provider (see the integration test below), not against live Okta,
+Google or Microsoft tenants.
 
 ## Automatic user setup
 
-In the provider application, choose SCIM 2.0 and paste the base URL shown in Chest (`/scim/v2`). **Issue SCIM token** shows the bearer token once. Paste it into the provider. The owner can name, issue and revoke tokens; only token digests are stored.
+With **automatic user setup (SCIM)**, your provider adds people to Chest,
+updates their names and turns them off when they leave. Okta and Microsoft Entra
+ID can do this (their guides include it); Google Workspace cannot for apps like
+Chest, so invite people under **People**.
 
-Enable user creation, profile updates, deactivation and group push. SCIM users are ordinary members. Group membership becomes the existing Chest group membership used for grants. Provider app role labels are retained for reconciliation and grant no Chest authority. Deactivation immediately denies browser sessions and device credentials; reactivation requires a fresh sign-in. SCIM cannot adopt an existing local identity or change an owner. Email renaming is refused: create a separate identity so existing grants stay with their original person.
+In the provider's app, turn on SCIM provisioning and paste the SCIM base URL
+shown in Chest (`/scim/v2`). **Issue SCIM token** shows a token once: paste it
+where the provider asks for a bearer or secret token. Turn on creating users,
+updating them, deactivating them and pushing groups. Use each person's email as
+their username. The owner can name, issue and revoke tokens; only token digests
+are stored.
+
+SCIM users are ordinary members. Group membership becomes the existing Chest
+group membership used for grants. Provider app role labels are retained for
+reconciliation and grant no Chest authority. Deactivation immediately denies
+browser sessions and device credentials; reactivation requires a fresh sign-in.
+SCIM cannot adopt an existing local identity or change an owner. Email renaming
+is refused: add the new address as a separate person so existing grants stay
+with the original one.
 
 Users and groups support creation, reads, replacement, PATCH and deletion. User deletion deactivates and reserves the identity; group deletion removes effective membership. Discovery, equality filters, pagination, resource locations and ETags are available. Provisioning mutations and token actions appear in the audit.
 

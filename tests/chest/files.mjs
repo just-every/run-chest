@@ -122,7 +122,7 @@ try{
   // Dee opens the stable link without access: Request access, never the name; Ana approves at a lower role.
   const refused=await h.raw(`/api/chest/items/${plan.id}`,people.dee);assert.equal(refused.status,403);const refusal=await refused.text();assert.ok(!refusal.includes('plan.txt')&&refusal.includes('access_required'));
   const request=await h.api(`/items/${plan.id}/access-requests`,people.dee,{role:'editor',message:'I run the launch'});
-  assert.ok(!JSON.stringify(await h.api(`/requests/${request.request}`,people.dee)).includes('plan.txt'));assert.equal(mail('ana@example.test',new RegExp(`/app/requests/${request.request}`)).length,1);
+  assert.ok(!JSON.stringify(await h.api(`/requests/${request.request}`,people.dee)).includes('plan.txt'));assert.ok(!JSON.stringify(await h.api('/requests',people.dee)).includes('plan.txt'));assert.equal((await h.api('/requests',people.ana)).decide.find(r=>r.id===request.request).itemName,'plan.txt');assert.equal(mail('ana@example.test',new RegExp(`/app/requests/${request.request}`)).length,1);
   await h.api(`/requests/${request.request}`,people.cy,{decision:'approve'},403);await h.api(`/requests/${request.request}`,people.ana,{decision:'approve',role:'viewer'});
   assert.ok((await h.api('/notices',people.dee)).some(n=>n.payload.type==='request.decision'&&n.payload.message.includes('was approved as viewer')));assert.equal(mail('dee@example.test',/approved as viewer/).length,1);
   const opened=await h.api(`/items/${plan.id}`,people.dee);assert.equal(opened.role,'viewer');await h.api(`/requests/${request.request}`,people.ana,{decision:'approve'},409);

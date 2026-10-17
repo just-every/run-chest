@@ -21,6 +21,8 @@
     "reset": "rer reset",
     "export": "rer export",
     "import": "rer import",
+    "hosted-backup": "node scripts/hosted-backup.mjs",
+    "hosted-restore": "node scripts/hosted-restore.mjs",
     "release": "rer release",
     "doctor": "rer doctor",
     "describe": "rer describe",

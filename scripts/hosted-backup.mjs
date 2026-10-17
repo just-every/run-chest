@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Back up a hosted Chest: its whole D1 database (wrangler d1 export --remote) and every original file in its R2
 // bucket, into one owner-only folder with a manifest. `rer export` saves only the local copy on this computer.
-// Restore with scripts/hosted-restore.mjs. Steps: docs/hosting.md.
+// Run it as `rer run hosted-backup`, which brings rer's own Node; restore with `rer run hosted-restore`. Steps: docs/hosting.md.
 import { mkdirSync, writeFileSync, readFileSync, chmodSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { args, credentials, names, databaseId, query, wrangler, fail } from './hosted/account.mjs';
 import { r2 } from './hosted/r2.mjs';
 
-const usage = 'Usage: node scripts/hosted-backup.mjs --environment NAME [--output DIR] [--env-file FILE]\nNeeds CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN (the ones that deployed it), in the environment or --env-file.';
+const usage = 'Usage: rer run hosted-backup --environment NAME [--output DIR] [--env-file FILE]\nNeeds CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN (the ones that deployed it), in the environment or --env-file.';
 const opts = args(process.argv.slice(2), usage), creds = credentials(opts.envFile), n = names(opts.environment);
 const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const out = opts.output ?? join('exports', `hosted-${opts.environment}-${stamp}`);

@@ -4,6 +4,7 @@ import type { Session } from '../../modules/operator-auth/index.mjs'
 import { fromBase64 } from '../blobs'
 import { insist } from '../model'
 import { who } from './access'
+import { requestLists } from './request-lists'
 import { addVersion, bytes, copy, createItem, itemSettings, move, nameVersion, rename, restoreVersion } from './items'
 import { erase, restore, trash, trashView } from './trash'
 import { decide, extend, markRead, notices, pending, prefs, requestAccess, requestView, share, sharedWithMe, unshare } from './shares'
@@ -69,7 +70,7 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && sub && actions[sub] && !version) return actions[sub]()
  }
  if (head === 'requests') {
-  if (get && !key) return { decide: (await pending(env, w)).map(r => ({ id: r.id, ...r.payload })), mine: (await list<AccessRequest>(env, 'request')).filter(r => r.payload.requester === w.email).map(r => ({ id: r.id, role: r.payload.role, status: r.payload.status, at: r.payload.at, expiresAt: r.payload.expiresAt, grantedRole: r.payload.grantedRole ?? null })) }
+  if (get && !key) return requestLists(env, w)
   if (get && key) return requestView(env, s, w, key)
   if (post && key) return decide(env, s, w, key, input)
  }

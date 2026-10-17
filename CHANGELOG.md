@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+**Hosted backup, company sign-in and email intake work from their pages alone (stranger journey 2).**
+
+- The hosting guide backs up, restores and removes with `rer run hosted-backup` and `rer run hosted-restore`, which
+  use rer's own Node, so they work right after the `install.sh` install. Any failure ends in one plain line.
+- **People & settings › Company sign-in** uses plain field names with a line beside each, shows Chest's values for
+  the provider in one place, and has step-by-step guides for Okta and Google Workspace (OpenID Connect) and
+  Microsoft Entra ID (SAML), with automatic user setup (SCIM) for Okta and Entra.
+- **Filing agents › Email intake** says what it needs (Chest hosted on Cloudflare, a domain on Cloudflare with Email
+  Routing, or a subdomain when the domain already gets mail), gives the Cloudflare steps screen by screen, names the
+  Worker, and points people without such a domain to file requests. The unexplained "Containers" sentence is gone.
+- File versions are numbered oldest 1 to newest, and a number never moves after a new version or a restore.
+- Folder lists, search, Shared with me, Links, file requests, access requests, trash, comments and settings show
+  times on your own clock with its zone, like file pages.
+- Filing agents' folder pickers and rule lines show full folder paths.
+- Access requests name the item for the people who decide; the person asking sees a link, and the name once they
+  have access.
+- The hosting guide says that `MAIL_API_KEY`, which `rer setup` lists, is the same key as `SENDGRID_API_KEY` or
+  `RESEND_API_KEY`.
+
 **People are named, and the stranger's smaller notes are fixed (stranger journey 1, notes).**
 
 - Finish setup asks for your name. Invitation emails say who invited you ("Rosa Diaz (rosa@…) invited you to

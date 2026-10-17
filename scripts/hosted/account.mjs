@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 
 export function args(argv, usage) {
   const out = { environment: 'production' };
+  argv = argv[0] === '--' ? argv.slice(1) : argv;
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i], value = argv[i + 1];
     if (flag === '--help' || flag === '-h') { console.log(usage); process.exit(0); }
@@ -15,6 +16,8 @@ export function args(argv, usage) {
   return out;
 }
 export function fail(message) { console.error(message); process.exit(2); }
+// Anything unexpected (Cloudflare or R2 refusing, the network dropping) ends with one plain line, not a stack trace.
+for (const event of ['uncaughtException', 'unhandledRejection']) process.on(event, error => { const m = String(error?.message ?? error).trim(); fail(`Stopped: ${m}${/[.?!]$/.test(m) ? '' : '.'} Check your connection and the Cloudflare settings in your env file, then run the same command again.`); });
 
 // Cloudflare credentials from the environment, or an owner-only KEY=VALUE file (the same one rer deploy takes).
 export function credentials(envFile) {
@@ -24,7 +27,7 @@ export function credentials(envFile) {
     if (mode & 0o077) fail(`${envFile} must be readable only by you (chmod 600 ${envFile}).`);
     for (const line of readFileSync(envFile, 'utf8').split('\n')) { const m = /^\s*(?:export\s+)?([A-Z][A-Z0-9_]*)=(.*)$/.exec(line); if (m) env[m[1]] = m[2].trim().replace(/^(['"])(.*)\1$/, '$2'); }
   }
-  for (const name of ['CLOUDFLARE_ACCOUNT_ID', 'CLOUDFLARE_API_TOKEN']) if (!env[name]?.trim()) fail(`${name} is needed: use the same Cloudflare account ID and API token that deployed this Chest (see docs/hosting.md).`);
+  for (const name of ['CLOUDFLARE_ACCOUNT_ID', 'CLOUDFLARE_API_TOKEN']) if (!env[name]?.trim()) fail(`${name} is needed: use the same Cloudflare account ID and API token that deployed this Chest (see run-chest.com/docs/hosting).`);
   return { account: env.CLOUDFLARE_ACCOUNT_ID.trim(), token: env.CLOUDFLARE_API_TOKEN.trim(), env };
 }
 

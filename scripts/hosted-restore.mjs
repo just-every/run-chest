@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { args, credentials, names, databaseId, query, wrangler, fail } from './hosted/account.mjs';
 import { r2 } from './hosted/r2.mjs';
 
-const usage = 'Usage: node scripts/hosted-restore.mjs --environment NAME --input DIR [--env-file FILE]\nDeploy the environment first (rer deploy --environment NAME), then restore into it before anyone adds files.';
+const usage = 'Usage: rer run hosted-restore --environment NAME --input DIR [--env-file FILE]\nDeploy the environment first (rer deploy --environment NAME --env-file FILE), then restore into it before anyone adds files.';
 const opts = args(process.argv.slice(2), usage);
 if (!opts.input) fail(usage);
 const creds = credentials(opts.envFile), n = names(opts.environment);

@@ -137,8 +137,8 @@ rer deploy --environment production --env-file chest.env
 Mail is chosen with these settings, never by editing `deploy.json`. Open the
 printed address, **Sign in** with your setup email and follow the emailed link.
 Back up the hosted Chest (database and every original) with
-`node scripts/hosted-backup.mjs --environment production --env-file chest.env`;
-`rer export` saves only the local copy. `scripts/hosted-restore.mjs` restores a
+`rer run hosted-backup --environment production --env-file chest.env`;
+`rer export` saves only the local copy. `rer run hosted-restore` restores a
 backup into a fresh deployment. Remove it with
 `rer deploy --environment production --env-file chest.env --remove --yes`, after a backup.
 

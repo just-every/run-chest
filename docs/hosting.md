@@ -40,6 +40,10 @@ chmod 600 chest.env
 - `MAIL_FROM` is the sender you verified. It may carry a name:
   `MAIL_FROM="Example Files <files@example.com>"`.
 - With Resend, set `RESEND_API_KEY` instead of `SENDGRID_API_KEY`.
+- `rer setup` and `rer deploy --dry-run` may list this key as
+  `MAIL_API_KEY`. It is the same key under rer's general name: set
+  `SENDGRID_API_KEY` or `RESEND_API_KEY` as above (or `MAIL_API_KEY`, which works
+  too), and Chest uses it.
 
 These are deploy settings: you never edit `deploy.json`. The same names work as
 environment variables instead of a file.
@@ -80,6 +84,25 @@ If no email arrives, check the sender is verified with your provider and look
 in spam. To get in without mail, `rer signin --environment production --env-file chest.env`
 prints a one-time owner sign-in link in your terminal.
 
+## Receive files by email
+
+A hosted Chest can give a space its own email address: files attached to emails
+sent there land in a folder you choose. It needs a domain name whose DNS is on
+your Cloudflare account, with Cloudflare Email Routing (free) turned on. If the
+domain already receives your mail elsewhere (Google Workspace, Microsoft 365),
+use a subdomain such as `files.example.com` so that mail is not affected.
+
+Open **Files › Filing agents › Email intake**. Choose a space, an inbox folder
+and an address at your domain, then **Save intake**. In the Cloudflare dashboard
+open the domain, **Email › Email Routing** (turn it on and let Cloudflare add its
+records), then **Routing rules › Create address**: type the part before the @,
+choose **Send to a Worker** and pick `chest-production` (the Worker your deploy
+made). Send a test email with an attachment; it shows under **Received
+attachments**.
+
+Without a domain on Cloudflare, use a **file request** instead: open a folder and
+**Create file request** for a link anyone can upload to, with no account.
+
 ## Where your files are kept
 
 Every original file and every version lives in the R2 bucket, stored once per
@@ -92,8 +115,14 @@ computer, so back up the hosted Chest itself.
 To back up the hosted Chest, run Chest's hosted backup from the same folder:
 
 ```sh
-node scripts/hosted-backup.mjs --environment production --env-file chest.env
+rer run hosted-backup --environment production --env-file chest.env
 ```
+
+`rer run` uses the Node that rer keeps for itself, so this works right after the
+`install.sh` install with nothing else to set up. If something stops it (a wrong
+environment name, the wrong Cloudflare token, a dropped connection), it says so
+in one line and saves nothing partial you need to clean up: fix that and run the
+same command again.
 
 It saves the whole database (with `wrangler d1 export --remote`) and every
 original file from the bucket, each checked against its SHA-256, into a new
@@ -108,7 +137,7 @@ anyone adds files to it:
 
 ```sh
 rer deploy --environment production --env-file chest.env
-node scripts/hosted-restore.mjs --environment production --input exports/hosted-production-2026-10-17T09-00-00 --env-file chest.env
+rer run hosted-restore --environment production --input exports/hosted-production-2026-10-17T09-00-00 --env-file chest.env
 ```
 
 The restore checks the backup's checksums, that the database versions match and
@@ -123,9 +152,13 @@ Removal deletes the Worker, the database and the bucket, with every file in
 them. Back up first, then remove from the folder that deployed it:
 
 ```sh
-node scripts/hosted-backup.mjs --environment production --env-file chest.env
+rer run hosted-backup --environment production --env-file chest.env
 rer deploy --environment production --env-file chest.env --remove --yes
 ```
+
+Remove only after the backup ends with "Backed up … to exports/…". If the backup
+stopped with a message instead, nothing is removed yet: fix what it names and
+back up again before you remove.
 
 rer deletes only what this environment's deploy created, then reads back that
 none of it remains. The address stops working at once.
