@@ -44,6 +44,13 @@
         "CHEST-23",
         "CHEST-24"
       ]
+    },
+    {
+      "id": "policy-controlled-links",
+      "clauses": [
+        "SHARE-001",
+        "POLICY-001"
+      ]
     }
   ],
   "nonGoals": [

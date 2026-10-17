@@ -5,6 +5,7 @@ import { fromBase64 } from '../blobs'
 import { insist } from '../model'
 import { who } from './access'
 import { offerOwnership, ownershipView, ownershipInbox, decideOwnership, cancelOwnership } from './ownership'
+import { linkPolicies, saveLinkPolicy } from './link-policy'
 import { requestLists } from './request-lists'
 import { addVersion, bytes, copy, createItem, itemSettings, move, nameVersion, rename, restoreVersion } from './items'
 import { erase, restore, trash, trashView } from './trash'
@@ -26,7 +27,7 @@ import { begin, cancel, complete, receive, status, unfinished } from './uploads'
 import type { AccessRequest } from './model'
 // /api/chest routes for everyday files. Every route reads the person's current groups and links first; the UI's form
 // posts reach the same functions through execute().
-const roots = new Set(['uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search'])
+const roots = new Set(['link-policy', 'uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search'])
 export async function filesExecute(env: Bindings, request: Request, s: Session, method: string, parts: string[], input: any, url: URL): Promise<unknown> {
  if (!roots.has(parts[0])) return undefined
  const w = await who(env, s), [head, key, sub, version, verb] = parts, get = method === 'GET', post = method === 'POST'
@@ -36,6 +37,7 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && key && sub === 'cancel') return cancelOwnership(env, s, w, key)
   if (post && key && !sub) return decideOwnership(env, s, w, key, input)
  }
+ if(head==='link-policy')return get?linkPolicies(env,s):saveLinkPolicy(env,s,input)
  if (get && head === 'files') return home(env, s, w)
  if (get && head === 'search') return search(env, w, url)
  if (get && head === 'trash') return trashView(env, s, w)

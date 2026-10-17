@@ -1,4 +1,7 @@
 import { runtimeBindings, type Bindings } from '../../auth.server'
+import { linkedVersion } from './link-versions'
+import { esc } from '../ui-shared'
+import { isOffice } from '../office/service'
 import { serve, digest } from '../blobs'
 import { officePreview } from '../office/codec'
 import { officeDocument } from '../office/service'
@@ -31,21 +34,21 @@ async function locked(env: Bindings, request: Request, r: Resolved) { return !!r
 async function open(env: Bindings, request: Request, secret: string) {
  const r = await resolveLink(env, secret), base = `/l/${secret}`; if ('refused' in r) return refusedLink(r.refused)
  if (await locked(env, request, r)) return passwordPage(base)
- const files = (await reachable(env, r)).map(({ row, path }) => { const v = row.payload.versions.find(v => v.id === row.payload.current)!; return { id: row.id, path, name: row.payload.name, size: v.size, mediaType: v.mediaType } })
+ const files = (await reachable(env, r)).flatMap(({ row, path }) => { const v = linkedVersion(row.payload,r.link.payload); return v ? [{ id: row.id, path, name: row.payload.name, size: v.size, mediaType: v.mediaType, canPreview: v.size <= 8_000_000 && (isOffice(v.filename) || v.preview === 'text') }] : [] })
  await commit(env, null, [], { by: anyone, audits: [{ action: 'link.view', object: r.root.id, detail: { link: r.link.id } }] })
  return linkPage(base, r.link.payload, r.root.payload, files, !r.state.noDownload)
 }
 async function preview(env: Bindings, request: Request, secret: string, key: string) {
  const r = await resolveLink(env, secret); if ('refused' in r) return refusedLink(r.refused)
  if (await locked(env, request, r)) return passwordPage(`/l/${secret}`, false, 401)
- const file = await fileThrough(env, r, key); if (!file) return refusedLink('unavailable')
- const v = file.row.payload.versions.find(v => v.id === file.row.payload.current); insist(v, 'version_not_found', 404)
+ const file = await fileThrough(env, r, key, true); if (!file) return refusedLink('unavailable')
+ const v = linkedVersion(file.row.payload,r.link.payload); insist(v, 'version_not_found', 404)
  insist(v.size <= 8_000_000, 'office_file_too_large', 413)
  const blob = await env.BLOBS.get(`sha256/${v.checksum}`); insist(blob, 'blob_missing', 503)
  const bytes = new Uint8Array(await blob.arrayBuffer()); insist(bytes.length === v.size && await digest(bytes) === v.checksum, 'blob_integrity', 503)
- const result = await officePreview(bytes); insist(result, 'office_format_unsupported', 415)
+ const text = v.preview === 'text', result = text ? null : await officePreview(bytes); insist(text || result, 'office_format_unsupported', 415)
  await commit(env, null, [], { by: anyone, fences: file.fences, audits: [{ action: 'link.preview', object: file.row.id, detail: { link: r.link.id, version: v.id } }] })
- return officeDocument(result.html)
+ return text ? publicPage(file.row.payload.name, `<pre class="receipt">${esc(new TextDecoder().decode(bytes))}</pre>`) : officeDocument(result!.html)
 }
 // Ten wrong passwords for one link in 15 minutes pause it; every refusal is audited without the attempt itself.
 async function unlock(env: Bindings, request: Request, secret: string) {
@@ -64,7 +67,7 @@ async function download(env: Bindings, request: Request, secret: string, key: st
   const r = await resolveLink(env, secret); if ('refused' in r) return refusedLink(r.refused)
   if (await locked(env, request, r)) return passwordPage(`/l/${secret}`, false, 401)
   const file = await fileThrough(env, r, key); if (!file) return refusedLink(r.state.noDownload ? 'download_off' : 'not_found')
-  const v = file.row.payload.versions.find(v => v.id === file.row.payload.current); insist(v, 'version_not_found', 404)
+  const v = linkedVersion(file.row.payload,r.link.payload); insist(v, 'version_not_found', 404)
   const response = await serve(env, v as unknown as Version, true), link = r.link.payload
   try { await commit(env, null, [{ row: next(r.link, { ...link, downloads: link.downloads + 1 }), previous: r.link }], { by: anyone, fences: file.fences, audits: [{ action: 'link.download', object: file.row.id, detail: { link: r.link.id, version: v.id, downloads: link.downloads + 1, limit: link.limit } }] }); return response }
   catch (e) { if (!String((e as Error)?.message).includes('CHECK constraint failed')) throw e }

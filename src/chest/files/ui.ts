@@ -20,18 +20,21 @@ import { quotaPage, quotasPage } from '../quota/ui'
 import { readOffice } from '../office/service'
 import { moveInPage } from './ui-movein'
 import { zoned } from './zone'
+import { linkPolicies } from './link-policy'
 import { ownershipView, ownershipInbox } from './ownership'
 import { ownershipPage, ownershipInboxPage } from './ui-ownership'
 import { personal } from './spaces'
 import { readerState } from '../read/settings'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
-export const filesPath = (path: string) => /^\/(items|spaces|links|public-links|file-requests|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
+export const filesPath = (path: string) => /^\/(items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
  if (typeof input.storageLimitBytes === 'string') input.storageLimitBytes = input.storageLimitBytes.trim() === '' ? null : Number(input.storageLimitBytes)
- for (const key of ['noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove', 'retainEditor']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
+ for (const key of ['noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove', 'retainEditor', 'allowPublic', 'allowOrganisation', 'allowDiscovery', 'download']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
  if (input.path === '/items' && input.type === 'file' && !input.name) input.name = input.filename
  if (typeof input.destination === 'string') { const [kind, id] = input.destination.split(':'); if (kind === 'space') { input.space = id; input.parent = null } else input.parent = id }
  if (/^\/items\/[^/]+\/office$/.test(input.path)) input.changes = Object.fromEntries(Object.entries(input).filter(([k]) => k.startsWith('office:')).map(([k, v]) => [k.slice(7), v]))
+ if(input.audience==='public')delete input.role
+ if(typeof input.linkVersion==='string'){if(input.linkVersion.startsWith('pinned:')){input.versionMode='pinned';input.version=input.linkVersion.slice(7)}else input.versionMode='current'}
  if (input.expires === '') delete input.expires
  // The restore preview's checkboxes name the items to restore.
  if (input.path === '/rewind/preview' && input.local !== undefined) input.at = zoned(input.local, input.zone)
@@ -40,7 +43,7 @@ export function filesInput(input: any) {
 }
 // Pages that must show a one-time secret instead of redirecting.
 export function filesReceipt(input: any, result: any) {
- if (/^\/items\/[^/]+\/links$/.test(input.path)) return secretPage('Organization link created', result.url, 'Copy this link now. Chest keeps only a fingerprint of it and cannot show it again.', input.returnTo || '/app/files')
+ if (/^\/items\/[^/]+\/links$/.test(input.path)) return secretPage('Link created', result.url, 'Copy this link now. Chest keeps only a fingerprint of it and cannot show it again.', input.returnTo || '/app/files')
  if (/^\/items\/[^/]+\/public-links$/.test(input.path)) return secretPage('Link created', result.url, `Copy this link now and send it to the people who need the ${result.link.password ? 'file; send the password separately' : 'file'}. Chest keeps only a fingerprint of it and cannot show it again. Revoke it any time from the file's page or Links.`, input.returnTo || '/app/links')
  if (/^\/items\/[^/]+\/file-requests$/.test(input.path)) return secretPage('File request created', result.url, `Send this link to the people who should upload. They need no account and see nothing else in the folder. ${result.email === 'available' ? 'You get an email and a notice for every upload.' : 'Email is not available yet on this installation; every upload appears in your Notices.'} Close the request any time from Links.`, input.returnTo || '/app/links')
  if (/^\/items\/[^/]+\/comments$/.test(input.path) && result.email && !/^(accepted|sent)/.test(result.email)) return `<p>${esc(result.email.startsWith('Not available yet') ? result.email : 'Email notification is not available yet on this installation.')}</p><p><a href="${esc(input.returnTo || '/app/files')}">Back to the file</a></p>`
@@ -76,7 +79,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (path === '/app/requests') return { body: requestsPage(await filesExecute(env, request, s, 'GET', ['requests'], {}, url)) }
  if (parts[1] === 'requests' && parts[2]) return { body: requestPage(await requestView(env, s, w, parts[2])) }
  if (path === '/app/notices') return { body: noticesPage(await notices(env, w)) }
- if (path === '/app/links') return { body: linksPage(await linksView(env, s, w)) }
+ if (path === '/app/links') return { body: linksPage({ ...await linksView(env, s, w), policy: ['owner','admin'].includes(s.operator.role) ? await linkPolicies(env,s) : null, policyScope: url.searchParams.get('policyScope') ?? 'organisation' }) }
  if (path === '/app/devices') return { body: devicesPage(await devices(env, s)) }
  if (path === '/app/move-in') { await personal(env, s); return { body: moveInPage(await destinations(env, w), s.operator.role === 'owner') } }
  throw new ChestError('not_found', 404)

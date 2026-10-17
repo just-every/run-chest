@@ -29,8 +29,8 @@
     "check": "rer check",
     "deps": "rer install",
     "rer": "rer",
-    "test:chest": "rer queue test:chest -- sh -c \"node tests/chest/flows.mjs && node tests/chest/files.mjs && node tests/chest/ownership.mjs && node tests/chest/reading.mjs && node tests/chest/quota.mjs && node tests/chest/office.mjs && node tests/chest/filing.mjs\"",
-    "test:browser": "node tests/chest/browser-files.mjs && node tests/chest/browser-ownership.mjs",
+    "test:chest": "rer queue test:chest -- sh -c \"node tests/chest/flows.mjs && node tests/chest/files.mjs && node tests/chest/ownership.mjs && node tests/chest/link-versions.mjs && node tests/chest/link-policy.mjs && node tests/chest/reading.mjs && node tests/chest/quota.mjs && node tests/chest/office.mjs && node tests/chest/filing.mjs\"",
+    "test:browser": "node tests/chest/browser-files.mjs && node tests/chest/browser-ownership.mjs && node tests/chest/browser-links.mjs",
     "test:journey": "node tests/chest/journey.mjs",
     "test:site": "node tests/chest/site.mjs",
     "test:organisation": "node tests/chest/organisation.mjs"

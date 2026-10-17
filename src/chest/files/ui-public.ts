@@ -2,7 +2,6 @@ import { headers } from '../api'
 import { head, policy } from '../ui-shell'
 import { esc, stamp } from '../ui-shared'
 import { size } from './ui-item'
-import { isOffice } from '../office/service'
 // Pages for people without a Chest account: a link for anyone and a file request. They read like sign-in (the
 // wordmark above one card), carry no script, and never show more than the link itself reveals.
 // Request limits are set in decimal megabytes, so they read back that way.
@@ -11,22 +10,23 @@ export function publicPage(title: string, body: string, status = 200, extra: Rec
  return new Response(`<!doctype html><html lang="en" class="rer-themed"><head>${head(`${title} · Chest`)}</head><body><main><p class="brand"><span data-rer-name>Chest</span></p><h1>${esc(title)}</h1>${body}</main></body></html>`, { status, headers: { ...headers, 'content-type': 'text/html; charset=utf-8', 'content-security-policy': policy, 'x-robots-tag': 'noindex', ...extra } })
 }
 const gone: Record<string, [string, string]> = {
+ policy: ['Link blocked by sharing policy', 'The organization’s current link policy blocks this link. Ask the person who shared it for access by name.'],
  not_found: ['Link not found', 'This link does not exist. Check that you copied all of it, or ask the person who sent it.'],
  unavailable: ['Link not available', 'This link no longer opens anything. Ask the person who sent it for a new one.'],
  revoked: ['Link turned off', 'The person who shared this link turned it off. Ask them for a new one if you still need the file.'],
  expired: ['Link expired', 'This link has expired. Ask the person who shared it for a new one.'],
  limit: ['Download limit reached', 'This link has been used for all the downloads it allows. Ask the person who shared it for a new one.'],
- download_off: ['Downloads turned off', 'The owner turned off downloads for this file.'],
+ download_off: ['Downloads turned off', 'The owner turned off original downloads for this link. Ask the person who shared it if you need the original.'],
 }
 export const refusedLink = (reason: string) => { const [title, text] = gone[reason] ?? gone.not_found; return publicPage(title, `<p>${esc(text)}</p>`, reason === 'not_found' || reason === 'unavailable' ? 404 : 410) }
 export const passwordPage = (action: string, wrong = false, status = 200) => publicPage('Enter the password', `<p>The person who shared this link protected it with a password.</p>${wrong ? '<p class="notice" role="alert">That password is not right. Try again.</p>' : ''}<form method="post" action="${esc(action)}"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required autofocus><button class="action">Open</button></form>`, status)
 const until = (link: { expires: string | null; limit: number | null; downloads: number }) => [link.expires ? `Open until ${stamp(link.expires)}` : '', link.limit !== null ? `${link.limit - link.downloads} of ${link.limit} downloads left` : ''].filter(Boolean).join(' · ')
-export function linkPage(base: string, link: { expires: string | null; limit: number | null; downloads: number }, root: { name: string; type: string }, files: { id: string; path: string; name: string; size: number; mediaType: string }[], downloads: boolean) {
+export function linkPage(base: string, link: { expires: string | null; limit: number | null; downloads: number }, root: { name: string; type: string }, files: { id: string; path: string; name: string; size: number; mediaType: string; canPreview: boolean }[], downloads: boolean) {
  const terms = until(link)
  const facts = (f: { size: number; mediaType: string }) => `${esc(size(f.size))} · ${esc(f.mediaType)}`
- const rows = root.type === 'folder' ? files.map(f => `<p><strong>${esc(f.path)}${esc(f.name)}</strong><br><span class="mono">${facts(f)}</span>${downloads && isOffice(f.name) ? ` · <a href="${esc(`${base}/p/${f.id}`)}">Preview</a>` : ''}${downloads ? ` · <a href="${esc(`${base}/f/${f.id}`)}" download>Download</a>` : ''}</p>`).join('') : files[0] ? `<p class="mono">${facts(files[0])}</p>` : ''
- const lede = root.type === 'folder' ? `<p>A folder shared with you. ${files.length ? `${files.length} file${files.length === 1 ? '' : 's'} you can download.` : 'It has no files yet.'}</p>` : '<p>A file shared with you. You do not need an account to download it.</p>'
- return publicPage(root.name, `${lede}${terms ? `<p class="mono">${terms}</p>` : ''}${rows}${downloads && root.type === 'file' && files[0] && isOffice(files[0].name) ? `<p><a class="action" href="${esc(`${base}/p/${files[0].id}`)}">Preview</a></p>` : ''}${downloads ? root.type === 'file' && files[0] ? `<p><a class="action" href="${esc(`${base}/f/${files[0].id}`)}" download>Download</a></p>` : '' : `<p class="notice">${esc(gone.download_off[1])}</p>`}`)
+ const rows = root.type === 'folder' ? files.map(f => `<p><strong>${esc(f.path)}${esc(f.name)}</strong><br><span class="mono">${facts(f)}</span>${f.canPreview ? ` · <a href="${esc(`${base}/p/${f.id}`)}">Preview</a>` : ''}${downloads ? ` · <a href="${esc(`${base}/f/${f.id}`)}" download>Download</a>` : ''}</p>`).join('') : files[0] ? `<p class="mono">${facts(files[0])}</p>` : ''
+ const lede = root.type === 'folder' ? `<p>A folder shared with you. ${files.length ? `${files.length} file${files.length === 1 ? '' : 's'} shared with you.` : 'It has no files yet.'}</p>` : '<p>A file shared with you. You do not need an account to open it.</p>'
+ return publicPage(root.name, `${lede}${terms ? `<p class="mono">${terms}</p>` : ''}${rows}${root.type === 'file' && files[0]?.canPreview ? `<p><a class="action" href="${esc(`${base}/p/${files[0].id}`)}">Preview</a></p>` : ''}${downloads ? root.type === 'file' && files[0] ? `<p><a class="action" href="${esc(`${base}/f/${files[0].id}`)}" download>Download</a></p>` : '' : `<p class="notice">${esc(gone.download_off[1])}</p>`}`)
 }
 export const closedRequest = () => publicPage('File request closed', '<p>This file request is no longer accepting files. Ask the person who sent it whether they still need them.</p>', 410)
 export const missingRequest = () => publicPage('File request not found', '<p>This file request does not exist. Check that you copied all of the link.</p>', 404)

@@ -2,6 +2,7 @@ import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get, list } from '../store'
 import { ChestError, insist, type Group, type Row } from '../model'
+import { permittedLinks } from './link-policy'
 import { rank, live, type Item, type Link, type Role, type Space } from './model'
 // Current access, computed on every request from the space, each folder on the path and the person's live groups.
 // Inherited roles accumulate down the tree; a restricted folder or file stops inheritance except for space managers.
@@ -42,10 +43,10 @@ export async function chain(env: Bindings, key: string): Promise<{ space: Row<Sp
  return { space: await get<Space>(env, 'space', nodes[0].payload.space), chain: nodes }
 }
 export async function context(env: Bindings, w: Who, key: string): Promise<Ctx> {
- const { space, chain: nodes } = await chain(env, key), links = await list<Link>(env, 'link')
+ const { space, chain: nodes } = await chain(env, key), links = await permittedLinks(env, await list<Link>(env, 'link'), new Map(nodes.map(n => [n.id,n.payload.space])))
  let state = start(space.payload, w)
  for (const node of nodes) state = descend(state, node, w, links)
- return { space, chain: nodes, state, links, fences: [space, ...nodes, ...w.groups] }
+ return { space, chain: nodes, state, links, fences: [space, ...nodes, ...w.groups, ...links] }
 }
 export const level = (s: State) => s.role ? rank[s.role] : 0
 export type Action = 'view' | 'download' | 'comment' | 'contribute' | 'manage' | 'share' | 'administer'
@@ -68,7 +69,7 @@ export const isAdmin = (s: Session) => s.operator.role === 'owner' || s.operator
 // Every item with the person's current state, computed once per request for search, Shared with me, recent and trash.
 export type Entry = { row: Row<Item>; space: Row<Space>; state: State }
 export async function everything(env: Bindings, w: Who): Promise<Map<string, Entry>> {
- const spaces = new Map((await list<Space>(env, 'space')).map(r => [r.id, r])), rows = new Map((await list<Item>(env, 'item')).map(r => [r.id, r])), links = await list<Link>(env, 'link'), memo = new Map<string, Entry>()
+ const spaces = new Map((await list<Space>(env, 'space')).map(r => [r.id, r])), rows = new Map((await list<Item>(env, 'item')).map(r => [r.id, r])), links = await permittedLinks(env, await list<Link>(env, 'link'), new Map([...rows.values()].map(r => [r.id,r.payload.space]))), memo = new Map<string, Entry>()
  const visit = (key: string, depth = 0): Entry | undefined => {
   const known = memo.get(key); if (known) return known
   const row = rows.get(key), space = row && spaces.get(row.payload.space); if (!row || !space || depth > 200) return undefined

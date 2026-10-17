@@ -10,12 +10,14 @@ import { comments } from './comments'
 import { rewinds } from './rewind'
 import { unfinished } from './uploads'
 import { linksOn } from './public-links'
+import { linksForItem } from './links'
 import { requestsOn } from './file-requests'
 import { personal, visibleSpaces } from './spaces'
-import type { Link, Prefs, Space } from './model'
+import type { Prefs, Space } from './model'
 import { extraction, textHits } from '../read/jobs'
 import { mergeView,hiddenMerged } from '../filing/duplicate-view'
 import { summary } from '../read/api'
+import { effectiveLinkPolicy } from './link-policy'
 import { accessExplanation } from './access-explanation'
 import { ownershipForItem } from './ownership'
 import { storage } from '../quota/storage'
@@ -48,12 +50,12 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
  const lineage=await mergeView(env,s,w,item)
  await recordAccess(env, s, item, 'item.read')
  return {
-  id: key, item: { ...item.payload, versions: undefined, grants: undefined, trash: undefined }, revision: item.revision, ownership: await ownershipForItem(env, s, w, key), accessExplanation: accessExplanation(ctx, w), role: ctx.state.role, can: can(ctx), space: { id: ctx.space.id, name: label(ctx.space.payload, w), kind: ctx.space.payload.kind, member: !!start(ctx.space.payload, w).role }, path,
+  linkCreation: (await effectiveLinkPolicy(env,w,ctx.space.id)).rules, id: key, item: { ...item.payload, versions: undefined, grants: undefined, trash: undefined }, revision: item.revision, ownership: await ownershipForItem(env, s, w, key), accessExplanation: accessExplanation(ctx, w), role: ctx.state.role, can: can(ctx), space: { id: ctx.space.id, name: label(ctx.space.payload, w), kind: ctx.space.payload.kind, member: !!start(ctx.space.payload, w).role }, path,
   versions: lineage.versions.map(v => ({ ...v, text: undefined, textLength: v.text.length })), mergedInto:lineage.mergedInto, merges:lineage.merges,
   reading: currentVersion ? summary((await extraction(env, currentVersion.checksum))?.payload ?? null, currentVersion.mediaType) : null,
   children: item.payload.type === 'folder' ? (await children(env, w, ctx, key)).map(brief) : [],
   grants: sharer ? item.payload.grants : item.payload.grants.filter(g => w.principals.includes(g.principal)),
-  links: sharer ? ctx.links.filter((l: { payload: Link }) => l.payload.item === key).map(l => ({ id: l.id, ...l.payload, tokenHash: undefined })) : [],
+  links: sharer ? await linksForItem(env,key,ctx.space.id) : [],
   publicLinks: sharer ? await linksOn(env, key) : [],
   fileRequests: sharer && item.payload.type === 'folder' ? await requestsOn(env, key) : [],
   requests: sharer ? (await pending(env, w, key)).map(r => ({ id: r.id, requester: r.payload.requester, role: r.payload.role, message: r.payload.message, at: r.payload.at })) : [],

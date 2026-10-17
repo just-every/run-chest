@@ -4,13 +4,16 @@ import { list } from '../store'
 import { insist, now, type Row } from '../model'
 import { commit, next, where, type Op } from './repo'
 import { allowed, context, demand, everything, isAdmin, type Entry, type Who } from './access'
-import { describe, linkState } from './public-links'
+import { describe, describePolicy, linkState } from './public-links'
 import { describeRequest } from './file-requests'
+import { describeMemberLink } from './links'
 import { day, type FileRequest, type Link, type PublicLink } from './model'
 // The Links view: every link and file request the person made or may manage, and "Shared too widely": links that
 // are public, long-lived or past their limit, each with Make private. Admins see every link in the installation.
 const longLived = 90 * day
-export function reasons(l: { audience: 'public' | 'organisation'; at: string; expires: string | null; state: string; discoverable?: boolean }, at = Date.now()) {
+export function reasons(l: { audience: 'public' | 'organisation' | 'restricted'; at: string; expires: string | null; state: string; discoverable?: boolean; policyBlocked?: boolean }, at = Date.now()) {
+ if(l.audience==='restricted')return []
+ if(l.policyBlocked)return ['Blocked by link policy until the policy permits it again']
  if (l.audience === 'organisation') return [...(l.discoverable ? ['Every colleague can find it in search'] : []), ...(at - Date.parse(l.at) > longLived ? ['Open to the whole organization for more than 90 days'] : [])]
  if (l.state === 'expired') return ['Past its expiry but not revoked']
  if (l.state === 'limit reached') return ['Download limit used up but not revoked']
@@ -21,8 +24,9 @@ export async function linksView(env: Bindings, s: Session, w: Who) {
  const all = await everything(env, w), admin = isAdmin(s), mine = (by: string) => by === s.operator.email
  const manages = (key: string) => { const e = all.get(key); return admin || (!!e && !e.state.trash && allowed(e, 'share')) }
  const named = (key: string) => { const e = all.get(key); return { item: key, name: e ? e.row.payload.name : 'Item', path: e ? pathOf(all, key) : '', type: e?.row.payload.type ?? 'file' } }
- const pub = (await list<PublicLink>(env, 'public-link')).filter(l => mine(l.payload.createdBy) || manages(l.payload.item)).map(l => ({ ...describe(l), ...named(l.payload.item), manage: manages(l.payload.item) }))
- const org = (await list<Link>(env, 'link')).filter(l => mine(l.payload.createdBy) || manages(l.payload.item)).map(l => ({ id: l.id, audience: 'organisation' as const, role: l.payload.role, discoverable: l.payload.discoverable, createdBy: l.payload.createdBy, at: l.payload.at, expires: null, state: 'active', ...named(l.payload.item), manage: manages(l.payload.item) }))
+ const pub = await Promise.all((await list<PublicLink>(env, 'public-link')).filter(l => mine(l.payload.createdBy) || manages(l.payload.item)).map(async l => ({ ...await describePolicy(env,l,all.get(l.payload.item)?.row.payload.space), ...named(l.payload.item), manage: manages(l.payload.item) })))
+ const org = await Promise.all((await list<Link>(env, 'link')).filter(l => mine(l.payload.createdBy) || manages(l.payload.item)).map(async l => ({...await describeMemberLink(env,l,all.get(l.payload.item)?.row.payload.space),...named(l.payload.item),manage:manages(l.payload.item)})))
+
  const requests = (await list<FileRequest>(env, 'file-request')).filter(r => mine(r.payload.createdBy) || manages(r.payload.folder)).map(r => ({ ...describeRequest(r), ...named(r.payload.folder) }))
  const flagged = new Map<string, { item: string; name: string; path: string; type: string; manage: boolean; links: { id: string; audience: string; summary: string; reasons: string[]; link?: ReturnType<typeof describe> }[] }>()
  for (const l of [...pub.filter(l => l.state !== 'revoked'), ...org]) {

@@ -3,6 +3,7 @@ import { zones } from './zone'
 import { eventWords } from '../ui-words'
 import { textInside } from '../read/ui'
 import { officePanel } from '../office/ui'
+import { linkForm } from './ui-link-form'
 import { ownershipForm } from './ui-ownership'
 import { linkFacts } from './ui-links'
 // A date field's day ends on the person's own clock: chest-time.js puts the browser's zone here.
@@ -63,10 +64,10 @@ function version(v: any, d: any, returnTo: string) {
 function sharing(d: any, people: any[], groups: any[], returnTo: string) {
  const principals = [...people.filter(p => p.id !== d.me).map(p => ({ id: p.id, label: `${p.payload.name} · ${p.id}` })), ...groups.map(g => ({ id: g.id, label: `Group · ${g.payload.name}` }))]
  const grants = d.grants.map((g: any) => `<li><span class="mono">${esc(g.principal)} · ${esc(g.role)} · by ${esc(g.by)}${g.expires ? ` · expires ${stamp(g.expires)}` : ''}</span>${g.message ? `<p>${esc(g.message)}</p>` : ''}${form(`/items/${d.id}/unshare`, hidden('principal', g.principal), 'Remove access', returnTo, inline)}${g.expires ? form(`/items/${d.id}/extend`, hidden('principal', g.principal) + hidden('from', g.expires), 'Extend by 7 days', returnTo, inline) : ''}</li>`).join('')
- const links = d.links.map((l: any) => `<li><span class="mono">Organization link · ${esc(l.role)} · ${l.discoverable ? 'discoverable' : 'not discoverable'} · by ${esc(l.createdBy)}</span>${form(`/links/${l.id}`, hidden('remove', 'true'), 'Revoke', returnTo, inline)}</li>`).join('')
+
  const requests = d.requests.map((r: any) => `<li><span class="mono">${esc(r.requester)} asks for ${esc(r.role)}</span>${r.message ? `<p>${esc(r.message)}</p>` : ''}${form(`/requests/${r.id}`, hidden('decision', 'approve') + select('Grant role', 'role', roles(['viewer', 'commenter', 'editor'].slice(0, ['viewer', 'commenter', 'editor'].indexOf(r.role) + 1)), r.role), 'Approve', returnTo, inline)}${form(`/requests/${r.id}`, hidden('decision', 'decline'), 'Decline', returnTo, inline)}</li>`).join('')
  return card('Share', form(`/items/${d.id}/shares`, select('Person or group', 'principal', principals) + select('Role', 'role', roles(['viewer', 'commenter', 'editor'])) + area('Message (optional)', 'message', '', false) + field('Access expires (optional)', 'expires', '', 'date', false) + zoneField, 'Share', returnTo, { buttonClass: 'btn btn-block' }) + (grants ? `<h3 class="section-title">People with access</h3><ul class="events">${grants}</ul>` : ''), 'side-card')
-  + card('Organization link', `<p class="quiet">Anyone signed in to this Chest who has the link opens it at the link's role. Opening it grants nothing; removing the link ends that access.</p>${form(`/items/${d.id}/links`, select('Link role', 'role', roles(['viewer', 'commenter', 'editor'])) + select('Discoverable in search', 'discoverable', [{ id: 'false', label: 'No: only people who opened the link' }, { id: 'true', label: 'Yes: every colleague can find it' }]), 'Create link', returnTo, { buttonClass: 'btn btn-outline btn-block' })}${links ? `<ul class="events">${links}</ul>` : ''}`, 'side-card')
+  + linkForm(d,returnTo)
   + publicLinks(d, returnTo) + (d.item.type === 'folder' ? fileRequests(d, returnTo) : '')
   + (requests ? card('Access requests', `<ul class="events">${requests}</ul>`, 'side-card') : '')
 }
@@ -75,7 +76,7 @@ function sharing(d: any, people: any[], groups: any[], returnTo: string) {
 function publicLinks(d: any, returnTo: string) {
  const live = d.publicLinks.filter((l: any) => l.state !== 'revoked'), rows = live.map((l: any) => `<li><span class="mono">Link for anyone · ${linkFacts(l)}</span>${form(`/public-links/${l.id}/revoke`, '', 'Revoke', returnTo, inline)}</li>`).join('')
  const wide = live.length + d.links.length ? form(`/items/${d.id}/make-private`, '', 'Make private', returnTo, inline) : ''
- return card('Link for anyone', `<p class="quiet">People with this link open the ${d.item.type === 'folder' ? 'folder and download its files' : 'file and download it'} without an account. Every open and download is in the activity.</p>${form(`/items/${d.id}/public-links`, field('Password (optional)', 'password', '', 'password', false) + field('Expires (optional)', 'expires', '', 'date', false) + zoneField + field('Download limit (optional)', 'limit', '', 'number', false), 'Create link for anyone', returnTo, { buttonClass: 'btn btn-outline btn-block' })}${rows ? `<ul class="events">${rows}</ul>` : ''}${wide}`, 'side-card')
+ return rows || wide ? card('Links for anyone', `<p class="quiet">Existing links and their current download usage. Revoke ends access on the next request.</p>${rows ? `<ul class="events">${rows}</ul>` : ''}${wide}`, 'side-card') : ''
 }
 // A folder's file requests: anyone with the request link uploads here and sees nothing else.
 function fileRequests(d: any, returnTo: string) {
