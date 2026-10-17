@@ -66,7 +66,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "10e569948863b7050e6645b7219b56007953b232",
+          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
           "path": "modules/import-kit",
           "paths": [
             "src",
@@ -88,7 +88,7 @@
         ],
         "origin": {
           "repository": "https://github.com/runeditrun/base.git",
-          "revision": "38aa7efdb3cceec585d2344ed54dd559295b9059",
+          "revision": "9eb83c85a9088c16ffe94a3af43e8a2e95acc377",
           "path": "modules/demo",
           "paths": [
             "README.md",

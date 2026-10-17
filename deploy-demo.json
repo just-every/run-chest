@@ -5,6 +5,5 @@
   "settings": {
     "MAIL_FROM": "Chest demo <demo@demo.invalid>"
   },
-  "instanceType": "basic",
   "ownerEmail": "alex.morgan@harbourworks.example"
 }
