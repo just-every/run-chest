@@ -7,8 +7,7 @@ import './ownership.css'
 
 const icons: IconName[] = ['database', 'monitor', 'share']
 const command = 'npx -y @runeditrun/rer dev just-every/run-chest'
-/** Lines rer prints on a first start (rer 0.2.38: Restart, two of its progress lines, then the ready line). */
-const output = ['Restart: cd run-chest && rer dev', 'rer dev: installing dependencies', 'RER_READY http://127.0.0.1:8787']
+const comment = '# clones, installs and starts Chest on your computer'
 
 /** Page 7: "Yours, start to finish." with the one command that starts Chest on your own computer. */
 export function Ownership() {
@@ -26,11 +25,11 @@ export function Ownership() {
         </ul>
       </div>
       <div className="feature-art" style={{ left: '74em', top: '24em' }}>
-        <Stage w={780} h={520} crop={{ x: 20, y: 40, w: 730, h: 440 }} label={`A terminal: ${command}, which prints ${output.join(', ')}; a sticky note says that's it.`}>
+        <Stage w={780} h={520} crop={{ x: 20, y: 40, w: 730, h: 440 }} label={`A terminal: ${command}, then the comment ${comment}; a sticky note says that's it.`}>
           <Place x={30} y={66} w={686} h={372} r={-2}>
             <div className="terminal">
               <div className="terminal-bar"><i /><i /><i /></div>
-              <pre className="terminal-body"><span><b>$</b> {command}{'\n'}</span>{output.map(line => <span key={line}>{line}{'\n'}</span>)}</pre>
+              <pre className="terminal-body"><span><b>$</b> {command}{'\n'}</span><span>{comment}{'\n'}</span></pre>
             </div>
           </Place>
           <Place x={556} y={282} w={190} h={184} r={4} z={2}><Sticky tone="butter" className="own-sticky" underline>that’s it</Sticky></Place>
