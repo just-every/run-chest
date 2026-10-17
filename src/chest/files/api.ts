@@ -4,6 +4,7 @@ import type { Session } from '../../modules/operator-auth/index.mjs'
 import { fromBase64 } from '../blobs'
 import { insist } from '../model'
 import { who } from './access'
+import { offerOwnership, ownershipView, ownershipInbox, decideOwnership, cancelOwnership } from './ownership'
 import { requestLists } from './request-lists'
 import { addVersion, bytes, copy, createItem, itemSettings, move, nameVersion, rename, restoreVersion } from './items'
 import { erase, restore, trash, trashView } from './trash'
@@ -25,10 +26,16 @@ import { begin, cancel, complete, receive, status, unfinished } from './uploads'
 import type { AccessRequest } from './model'
 // /api/chest routes for everyday files. Every route reads the person's current groups and links first; the UI's form
 // posts reach the same functions through execute().
-const roots = new Set(['uploads', 'rewind', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search'])
+const roots = new Set(['uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search'])
 export async function filesExecute(env: Bindings, request: Request, s: Session, method: string, parts: string[], input: any, url: URL): Promise<unknown> {
  if (!roots.has(parts[0])) return undefined
  const w = await who(env, s), [head, key, sub, version, verb] = parts, get = method === 'GET', post = method === 'POST'
+ if (head === 'ownership') {
+  if (get && !key) return ownershipInbox(env, s, w)
+  if (get && key) return ownershipView(env, s, w, key)
+  if (post && key && sub === 'cancel') return cancelOwnership(env, s, w, key)
+  if (post && key && !sub) return decideOwnership(env, s, w, key, input)
+ }
  if (get && head === 'files') return home(env, s, w)
  if (get && head === 'search') return search(env, w, url)
  if (get && head === 'trash') return trashView(env, s, w)
@@ -66,7 +73,7 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && sub === 'versions' && !version) return addVersion(env, s, w, key, fromBase64(input.base64), input)
   if (post && sub === 'versions' && verb === 'name') return nameVersion(env, s, w, key, version, input)
   if (post && sub === 'versions' && verb === 'restore') return restoreVersion(env, s, w, key, version)
-  const actions: Record<string, () => Promise<unknown>> = { rename: () => rename(env, s, w, key, input), move: () => move(env, s, w, key, input), copy: () => copy(env, s, w, key, input), settings: () => itemSettings(env, s, w, key, input), trash: () => trash(env, s, w, key), restore: () => restore(env, s, w, key), erase: () => erase(env, s, w, key), shares: () => share(env, s, w, key, input), unshare: () => unshare(env, s, w, key, input), extend: () => extend(env, s, w, key, input), links: () => createLink(env, s, w, key, input), 'public-links': () => createPublicLink(env, s, w, key, input), 'file-requests': () => createFileRequest(env, s, w, key, input), 'make-private': () => makePrivate(env, s, w, key), 'access-requests': () => requestAccess(env, s, w, key, input), prefs: () => prefs(env, s, w, key, input), comments: () => comment(env, s, w, key, input) }
+  const actions: Record<string, () => Promise<unknown>> = { ownership: () => offerOwnership(env, s, w, key, input), rename: () => rename(env, s, w, key, input), move: () => move(env, s, w, key, input), copy: () => copy(env, s, w, key, input), settings: () => itemSettings(env, s, w, key, input), trash: () => trash(env, s, w, key), restore: () => restore(env, s, w, key), erase: () => erase(env, s, w, key), shares: () => share(env, s, w, key, input), unshare: () => unshare(env, s, w, key, input), extend: () => extend(env, s, w, key, input), links: () => createLink(env, s, w, key, input), 'public-links': () => createPublicLink(env, s, w, key, input), 'file-requests': () => createFileRequest(env, s, w, key, input), 'make-private': () => makePrivate(env, s, w, key), 'access-requests': () => requestAccess(env, s, w, key, input), prefs: () => prefs(env, s, w, key, input), comments: () => comment(env, s, w, key, input) }
   if (post && sub && actions[sub] && !version) return actions[sub]()
  }
  if (head === 'requests') {

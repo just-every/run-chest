@@ -1,5 +1,14 @@
 // What a refused action says, in plain words. The code stays on the page in small print for anyone reporting it.
 const words: Record<string, string> = {
+ ownership_personal_only: 'Only an item in your personal area can be offered. Team-space items belong to the team.',
+ ownership_changed: 'This request or the item changed. Reload to see its current state.',
+ ownership_already_pending: 'An ownership request is already waiting. Cancel it before sending a new one.',
+ ownership_closed: 'This ownership request was already decided or cancelled.',
+ ownership_active_colleague_required: 'Choose an active colleague in this Chest.',
+ ownership_name_taken: 'My files already has that name. Choose another name on the ownership request, then accept.',
+ ownership_offer_stale: 'The item changed after this request. Ask its owner to send a new ownership request.',
+ ownership_identity_changed: 'An account changed after this request. Ask the owner to send a new request.',
+ ownership_refused: 'Only the owner of an item in a personal area can offer its ownership.',
  invalid_point: 'Enter a date and time to go back to.',
  future_point: 'That date and time has not happened yet. Choose a moment in the past.',
  invalid_zone: 'Choose the time zone the date and time are in.',

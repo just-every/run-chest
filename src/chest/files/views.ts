@@ -16,6 +16,8 @@ import type { Link, Prefs, Space } from './model'
 import { extraction, textHits } from '../read/jobs'
 import { mergeView,hiddenMerged } from '../filing/duplicate-view'
 import { summary } from '../read/api'
+import { accessExplanation } from './access-explanation'
+import { ownershipForItem } from './ownership'
 import { storage } from '../quota/storage'
 // Read models for the files pages and API: what a person may see, with the actions their current role allows.
 const can = (ctx: { space: any; state: any }) => Object.fromEntries((['download', 'comment', 'contribute', 'manage', 'share', 'administer'] as const).map(a => [a, allowed(ctx, a)]))
@@ -46,7 +48,7 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
  const lineage=await mergeView(env,s,w,item)
  await recordAccess(env, s, item, 'item.read')
  return {
-  id: key, item: { ...item.payload, versions: undefined, grants: undefined, trash: undefined }, revision: item.revision, role: ctx.state.role, can: can(ctx), space: { id: ctx.space.id, name: label(ctx.space.payload, w), kind: ctx.space.payload.kind, member: !!start(ctx.space.payload, w).role }, path,
+  id: key, item: { ...item.payload, versions: undefined, grants: undefined, trash: undefined }, revision: item.revision, ownership: await ownershipForItem(env, s, w, key), accessExplanation: accessExplanation(ctx, w), role: ctx.state.role, can: can(ctx), space: { id: ctx.space.id, name: label(ctx.space.payload, w), kind: ctx.space.payload.kind, member: !!start(ctx.space.payload, w).role }, path,
   versions: lineage.versions.map(v => ({ ...v, text: undefined, textLength: v.text.length })), mergedInto:lineage.mergedInto, merges:lineage.merges,
   reading: currentVersion ? summary((await extraction(env, currentVersion.checksum))?.payload ?? null, currentVersion.mediaType) : null,
   children: item.payload.type === 'folder' ? (await children(env, w, ctx, key)).map(brief) : [],

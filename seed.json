@@ -27,6 +27,12 @@
         "CHEST-12",
         "CHEST-13"
       ]
+    },
+    {
+      "id": "ordinary-files",
+      "clauses": [
+        "SPACE-001"
+      ]
     }
   ],
   "nonGoals": [

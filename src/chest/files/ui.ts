@@ -20,13 +20,15 @@ import { quotaPage, quotasPage } from '../quota/ui'
 import { readOffice } from '../office/service'
 import { moveInPage } from './ui-movein'
 import { zoned } from './zone'
+import { ownershipView, ownershipInbox } from './ownership'
+import { ownershipPage, ownershipInboxPage } from './ui-ownership'
 import { personal } from './spaces'
 import { readerState } from '../read/settings'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
-export const filesPath = (path: string) => /^\/(items|spaces|links|public-links|file-requests|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
+export const filesPath = (path: string) => /^\/(items|spaces|links|public-links|file-requests|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
  if (typeof input.storageLimitBytes === 'string') input.storageLimitBytes = input.storageLimitBytes.trim() === '' ? null : Number(input.storageLimitBytes)
- for (const key of ['noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
+ for (const key of ['noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove', 'retainEditor']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
  if (input.path === '/items' && input.type === 'file' && !input.name) input.name = input.filename
  if (typeof input.destination === 'string') { const [kind, id] = input.destination.split(':'); if (kind === 'space') { input.space = id; input.parent = null } else input.parent = id }
  if (/^\/items\/[^/]+\/office$/.test(input.path)) input.changes = Object.fromEntries(Object.entries(input).filter(([k]) => k.startsWith('office:')).map(([k, v]) => [k.slice(7), v]))
@@ -56,10 +58,12 @@ async function destinations(env: Bindings, w: Awaited<ReturnType<typeof who>>) {
 export async function filesPage(env: Bindings, request: Request, s: Session, url: URL): Promise<{ body: string } | { redirect: string } | null> {
  const path = url.pathname, parts = path.split('/').filter(Boolean)
  if (parts[0] === 's' && parts[1]) return { redirect: `/app/items/${(await openLink(env, s, parts[1])).item}` }
- if (parts[0] !== 'app' || !['files', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in'].includes(parts[1])) return null
+ if (parts[0] !== 'app' || !['files', 'ownership', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in'].includes(parts[1])) return null
  if (path === '/app/storage') return { body: quotasPage(await quotas(env, s)) }
  if (parts[1] === 'spaces' && parts[2] && parts[3] === 'quota') return { body: quotaPage(await quotaView(env, s, parts[2])) }
  const w = await who(env, s), people = (await list<Person>(env, 'person')).filter(p => p.payload.status !== 'inactive'), groups = await list<Group>(env, 'group')
+ if (path === '/app/ownership') return { body: ownershipInboxPage(await ownershipInbox(env, s, w)) }
+ if (parts[1] === 'ownership' && parts[2]) return { body: ownershipPage(await ownershipView(env, s, w, parts[2])) }
  if (path === '/app/files') return { body: homePage(await home(env, s, w)) }
  if (path === '/app/files/search') { const reader = await readerState(env); return { body: searchPage(url.searchParams.get('q') || '', await search(env, w, url), 'config' in reader ? null : 'unavailable' in reader ? reader.unavailable : reader.missing) } }
  if (path === '/app/files/trash') return { body: trashPage(await trashView(env, s, w)) }

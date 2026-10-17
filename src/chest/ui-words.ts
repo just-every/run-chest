@@ -1,6 +1,7 @@
 // What each recorded event and notice means, in words a person reads in Activity, Notices and the Audit trail.
 // The recorded codes stay unchanged in storage and the API.
 const events: Record<string, string> = {
+ 'ownership.offer': 'offered ownership', 'ownership.accept': 'accepted ownership', 'ownership.decline': 'declined ownership', 'ownership.cancel': 'cancelled an ownership request',
  'item.read': 'opened it', 'version.download': 'downloaded it', 'version.preview': 'previewed it', 'file.upload': 'uploaded it', 'folder.create': 'created the folder',
  'version.upload': 'uploaded a new version', 'version.restore': 'restored an earlier version', 'version.name': 'named a version', 'version.submit': 'submitted a version for review',
  'item.rename': 'renamed it', 'item.move': 'moved it', 'item.copy': 'copied it', 'item.trash': 'moved it to trash', 'item.restore': 'brought it back from trash', 'item.erase': 'erased it permanently',
@@ -22,5 +23,5 @@ const events: Record<string, string> = {
 }
 // An unlisted code still reads as words: "thing.done-now" becomes "thing done now".
 export const eventWords = (code: string) => events[code] ?? code.replace(/[._-]+/g, ' ')
-const notices: Record<string, string> = { share: 'Shared with you', 'share.expiring': 'Access ending soon', request: 'Access request', 'request.decision': 'Your access request', 'request.expired': 'Access request ran out', 'file-request.upload': 'Files received' }
+const notices: Record<string, string> = { 'ownership.request': 'Ownership offered to you', 'ownership.accepted': 'Ownership accepted', 'ownership.declined': 'Ownership declined', 'ownership.cancelled': 'Ownership request cancelled', share: 'Shared with you', 'share.expiring': 'Access ending soon', request: 'Access request', 'request.decision': 'Your access request', 'request.expired': 'Access request ran out', 'file-request.upload': 'Files received' }
 export const noticeWords = (type: string) => notices[type] ?? eventWords(type)

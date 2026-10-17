@@ -9,7 +9,7 @@ import type { Item, PublicLink } from './model'
 import { dayEnd } from './zone'
 // Links for anyone (SHARE-001): a file or folder opens without an account, behind an optional password, until an
 // optional expiry and for an optional number of downloads. Every request re-reads the link, the item's path and the
-// creator's current right to share it, so revoking, trashing, restricting or removing the sharer ends the link at
+// custodian's current right to share it, so revoking, trashing, restricting or removing the sharer ends the link at
 // once. Folder links never reach restricted or trashed descendants.
 export const publicPrefix = 'chest_pub_'
 const nobody: Who = { email: '', principals: [], groups: [], opened: [] }
@@ -58,7 +58,7 @@ export async function resolveLink(env: Bindings, secret: string): Promise<Resolv
  if (!tokenShape(publicPrefix).test(secret)) return { refused: 'not_found' }
  const [link] = await where<PublicLink>(env, 'public-link', '$.tokenHash', await tokenHash(secret)); if (!link) return { refused: 'not_found' }
  const s = linkState(link.payload); if (s !== 'active') return { refused: s === 'revoked' ? 'revoked' : s === 'expired' ? 'expired' : 'limit' }
- const ctx = await stillSharing(env, link.payload.createdBy, link.payload.item); if (!ctx) return { refused: 'unavailable' }
+ const ctx = await stillSharing(env, link.payload.custodian ?? link.payload.createdBy, link.payload.item); if (!ctx) return { refused: 'unavailable' }
  let state = start(ctx.space.payload, nobody); for (const node of ctx.chain) state = descend(state, node, nobody, [])
  if (state.trash) return { refused: 'unavailable' }
  return { link, root: ctx.chain.at(-1)!, state, fences: [link, ...ctx.fences] }

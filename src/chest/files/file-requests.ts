@@ -42,12 +42,12 @@ export async function closeFileRequest(env: Bindings, s: Session, w: Who, id: st
 export const requestOpen = (r: FileRequest, at = Date.now()) => !r.closedAt && (!r.deadline || Date.parse(r.deadline) > at)
 export const describeRequest = (row: Row<FileRequest>) => ({ id: row.id, folder: row.payload.folder, title: row.payload.title, message: row.payload.message, types: row.payload.types, maxBytes: row.payload.maxBytes, deadline: row.payload.deadline, uploads: row.payload.uploads, createdBy: row.payload.createdBy, at: row.payload.at, closedAt: row.payload.closedAt ?? null, open: requestOpen(row.payload) })
 export const requestsOn = async (env: Bindings, key: string) => (await where<FileRequest>(env, 'file-request', '$.folder', key)).map(describeRequest)
-// The public door: an open request whose asker may still share the folder.
+// The public door: an open request whose current custodian may still share the folder.
 export async function resolveRequest(env: Bindings, secret: string) {
  if (!tokenShape(requestPrefix).test(secret)) return null
  const [request] = await where<FileRequest>(env, 'file-request', '$.tokenHash', await tokenHash(secret)); if (!request) return null
  if (!requestOpen(request.payload)) return { request, ctx: null }
- const ctx = await stillSharing(env, request.payload.createdBy, request.payload.folder)
+ const ctx = await stillSharing(env, request.payload.custodian ?? request.payload.createdBy, request.payload.folder)
  return { request, ctx: ctx && ctx.chain.at(-1)!.payload.type === 'folder' ? ctx : null }
 }
 const extension = (filename: string) => (/\.([A-Za-z0-9]{1,10})$/.exec(filename)?.[1] ?? '').toLowerCase()
@@ -74,7 +74,7 @@ export async function submit(env: Bindings, secret: string, input: Submission) {
   rows.push(fresh<Item>('item', { space: ctx.space.id, parent: folder.id, type: 'file', name: value, createdBy: request.payload.createdBy, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions: [v], current: v.id }))
  }
  const who = submitter.name ? `${submitter.name}${submitter.email ? ` (${submitter.email})` : ''}` : submitter.email || 'Someone'
- const note = notice(request.payload.createdBy, 'file-request.upload', rows.length === 1 ? rows[0].id : folder.id, who, `${who} uploaded ${rows.map(r => `"${r.payload.name}"`).join(', ')} to "${folder.payload.name}" through your file request "${request.payload.title}".`)
+ const note = notice(request.payload.custodian ?? request.payload.createdBy, 'file-request.upload', rows.length === 1 ? rows[0].id : folder.id, who, `${who} uploaded ${rows.map(r => `"${r.payload.name}"`).join(', ')} to "${folder.payload.name}" through your file request "${request.payload.title}".`)
  await commit(env, null, [{ row: next(request, { ...request.payload, uploads: request.payload.uploads + rows.length }), previous: request }, ...rows.map(row => ({ row })), { row: note }], { by, fences: [request, ...ctx.fences], changes: rows.map(r => ({ item: r.id, space: ctx.space.id, kind: 'create' })), audits: rows.map(r => ({ action: 'file-request.upload', object: r.id, detail: { request: request.id, folder: folder.id, version: r.payload.current, size: r.payload.versions[0].size, checksum: r.payload.versions[0].checksum, submitter: submitter.email || null } })) })
  await deliver(env, null, [note])
  return { title: request.payload.title, at, files: rows.map(r => ({ name: r.payload.name, size: r.payload.versions[0].size, checksum: r.payload.versions[0].checksum })) }

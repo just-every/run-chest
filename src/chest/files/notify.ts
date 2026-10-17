@@ -12,6 +12,7 @@ export const MAIL_MANAGED_LINE = 'Not available yet on RER Managed hosting: emai
 // `from` is the sender's name, or their address before they set one.
 function compose(env: Bindings, n: Notice, from: string) {
  const base = env.AUTH_ORIGIN, open = n.item ? `${base}/app/items/${n.item}` : `${base}/app/files`
+ if (n.type.startsWith('ownership')) return { subject: n.type === 'ownership.request' ? `${from} offered you ownership` : 'Ownership request updated', text: `${n.message}\n\nOpen the ownership request: ${base}/app/ownership/${n.request}` }
  if (n.type === 'share') return { subject: `${from} shared a file with you`, text: `${n.message}\n\nOpen it in Chest: ${open}\nFind everything shared with you: ${base}/app/shared` }
  if (n.type === 'request') return { subject: `${from} asked for access`, text: `${n.message}\n\nApprove or decline: ${base}/app/requests/${n.request}` }
  if (n.type === 'request.decision' || n.type === 'request.expired') return { subject: 'Your access request', text: `${n.message}\n\n${open}` }
