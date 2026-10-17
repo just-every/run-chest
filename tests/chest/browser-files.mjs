@@ -93,6 +93,10 @@ async function journey(width){
  await go(p.ana,'/app/devices');await p.ana.getByLabel('Device name').fill(`Ana laptop ${width}`);await p.ana.getByLabel('Platform').selectOption('macos');await press(p.ana,'Create device key');
  const token=(await p.ana.locator('pre').innerText()).trim(),tree2=()=>h.fetch('/api/chest/sync/tree',{headers:{authorization:`Bearer ${token}`}});assert.equal((await tree2()).status,200);
  await go(p.ana,'/app/devices');await fit(p.ana,'devices',width);await press(row(p.ana,`Ana laptop ${width}`),'Revoke device');assert.equal((await tree2()).status,401);
+ // RECOVER-001 from the browser: the space manager previews a rewind; nothing changes until it is applied.
+ const minute=new Date(Date.now()-60_000).toISOString().slice(0,16),items=(await json(p.mo,`/spaces/${space}`)).children.length;
+ await go(p.mo,`/app/spaces/${space}`);await open(p.mo,'Rewind to an earlier point');await p.mo.getByLabel('Point in time (UTC)').fill(minute);await press(p.mo,'Preview rewind');
+ await p.mo.getByRole('heading',{name:'Rewind preview'}).waitFor();await p.mo.getByText('added since',{exact:false}).first().waitFor();await fit(p.mo,'rewind',width);assert.equal((await json(p.mo,`/spaces/${space}`)).children.length,items);
  await go(p.ana,'/app/files');await fit(p.ana,'home',width);
  for(const page of Object.values(p))await page.context().close();
  console.log(`Files browser journey passed at ${width}: trash/restore/erase, version history and restore, sharing, access requests, expiry and device keys`);

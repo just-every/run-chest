@@ -158,6 +158,35 @@ try{
   assert.equal((await audit('share.expired')).filter(e=>e.object_id===space.terms).length,1);
   assert.equal((await h.api(`/items/${plan.id}`,people.dee)).role,'viewer','other grants are kept');
  });
+ await check('RECOVER-001',async()=>{
+  // A folder with history; then, after the recorded point, a rename, an overwrite, a deletion, a new file and removed sharing.
+  const q3=await h.api('/items',people.mo,{space:space.id,type:'folder',name:'Q3'});let a=await upload(people.mo,{parent:q3.id,name:'a.txt',base64:b64('a one')});a=await h.api(`/items/${a.id}/versions`,people.ana,{base64:b64('a two')});
+  const b=await upload(people.ana,{parent:q3.id,name:'b.txt',base64:b64('b original')}),link=await h.api(`/items/${b.id}/links`,people.ana,{role:'viewer'});await h.api(`/items/${q3.id}/shares`,people.mo,{principal:'dee@example.test',role:'viewer'});
+  await new Promise(r=>setTimeout(r,25));const at=new Date().toISOString();await new Promise(r=>setTimeout(r,25));
+  await h.api(`/items/${q3.id}/rename`,people.ana,{name:'Q3 old'});await h.api(`/items/${b.id}/versions`,people.ana,{base64:b64('b overwritten')});await h.api(`/items/${a.id}/trash`,people.ana,{});
+  const c=await upload(people.cy,{parent:q3.id,name:'c.txt',base64:b64('c added later')});await h.api(`/links/${link.link.id}`,people.ana,{remove:true});await h.api(`/items/${q3.id}/unshare`,people.mo,{principal:'dee@example.test'});await h.api(`/items/${q3.id}/trash`,people.ana,{});
+  await h.api('/rewind/preview',people.ben,{folder:q3.id,at},403);await h.api('/rewind/preview',people.dee,{space:space.id,at},404);
+  const preview=await h.api('/rewind/preview',people.mo,{space:space.id,at}),kinds=key=>preview.changes.find(x=>x.id===key)?.kinds??[];
+  assert.deepEqual(kinds(q3.id),['name','not trashed then']);assert.deepEqual(kinds(a.id),['not trashed then']);assert.deepEqual(kinds(b.id),['earlier version']);assert.deepEqual(kinds(c.id),['added since']);
+  assert.equal(preview.sharing.restored,false);assert.ok(preview.sharing.removedSince.some(e=>e.action==='link.remove')&&preview.sharing.removedSince.some(e=>e.action==='share.remove'));
+  await h.api('/rewind/apply',people.mo,{space:space.id,at,fingerprint:'stale'},409);
+  // The space manager, not the installation owner, restores the selected content and keeps the new file.
+  const result=await h.api('/rewind/apply',people.mo,{space:space.id,at,fingerprint:preview.fingerprint,items:[q3.id,a.id,b.id]});assert.deepEqual(result.applied.sort(),[q3.id,a.id,b.id].sort());
+  assert.equal((await h.api(`/items/${q3.id}`,people.mo)).item.name,'Q3');const aNow=await h.api(`/items/${a.id}`,people.mo);assert.equal(sha(await bytesOf('mo',a.id,aNow.item.current)),sha('a two'));
+  const bNow=await h.api(`/items/${b.id}`,people.mo);assert.equal(sha(await bytesOf('mo',b.id,bNow.item.current)),sha('b original'));assert.equal(bNow.versions.length,3,'later history is retained');assert.equal(sha(await bytesOf('mo',b.id,bNow.versions[1].id)),sha('b overwritten'));
+  assert.equal((await h.api(`/items/${c.id}`,people.mo)).item.name,'c.txt');
+  await h.api('/links/open',people.dee,{token:link.url.split('/s/')[1]},404);await h.api(`/items/${q3.id}`,people.dee,undefined,403);await h.api('/files',people.fay,undefined,401);
+  assert.equal((await audit('rewind.apply')).at(-1).actor,'mo@example.test');
+  // Below manager, a rewind covers only the person's own files; the same contributor restores a colleague's version under VERSION-001.
+  assert.deepEqual((await h.api('/rewind/preview',people.cy,{folder:q3.id,at})).changes.map(x=>x.id),[c.id]);
+  const colleague=await h.api(`/items/${b.id}/versions/${bNow.versions[1].id}/restore`,people.cy,{});assert.equal(colleague.payload.versions.at(-1).actor,'cy@example.test');
+  // An admin previews a departed person's area (Fay's, now held by her successor) without being its owner.
+  assert.equal((await h.api('/rewind/preview',people.owner,{space:personalOf.fay,at})).scope,`space:${personalOf.fay}`);await h.api('/rewind/preview',people.ana,{space:personalOf.fay,at},404);
+  // A person rewinds their own personal area.
+  const own=await upload(people.dee,{space:personalOf.dee,name:'own.txt',base64:b64('own v1')});const ownAt=new Date().toISOString();await new Promise(r=>setTimeout(r,25));await h.api(`/items/${own.id}/versions`,people.dee,{base64:b64('own v2')});
+  const ownPlan=await h.api('/rewind/preview',people.dee,{space:personalOf.dee,at:ownAt});await h.api('/rewind/apply',people.dee,{space:personalOf.dee,at:ownAt,fingerprint:ownPlan.fingerprint});
+  assert.equal(sha(await bytesOf('dee',own.id,(await h.api(`/items/${own.id}`,people.dee)).item.current)),sha('own v1'));
+ });
  await check('SYNC-001 server protocol',async()=>{
   const device=await h.api('/devices',people.ana,{name:'Ana desktop',platform:'windows'}),auth={authorization:`Bearer ${device.token}`},sync=(path,init={})=>h.fetch('/api/chest'+path,{...init,headers:{...auth,...init.headers}});
   assert.equal((await h.fetch('/api/chest/sync/tree')).status,401);assert.equal((await h.fetch('/api/chest/sync/tree',{headers:{authorization:'Bearer chest_dev_'+'x'.repeat(43)}})).status,401);
