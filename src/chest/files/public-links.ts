@@ -6,16 +6,17 @@ import { commit, fresh, next, spaceItems, where } from './repo'
 import { chain, context, demand, descend, isAdmin, start, stillSharing, type State, type Who } from './access'
 import { hashPassword, randomToken, tokenHash, tokenShape } from './capability'
 import type { Item, PublicLink } from './model'
+import { dayEnd } from './zone'
 // Links for anyone (SHARE-001): a file or folder opens without an account, behind an optional password, until an
 // optional expiry and for an optional number of downloads. Every request re-reads the link, the item's path and the
 // creator's current right to share it, so revoking, trashing, restricting or removing the sharer ends the link at
 // once. Folder links never reach restricted or trashed descendants.
 export const publicPrefix = 'chest_pub_'
 const nobody: Who = { email: '', principals: [], groups: [], opened: [] }
-export function linkDate(value: unknown) {
+export function linkDate(value: unknown, zone?: unknown) {
  if (value === undefined || value === null || value === '') return null
  insist(typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value), 'invalid_expiry')
- const at = `${value}T23:59:59.999Z`; insist(Number.isFinite(Date.parse(at)) && Date.parse(at) > Date.now(), 'invalid_expiry'); return at
+ const at = dayEnd(value, zone); insist(Number.isFinite(Date.parse(at)) && Date.parse(at) > Date.now(), 'invalid_expiry'); return at
 }
 function limitOf(value: unknown) {
  if (value === undefined || value === null || value === '') return null
@@ -24,7 +25,7 @@ function limitOf(value: unknown) {
 export async function createPublicLink(env: Bindings, s: Session, w: Who, key: string, input: any) {
  const ctx = await context(env, w, key); demand(ctx, 'share'); insist(!ctx.state.noDownload, 'download_restricted', 403)
  const password = input.password === undefined || input.password === '' ? null : await hashPassword(input.password)
- const secret = randomToken(publicPrefix), row = fresh<PublicLink>('public-link', { item: key, tokenHash: await tokenHash(secret), password, expires: linkDate(input.expires), limit: limitOf(input.limit), downloads: 0, createdBy: s.operator.email, at: now() })
+ const secret = randomToken(publicPrefix), row = fresh<PublicLink>('public-link', { item: key, tokenHash: await tokenHash(secret), password, expires: linkDate(input.expires, input.zone), limit: limitOf(input.limit), downloads: 0, createdBy: s.operator.email, at: now() })
  await commit(env, s, [{ row }], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.create', object: key, detail: { link: row.id, audience: 'public', password: !!password, expires: row.payload.expires, limit: row.payload.limit } }] })
  return { link: describe(row), url: `${env.AUTH_ORIGIN}/l/${secret}` }
 }

@@ -1,6 +1,8 @@
 // One core flow across two real built Workers: SCIM user/group provisioning, OIDC and SAML sign-in from Auth,
-// company-only policy, immediate deactivation (also on a device), reactivation and token revocation.
+// company-only policy, immediate deactivation (also on a device), reactivation and token revocation, and email
+// sign-in surviving a provider sealed by an earlier deployment (a hosted restore).
 import assert from 'node:assert/strict';
+import {randomBytes} from 'node:crypto';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
 import {authProvider,scimTransport} from './auth-provider.mjs';
@@ -58,5 +60,10 @@ try {
  await provider('/groups/remove',{groupId:providerGroup.id,personId:me.user.id});await eventually(()=>scim('/Users/'+user.id),v=>v.active===false,'Auth deactivates the SAML member through SCIM');
  await page.goto(h.origin+'/signin');const deniedSaml=page.waitForResponse(r=>new URL(r.url()).pathname==='/auth/company/acs');await page.getByRole('button',{name:'Continue with Auth SAML',exact:true}).click();assert.equal((await deniedSaml).status(),403,'a valid signed assertion cannot reactivate an inactive account');
  await h.api('/organisation/scim/revoke',owner,{id:token.credential.id});const denied=await h.fetch('/scim/v2/Users',{headers:{authorization:'Bearer '+token.token}});assert.equal(denied.status,401);
+ // Company sign-in required, then the database moves to a deployment with another secret.
+ await h.sql('UPDATE chest_sso_config SET local_disabled=1');
+ await h.stop();h.vars.SESSION_SECRET=randomBytes(32).toString('base64url');await h.start();
+ const signin=await h.fetch('/signin');assert.equal(signin.status,200,'a provider sealed by another deployment never blocks the sign-in page');assert.match(await signin.text(),/action="\/auth\/magic-link"/);
+ assert.equal((await h.raw('/auth/magic-link',null,{email:h.vars.OWNER_EMAIL})).status,202,'email sign-in works again');
  console.log('ADMIN-001 real Auth OIDC/SAML + SCIM lifecycle and revocation passed');
 } finally {await browser?.close();await transport?.close();await h?.close();await auth?.close()}

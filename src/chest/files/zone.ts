@@ -12,4 +12,9 @@ export function zoned(local: unknown, zone: unknown) {
  const first = wall - offset(wall, zone)
  return new Date(wall - offset(first, zone)).toISOString()
 }
+// A date picked for an expiry or deadline ends at the last moment of that day on the person's own clock. Forms send
+// the browser's zone (chest-time.js fills the hidden field); without it the day ends in UTC.
+export function dayEnd(day: string, zone: unknown) {
+ return new Date(Date.parse(zoned(`${day}T23:59:59`, zone === undefined || zone === '' ? 'UTC' : zone)) + 999).toISOString()
+}
 export const zones = () => ['UTC', ...(Intl as any).supportedValuesOf('timeZone').filter((z: string) => z !== 'UTC')] as string[]

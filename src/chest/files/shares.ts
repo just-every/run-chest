@@ -8,6 +8,7 @@ import { allowed, context, demand, descend, everything, isAdmin, level, start, t
 import { deliver, notice } from './notify'
 import { personLine } from '../names'
 import { day, live, rank, role, shareRoles, type AccessRequest, type Expiry, type Grant, type Item, type Link, type Notice, type Prefs, type Space } from './model'
+import { dayEnd } from './zone'
 // Item sharing (SHARE-004): people with share rights grant viewer, commenter or editor to colleagues or groups with
 // an optional message and expiry; recipients get an in-app notice and an email and find the item under Shared with me.
 async function recipients(env: Bindings, value: unknown): Promise<{ principal: string; emails: string[] }> {
@@ -16,10 +17,10 @@ async function recipients(env: Bindings, value: unknown): Promise<{ principal: s
  const group = await get<Group>(env, 'group', value); return { principal: group.id, emails: group.payload.members }
 }
 async function maximumDays(env: Bindings) { return (await maybe<{ maxGrantDays: number | null }>(env, 'policy', 'policy:sharing'))?.payload.maxGrantDays ?? null }
-async function expiry(env: Bindings, value: unknown) {
+async function expiry(env: Bindings, value: unknown, zone: unknown) {
  if (value === undefined || value === null || value === '') return undefined
  insist(typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value), 'invalid_expiry')
- const at = `${value}T23:59:59.999Z`, max = await maximumDays(env); insist(Number.isFinite(Date.parse(at)) && Date.parse(at) > Date.now(), 'invalid_expiry')
+ const at = dayEnd(value, zone), max = await maximumDays(env); insist(Number.isFinite(Date.parse(at)) && Date.parse(at) > Date.now(), 'invalid_expiry')
  insist(max === null || Date.parse(at) <= Date.now() + (max + 1) * day, 'expiry_beyond_maximum'); return at
 }
 const optional = (value: unknown, field: string, max = 1000) => { if (value === undefined || value === null || value === '') return ''; insist(typeof value === 'string' && value.length <= max && !/[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(value), `invalid_${field}`); return value.trim() }
@@ -34,7 +35,7 @@ export async function share(env: Bindings, s: Session, w: Who, key: string, inpu
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'share')
  const r = role(input.role, shareRoles); insist(rank[r] <= rank[ctx.state.role!], 'role_above_own', 403)
  const { principal, emails } = await recipients(env, input.principal); insist(principal !== s.operator.email, 'cannot_share_with_self')
- const message = optional(input.message, 'message'), expires = await expiry(env, input.expires)
+ const message = optional(input.message, 'message'), expires = await expiry(env, input.expires, input.zone)
  const grant: Grant = { principal, role: r, by: s.operator.email, at: now(), ...(expires ? { expires } : {}), ...(message ? { message } : {}) }
  const notices = emails.filter(e => e !== s.operator.email).map(e => notice(e, 'share', key, s.operator.email, `${personLine(s.operator.displayName, s.operator.email)} shared "${item.payload.name}" with you as ${r}.${message ? `\n\n${message}` : ''}${expires ? `\n\nAccess expires ${expires.slice(0, 10)}.` : ''}`))
  await commit(env, s, [{ row: next(item, { ...item.payload, grants: [...item.payload.grants.filter(g => g.principal !== principal), grant] }), previous: item }, ...await expiryOps(env, key, principal, grant), ...notices.map(row => ({ row }))], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'share.grant', object: key, detail: { principal, role: r, expires: expires ?? null } }] })
@@ -65,7 +66,7 @@ export async function sharedWithMe(env: Bindings, w: Who, query: URLSearchParams
   const grant = e.row.payload.grants.filter(g => w.principals.includes(g.principal) && live(g) && g.by !== w.email).sort((a, b) => b.at.localeCompare(a.at))[0]
   const link = links.find(l => l.payload.item === e.row.id && w.opened.includes(l.id))
   if (!grant && !link) continue
-  const entry = { id: e.row.id, name: e.row.payload.name, type: e.row.payload.type, role: e.state.role, sharer: grant?.by ?? link!.payload.createdBy, at: grant?.at ?? link!.payload.at, via: grant ? 'grant' : 'link', expires: grant?.expires ?? null }
+  const entry = { id: e.row.id, name: e.row.payload.name, type: e.row.payload.type, role: e.state.role, updatedAt: e.row.payload.updatedAt, sharer: grant?.by ?? link!.payload.createdBy, at: grant?.at ?? link!.payload.at, via: grant ? 'grant' : 'link', expires: grant?.expires ?? null }
   if ((sharer && entry.sharer !== sharer) || (from && entry.at.slice(0, 10) < from) || (to && entry.at.slice(0, 10) > to)) continue
   rows.push(entry)
  }

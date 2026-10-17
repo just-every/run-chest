@@ -27,7 +27,7 @@ function megabytes(value: unknown) {
 }
 export async function createFileRequest(env: Bindings, s: Session, w: Who, key: string, input: any) {
  const ctx = await context(env, w, key), folder = ctx.chain.at(-1)!; demand(ctx, 'share'); insist(folder.payload.type === 'folder', 'not_a_folder')
- const secret = randomToken(requestPrefix), row = fresh<FileRequest>('file-request', { folder: key, title: optional(input.title, 'title', 200) || `Files for ${folder.payload.name}`, message: optional(input.message, 'message', 2000), types: typesOf(input.types), maxBytes: megabytes(input.maxMegabytes), deadline: linkDate(input.deadline), tokenHash: await tokenHash(secret), createdBy: s.operator.email, at: now(), uploads: 0 })
+ const secret = randomToken(requestPrefix), row = fresh<FileRequest>('file-request', { folder: key, title: optional(input.title, 'title', 200) || `Files for ${folder.payload.name}`, message: optional(input.message, 'message', 2000), types: typesOf(input.types), maxBytes: megabytes(input.maxMegabytes), deadline: linkDate(input.deadline, input.zone), tokenHash: await tokenHash(secret), createdBy: s.operator.email, at: now(), uploads: 0 })
  await commit(env, s, [{ row }], { fences: ctx.fences, audits: [{ action: 'file-request.create', object: key, detail: { request: row.id, types: row.payload.types, maxBytes: row.payload.maxBytes, deadline: row.payload.deadline } }] })
  return { request: describeRequest(row), url: `${env.AUTH_ORIGIN}/r/${secret}`, email: operatorMail(env) && env.MAIL_FROM ? 'available' : 'not_available' }
 }

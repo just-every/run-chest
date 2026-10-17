@@ -21,6 +21,7 @@ import { readOffice } from '../office/service'
 import { moveInPage } from './ui-movein'
 import { zoned } from './zone'
 import { personal } from './spaces'
+import { readerState } from '../read/settings'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
 export const filesPath = (path: string) => /^\/(items|spaces|links|public-links|file-requests|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
@@ -60,7 +61,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (parts[1] === 'spaces' && parts[2] && parts[3] === 'quota') return { body: quotaPage(await quotaView(env, s, parts[2])) }
  const w = await who(env, s), people = (await list<Person>(env, 'person')).filter(p => p.payload.status !== 'inactive'), groups = await list<Group>(env, 'group')
  if (path === '/app/files') return { body: homePage(await home(env, s, w)) }
- if (path === '/app/files/search') return { body: searchPage(url.searchParams.get('q') || '', await search(env, w, url)) }
+ if (path === '/app/files/search') { const reader = await readerState(env); return { body: searchPage(url.searchParams.get('q') || '', await search(env, w, url), 'config' in reader ? null : 'unavailable' in reader ? reader.unavailable : reader.missing) } }
  if (path === '/app/files/trash') return { body: trashPage(await trashView(env, s, w)) }
  if (parts[1] === 'spaces' && parts[2]) return { body: spacePage({ ...await spaceView(env, w, parts[2]), quotaOwner: s.operator.role === 'owner' }, people, groups) }
  if (parts[1] === 'items' && parts[2]) {
