@@ -97,7 +97,7 @@ body:has(> header.bar) { background: url('/site/grid.svg') top center / 1536px a
 body:has(> header.bar) > .bar { max-width: 1536px; padding: 22px clamp(16px, 5.73vw, 88px) 0; }
 body:has(> header.bar) > .bar .brand { gap: 12px; font-size: 28px; font-weight: 750; letter-spacing: -0.035em; }
 body:has(> header.bar) > .bar nav a { color: #3a3e4c; font-size: 18px; font-weight: 450; }
-body:has(> header.bar) h1 { font-weight: 860; letter-spacing: -0.05em; line-height: 1.02; }
+body:has(> header.bar) h1 { font-weight: 860; letter-spacing: -0.05em; word-spacing: 0.06em; line-height: 1.02; }
 body:has(> header.bar) .intro h1 { font-size: 64px; }
 body:has(> header.bar) .intro h1::after { content: ""; display: block; width: 92px; height: 6px; margin: 22px auto 0; border-radius: 6px; background: var(--chest-gradient); }
 body:has(> header.bar) .sub { color: #4f5464; }
