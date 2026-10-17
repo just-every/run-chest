@@ -12,6 +12,11 @@ export type FileVersion = { id: string; filename: string; checksum: string; size
 export type Trash = { by: string; at: string; role: Role }
 export type Item = { space: string; parent: string|null; type: 'folder'|'file'; name: string; createdBy: string; createdAt: string; updatedAt: string; restricted: boolean; noDownload: boolean; grants: Grant[]; trash: Trash|null; versions: FileVersion[]; current: string|null }
 export type Link = { item: string; tokenHash: string; audience: 'organisation'; role: Role; discoverable: boolean; createdBy: string; at: string }
+// A link for anyone (SHARE-001): no account; optional password (PBKDF2 hash only), expiry and download limit. Revoking
+// keeps the record so the link answers a plain page and the audit keeps its history.
+export type PublicLink = { item: string; tokenHash: string; password: { salt: string; hash: string; iterations: number } | null; expires: string | null; limit: number | null; downloads: number; createdBy: string; at: string; revokedAt?: string; revokedBy?: string }
+// An upload-only file request (SHARE-002): anyone with the link adds files to one folder and sees nothing else.
+export type FileRequest = { folder: string; title: string; message: string; types: string[]; maxBytes: number; deadline: string | null; tokenHash: string; createdBy: string; at: string; uploads: number; closedAt?: string; closedBy?: string }
 export type Notice = { to: string; type: string; item: string|null; request?: string; from: string; message: string; at: string; read: boolean; email: string }
 export type AccessRequest = { item: string; requester: string; role: Role; message: string; at: string; expiresAt: string; status: 'pending'|'approved'|'declined'|'expired'; approvers: string[]; decidedBy?: string; decidedAt?: string; grantedRole?: Role }
 export type Prefs = { starred: string[]; shortcuts: string[] }

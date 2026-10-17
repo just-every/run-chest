@@ -1,20 +1,19 @@
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get } from '../store'
-import { digest } from '../blobs'
 import { insist, now } from '../model'
 import { commit, fresh, next, where } from './repo'
 import { context, demand, type Who } from './access'
 import { rank, role, shareRoles, type Item, type Link } from './model'
+import { randomToken, tokenHash, tokenShape } from './capability'
 // Organisation links (part of SHARE-001): any signed-in staff member with the link opens the item at the link's role.
 // Opening records the item in their recent items and creates no grant, so changing or removing the link changes their
 // access on the next request. A non-discoverable link works only for people who opened it. Only the token's hash is
 // stored; the token itself is shown once to its creator and never logged or exported.
-const token = () => 'chest_link_' + btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 export async function createLink(env: Bindings, s: Session, w: Who, key: string, input: any) {
  const ctx = await context(env, w, key); demand(ctx, 'share')
  const r = role(input.role ?? 'viewer', shareRoles); insist(rank[r] <= rank[ctx.state.role!], 'role_above_own', 403); insist(input.discoverable === undefined || typeof input.discoverable === 'boolean', 'invalid_discoverable')
- const secret = token(), row = fresh<Link>('link', { item: key, tokenHash: await digest(new TextEncoder().encode(secret)), audience: 'organisation', role: r, discoverable: input.discoverable ?? false, createdBy: s.operator.email, at: now() })
+ const secret = randomToken('chest_link_'), row = fresh<Link>('link', { item: key, tokenHash: await tokenHash(secret), audience: 'organisation', role: r, discoverable: input.discoverable ?? false, createdBy: s.operator.email, at: now() })
  await commit(env, s, [{ row }], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.create', object: key, detail: { link: row.id, role: r, discoverable: row.payload.discoverable } }] })
  return { link: { id: row.id, ...row.payload, tokenHash: undefined }, url: `${env.AUTH_ORIGIN}/s/${secret}` }
 }
@@ -29,8 +28,8 @@ export async function changeLink(env: Bindings, s: Session, w: Who, id: string, 
  return { link: { id, ...payload, tokenHash: undefined } }
 }
 export async function openLink(env: Bindings, s: Session, secret: string) {
- insist(/^chest_link_[A-Za-z0-9_-]{43}$/.test(secret), 'link_not_found', 404)
- const [link] = await where<Link>(env, 'link', '$.tokenHash', await digest(new TextEncoder().encode(secret))); insist(link, 'link_not_found', 404)
+ insist(tokenShape('chest_link_').test(secret), 'link_not_found', 404)
+ const [link] = await where<Link>(env, 'link', '$.tokenHash', await tokenHash(secret)); insist(link, 'link_not_found', 404)
  const item = await get<Item>(env, 'item', link.payload.item); insist(!item.payload.trash, 'link_not_found', 404)
  await commit(env, s, [], { audits: [{ action: 'link.open', object: link.id, detail: { item: item.id } }] })
  return { item: item.id }

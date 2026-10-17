@@ -7,9 +7,9 @@ import { esc } from './ui-shared'
 // chest-app.css layout). The top bar is the lockup (the violet chest mark and the wordmark), the nav (current item
 // on a manila pill), who is signed in and "Sign out" (a form: signing out revokes the session server-side); at phone
 // width all of it sits behind one "Menu".
-const policy="default-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; script-src 'self'; connect-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'"
-const head=(title:string)=>`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${iconHead}${fontHead}<link rel="stylesheet" href="/rer-theme.css"><link rel="stylesheet" href="/chest.css"><link rel="stylesheet" href="/chest-app.css"><script src="/chest-upload.js" defer></script>`
-const section=(path:string)=>path.startsWith('/app/admin')?'admin':path.startsWith('/app/archive')?'archive':path.startsWith('/app/audit')?'audit':/^\/app\/(files|spaces|items|shared|requests|notices|devices)(\/|$)/.test(path)?'files':'library'
+export const policy="default-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; script-src 'self'; connect-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'"
+export const head=(title:string)=>`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${iconHead}${fontHead}<link rel="stylesheet" href="/rer-theme.css"><link rel="stylesheet" href="/chest.css"><link rel="stylesheet" href="/chest-app.css"><script src="/chest-upload.js" defer></script>`
+const section=(path:string)=>path.startsWith('/app/admin')?'admin':path.startsWith('/app/archive')?'archive':path.startsWith('/app/audit')?'audit':/^\/app\/(files|spaces|items|shared|requests|notices|devices|links)(\/|$)/.test(path)?'files':'library'
 export function page(body:string,me:{name:string,email:string,role:string},path='/app'){
  const current=section(path),link=(key:string,href:string,label:string)=>`<a href="${href}"${key===current?' aria-current="page"':''}>${label}</a>`
  const nav=link('files','/app/files','Files')+link('library','/app','Library')+(me.role==='owner'?link('admin','/app/admin','People &amp; settings')+link('archive','/app/archive','Move-in'):'')+link('audit','/app/audit','Audit')

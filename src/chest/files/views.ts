@@ -9,6 +9,8 @@ import { pending } from './shares'
 import { comments } from './comments'
 import { rewinds } from './rewind'
 import { unfinished } from './uploads'
+import { linksOn } from './public-links'
+import { requestsOn } from './file-requests'
 import { personal, visibleSpaces } from './spaces'
 import type { Link, Prefs, Space } from './model'
 // Read models for the files pages and API: what a person may see, with the actions their current role allows.
@@ -44,6 +46,8 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
   children: item.payload.type === 'folder' ? (await children(env, w, ctx, key)).map(brief) : [],
   grants: sharer ? item.payload.grants : item.payload.grants.filter(g => w.principals.includes(g.principal)),
   links: sharer ? ctx.links.filter((l: { payload: Link }) => l.payload.item === key).map(l => ({ id: l.id, ...l.payload, tokenHash: undefined })) : [],
+  publicLinks: sharer ? await linksOn(env, key) : [],
+  fileRequests: sharer && item.payload.type === 'folder' ? await requestsOn(env, key) : [],
   requests: sharer ? (await pending(env, w, key)).map(r => ({ id: r.id, requester: r.payload.requester, role: r.payload.role, message: r.payload.message, at: r.payload.at })) : [],
   activity: await activity(env, key, allowed(ctx, 'contribute')),
   comments: (await comments(env, key)).map(c => ({ id: c.id, ...c.payload })).sort((a, b) => a.at.localeCompare(b.at)),
@@ -56,7 +60,7 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
 // downloaded it only for people who can edit it.
 async function activity(env: Bindings, key: string, editor: boolean) {
  const rows = (await env.DB.prepare('SELECT actor, action, detail, at FROM chest_audit WHERE object_id=? ORDER BY at DESC LIMIT 100').bind(key).all()).results as { actor: string; action: string; detail: string; at: string }[]
- return rows.filter(r => editor || !['item.read', 'version.download', 'version.preview', 'sync.hydrate'].includes(r.action)).map(r => ({ actor: r.actor, action: r.action, at: r.at, detail: JSON.parse(r.detail) }))
+ return rows.filter(r => editor || !['item.read', 'version.download', 'version.preview', 'sync.hydrate', 'link.view', 'link.download', 'link.password.refused'].includes(r.action)).map(r => ({ actor: r.actor, action: r.action, at: r.at, detail: JSON.parse(r.detail) }))
 }
 // Names, current extracted text and folders; hits, counts and snippets follow current access exactly.
 export async function search(env: Bindings, w: Who, url: URL) {

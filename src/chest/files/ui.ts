@@ -11,9 +11,11 @@ import { openLink } from './links'
 import { filesExecute } from './api'
 import { itemPage, requestAccessPage, rewindDonePage, rewindPage, rewindUndonePage } from './ui-item'
 import { devicesPage, homePage, noticesPage, requestPage, requestsPage, searchPage, secretPage, sharedPage, spacePage, trashPage } from './ui-pages'
+import { linksPage } from './ui-links'
+import { linksView } from './exposure'
 import type { Space } from './model'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
-export const filesPath = (path: string) => /^\/(items|spaces|links|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
+export const filesPath = (path: string) => /^\/(items|spaces|links|public-links|file-requests|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
  for (const key of ['noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
  if (input.path === '/items' && input.type === 'file' && !input.name) input.name = input.filename
@@ -26,6 +28,8 @@ export function filesInput(input: any) {
 // Pages that must show a one-time secret instead of redirecting.
 export function filesReceipt(input: any, result: any) {
  if (/^\/items\/[^/]+\/links$/.test(input.path)) return secretPage('Organisation link created', result.url, 'Copy this link now. Chest keeps only a fingerprint of it and cannot show it again.', input.returnTo || '/app/files')
+ if (/^\/items\/[^/]+\/public-links$/.test(input.path)) return secretPage('Link created', result.url, `Copy this link now and send it to the people who need the ${result.link.password ? 'file; send the password separately' : 'file'}. Chest keeps only a fingerprint of it and cannot show it again. Revoke it any time from the file's page or Links.`, input.returnTo || '/app/links')
+ if (/^\/items\/[^/]+\/file-requests$/.test(input.path)) return secretPage('File request created', result.url, `Send this link to the people who should upload. They need no account and see nothing else in the folder. ${result.email === 'available' ? 'You get an email and a notice for every upload.' : 'Email is not available yet on this installation; every upload appears in your Notices.'} Close the request any time from Links.`, input.returnTo || '/app/links')
  if (input.path === '/rewind/preview') return rewindPage(input, result)
  if (input.path === '/rewind/apply') return rewindDonePage(input, result)
  if (/^\/rewind\/[^/]+\/undo$/.test(input.path)) return rewindUndonePage(input, result)
@@ -40,7 +44,7 @@ async function destinations(env: Bindings, w: Awaited<ReturnType<typeof who>>) {
 export async function filesPage(env: Bindings, request: Request, s: Session, url: URL): Promise<{ body: string } | { redirect: string } | null> {
  const path = url.pathname, parts = path.split('/').filter(Boolean)
  if (parts[0] === 's' && parts[1]) return { redirect: `/app/items/${(await openLink(env, s, parts[1])).item}` }
- if (parts[0] !== 'app' || !['files', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices'].includes(parts[1])) return null
+ if (parts[0] !== 'app' || !['files', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links'].includes(parts[1])) return null
  const w = await who(env, s), people = (await list<Person>(env, 'person')).filter(p => p.payload.status !== 'inactive'), groups = await list<Group>(env, 'group')
  if (path === '/app/files') return { body: homePage(await home(env, s, w)) }
  if (path === '/app/files/search') return { body: searchPage(url.searchParams.get('q') || '', await search(env, w, url)) }
@@ -54,6 +58,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (path === '/app/requests') return { body: requestsPage(await filesExecute(env, request, s, 'GET', ['requests'], {}, url)) }
  if (parts[1] === 'requests' && parts[2]) return { body: requestPage(await requestView(env, s, w, parts[2])) }
  if (path === '/app/notices') return { body: noticesPage(await notices(env, w)) }
+ if (path === '/app/links') return { body: linksPage(await linksView(env, s, w)) }
  if (path === '/app/devices') return { body: devicesPage(await devices(env, s)) }
  throw new ChestError('not_found', 404)
 }

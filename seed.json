@@ -32,7 +32,7 @@
   "nonGoals": [
     "AI jobs (phase two)",
     "Office editing and universal previews",
-    "Anonymous sharing and device sync",
+    "Signed desktop and phone sync clients",
     "Statutory retention and automatic destruction"
   ],
   "externals": [
@@ -55,7 +55,7 @@
       "/health",
       "/signin"
     ],
-    "notes": "Native owner sessions guard /app; unknown paths return real 404s; local runs and demos send no mail."
+    "notes": "Native owner sessions guard /app; /l/<token> (links for anyone) and /r/<token> (file requests) are token doors that need no account; unknown paths return real 404s; local runs and demos send no mail."
   },
   "extensionPoints": {
     "contributions": [],
