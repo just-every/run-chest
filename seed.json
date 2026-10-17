@@ -1,14 +1,14 @@
 {
   "id": "chest",
   "name": "Chest",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "maturity": "phase-one-local-candidate",
   "category": "documents",
   "spine": {
     "id": "governed-documents",
     "record": "Document with immutable versions and exact review decisions"
   },
-  "description": "Owned business records with immutable originals, exact-version review, enforced access and complete local recovery.",
+  "description": "An owned team file store: team spaces and folders, resumable uploads, file and folder restore, password links, file requests and PDF search, plus a governed records library, on your own computer or Cloudflare account.",
   "capabilities": [
     {
       "id": "governed-library",
@@ -31,7 +31,18 @@
     {
       "id": "ordinary-files",
       "clauses": [
-        "SPACE-001"
+        "SPACE-001",
+        "CHEST-14",
+        "CHEST-15",
+        "CHEST-16",
+        "CHEST-17",
+        "CHEST-18",
+        "CHEST-19",
+        "CHEST-20",
+        "CHEST-21",
+        "CHEST-22",
+        "CHEST-23",
+        "CHEST-24"
       ]
     }
   ],

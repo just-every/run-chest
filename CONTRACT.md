@@ -97,6 +97,76 @@ Every user has a trash view of the items they trashed and restores any of them, 
 
 **Acceptance evidence:** Through the API and browser at 1440 and 390, a staff editor trashes a nested folder of their own in a team space and restores it from their own trash view, tree, hashes, version IDs and stable links identical, with no owner session involved. A space reader is refused restore (403) of that folder and a contributor is refused trash; a space manager restores an item another member trashed; a manager's permanent-delete request goes through ERASE-001 while an editor's is refused. The trashed item disappears from a reviewer's list/search/download, and each trash/restore appears once in the audit with actor and outcome.
 
+## Everyday files, sharing and hosted operation (0.2.0)
+
+These clauses are what Chest 0.2.0 promises. Each states only what the 0.2.0 release gate (18 October 2026) saw working, in a browser at 1440 and 390 pixels on a local copy and in a Chest deployed to its own Cloudflare account with real email. Broader target behaviour stays in the target clauses below.
+
+### CHEST-14 — Team spaces, nested folders and phone uploads.
+
+The owner creates a team space and nested folders inside it (for example Clients › Harbor Freight › Contracts), shown with a breadcrumb, and uploads files into any folder with the file picker. On a phone-width screen the folder page also offers **Take a photo**, which opens the camera picker and uploads the photo into that folder.
+
+**Acceptance evidence:** Create a team space and two nested folders in the browser, upload a PDF and a text file into the innermost folder, and at 390 pixels upload an image through **Take a photo**; each file opens on its own page inside the breadcrumb.
+
+### CHEST-15 — Large uploads resume where they stopped.
+
+A large file goes up in parts with its progress shown. If the page is reloaded or the connection drops, the folder lists it under **Unfinished uploads** with the share already received; choosing the same file again continues from the parts already stored instead of starting over. The finished file's stored SHA-256 and downloaded bytes equal the original.
+
+**Acceptance evidence:** Upload a 150 MB file, reload the page once progress passes a quarter, see "Unfinished uploads · N% of 150.0 MB received", choose the same file again, see progress resume above zero, and compare the stored and downloaded SHA-256 with the original's.
+
+### CHEST-16 — Restore a file to an earlier version.
+
+Each upload of a new version is kept in the file's version history with its number, author, time, size and SHA-256. **Restore as current version** on an earlier version adds a new version marked "restore of version N" whose bytes equal that version; the later versions stay in the history.
+
+**Acceptance evidence:** Upload three versions of a file, restore version 1, and check that version 4 reads "restore of version 1", its downloaded bytes equal version 1, and versions 1 to 3 are still listed.
+
+### CHEST-17 — Restore a folder to a date, and undo it.
+
+**Restore to a date** on a folder takes a date and time with its time zone and first shows a preview listing each change it would make (a renamed file renamed back, a trashed file brought back, a file added since moved to trash). Nothing changes until **Restore selected items**. The receipt offers **Undo this restore**, which returns the folder to how it was just before the restore.
+
+**Acceptance evidence:** Note a minute, then rename one file, trash another and add a third in a folder; preview a restore to that minute and see the three changes with the folder unchanged; apply it and see the folder's contents as they were; undo it and see the renamed, trashed and added state again.
+
+### CHEST-18 — Links for anyone with a password, expiry and download limit, and revoke.
+
+A file's **Link for anyone** can carry a password (8 characters or more), an expiry date and a download limit, and its row shows "Expires … · N of M downloads". Someone without an account who opens it is asked for the password; a wrong password is refused. Once the limit is used, the link shows "Download limit reached". **Revoke** turns a link off at once: it then shows "Link turned off".
+
+**Acceptance evidence:** Create a link with a password, tomorrow's expiry and a limit of 2; in a browser with no account, a wrong password is refused, the right one opens the file, two downloads succeed and the next visit shows "Download limit reached". Create a second link, open it, revoke it, and see "Link turned off".
+
+### CHEST-19 — Shared too widely, and Make private.
+
+**Links › Shared too widely** lists items with a link anyone can open without signing in that never expires, or one past its expiry or download limit, with the reason. **Make private** on such an item turns off every link on it; the item leaves the list and its links stop opening.
+
+**Acceptance evidence:** Create a link for anyone with no expiry on a folder, see the folder under Shared too widely with "Never expires", press Make private, and see it leave the list and the link stop opening.
+
+### CHEST-20 — File requests from anyone.
+
+A folder's **File request** gives a link that someone with no account opens to upload files into that folder, with their name and email if they give them. The upload lands in the folder, and on a hosted Chest the person who made the request is emailed "New files from your file request" naming the uploader, the file and the folder.
+
+**Acceptance evidence:** Create a file request on a folder, open its link in a browser with no account, upload a PDF with a name and email, see "Files received", find the file in the folder, and on a hosted Chest receive the notice email.
+
+### CHEST-21 — Search finds words inside PDFs, only where you have access.
+
+Search finds files by words inside their PDF text, including files that arrived through a file request. It shows only files the searcher can open: words inside a file in a space they are not a member of are not found.
+
+**Acceptance evidence:** Search a word that appears only inside an uploaded PDF and inside a PDF received through a file request, and find both; as a member outside a space, search a word inside one of its files and find nothing, while the owner's same search finds it.
+
+### CHEST-22 — Space viewers read and download only.
+
+A person added to a team space as a viewer sees that space and opens its folders and files, but has no upload, new folder, share, rename or trash action, and the server refuses those actions (403). A file in a space they are not in shows **Request access** without its name, and People & settings is refused (403).
+
+**Acceptance evidence:** Add a second person to a space as viewer; as them, check the actions are absent and a rename request is refused with 403, open a file of another space and see Request access with no name, and open People & settings and get 403.
+
+### CHEST-23 — Hosted Chest on your own Cloudflare account, with email sign-in, backup, restore and removal.
+
+`rer deploy` puts Chest on the owner's Cloudflare account (a Worker, a D1 database and an R2 bucket) with the owner's own mail provider (the gate used SendGrid). People sign in by an emailed link, and invited people get an invitation email. `rer run hosted-backup` saves the hosted database and every original into a private folder; `rer run hosted-restore` puts them into a freshly deployed Chest, after which the owner and invited people sign in by email again and find their spaces, folders, files, versions, links, file requests, trash and grants. `rer deploy --remove --yes` deletes the Worker, database and bucket and reads back that none remains.
+
+**Acceptance evidence:** Deploy, sign in as the owner by email, invite a second person who accepts from the email, and use the jobs above; back up and check the backup holds data made only on the hosted Chest; remove, redeploy and restore; sign in again as both people by email and read back the folders, the trashed file with its versions, the link's download count, the file request and the 150 MB original byte for byte; remove and find no Worker, database or bucket left.
+
+### CHEST-24 — Upgrading from 0.1.0 keeps every record and original.
+
+A Chest 0.1.0 copy moved to 0.2.0 in place (check out the new release, `rer install`, `rer dev`) applies migrations 0016 to 0020, which only add tables, and keeps every earlier database row and stored original unchanged. Its Library documents open with every version's bytes, its people stay, and Files works.
+
+**Acceptance evidence:** Install 0.1.0, add people, a collection, a document type and two documents with two versions each, snapshot every table and stored object, upgrade in place, and check every earlier row and object is unchanged, every version downloads with its SHA-256, and a team space can be created.
+
 ## Target clauses
 
 ### The everyday business file system
@@ -788,13 +858,15 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 
 Judged from the code and tests at commit `506ad550417537048ed74c928fdab4b8946197ea` (17 October 2026).
 
+Published clauses CHEST-14 to CHEST-24 were added for Chest 0.2.0 from its release gate on commit `3c4e0660ee31121eb3cec22053eff21b329a1e9c` (18 October 2026).
+
 Office preview, editing and comment rows updated on 17 October 2026; see `docs/office.md`.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 13 | 0 | 0 | 13 |
+| Published | 22 | 2 | 0 | 24 |
 | Target and push further | 3 | 38 | 31 | 72 |
-| All | 16 | 38 | 31 | 85 |
+| All | 25 | 40 | 31 | 96 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -811,6 +883,17 @@ Office preview, editing and comment rows updated on 17 October 2026; see `docs/o
 | `CHEST-11` | Reviewed reversible archive admission | published | done | `src/chest/archive.ts`; `src/chest/archive-target.ts`; `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-12` | Complete independent local recovery | published | done | `scripts/installer/local.mjs`; `scripts/check-public-assets.mjs`; `tests/chest/restore.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-13` | Self-service reversible trash and mutation audit | published | done | `src/chest/files/trash.ts`; `src/chest/documents.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
+| `CHEST-14` | Team spaces, nested folders and phone uploads | published | done | `src/chest/files/spaces.ts`; `src/chest/files/items.ts`; `src/chest/files/ui-item.ts`; `public/chest-upload.js`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
+| `CHEST-15` | Large uploads resume where they stopped | published | done | `src/chest/files/uploads.ts`; `src/chest/blobs.ts`; `public/chest-upload.js`; `tests/chest/files.mjs` |  |
+| `CHEST-16` | Restore a file to an earlier version | published | done | `src/chest/files/items.ts`; `src/chest/files/ui-item.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
+| `CHEST-17` | Restore a folder to a date, and undo it | published | done | `src/chest/files/rewind.ts`; `src/chest/files/ui-item.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
+| `CHEST-18` | Links for anyone with a password, expiry and download limit, and revoke | published | done | `src/chest/files/public-links.ts`; `src/chest/files/capability.ts`; `src/chest/files/public.ts`; `src/chest/files/ui-public.ts`; `tests/chest/files.mjs` |  |
+| `CHEST-19` | Shared too widely, and Make private | published | done | `src/chest/files/exposure.ts`; `src/chest/files/ui-links.ts`; `tests/chest/files.mjs` |  |
+| `CHEST-20` | File requests from anyone | published | done | `src/chest/files/file-requests.ts`; `src/chest/files/ui-public.ts`; `src/chest/files/notify.ts`; `tests/chest/files.mjs` |  |
+| `CHEST-21` | Search finds words inside PDFs, only where you have access | published | done | `src/chest/files/views.ts`; `src/chest/read/pdf.ts`; `src/chest/read/jobs.ts`; `tests/chest/reading.mjs`; `tests/chest/files.mjs` |  |
+| `CHEST-22` | Space viewers read and download only | published | done | `src/chest/files/access.ts`; `src/chest/files/api.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
+| `CHEST-23` | Hosted Chest on your own Cloudflare account, with email sign-in, backup, restore and removal | published | partial | `deploy.json`; `scripts/hosted-backup.mjs`; `scripts/hosted-restore.mjs`; `scripts/hosted/account.mjs`; `scripts/hosted/r2.mjs`; `docs/hosting.md`; `tests/chest/flows.mjs`; `tests/chest/organisation.mjs` | Email sign-in and invitations are tested against the built Worker; no repository test deploys to Cloudflare or runs a hosted backup, restore or removal. The 0.2.0 release gate ran them by hand. |
+| `CHEST-24` | Upgrading from 0.1.0 keeps every record and original | published | partial | `migrations/core/0016_owner_signin.sql`; `migrations/core/0017_files.sql`; `migrations/core/0018_reading.sql`; `migrations/core/0019_organisation.sql`; `migrations/core/0020_scim.sql` | No repository test upgrades a 0.1.0 copy; the 0.2.0 release gate did it by hand. |
 | `SPACE-001` | Team spaces and ordinary files | target | partial | `src/chest/files/spaces.ts`; `src/chest/files/items.ts`; `src/chest/files/uploads.ts`; `src/chest/files/ui-item.ts`; `src/chest/files/ownership.ts`; `src/chest/files/ui-ownership.ts`; `src/chest/files/access-explanation.ts`; `tests/chest/ownership.mjs`; `tests/chest/browser-ownership.mjs`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` | Team spaces, personal areas, nested folders with inherited grants and a breadcrumb, create/rename/move/copy/trash, untyped upload by drop, picker or phone camera, stable IDs, restricted subfolders, star, recent, shortcuts and offboarding to a successor exist; Personal-file and folder ownership offers now require recipient acceptance, preserve IDs, original versions, links and grants, support decline/cancel and optional sender editor access, and notify both parties by email and in-app. Acceptance hands existing public links and upload requests to the recipient without changing their tokens or original authorship, even if the sender relinquishes direct access; arrivals notify the new custodian. Changed content, identities or destination collisions cannot silently complete an old offer. The file page explains current inherited, direct, group and organization-link access. The EDIT-004 New menu and a SCALE-001 reference-size run remain. |
 | `SPACE-002` | Space creation control and new-space defaults | target | missing |  | Anyone may create a team space; no creation rule or new-space defaults. |
 | `ROLE-001` | Five-level roles and delegated sharing | target | partial | `src/chest/files/access.ts`; `tests/chest/files.mjs` | Viewer, commenter, contributor, content manager and manager on spaces, file-level viewer/commenter/editor, restricted inheritance, per-space and per-item no-download and the editor sharing switch exist; EDIT-001 comment-and-suggest sessions, a per-role browser matrix and the BULK-001 archive door do not. |
