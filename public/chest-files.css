@@ -9,7 +9,7 @@
 .my-files h2 { margin: 0; }
 .team-spaces { display: grid; gap: 12px; min-width: 0; }
 .team-spaces > .section-title { margin: 0 !important; font-size: 16px !important; }
-.space-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr)); gap: 12px; padding: 0; margin: 0; list-style: none; }
+.space-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 12px; padding: 0; margin: 0; list-style: none; }
 .space-card { position: relative; display: grid; gap: 12px; align-content: start; min-width: 0; padding: 16px 18px; background: var(--chest-site-card); border: 1px solid var(--chest-site-line); border-radius: var(--chest-radius); box-shadow: var(--chest-card-quiet); transition: border-color .15s ease, box-shadow .15s ease; }
 .space-card:hover { border-color: #d8d3fb; box-shadow: var(--chest-card-shadow); }
 .space-card strong { font-size: 16px; font-weight: 650; }
@@ -35,7 +35,7 @@
 
 /* File table: Name (tile, name, where it lives), Your access, Updated, Size, chevron. */
 .file-table { display: grid; min-width: 0; background: var(--chest-site-card); border: 1px solid var(--chest-site-line); border-radius: var(--chest-card-radius); box-shadow: var(--chest-card-quiet); }
-.file-head, .file-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px 220px 96px 22px; align-items: center; gap: 16px; padding: 12px 20px; }
+.file-head, .file-row { display: grid; grid-template-columns: minmax(0, 1fr) 132px 112px 84px 20px; align-items: center; gap: 16px; padding: 12px 20px; }
 .file-head { padding-top: 14px; padding-bottom: 10px; color: var(--chest-site-muted); font-size: 13px; font-weight: 550; border-bottom: 1px solid var(--chest-site-line); }
 .file-head::after { content: ""; }
 .file-row { position: relative; border-top: 1px solid var(--chest-site-line); transition: background-color .12s ease; }
@@ -162,7 +162,7 @@
 .notices > li.unread .icon-chip { background: var(--chest-violet); color: #fff; }
 
 @media (max-width: 1180px) {
-  .file-head, .file-row { grid-template-columns: minmax(0, 1fr) 130px 200px 84px 20px; }
+  .file-head, .file-row { grid-template-columns: minmax(0, 1fr) 124px 104px 80px 20px; gap: 12px; }
 }
 @media (max-width: 960px) {
   .home-spaces { grid-template-columns: minmax(0, 1fr); }

@@ -54,8 +54,8 @@ body.app { display: grid; grid-template-columns: 252px minmax(0, 1fr); min-heigh
 .page-head-row > .page-head { margin-bottom: 0; }
 .title-with-tile { display: flex; align-items: center; gap: 16px; min-width: 0; }
 
-/* The main column and a 340px side column (below it at narrower widths). */
-.with-side { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+/* The main column and a 320px side column (below it at narrower widths). */
+.with-side { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
 .doc-main { display: grid; gap: 20px; min-width: 0; align-content: start; }
 .doc-side { display: grid; gap: 16px; min-width: 0; }
 .stack { display: grid; gap: 20px; min-width: 0; }
