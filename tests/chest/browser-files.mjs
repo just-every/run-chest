@@ -29,6 +29,8 @@ const fit=async(page,name,width)=>{const wide=await page.evaluate(()=>document.d
 const download=async(page,link)=>{const [file]=await Promise.all([page.waitForEvent('download'),link.click()]);return readFile(await file.path())};
 const audit=async(action,object)=>(await h.api('/audit',cookies.owner)).filter(e=>e.action===action&&e.object_id===object);
 const row=(page,text)=>page.locator('li').filter({hasText:text});
+// Uploads go through the drop area's picker: a new file opens its page, a new version reloads the file's page.
+const pick=async(page,file)=>{const from=page.url(),input=page.locator('[data-upload] input[data-pick]').first();if(page.url().includes('/items/')&&await page.locator('[data-upload][data-item]').count())await Promise.all([page.waitForNavigation(),input.setInputFiles(file)]);else{await input.setInputFiles(file);await page.waitForURL(u=>u.href!==from&&u.pathname.startsWith('/app/items/'))}};
 async function journey(width){
  const p=Object.fromEntries(await Promise.all(people.map(async n=>[n,await as(n,width)]))),xlsx=n=>Buffer.concat([Buffer.from([0x50,0x4b,3,4]),Buffer.from(`budget ${width} revision ${n}`)]);
  // Mo creates a team space and its members in the browser; Ana builds a nested tree with an ordinary file.
@@ -38,7 +40,7 @@ async function journey(width){
  await fit(p.mo,'space',width);
  await go(p.ana,`/app/spaces/${space}`);await open(p.ana,'New folder');await p.ana.getByLabel('Folder name').fill('Client');await press(p.ana,'Create folder');const client=id(p.ana);
  await open(p.ana,'New folder');await p.ana.getByLabel('Folder name').fill('Contracts');await press(p.ana,'Create folder');const contracts=id(p.ana);
- await open(p.ana,'Upload a file');await p.ana.getByLabel('File',{exact:true}).setInputFiles({name:'terms.txt',mimeType:'text/plain',buffer:Buffer.from(`Payment terms ${width}`)});await press(p.ana,'Upload file');const terms=id(p.ana);
+ await pick(p.ana,{name:'terms.txt',mimeType:'text/plain',buffer:Buffer.from(`Payment terms ${width}`)});const terms=id(p.ana);
  await go(p.ana,`/app/items/${client}`);await fit(p.ana,'folder',width);
  // CHEST-13: a contributor has no trash action and is refused; the content manager trashes and restores her own folder.
  const tree=async()=>{const a=await json(p.ana,`/items/${client}`),b=await json(p.ana,`/items/${contracts}`),c=await json(p.ana,`/items/${terms}`);return [a.children.map(x=>x.id),b.children.map(x=>x.id),c.versions.map(v=>[v.id,v.checksum])]},before=await tree();
@@ -54,9 +56,9 @@ async function journey(width){
  await go(p.ana,'/app/files/trash');assert.equal(await row(p.ana,'scrap.txt').getByRole('button',{name:'Erase permanently'}).count(),0);assert.equal((await call(p.ana,`/items/${scrap.id}/erase`,{})).status(),403);
  await go(p.mo,'/app/files/trash');await press(row(p.mo,'scrap.txt'),'Erase permanently');assert.equal((await call(p.mo,`/items/${scrap.id}`)).status(),404);
  // VERSION-001: three versions by two people; a contributor reads the history, downloads, names and restores version 2.
- await go(p.ana,`/app/spaces/${space}`);await open(p.ana,'Upload a file');await p.ana.getByLabel('File',{exact:true}).setInputFiles({name:'budget.xlsx',mimeType:'application/octet-stream',buffer:xlsx(1)});await press(p.ana,'Upload file');const budget=id(p.ana);
- await open(p.ana,'Upload a new version');await p.ana.getByLabel('Replacement file').setInputFiles({name:'budget-v2.xlsx',mimeType:'application/octet-stream',buffer:xlsx(2)});await press(p.ana,'Upload new version');
- await go(p.mo,`/app/items/${budget}`);await open(p.mo,'Upload a new version');await p.mo.getByLabel('Replacement file').setInputFiles({name:'budget-v3.xlsx',mimeType:'application/octet-stream',buffer:xlsx(3)});await press(p.mo,'Upload new version');
+ await go(p.ana,`/app/spaces/${space}`);await pick(p.ana,{name:'budget.xlsx',mimeType:'application/octet-stream',buffer:xlsx(1)});const budget=id(p.ana);
+ await pick(p.ana,{name:'budget-v2.xlsx',mimeType:'application/octet-stream',buffer:xlsx(2)});
+ await go(p.mo,`/app/items/${budget}`);await pick(p.mo,{name:'budget-v3.xlsx',mimeType:'application/octet-stream',buffer:xlsx(3)});
  await go(p.ana,`/app/items/${budget}`);await p.ana.getByLabel('Link role').selectOption('viewer');await press(p.ana,'Create link');const link=new URL((await p.ana.locator('pre').innerText()).trim());
  await go(p.cy,`/app/items/${budget}`);const versions=p.cy.locator('article.ver');assert.equal(await versions.count(),3);
  for(const [file,who] of [['budget-v3.xlsx','mo'],['budget-v2.xlsx','ana'],['budget.xlsx','ana']])await versions.filter({has:p.cy.getByRole('heading',{name:file})}).getByText(`By ${who}@example.test`).waitFor();
@@ -68,11 +70,11 @@ async function journey(width){
  await p.dee.goto(link.href.replace(link.origin,h.origin));assert.equal(new URL(p.dee.url()).pathname,`/app/items/${budget}`);assert.equal(sha(await download(p.dee,p.dee.locator('.doc-actions').getByRole('link',{name:'Download'}))),sha(xlsx(2)));
  for(const who of ['ben','eve']){await go(p[who],`/app/items/${budget}`);assert.equal(await p[who].locator('article.ver').count(),4);assert.equal(await p[who].getByRole('button',{name:'Restore as current version'}).count(),0);assert.equal((await call(p[who],`/items/${budget}/versions/${after.versions[3].id}/restore`,{})).status(),403)}
  // SHARE-004: Ana shares a personal file with Ben as commenter; Dee asks for access and Ana approves from the email.
- const mine=(await json(p.ana,'/files')).personal;await go(p.ana,`/app/spaces/${mine}`);await open(p.ana,'Upload a file');await p.ana.getByLabel('File',{exact:true}).setInputFiles({name:`plan-${width}.txt`,mimeType:'text/plain',buffer:Buffer.from('launch plan')});await press(p.ana,'Upload file');const plan=id(p.ana);
+ const mine=(await json(p.ana,'/files')).personal;await go(p.ana,`/app/spaces/${mine}`);await pick(p.ana,{name:`plan-${width}.txt`,mimeType:'text/plain',buffer:Buffer.from('launch plan')});const plan=id(p.ana);
  await p.ana.getByLabel('Person or group').selectOption('ben@example.test');await p.ana.getByLabel(/^Role/).selectOption('commenter');await p.ana.getByLabel('Message (optional)').fill('Please check section 2');await press(p.ana,'Share');
  await go(p.ben,'/app/notices');await p.ben.getByText(`shared "plan-${width}.txt" with you as commenter`,{exact:false}).waitFor();await fit(p.ben,'notices',width);
  await go(p.ben,'/app/shared');await fit(p.ben,'shared',width);await p.ben.getByRole('link',{name:`plan-${width}.txt`}).click();
- assert.equal(await p.ben.getByText('Upload a new version',{exact:true}).count(),0);await p.ben.getByLabel('Comment',{exact:true}).fill('Section 2 is right');await press(p.ben,'Post comment');await p.ben.getByText('Section 2 is right').waitFor();
+ assert.equal(await p.ben.locator('[data-upload]').count(),0);await p.ben.getByLabel('Comment',{exact:true}).fill('Section 2 is right');await press(p.ben,'Post comment');await p.ben.getByText('Section 2 is right').waitFor();
  assert.equal((await call(p.ben,`/items/${plan}/versions`,{base64:b64('edit')})).status(),403);
  const refused=await go(p.dee,`/app/items/${plan}`);await p.dee.getByRole('heading',{name:'Request access'}).waitFor();assert.ok(!(await refused.text()).includes(`plan-${width}`));
  await p.dee.getByLabel('Access you need').selectOption('editor');await p.dee.getByLabel('Message (optional)').fill('I run the launch');await press(p.dee,'Request access');await p.dee.getByText('editor · pending',{exact:false}).waitFor();
@@ -93,10 +95,13 @@ async function journey(width){
  await go(p.ana,'/app/devices');await p.ana.getByLabel('Device name').fill(`Ana laptop ${width}`);await p.ana.getByLabel('Platform').selectOption('macos');await press(p.ana,'Create device key');
  const token=(await p.ana.locator('pre').innerText()).trim(),tree2=()=>h.fetch('/api/chest/sync/tree',{headers:{authorization:`Bearer ${token}`}});assert.equal((await tree2()).status,200);
  await go(p.ana,'/app/devices');await fit(p.ana,'devices',width);await press(row(p.ana,`Ana laptop ${width}`),'Revoke device');assert.equal((await tree2()).status,401);
- // RECOVER-001 from the browser: the space manager previews a rewind; nothing changes until it is applied.
+ // RECOVER-001 from the browser: the space manager previews a restore to a date; nothing changes until it is applied,
+ // and the applied restore is undone from its receipt.
  const minute=new Date(Date.now()-60_000).toISOString().slice(0,16),items=(await json(p.mo,`/spaces/${space}`)).children.length;
- await go(p.mo,`/app/spaces/${space}`);await open(p.mo,'Rewind to an earlier point');await p.mo.getByLabel('Point in time (UTC)').fill(minute);await press(p.mo,'Preview rewind');
- await p.mo.getByRole('heading',{name:'Rewind preview'}).waitFor();await p.mo.getByText('added since',{exact:false}).first().waitFor();await fit(p.mo,'rewind',width);assert.equal((await json(p.mo,`/spaces/${space}`)).children.length,items);
+ await go(p.mo,`/app/spaces/${space}`);await open(p.mo,'Restore to a date');await p.mo.getByLabel('Date and time (UTC)').fill(minute);await press(p.mo,'Preview restore');
+ await p.mo.getByRole('heading',{name:'Restore preview'}).waitFor();await p.mo.getByText('added since',{exact:false}).first().waitFor();await fit(p.mo,'rewind',width);assert.equal((await json(p.mo,`/spaces/${space}`)).children.length,items);
+ await press(p.mo,'Restore selected items');await p.mo.getByRole('heading',{name:/^Restored to /}).waitFor();assert.ok((await json(p.mo,`/spaces/${space}`)).children.length<items);
+ await press(p.mo,'Undo this restore');await p.mo.getByRole('heading',{name:'Restore undone'}).waitFor();assert.equal((await json(p.mo,`/spaces/${space}`)).children.length,items);
  await go(p.ana,'/app/files');await fit(p.ana,'home',width);
  for(const page of Object.values(p))await page.context().close();
  console.log(`Files browser journey passed at ${width}: trash/restore/erase, version history and restore, sharing, access requests, expiry and device keys`);

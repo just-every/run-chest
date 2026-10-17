@@ -9,22 +9,26 @@ import { notices, requestView, sharedWithMe } from './shares'
 import { devices } from './devices'
 import { openLink } from './links'
 import { filesExecute } from './api'
-import { itemPage, requestAccessPage, rewindPage } from './ui-item'
+import { itemPage, requestAccessPage, rewindDonePage, rewindPage, rewindUndonePage } from './ui-item'
 import { devicesPage, homePage, noticesPage, requestPage, requestsPage, searchPage, secretPage, sharedPage, spacePage, trashPage } from './ui-pages'
 import type { Space } from './model'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
-export const filesPath = (path: string) => /^\/(items|spaces|links|requests|notices|devices|rewind)(\/|$)/.test(path)
+export const filesPath = (path: string) => /^\/(items|spaces|links|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
  for (const key of ['noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
  if (input.path === '/items' && input.type === 'file' && !input.name) input.name = input.filename
  if (typeof input.destination === 'string') { const [kind, id] = input.destination.split(':'); if (kind === 'space') { input.space = id; input.parent = null } else input.parent = id }
  if (input.expires === '') delete input.expires
+ // The restore preview's checkboxes name the items to restore.
+ if (input.path === '/rewind/apply') input.items = Object.keys(input).filter(k => k.startsWith('item:')).map(k => k.slice(5))
  return input
 }
 // Pages that must show a one-time secret instead of redirecting.
 export function filesReceipt(input: any, result: any) {
  if (/^\/items\/[^/]+\/links$/.test(input.path)) return secretPage('Organisation link created', result.url, 'Copy this link now. Chest keeps only a fingerprint of it and cannot show it again.', input.returnTo || '/app/files')
  if (input.path === '/rewind/preview') return rewindPage(input, result)
+ if (input.path === '/rewind/apply') return rewindDonePage(input, result)
+ if (/^\/rewind\/[^/]+\/undo$/.test(input.path)) return rewindUndonePage(input, result)
  if (input.path === '/devices') return secretPage('Device key created', result.token, `Enter this key in the Chest client on ${result.device.name}. It is shown once; revoke the device to stop it.`, '/app/devices')
  return null
 }

@@ -187,6 +187,55 @@ try{
   const ownPlan=await h.api('/rewind/preview',people.dee,{space:personalOf.dee,at:ownAt});await h.api('/rewind/apply',people.dee,{space:personalOf.dee,at:ownAt,fingerprint:ownPlan.fingerprint});
   assert.equal(sha(await bytesOf('dee',own.id,(await h.api(`/items/${own.id}`,people.dee)).item.current)),sha('own v1'));
  });
+ await check('TRANSFER-001 resumable upload',async()=>{
+  // A 17 MB original in three parts: two arrive, the Worker restarts, and choosing the same file resumes with only the missing part.
+  const big=Buffer.alloc(17*1024*1024+123);for(let i=0;i+4<=big.length;i+=4)big.writeUInt32LE(Math.imul(i,2654435761)>>>0,i);
+  const begin={parent:space.contracts,name:'site-survey.bin',size:big.length,lastModified:1760000000000};
+  await h.api('/uploads',people.ben,begin,403);await h.api('/uploads',people.ana,{...begin,size:4*1024**3+1},413);
+  const u=await h.api('/uploads',people.ana,begin),slice=n=>big.subarray((n-1)*u.partSize,Math.min(n*u.partSize,big.length));
+  const put=(n,who='ana',body=slice(n))=>h.fetch(`/api/chest/uploads/${u.id}/parts/${n}`,{method:'PUT',headers:{cookie:people[who],origin:h.origin,'content-type':'application/octet-stream'},body});
+  assert.deepEqual(u.parts,[]);assert.equal((await put(1)).status,200);
+  assert.equal((await put(2,'ana',big.subarray(0,10))).status,400,'a part of the wrong size is refused');assert.equal((await put(2,'cy',big.subarray(0,10))).status,404,"another person's upload");
+  assert.equal((await put(2)).status,200);await h.api(`/uploads/${u.id}/complete`,people.ana,{},409);
+  assert.ok(!(await h.api(`/items/${space.contracts}`,people.ana)).children.some(c=>c.name==='site-survey.bin'),'nothing is half-visible');
+  await h.stop();await h.start();
+  const again=await h.api('/uploads',people.ana,begin);assert.equal(again.id,u.id);assert.deepEqual(again.parts,[1,2]);assert.equal(again.received,2*u.partSize);
+  assert.deepEqual((await h.api(`/uploads?parent=${space.contracts}`,people.ana)).map(x=>x.id),[u.id]);
+  assert.equal((await put(3)).status,200);
+  const done=await h.api(`/uploads/${u.id}/complete`,people.ana,{});assert.equal(done.state,'complete');assert.deepEqual((await h.api(`/uploads/${u.id}/complete`,people.ana,{})).result,done.result,'completing twice makes one file');
+  const file=await h.api(`/items/${done.result.item}`,people.mo);assert.equal(file.versions.length,1);assert.equal(file.versions[0].checksum,sha(big));assert.equal(file.versions[0].size,big.length);
+  assert.equal(sha(await bytesOf('mo',done.result.item,done.result.version)),sha(big),'the original streams back verified');
+  assert.equal((await h.api(`/items/${space.contracts}`,people.ana)).children.filter(c=>c.name==='site-survey.bin').length,1);
+  // A new version through the same door carries a stated checksum; a wrong one is refused before the file changes.
+  const v2=Buffer.from('survey revised'),bad=await h.api('/uploads',people.cy,{item:done.result.item,name:'site-survey.bin',size:v2.length,checksum:sha('other')});
+  assert.equal((await h.fetch(`/api/chest/uploads/${bad.id}/parts/1`,{method:'PUT',headers:{cookie:people.cy,origin:h.origin},body:v2})).status,200);await h.api(`/uploads/${bad.id}/complete`,people.cy,{},400);
+  await h.api(`/uploads/${bad.id}/cancel`,people.cy,{});await h.api(`/uploads/${bad.id}`,people.cy,undefined,404);
+  const good=await h.api('/uploads',people.cy,{item:done.result.item,name:'site-survey.bin',size:v2.length,checksum:sha(v2)});
+  await h.fetch(`/api/chest/uploads/${good.id}/parts/1`,{method:'PUT',headers:{cookie:people.cy,origin:h.origin},body:v2});await h.api(`/uploads/${good.id}/complete`,people.cy,{});
+  const after=await h.api(`/items/${done.result.item}`,people.mo);assert.equal(after.versions.length,2);assert.equal(after.versions[0].checksum,sha(v2));assert.equal(after.versions[1].checksum,sha(big));
+ });
+ await check('RECOVER-001 folder to a date',async()=>{
+  // Harbor Freight on the 12th, then an overwrite, a deletion, a move out, a rename and a new file.
+  const pause=()=>new Promise(r=>setTimeout(r,25)),f=await h.api('/items',people.ana,{space:space.id,type:'folder',name:'Harbor Freight'}),sub=await h.api('/items',people.ana,{parent:f.id,type:'folder',name:'Invoices'}),elsewhere=await h.api('/items',people.ana,{space:space.id,type:'folder',name:'Archive'});
+  const quote=await upload(people.ana,{parent:f.id,name:'quote.txt',base64:b64('quote v1')}),invoice=await upload(people.ana,{parent:sub.id,name:'inv-1.txt',base64:b64('invoice one')}),notes=await upload(people.ana,{parent:f.id,name:'notes.txt',base64:b64('notes')});
+  await pause();const at=new Date().toISOString();await pause();
+  await h.api(`/items/${quote.id}/versions`,people.ana,{base64:b64('quote v2')});await h.api(`/items/${invoice.id}/trash`,people.ana,{});await h.api(`/items/${notes.id}/move`,people.ana,{parent:elsewhere.id});await h.api(`/items/${sub.id}/rename`,people.ana,{name:'Bills'});
+  const late=await upload(people.ana,{parent:f.id,name:'late.txt',base64:b64('late')});
+  const state=async()=>({quote:sha(await bytesOf('mo',quote.id,(await h.api(`/items/${quote.id}`,people.mo)).item.current)),invoice:(await h.raw(`/api/chest/items/${invoice.id}`,people.mo)).status,notes:(await h.api(`/items/${notes.id}`,people.mo)).item.parent,sub:(await h.api(`/items/${sub.id}`,people.mo)).item.name,late:(await h.raw(`/api/chest/items/${late.id}`,people.mo)).status});
+  const changed={quote:sha('quote v2'),invoice:404,notes:elsewhere.id,sub:'Bills',late:200};assert.deepEqual(await state(),changed);
+  await h.api('/rewind/preview',people.ben,{folder:f.id,at},403);
+  const preview=await h.api('/rewind/preview',people.mo,{folder:f.id,at}),kinds=key=>preview.changes.find(x=>x.id===key)?.kinds??[];
+  assert.deepEqual(kinds(quote.id),['earlier version']);assert.deepEqual(kinds(invoice.id),['not trashed then']);assert.deepEqual(kinds(notes.id),['place']);assert.deepEqual(kinds(sub.id),['name']);assert.deepEqual(kinds(late.id),['added since']);
+  assert.deepEqual(await state(),changed,'a preview changes nothing');
+  const applied=await h.api('/rewind/apply',people.mo,{folder:f.id,at,fingerprint:preview.fingerprint});
+  assert.deepEqual(await state(),{quote:sha('quote v1'),invoice:200,notes:f.id,sub:'Invoices',late:404});
+  assert.equal(sha(await bytesOf('mo',invoice.id,(await h.api(`/items/${invoice.id}`,people.mo)).item.current)),sha('invoice one'));
+  // Undo returns each item to its state just before the restore, as new states; every version stays.
+  await h.api(`/rewind/${applied.id}/undo`,people.ben,{},403);
+  const undone=await h.api(`/rewind/${applied.id}/undo`,people.mo,{});assert.deepEqual(undone.restored.sort(),applied.applied.sort());assert.deepEqual(undone.skipped,[]);
+  assert.deepEqual(await state(),changed);assert.equal((await h.api(`/items/${quote.id}`,people.mo)).versions.length,4);
+  await h.api(`/rewind/${applied.id}/undo`,people.mo,{},409);
+ });
  await check('SYNC-001 server protocol',async()=>{
   const device=await h.api('/devices',people.ana,{name:'Ana desktop',platform:'windows'}),auth={authorization:`Bearer ${device.token}`},sync=(path,init={})=>h.fetch('/api/chest'+path,{...init,headers:{...auth,...init.headers}});
   assert.equal((await h.fetch('/api/chest/sync/tree')).status,401);assert.equal((await h.fetch('/api/chest/sync/tree',{headers:{authorization:'Bearer chest_dev_'+'x'.repeat(43)}})).status,401);

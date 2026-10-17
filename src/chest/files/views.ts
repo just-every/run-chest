@@ -7,6 +7,8 @@ import { allowed, context, demand, descend, everything, start, type Ctx, type En
 import { children } from './items'
 import { pending } from './shares'
 import { comments } from './comments'
+import { rewinds } from './rewind'
+import { unfinished } from './uploads'
 import { personal, visibleSpaces } from './spaces'
 import type { Link, Prefs, Space } from './model'
 // Read models for the files pages and API: what a person may see, with the actions their current role allows.
@@ -27,7 +29,8 @@ export async function home(env: Bindings, s: Session, w: Who) {
 export async function spaceView(env: Bindings, w: Who, key: string) {
  const space = await get<Space>(env, 'space', key), state = start(space.payload, w); insist(state.role, 'not_found', 404)
  const ctx: Ctx = { space, chain: [], state, links: [], fences: [] }
- return { id: space.id, name: label(space.payload, w), kind: space.payload.kind, role: state.role, can: can(ctx), settings: space.payload.settings, members: space.payload.kind === 'team' ? space.payload.members : [], children: (await children(env, w, ctx, null)).map(brief) }
+ const manager = state.role === 'manager' || state.role === 'owner'
+ return { id: space.id, name: label(space.payload, w), kind: space.payload.kind, role: state.role, can: can(ctx), settings: space.payload.settings, members: space.payload.kind === 'team' ? space.payload.members : [], children: (await children(env, w, ctx, null)).map(brief), uploads: await unfinished(env, w, { space: space.id, parent: null }), rewinds: manager ? await rewinds(env, `space:${space.id}`) : [] }
 }
 export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'view')
@@ -45,6 +48,8 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
   activity: await activity(env, key, allowed(ctx, 'contribute')),
   comments: (await comments(env, key)).map(c => ({ id: c.id, ...c.payload })).sort((a, b) => a.at.localeCompare(b.at)),
   starred: prefs.starred.includes(key), shortcut: prefs.shortcuts.includes(key),
+  uploads: allowed(ctx, 'contribute') ? await unfinished(env, w, item.payload.type === 'folder' ? { parent: key } : { item: key }) : [],
+  rewinds: item.payload.type === 'folder' && allowed(ctx, 'contribute') ? await rewinds(env, `folder:${key}`) : [],
  }
 }
 // A file's activity: uploads, restores, renames, moves, sharing and trash for everyone who can open it; who viewed or

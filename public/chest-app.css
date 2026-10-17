@@ -190,6 +190,57 @@ body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: 
 .doc-side { display: grid; gap: 20px; }
 .readers { list-style: none; padding: 0; display: grid; gap: 8px; font-size: 14px; overflow-wrap: anywhere; }
 
+/* Folders: the breadcrumb, the upload drop area with per-file progress, and restores to a date */
+.crumbs ol { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 0; padding: 0; margin: 0 0 10px; list-style: none; font-size: 15px; color: var(--chest-muted); }
+.crumbs li { min-width: 0; overflow-wrap: anywhere; }
+.crumbs li + li::before { content: "/"; padding: 0 10px; color: var(--chest-line); }
+.crumbs [aria-current] { color: var(--chest-ink); }
+.upload { margin-top: 20px; }
+.upload-drop { display: grid; justify-items: center; gap: 12px; padding: 28px 24px; text-align: center; background: var(--chest-surface); border: 1.5px dashed var(--chest-line); border-radius: var(--chest-radius); transition: background-color .15s ease, border-color .15s ease; }
+.upload-over .upload-drop { background: var(--chest-manila); border-color: var(--chest-ink); border-style: solid; }
+.upload-hint { font-size: 18px; }
+.upload-picks { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.upload-picks label { position: relative; }
+.upload-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.upload-picks label:focus-within { outline: 2px solid var(--chest-focus); outline-offset: 2px; }
+.upload-camera { display: none; }
+@media (pointer: coarse) { .upload-camera { display: inline-flex; } }
+.upload-note { max-width: 46ch; font-size: 14px; }
+.upload-waiting { margin-top: 16px; padding: 16px 20px; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: var(--chest-radius); }
+.upload-waiting h3 { font-size: 17px; }
+.upload-waiting > * + * { margin-top: 8px; }
+.upload-waiting li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; overflow-wrap: anywhere; }
+.upload-list { display: grid; gap: 10px; padding: 0; margin: 16px 0 0; list-style: none; }
+.upload-list:empty { display: none; }
+.upload-item { display: grid; gap: 8px; padding: 14px 18px; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: var(--chest-radius); }
+.upload-line { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; min-width: 0; }
+.upload-name { min-width: 0; overflow-wrap: anywhere; font-size: 16px; font-weight: 600; }
+.upload-status { font-size: 14px; }
+.upload-bytes { color: var(--chest-muted); font-size: 13px; }
+.upload-item progress { width: 100%; height: 8px; appearance: none; border: 0; border-radius: 999px; background: var(--chest-hairline); overflow: hidden; }
+.upload-item progress::-webkit-progress-bar { background: var(--chest-hairline); border-radius: 999px; }
+.upload-item progress::-webkit-progress-value { background: var(--chest-cobalt); border-radius: 999px; transition: width .2s ease; }
+.upload-item progress::-moz-progress-bar { background: var(--chest-cobalt); border-radius: 999px; }
+.upload-item[data-state="done"] progress::-webkit-progress-value { background: var(--chest-ok); }
+.upload-item[data-state="done"] progress::-moz-progress-bar { background: var(--chest-ok); }
+.upload-item[data-state="failed"] { border-color: var(--chest-issue); }
+.upload-buttons { display: flex; gap: 14px; }
+.upload-button { padding: 4px 0; border: 0; background: none; color: var(--chest-ink); font: 500 14px/1.3 var(--chest-font-sans); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.upload-problem { color: var(--chest-issue); font-size: 14px; }
+.upload-problem:empty { display: none; }
+.upload [hidden], [data-upload-fallback][hidden] { display: none !important; }
+.upload [data-refresh] { margin-top: 12px; }
+.choices { display: grid; gap: 10px; padding: 0; list-style: none; }
+.choice label { display: flex; align-items: flex-start; gap: 12px; overflow-wrap: anywhere; cursor: pointer; }
+.choice input { flex: none; width: 20px; height: 20px; margin-top: 2px; accent-color: var(--chest-ink); }
+.restores .events li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+@media (max-width: 760px) {
+  .crumbs ol { font-size: 14px; }
+  .upload-drop { padding: 20px 16px; }
+  .upload-picks { width: 100%; }
+  .upload-picks label { flex: 1 1 100%; }
+}
+
 /* People & settings */
 .admin-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
 .admin-col { display: grid; gap: 24px; min-width: 0; }

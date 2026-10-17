@@ -13,11 +13,12 @@ import { home, itemView, search, spaceView } from './views'
 import { sharingPolicy } from './people'
 import { list } from '../store'
 import { comment } from './comments'
-import { apply, plan } from './rewind'
+import { apply, plan, undo } from './rewind'
+import { begin, cancel, complete, receive, status, unfinished } from './uploads'
 import type { AccessRequest } from './model'
 // /api/chest routes for everyday files. Every route reads the person's current groups and links first; the UI's form
 // posts reach the same functions through execute().
-const roots = new Set(['rewind', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'devices', 'policy', 'search'])
+const roots = new Set(['uploads', 'rewind', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'devices', 'policy', 'search'])
 export async function filesExecute(env: Bindings, request: Request, s: Session, method: string, parts: string[], input: any, url: URL): Promise<unknown> {
  if (!roots.has(parts[0])) return undefined
  const w = await who(env, s), [head, key, sub, version, verb] = parts, get = method === 'GET', post = method === 'POST'
@@ -29,6 +30,15 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
  if (post && head === 'policy') return sharingPolicy(env, s, input)
  if (post && head === 'rewind' && key === 'preview') return plan(env, s, w, input)
  if (post && head === 'rewind' && key === 'apply') return apply(env, s, w, input)
+ if (post && head === 'rewind' && key && sub === 'undo') return undo(env, s, w, key)
+ if (head === 'uploads') {
+  if (get && !key) return unfinished(env, w, { space: url.searchParams.get('space') ?? undefined, parent: url.searchParams.get('parent'), item: url.searchParams.get('item') })
+  if (post && !key) return begin(env, s, w, input)
+  if (get && key && !sub) return status(env, w, key)
+  if (method === 'PUT' && sub === 'parts' && version) return receive(env, s, w, key, Number(version), request)
+  if (post && sub === 'complete') return complete(env, s, w, key)
+  if (post && sub === 'cancel') return cancel(env, s, w, key)
+ }
  if (head === 'spaces') {
   if (post && !key) return createSpace(env, s, input)
   if (get && key && !sub) return spaceView(env, w, key)

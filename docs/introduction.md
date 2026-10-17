@@ -45,7 +45,8 @@ One export holds all of it, and restores into a fresh Chest. See
 Chest previews PDFs and images in the browser and shows text files as plain
 text; other formats download. It does not edit or render Office files, read
 text out of scanned PDFs or images, sync folders to computers or phones, or
-share records by public link. Originals are limited to 8 MB each.
+share records by public link. Library originals are limited to 8 MB each;
+files in [folders](/docs/files) upload up to 4 GB each.
 
 ## Next
 

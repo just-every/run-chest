@@ -22,20 +22,22 @@ export async function admit(env: Bindings, bytes: Uint8Array, filename: string, 
  await retain(env, bytes, v)
  return { id: v.id, filename: v.filename, checksum: v.checksum, size: v.size, mediaType: v.mediaType, preview: v.preview, text: v.text, parser: v.parser, at: v.at, actor, arrival, name: '', ...extra }
 }
-export async function createItem(env: Bindings, s: Session, w: Who, input: any, arrival: Arrival = 'upload', bytes?: Uint8Array) {
+// A resumable upload passes the version it already admitted, and the operations that close its session in the same batch.
+export type Admitted = { version?: FileVersion; ops?: (row: Row<Item>) => Op[] }
+export async function createItem(env: Bindings, s: Session, w: Who, input: any, arrival: Arrival = 'upload', bytes?: Uint8Array, more: Admitted = {}) {
  const p = await place(env, w, input.space, input.parent), parent = folderOf(p), value = name(input.name), at = now()
  unique(await siblings(env, p.space.id, parent), value)
  const type = input.type === 'folder' ? 'folder' : 'file', versions: FileVersion[] = []
- if (type === 'file') versions.push(await admit(env, bytes ?? fromBase64(input.base64), value, s.operator.email, arrival, input, input.device ? { device: input.device } : {}))
+ if (type === 'file') versions.push(more.version ?? await admit(env, bytes ?? fromBase64(input.base64), value, s.operator.email, arrival, input, input.device ? { device: input.device } : {}))
  const row = fresh<Item>('item', { space: p.space.id, parent, type, name: value, createdBy: s.operator.email, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions, current: versions[0]?.id ?? null })
- await commit(env, s, [{ row }], { fences: p.fences, changes: [{ item: row.id, space: p.space.id, kind: 'create' }], audits: [{ action: type === 'folder' ? 'folder.create' : 'file.upload', object: row.id, detail: { space: p.space.id, parent, version: row.payload.current, arrival } }] })
+ await commit(env, s, [{ row }, ...more.ops?.(row) ?? []], { fences: p.fences, changes: [{ item: row.id, space: p.space.id, kind: 'create' }], audits: [{ action: type === 'folder' ? 'folder.create' : 'file.upload', object: row.id, detail: { space: p.space.id, parent, version: row.payload.current, arrival } }] })
  return row
 }
-export async function addVersion(env: Bindings, s: Session, w: Who, key: string, bytes: Uint8Array, input: any, arrival: Arrival = 'upload') {
+export async function addVersion(env: Bindings, s: Session, w: Who, key: string, bytes: Uint8Array | null, input: any, arrival: Arrival = 'upload', more: Admitted = {}) {
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'contribute'); insist(item.payload.type === 'file', 'not_a_file')
- const v = await admit(env, bytes, typeof input.filename === 'string' ? name(input.filename, 'filename') : item.payload.name, s.operator.email, arrival, input, input.device ? { device: input.device } : {})
+ const v = more.version ?? await admit(env, bytes!, typeof input.filename === 'string' ? name(input.filename, 'filename') : item.payload.name, s.operator.email, arrival, input, input.device ? { device: input.device } : {})
  const row = next(item, { ...item.payload, versions: [...item.payload.versions, v], current: v.id, updatedAt: v.at })
- await commit(env, s, [{ row, previous: item }], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'version' }], audits: [{ action: 'version.upload', object: key, detail: { version: v.id, arrival } }] })
+ await commit(env, s, [{ row, previous: item }, ...more.ops?.(row) ?? []], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'version' }], audits: [{ action: 'version.upload', object: key, detail: { version: v.id, arrival } }] })
  return row
 }
 export async function nameVersion(env: Bindings, s: Session, w: Who, key: string, versionId: string, input: any) {
