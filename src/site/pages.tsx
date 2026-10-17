@@ -6,7 +6,7 @@ import { identity } from '../identity'
 import { DocsArticle } from './docs/DocsArticle'
 import { DocsIndex } from './docs/DocsIndex'
 import { docsHead, docsPages } from './docs/pages'
-import { iconLinks, socialImage, withChestIcons } from './head'
+import { iconLinks, socialImage, withChestIcons, withUsLicense } from './head'
 import { Landing } from './landing/Landing'
 import { run } from './run'
 import './shell/site.css'
@@ -45,7 +45,7 @@ export function sitePages({ styles, contract }: SiteContext): SiteBuild {
   return {
     pages: [
       { path: '/', html: document({ title: 'Chest · Every file, where it should be', description: identity.tagline, path: '/' }, <Landing />) },
-      { path: '/run', html: withChestIcons(runPageHtml(identity, run, contract)) },
+      { path: '/run', html: withUsLicense(withChestIcons(runPageHtml(identity, run, contract))) },
       ...(contract ? [{ path: '/contract', html: withChestIcons(contractPageHtml(identity, run, contract)) }] : []),
       { path: '/docs', html: document({ ...docsHead(), path: '/docs' }, <DocsIndex />) },
       ...docsPages.filter(page => page.slug).map(page => ({ path: `/docs/${page.slug}`, html: document({ ...docsHead(page.slug), path: `/docs/${page.slug}` }, <DocsArticle slug={page.slug} />) })),

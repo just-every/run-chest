@@ -26,4 +26,8 @@
 @media (max-width: 999px) {
   .interlude { height: auto; padding: 3.2em var(--gutter) 2em; }
   .interlude-art { position: static; display: grid; justify-items: center; }
+  .interlude .stage-flow > .stage { align-items: center; }
+  .interlude .stage-flow .counter { padding: 1.6em 2em; gap: 1.4em; }
+  .interlude .stage-flow .counter-text { font-size: 1.8em; }
+  .interlude .stage-flow .mascot-at { width: 24em !important; height: 24em !important; }
 }

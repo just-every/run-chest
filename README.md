@@ -14,9 +14,8 @@ rer setup --owner-email you@example.com
 rer dev
 ```
 
-Chest is a private, owner-operated document library for supplier, customer and
-project evidence. It keeps immutable originals, an exact approved version,
-accountable review, typed metadata and enforced collection/document access.
+Chest is a private, owner-operated file system for a business's files: a free,
+open source alternative to Google Drive, Dropbox and Box that you run yourself.
 Phase one needs no provider account. Local D1 and R2 persist under
 `.wrangler/state`; local runs send no email.
 
@@ -31,23 +30,38 @@ Deactivation revokes their sessions; session inspection also supports individual
 revocation. Locally, `rer dev --as member` signs in as a separately gated
 development persona to try a staff role.
 
-Create a collection and a document type, then upload a record. The forms
-show each document type's own fields. Owners can edit document types in **People & settings**;
-saved values remain unchanged, and affected records show missing or invalid fields.
-New uploads, replacements and filing changes validate against the current type.
-Moving a record requires editor access to both its current record and destination
-collection; collection access then follows its destination. Grant `reader`, `editor` and/or `reviewer` roles by
-person email or group ID. A reviewer must be assigned to the exact version and
-have current reviewer access. Uploading B leaves approved A current; approving
-B cannot approve a later C. Requested changes remain attached to their original
-version; resubmit by uploading a replacement, which needs its own exact approval. Review and expiry dates have separate completion
-evidence. Only the owner moves records to trash or restores them; trash retains
-all originals and history.
+**Files.** Team spaces with viewer, commenter, contributor, content manager and
+manager roles, each person's **My files**, and nested folders. Uploads are
+dropped, picked or photographed on a phone, show progress and resume after a
+dropped connection, up to 4 GB per file; every original is SHA-256 checked.
+Each new upload over a file keeps the earlier versions, which can be restored
+as current, and a folder or space can be restored to a date with undo. Trash is
+self-service and reversible.
+
+**Sharing.** Share a file or folder with people or groups at viewer, commenter
+or editor, with an optional expiry; organization links; links for anyone with an
+optional password, expiry and download limit, each revoked in one click; and
+file requests that let anyone upload into a folder. **Links** lists what is
+shared too widely, with **Make private**.
+
+**Search and reading.** Search covers file names and the words inside PDFs and
+Word, Excel, PowerPoint and OpenDocument files, read in the Worker, and scans
+and photos, read by an AI model with the owner's own key. Every result follows
+current access.
+
+**The Library.** For records that need sign-off: create a collection and a
+document type, then upload a record; the forms show each type's own fields.
+Grant `reader`, `editor` and/or `reviewer` roles by person email or group ID. A
+reviewer must be assigned to the exact version and have current reviewer
+access. Uploading B leaves approved A current; approving B cannot approve a
+later C. Review and expiry dates have separate completion evidence. Only the
+owner moves Library records to trash or restores them; trash retains all
+originals and history. Library originals are limited to 8 MB.
 
 PDF and raster previews use browser viewers. UTF-8 text is served as sandboxed
-plain text and searched with version/parser provenance. Unknown formats download
-only; no Office renderer or OCR is claimed. Original files are limited to 8 MB,
-searchable text to 500 kB. HTML and SVG never render as active content.
+plain text. Other formats, including Office files, download; there is no
+in-browser editor and no desktop or phone sync app yet. HTML and SVG never
+render as active content.
 
 ## Move-in and recovery
 
@@ -108,6 +122,6 @@ and a second genuine clone for complete export/restore. Install Chromium with
 needed for owner data, upgrades and hosted operation.
 [SOURCE.md](SOURCE.md) records pinned Base adoption and
 Chest-owned changes. MIT applies to eligible shipped source; third-party fonts
-and dependencies retain their licences.
+and dependencies retain their licenses.
 
 The public source is [just-every/run-chest](https://github.com/just-every/run-chest).

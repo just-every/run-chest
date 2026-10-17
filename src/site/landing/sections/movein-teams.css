@@ -2,6 +2,8 @@
 .import-card { height: 100%; padding: 1.4em 3.2em 0 3.2em; border-radius: 1.8em; }
 .import-row { gap: 1.2em; height: 7.6em; border-bottom: 0.1em solid #eceef4; }
 .import-row .brand-ico { display: grid; place-items: center; width: 4.4em; margin-right: 1.2em; }
+.import-name { white-space: nowrap; }
+.import-name .dim { margin-left: 0.15em; }
 .brand-ico svg { width: 4em; height: 3.6em; }
 .box-word { color: #0061d5; font: 700 2.9em/1 var(--chest-font-ui); letter-spacing: -0.06em; }
 .done { display: grid; place-items: center; width: 3.6em; height: 3.6em; border-radius: 50%; background: #e3f6e8; color: #2b9a50; }
@@ -28,3 +30,14 @@
 .space-folder { width: 2.8em; height: 2.4em; }
 .storage { display: grid; gap: 1.4em; margin-top: 1.6em; padding-top: 1.6em; border-top: 0.1em solid #eceef4; }
 .handnote { color: #4b2fe0; font: 500 2.5em/1 var(--chest-font-hand); }
+@media (max-width: 999px) {
+  .stage-flow .import-card { padding: 0.6em 1.8em 0; }
+  .stage-flow .import-row { height: auto; min-height: 7.6em; padding: 1.4em 0; }
+  .stage-flow .import-row .brand-ico { margin-right: 0.4em; }
+  .stage-flow .import-name { display: grid; }
+  .stage-flow .import-name .dim { margin-left: 0; }
+  .stage-flow .import-busy { padding: 1.6em 0; }
+  .stage-flow .import-busy .bar { margin-left: 0; }
+  .stage-flow .import-links { height: auto; padding: 2em 0; }
+  .stage-flow .teams-card { padding: 1.8em 2em; }
+}

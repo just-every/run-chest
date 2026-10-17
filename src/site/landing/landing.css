@@ -1,6 +1,6 @@
 /* The homepage's frame. The desk drew it at 1536 px wide; .landing's 1em is 10 of those pixels, so every
    section keeps the desk's proportions from 1000 px up (and stops growing past 1536). Below 1000 px each
-   section reflows to a column: copy, then its drawing, cropped to the screen. */
+   section reflows to a column: copy, then its drawing as whole cards. */
 .landing { --desk: min(10px, calc(100vw / 153.6)); font-size: var(--desk); max-width: 153.6em; margin: 0 auto; }
 .landing .stage { --art: var(--desk); }
 
@@ -33,6 +33,12 @@
   .eyebrow { font-size: 1.3em; }
   .feature-art { align-self: center; }
   .stage-window { position: relative; font-size: min(8.4px, calc((100vw - 2 * var(--gutter)) / var(--sw))); width: calc(var(--sw) * 1em); height: calc(var(--sh) * 1em); }
-  .stage-cropped { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
-  .stage-window > .stage { font-size: inherit; margin: calc(var(--sy) * -1em) 0 0 calc(var(--sx) * -1em); }
+  .stage-window > .stage { font-size: inherit; }
+  /* A flowing stage stacks its pieces as whole cards at the desk's own type sizes (one desk pixel to one CSS pixel,
+     so the smallest label is 12 px), in the order each piece's `phone` gives; the hand-drawn marks stay on desktop. */
+  .feature-art:has(.stage-flow), .hero-art:has(.stage-flow) { align-self: stretch; }
+  .stage-flow { width: 100%; height: auto; font-size: 10px; }
+  .stage-flow > .stage { display: flex; flex-direction: column; gap: 1.6em; width: auto !important; height: auto !important; margin: 0; font-size: inherit; }
+  .stage-flow .at { position: static; order: var(--phone-order, 0); width: auto !important; height: auto !important; rotate: none !important; }
+  .stage-flow .phone-out, .stage-flow > .stage > svg, .stage-flow > .stage > .cursor, .stage-flow > .stage > .mascot-glow { display: none; }
 }

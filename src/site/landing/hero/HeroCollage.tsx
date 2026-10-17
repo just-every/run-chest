@@ -1,51 +1,29 @@
-import { FileTile } from '../art/icons'
 import { Arrow, Sticky, Ticks } from '../art/marks'
 import { Place, Stage } from '../art/Place'
 import { ContractCard, ShareLinkCard, VersionStack } from './cards'
 import { PhotosCard } from './PhotosCard'
+import { FiledToast, NdaCard, ReceiptCard, UploadCard } from './ScanCards'
 
-/** Option F: the live folder collage, every card a real piece of a business's files. Stage origin: desk (280, 84). */
+/**
+ * Option F: the live folder collage, every card a real piece of a business's files. Stage origin: desk (280, 84).
+ * Pieces sit where the desk drew them, nudged only so none covers another's words: the share link starts below the
+ * contract (Luis's tag stays visible) and the approved pill has its own room beside the date. On a phone the
+ * contract, share link, versions, upload and filing stack as whole cards.
+ */
 export function HeroCollage() {
   return (
-    <Stage w={1256} h={900} crop={{ x: 410, y: 20, w: 520, h: 790 }} className="hero-collage" label="A team's files in Chest: a contract two people are editing, a receipt uploading, a share link, a version history, a scanned NDA read into fields, and a W-9 filed on its own.">
-      <Place x={427} y={39} w={420} h={432} r={-5} z={3}><ContractCard /></Place>
-      <Place x={900} y={44} w={252} h={292} r={6} z={2}>
-        <div className="card receipt-frame"><img className="photo" src="/site/receipt.webp" alt="" width="212" height="244" /></div>
-      </Place>
-      <Place x={874} y={313} w={272} h={94} r={4} z={4}>
-        <div className="card upload-card row">
-          <svg className="ring" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="19" /><circle className="ring-done" cx="24" cy="24" r="19" pathLength="100" strokeDasharray="62 100" /></svg>
-          <div className="stack"><b className="f165 ink nowrap">Uploading 62%</b><span className="f14 dim nowrap">Receipt 2024-10-14.jpg</span></div>
-        </div>
-      </Place>
-      <Place x={816} y={440} w={372} h={362} r={4} z={2}>
-        <div className="card nda-card">
-          <div className="row nda-head"><FileTile kind="pdf" /><div className="stack"><b className="f16 ink">NDA.pdf</b><span className="f13 dim">Scanned · 3 pages</span></div></div>
-          <div className="scan">
-            <p className="scan-title">Non-disclosure agreement</p>
-            <span className="scan-bar" style={{ width: '88%' }} /><span className="scan-bar" style={{ width: '70%' }} />
-            <dl className="scan-fields">
-              <div><dt>Date:</dt><dd><span className="field">Oct 1, 2024</span></dd></div>
-              <div><dt>Party:</dt><dd><span className="field field-wide">Acme Supply Co.</span></dd></div>
-              <div><dt>Amount:</dt><dd><span className="field">$50,000</span></dd></div>
-            </dl>
-            <span className="scan-bar" style={{ width: '92%' }} /><span className="scan-bar" style={{ width: '64%' }} />
-          </div>
-        </div>
-      </Place>
-      <Place x={455} y={480} w={346} h={86} r={-2.5} z={4}><ShareLinkCard /></Place>
-      <Place x={456} y={592} w={340} h={192} r={-1} z={3}><VersionStack /></Place>
-      <Place x={618} y={808} w={348} h={74} z={5}>
-        <div className="card toast row">
-          <FileTile kind="doc" className="tile-sm" />
-          <div className="stack grow"><span className="f14 ink nowrap">Filed W-9 Acme Supply.pdf <span aria-hidden="true">→</span></span><span className="f13 dim nowrap">Vendors / Acme / Tax</span></div>
-          <span className="f14 undo">Undo</span>
-        </div>
-      </Place>
-      <Place x={152} y={600} w={240} h={254} r={-7.5} z={3}><PhotosCard /></Place>
-      <Place x={20} y={674} w={122} h={134} r={-11} z={4}><Sticky className="hero-sticky">Q4<br />launch<br />assets</Sticky></Place>
+    <Stage w={1256} h={900} flow className="hero-collage" label="A team's files in Chest: a contract two people are editing, a receipt uploading, a share link, a version history, a scanned NDA read into fields, and a W-9 filed on its own.">
+      <Place x={424} y={28} w={424} h={452} r={-4} z={3} phone={1}><ContractCard /></Place>
+      <Place x={896} y={40} w={256} h={296} r={6} z={2} phone={false}><ReceiptCard /></Place>
+      <Place x={872} y={311} w={276} h={94} r={4} z={4} phone={4}><UploadCard /></Place>
+      <Place x={812} y={438} w={380} h={366} r={4} z={2} phone={false}><NdaCard /></Place>
+      <Place x={452} y={498} w={352} h={86} r={-2.5} z={4} phone={2}><ShareLinkCard /></Place>
+      <Place x={452} y={600} w={352} h={192} r={-1} z={3} phone={3}><VersionStack /></Place>
+      <Place x={618} y={810} w={350} h={74} z={5} phone={5}><FiledToast /></Place>
+      <Place x={150} y={604} w={240} h={254} r={-7.5} z={3} phone={false}><PhotosCard /></Place>
+      <Place x={20} y={674} w={122} h={134} r={-11} z={4} phone={false}><Sticky className="hero-sticky">Q4<br />launch<br />assets</Sticky></Place>
       <Arrow kind="short" style={{ left: '12.4em', top: '72.6em', width: '4.6em', height: '2.6em', zIndex: 5 }} />
-      <Arrow kind="hook" style={{ left: '40.4em', top: '46.4em', width: '4.6em', height: '9em', zIndex: 5 }} />
+      <Arrow kind="hook" style={{ left: '40.2em', top: '47.4em', width: '4.6em', height: '9em', zIndex: 5 }} />
       <Arrow kind="both" style={{ left: '97.6em', top: '80.4em', width: '10.6em', height: '5.8em', zIndex: 5 }} />
       <Ticks style={{ left: '117.4em', top: '8.4em' }} turn={20} />
       <Ticks style={{ left: '114.6em', top: '50.2em' }} turn={10} />
@@ -53,4 +31,3 @@ export function HeroCollage() {
     </Stage>
   )
 }
-

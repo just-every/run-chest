@@ -27,7 +27,7 @@ export function filesInput(input: any) {
 }
 // Pages that must show a one-time secret instead of redirecting.
 export function filesReceipt(input: any, result: any) {
- if (/^\/items\/[^/]+\/links$/.test(input.path)) return secretPage('Organisation link created', result.url, 'Copy this link now. Chest keeps only a fingerprint of it and cannot show it again.', input.returnTo || '/app/files')
+ if (/^\/items\/[^/]+\/links$/.test(input.path)) return secretPage('Organization link created', result.url, 'Copy this link now. Chest keeps only a fingerprint of it and cannot show it again.', input.returnTo || '/app/files')
  if (/^\/items\/[^/]+\/public-links$/.test(input.path)) return secretPage('Link created', result.url, `Copy this link now and send it to the people who need the ${result.link.password ? 'file; send the password separately' : 'file'}. Chest keeps only a fingerprint of it and cannot show it again. Revoke it any time from the file's page or Links.`, input.returnTo || '/app/links')
  if (/^\/items\/[^/]+\/file-requests$/.test(input.path)) return secretPage('File request created', result.url, `Send this link to the people who should upload. They need no account and see nothing else in the folder. ${result.email === 'available' ? 'You get an email and a notice for every upload.' : 'Email is not available yet on this installation; every upload appears in your Notices.'} Close the request any time from Links.`, input.returnTo || '/app/links')
  if (input.path === '/rewind/preview') return rewindPage(input, result)

@@ -29,7 +29,7 @@
 .tool-select .ico { width: 1.1em; height: 1.1em; }
 .tool-font { min-width: 4.6em; justify-content: space-between; }
 .tool-sep { width: 0.08em; height: 1.6em; background: #e1e3eb; }
-.editor-page { padding: 2.4em 4.2em 0; width: 57em; color: #1b1b22; font-family: var(--chest-font-doc); }
+.editor-page { padding: 2em 4.2em 0; width: 57em; color: #1b1b22; font-family: var(--chest-font-doc); }
 .doc-title { font: 600 3.2em/1.1 var(--chest-font-doc); letter-spacing: -0.01em; }
 .doc-h { margin-top: 1.6em !important; font: 700 1.7em/1.2 var(--chest-font-doc); }
 .doc-h2 { margin-top: 1.8em !important; }
@@ -42,8 +42,27 @@
 .hl-blue .cursor-doc { left: 6.6em; top: 1.4em; }
 .hl-blue .cursor-doc b { left: 1.6em; top: 2.6em; }
 .caret-at { position: relative; }
-.caret-at .cursor-doc { left: 0; top: 0.8em; }
-.caret-at .cursor-doc b { left: 0.6em; top: 2.8em; }
+.caret-at .cursor-doc { left: 0; top: 0.6em; }
+.caret-at .cursor-doc b { left: 0.6em; top: 2.4em; }
 .comment { position: absolute; left: 54.2em; top: 21.6em; width: 21.2em; white-space: nowrap; padding: 1.4em 1.6em; border-radius: 1.2em; }
 .comment-head { gap: 0.8em; margin-bottom: 0.8em; }
 .comment .avatar { width: 2.6em; height: 2.6em; font-size: 1.2em; border: 0; }
+@media (max-width: 999px) {
+  .stage-flow .search-card { padding: 1.6em 1.4em; }
+  .stage-flow .search-hit { gap: 1.2em; padding: 1.2em; }
+  .stage-flow .search-hit .tile { width: 3.8em; height: 3.8em; }
+  .stage-flow .scan-excerpt p { font-size: 1.3em; }
+  .stage-flow .clause-no { margin-left: 0; }
+  .stage-flow .editor-head { gap: 1.2em; padding: 0 1.6em; }
+  .stage-flow .editor-head .avatars, .stage-flow .editor-head > .ico { display: none; }
+  .stage-flow .editor-tools { overflow: hidden; }
+  .stage-flow .editor-tools > :nth-child(n+9) { display: none; }
+  .stage-flow .editor-page { width: auto; padding: 2em 2em 3.6em; }
+  .stage-flow .doc-title { font-size: 2.6em; }
+  .stage-flow .comment { position: relative; left: auto; top: auto; width: auto; margin: 0 2em 2em; white-space: normal; }
+  /* Where the text wraps is up to the phone, so each cursor takes room in its own line and hangs its tag left. */
+  .stage-flow .editor-page .cursor-doc { position: relative; left: auto; top: auto; display: inline-block; width: 0; height: 5.8em; vertical-align: top; }
+  .stage-flow .editor-page .cursor-doc svg { top: 1.2em; left: -0.6em; }
+  .stage-flow .editor-page .cursor-doc b { left: auto; right: 0.6em; top: 2.6em; }
+  .stage-flow .hl-blue, .stage-flow .hl-amber { white-space: nowrap; }
+}

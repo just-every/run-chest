@@ -1,6 +1,7 @@
-One export holds your whole library in one file: every original and version,
-the typed fields, people, groups, roles and grants, review decisions, completed
-work, trash, the audit trail and move-in history. Sign-in sessions, links and
+One export holds your whole Chest in one file: team spaces, folders and files,
+every original and version, people, groups, roles and grants, the
+Library's typed fields and review decisions, completed work, trash, the audit
+trail and move-in history. Sign-in sessions, links and
 local passwords are not included.
 
 ## Export

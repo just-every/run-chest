@@ -11,8 +11,8 @@ export function Closing() {
     <section id="start" className="closing" aria-labelledby="closing-title">
       <div className="closing-art" aria-hidden="true">
         <Stage w={1536} h={855} label="">
-          <Place x={18} y={70} w={420} h={432} r={-6}><ContractCard cursors={false} /></Place>
-          <Place x={48} y={570} w={380} h={86} r={-5}><ShareLinkCard /></Place>
+          <Place x={18} y={56} w={424} h={452} r={-6}><ContractCard cursors={false} /></Place>
+          <Place x={48} y={584} w={380} h={86} r={-5}><ShareLinkCard /></Place>
           <Place x={1182} y={66} w={300} h={286} r={6}><PhotosCard /></Place>
           <Place x={1166} y={398} w={372} h={196} r={5}><VersionStack /></Place>
           <Place x={1108} y={660} w={300} h={300} r={-4} className="peek"><img className="mascot-peek" src="/brand/mark.svg" alt="" width="300" height="300" /></Place>

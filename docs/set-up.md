@@ -1,6 +1,8 @@
-Before the first upload, Chest needs somewhere to file documents and a
-description of what they are. All of this lives under **People & settings**,
-which only the owner sees.
+After first-run setup you can upload straight away: open **Files**, then
+**My files** or a team space, and drop files in. This page covers the rest:
+inviting your staff, team spaces, groups, and the Library's collections and
+document types if you need records with sign-off. Inviting people and the
+Library's settings live under **People & settings**, which only the owner sees.
 
 ## Invite your staff
 
@@ -18,7 +20,21 @@ Each person's row shows their email, role and status, with two actions:
 While Chest runs on your computer it sends no email; try a staff role with
 `rer dev --as member` (see [Run Chest on your computer](/docs/run#use-your-own-email-as-the-owner)).
 
-## Create a collection
+## Create a team space
+
+In **Files**, enter a name under **Team spaces** and press
+**Create team space**. Anyone signed in can create one and becomes its
+manager. Open the space to add members as viewer, commenter, contributor,
+content manager or manager; every folder and file inside inherits those roles.
+See [Folders and files](/docs/files).
+
+## For the Library: collections and document types
+
+The Library is optional: use it for records that need an owner, a reviewer
+and an approved version. Before the first Library record, create a collection
+to file it in and a document type that describes it.
+
+### Create a collection
 
 A collection is a shelf of related records, such as *Supplier certificates*
 or *Customer agreements*. Enter a **Collection name** and press
@@ -27,7 +43,7 @@ or *Customer agreements*. Enter a **Collection name** and press
 Each collection carries grants: who can read, edit or review the documents in
 it. See [People and access](/docs/access) for how grants work.
 
-## Create a document type
+### Create a document type
 
 A document type says what a record is and which fields it must carry. Enter a
 **Type name** and a **Field schema (JSON)**, then press **Create document type**.
@@ -49,11 +65,13 @@ filing changes must meet the current type.
 
 ## Create a group
 
-Groups let you grant access once to a team. Enter a **Group name** and the
+Groups let you grant access once to a team, in a team space, a share or a
+Library grant. Enter a **Group name** and the
 **Member emails (JSON array)**, for example `["maria@example.com", "dan@example.com"]`,
 then press **Create group**. Each group shows its ID; use that ID in grants.
 Change members later with **Save group membership**.
 
 ## Next
 
-[File your first document](/docs/filing).
+[Folders and files](/docs/files): upload, organize and go back to an earlier
+version.

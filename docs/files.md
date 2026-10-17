@@ -1,6 +1,6 @@
-Besides the governed library, Chest keeps everyday files the way a shared drive
-does: in team spaces and in your own **My files**, in folders as deep as you
-need, with no document type or reviewer.
+Chest keeps your files the way a shared drive does: in team spaces and in your
+own **My files**, in folders as deep as you need. Nothing needs a type, an
+owner or a reviewer before it goes in.
 
 ## Team spaces and folders
 
@@ -29,6 +29,15 @@ up. Large files go up in parts, up to 4 GB per file:
 
 A file's page takes a new version the same way.
 
+## Find a file
+
+The search field on **Files** and on every space looks through file names and
+the words inside files and scans, and shows a short extract around each match.
+It only finds what you can open now. See
+[Text inside files and scans](/docs/reading).
+
+**Shared with me** lists what colleagues shared with you, newest first.
+
 ## Go back to an earlier version
 
 Every version stays in the file's **Version history**. **Restore as current
@@ -54,4 +63,5 @@ the folder.
 
 ## Next
 
-[People and access](/docs/access): decide who can read, edit and review.
+[Share files and folders](/docs/sharing): with colleagues, by a link for
+anyone, or with a file request.

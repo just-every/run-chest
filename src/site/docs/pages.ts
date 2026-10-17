@@ -6,7 +6,7 @@ import type { DocsPage, DocsPageMeta, DocsSection } from './types'
 export const docsSections: DocsSection[] = sections
 export const docsPages: DocsPageMeta[] = sections.flatMap(section => section.pages)
 
-export const docsLead = 'Run Chest on your computer, set up your library, and keep the approved version of every record: from your first upload to moving in, backup and restore.'
+export const docsLead = 'Run Chest on your computer and keep your team’s files in it: team spaces and folders, sharing, search inside files and scans, and every earlier version, through to moving in, backup and restore.'
 
 /** The page with its body and contents list, or undefined for an unknown slug. */
 export function getDocsPage(slug: string): DocsPage | undefined {

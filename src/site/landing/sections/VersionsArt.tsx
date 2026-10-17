@@ -5,7 +5,7 @@ import { Place, Stage } from '../art/Place'
 /** Page 4, top: v7 approved by Dana Ortiz, v6 and v5 kept, and a whole folder restored to Oct 12. */
 export function VersionsArt() {
   return (
-    <Stage w={760} h={400} crop={{ x: 16, w: 540, h: 390 }} className="versions-art" label="Acme Supply Contract.pdf: v7 approved by Dana Ortiz on Oct 14, v6 from Oct 10 and v5 from Oct 3, with Restore; beside it, Restore Clients / Harbor Freight to Oct 12.">
+    <Stage w={760} h={400} flow className="versions-art" label="Acme Supply Contract.pdf: v7 approved by Dana Ortiz on Oct 14, v6 from Oct 10 and v5 from Oct 3, with Restore; beside it, Restore Clients / Harbor Freight to Oct 12.">
       <Place x={23} y={13} w={470} h={367}>
         <div className="card versions-card">
           <div className="row versions-head"><FileTile kind="doc" /><b className="f18 ink grow">Acme Supply Contract.pdf</b><More /></div>

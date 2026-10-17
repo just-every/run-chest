@@ -7,8 +7,8 @@ const tools: (IconName | '|')[] = ['bold', 'italic', 'underline', '|', 'alignLef
 /** Page 3, bottom: the Acme Supply contract open in the browser, Dana and Luis editing, Dana's comment. */
 export function TogetherArt() {
   return (
-    <Stage w={860} h={421} crop={{ x: 0, w: 560, h: 421 }} className="together-art" label="Acme Supply Contract open as a Word document in the browser, Dana and Luis editing at once, and Dana's comment: Can we cap this at 30 days?">
-      <Place x={0} y={0} w={771} h={421}>
+    <Stage w={860} h={440} flow className="together-art" label="Acme Supply Contract open as a Word document in the browser, Dana and Luis editing at once, and Dana's comment: Can we cap this at 30 days?">
+      <Place x={0} y={0} w={771} h={440}>
         <div className="card editor">
           <div className="row editor-head">
             <FileTile kind="word" />
@@ -31,7 +31,7 @@ export function TogetherArt() {
             <p className="doc-p">Customer shall pay all undisputed invoices <mark className="hl-amber">within 30 <b>days</b></mark> of receipt. Late payments may be subject to interest at the rate of 1<span className="caret-at">.<Cursor name="Luis" tone="amber" className="cursor-doc" /></span>5% per month.</p>
           </div>
           <div className="card comment">
-            <div className="row comment-head"><Avatar initial="D" tone="violet" /><b className="f14 ink">Dana</b><span className="f11 dim">2m ago</span></div>
+            <div className="row comment-head"><Avatar initial="D" tone="violet" /><b className="f14 ink">Dana</b><span className="f12 dim">2m ago</span></div>
             <p className="f14 ink">Can we cap this at 30 days?</p>
           </div>
         </div>

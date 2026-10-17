@@ -11,7 +11,7 @@ import { day, type FileRequest, type Link, type PublicLink } from './model'
 // are public, long-lived or past their limit, each with Make private. Admins see every link in the installation.
 const longLived = 90 * day
 export function reasons(l: { audience: 'public' | 'organisation'; at: string; expires: string | null; state: string; discoverable?: boolean }, at = Date.now()) {
- if (l.audience === 'organisation') return [...(l.discoverable ? ['Every colleague can find it in search'] : []), ...(at - Date.parse(l.at) > longLived ? ['Open to the whole organisation for more than 90 days'] : [])]
+ if (l.audience === 'organisation') return [...(l.discoverable ? ['Every colleague can find it in search'] : []), ...(at - Date.parse(l.at) > longLived ? ['Open to the whole organization for more than 90 days'] : [])]
  if (l.state === 'expired') return ['Past its expiry but not revoked']
  if (l.state === 'limit reached') return ['Download limit used up but not revoked']
  return ['Anyone with the link can open it without signing in', ...(!l.expires ? ['Never expires'] : Date.parse(l.expires) - at > longLived ? ['Stays open for more than 90 more days'] : [])]
@@ -32,7 +32,7 @@ export async function linksView(env: Bindings, s: Session, w: Who) {
  }
  return { wide: [...flagged.values()], public: pub.sort((a, b) => b.at.localeCompare(a.at)), organisation: org.sort((a, b) => b.at.localeCompare(a.at)), requests: requests.sort((a, b) => b.at.localeCompare(a.at)) }
 }
-// Make private: one step that revokes every link for anyone and removes every organisation link on the item, keeping
+// Make private: one step that revokes every link for anyone and removes every organization link on the item, keeping
 // the named people and groups it is shared with. It only narrows access, so admins and sharers may use it on trash.
 export async function makePrivate(env: Bindings, s: Session, w: Who, key: string) {
  const ctx = await context(env, w, key); if (!isAdmin(s)) demand({ ...ctx, state: { ...ctx.state, trash: null } }, 'share')

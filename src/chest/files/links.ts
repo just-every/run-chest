@@ -6,7 +6,7 @@ import { commit, fresh, next, where } from './repo'
 import { context, demand, type Who } from './access'
 import { rank, role, shareRoles, type Item, type Link } from './model'
 import { randomToken, tokenHash, tokenShape } from './capability'
-// Organisation links (part of SHARE-001): any signed-in staff member with the link opens the item at the link's role.
+// Organization links (part of SHARE-001): any signed-in staff member with the link opens the item at the link's role.
 // Opening records the item in their recent items and creates no grant, so changing or removing the link changes their
 // access on the next request. A non-discoverable link works only for people who opened it. Only the token's hash is
 // stored; the token itself is shown once to its creator and never logged or exported.

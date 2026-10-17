@@ -1,54 +1,61 @@
-Chest is a document library for the records a business has to get right:
-supplier certificates, customer agreements, project evidence and the rest. It
-keeps every original, shows everyone which version is the approved one, and
-records who decided what. It is free and open source under the MIT licence,
-and you run it yourself.
+Chest keeps your team's files in one place you own: team spaces and folders,
+uploads that resume, sharing inside and outside the team, search that finds
+the words inside files and scans, and every earlier version. It is a free,
+open source alternative to Google Drive, Dropbox and Box under the MIT
+license, and you run it yourself.
 
-## How a document moves through Chest
+## How your files live in Chest
 
-1. **File it.** Someone uploads the original and files it: a title, a
-   collection, a document type with its fields, a responsible owner, a reviewer,
-   and optionally the supplier, customer or project it belongs to. See
-   [File and find documents](/docs/filing).
-2. **Approve the exact version.** The assigned reviewer opens the record and
-   records **Approve this exact version**. That version becomes the current
-   approved one. See [Versions and approval](/docs/versions).
-3. **Replace it when a new one arrives.** A replacement adds a new version.
-   Everyone keeps opening the approved one until the reviewer approves the new
-   version; the earlier version stays, with its decisions.
-4. **Keep the dates.** A review date and an expiry date put the record on the
-   library's **Review and expiry work** list when it is due. See
-   [Review and expiry dates](/docs/dates).
+1. **Make a team space.** Open **Files** and create a space for a team, such
+   as *Finance* or *Clients*. Its members and their roles apply to every
+   folder and file inside. Each person also has **My files**. See
+   [Folders and files](/docs/files).
+2. **Upload.** Drop files on a folder, choose them, or take a photo on a
+   phone. Large files go up in parts and continue after a dropped connection,
+   up to 4 GB per file.
+3. **Share.** Give a colleague or a group a role on a file or folder, make a
+   link for anyone with an optional password, expiry and download limit, or
+   ask someone outside to upload into a folder with a file request. See
+   [Share files and folders](/docs/sharing).
+4. **Find it.** Search covers file names and the words inside PDFs, Office
+   files, and scans and photos. See
+   [Text inside files and scans](/docs/reading).
+5. **Go back.** Every upload over a file keeps the earlier versions, and a
+   whole folder can be restored to a date. Trash keeps what you delete until
+   you bring it back.
 
 ## Who sees what
 
-Access comes from roles: **reader**, **editor** and **reviewer**, granted to a
-person or a group, on a collection or on one document. Lists, counts, search,
-previews and downloads all follow the current grants, so removing someone ends
-their access everywhere at once. See [People and access](/docs/access).
+Space members are viewers, commenters, contributors, content managers or
+managers. Sharing a file or folder adds people at viewer, commenter or editor.
+Lists, search, previews and downloads all follow current access, so removing
+someone ends their access everywhere at once.
+
+## The Library, for records that need sign-off
+
+Some records have to be approved: supplier certificates, customer agreements,
+permits. The **Library** files each one with a document type and its fields,
+an owner and a reviewer, and keeps the exact version that was approved while
+replacements wait for review. See [File and find documents](/docs/filing) and
+[Versions and approval](/docs/versions).
 
 ## What Chest keeps
 
 - Every original exactly as uploaded, with its filename, size and SHA-256
   fingerprint.
-- Every version and every decision on it: comments, requested changes,
-  approvals and reviewer assignments, each with who and when.
-- Completed reviews and expiries with their evidence.
-- An audit trail of every change. Nothing is deleted automatically; trash is
-  reversible.
+- Every version, comment, share and link, each with who and when.
+- An audit trail of every change. Nothing is deleted automatically.
 
 One export holds all of it, and restores into a fresh Chest. See
 [Backup and restore](/docs/backup-and-restore).
 
-## What it does not do
+## What it does not do yet
 
 Chest previews PDFs and images in the browser and shows text files as plain
-text; other formats download. It does not edit or render Office files, read
-text out of scanned PDFs or images, sync folders to computers or phones, or
-share records by public link. Library originals are limited to 8 MB each;
-files in [folders](/docs/files) upload up to 4 GB each.
+text; other formats download. It does not yet edit Office files in the
+browser, and there is no desktop or phone sync app: on a phone, use Chest in
+the browser.
 
 ## Next
 
-[Run Chest on your computer](/docs/run), then
-[set up your library](/docs/set-up).
+[Run Chest on your computer](/docs/run), then [set it up](/docs/set-up).

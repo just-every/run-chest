@@ -5,7 +5,7 @@ import { Place, Stage } from '../art/Place'
 /** Page 3, top: a search for "indemnification" finding the sentence in a Word file and in a scanned NDA. */
 export function SearchArt() {
   return (
-    <Stage w={760} h={470} crop={{ x: 66, w: 540, h: 470 }} className="search-art" label="Search for indemnification: 4 results in 0.2 s, the sentence on page 4 of MSA_2026_v7.docx and, boxed, clause 7 on page 2 of a scanned NDA.">
+    <Stage w={760} h={470} flow className="search-art" label="Search for indemnification: 4 results in 0.2 s, the sentence on page 4 of MSA_2026_v7.docx and, boxed, clause 7 on page 2 of a scanned NDA.">
       <Arrow kind="up" style={{ left: '1em', top: '6em', width: '5.6em', height: '5.2em' }} />
       <Ticks style={{ left: '1.2em', top: '0.8em', width: '3.2em', height: '3.2em' }} turn={-40} />
       <Ticks style={{ left: '70.6em', top: '22em', width: '3.2em', height: '3.2em' }} turn={40} />

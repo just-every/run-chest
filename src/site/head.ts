@@ -15,3 +15,10 @@ export function withChestIcons(html: string): string {
   if (!html.includes(baseIcon)) throw new Error('Base run-site page no longer links its icon as expected; update src/site/head.ts.')
   return html.replace(baseIcon, iconHead)
 }
+
+/** Base's Run page footer says "MIT licence"; the run site is written in US English, so it says "MIT license". */
+export function withUsLicense(html: string): string {
+  const baseLicense = ' licence</p></footer>'
+  if (!html.includes(baseLicense)) throw new Error('Base run page no longer ends its footer with the license as expected; update src/site/head.ts.')
+  return html.replace(baseLicense, ' license</p></footer>')
+}

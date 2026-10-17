@@ -31,7 +31,7 @@ export function Interlude() {
   return (
     <section id="filed" className="interlude" aria-label="312 files filed this week">
       <div className="interlude-art">
-        <Stage w={1536} h={1024} crop={{ x: 330, y: 130, w: 880, h: 700 }} label="Chest's mascot, the open violet chest with a smiling file, swallowing files from billing email, a phone photo IMG_4827.jpg and Q3-budget.xlsx from a laptop: 312 files filed this week.">
+        <Stage w={1536} h={1024} flow label="Chest's mascot, the open violet chest with a smiling file, swallowing files from billing email, a phone photo IMG_4827.jpg and Q3-budget.xlsx from a laptop: 312 files filed this week.">
           <svg className="flight" viewBox="0 0 1536 1024" aria-hidden="true">
             <path d="M292 258c40-8 76-6 104 12" /><path d="M468 332c40 22 66 54 88 92" />
             <path d="M296 556c22-14 40-24 60-28" /><path d="M472 504c46-2 84 12 112 40" />
@@ -43,17 +43,17 @@ export function Interlude() {
             <path d="M1020 440c10-12 20-20 32-26M1028 456c10-12 22-20 34-26" /><path d="M1144 598c12 10 20 24 22 40M1132 606c10 8 16 20 18 32" />
           </svg>
           <span className="mascot-glow" aria-hidden="true" />
-          <Place x={540} y={352} w={456} h={456} z={3}><img className="mascot" src="/brand/mark.svg" alt="" width="456" height="456" /></Place>
-          <Place x={568} y={152} w={400} h={112} z={3}>
+          <Place x={540} y={352} w={456} h={456} z={3} phone={2} className="mascot-at"><img className="mascot" src="/brand/mark.svg" alt="" width="456" height="456" /></Place>
+          <Place x={568} y={152} w={400} h={112} z={3} phone={1}>
             <div className="card counter row"><FileTile kind="doc" /><span className="counter-text"><b>312</b> files filed this week</span></div>
           </Place>
-          <Place x={52} y={164} w={236} h={222} r={-6} z={2}><div className="card source"><Envelope /><span className="f21 mid">from billing@</span></div></Place>
-          <Place x={74} y={538} w={236} h={232} r={-6} z={2}><div className="card source"><Camera /><span className="f21 mid">IMG_4827.jpg</span></div></Place>
-          <Place x={1244} y={212} w={254} h={222} r={5} z={2}><div className="card source source-laptop"><Laptop /><span className="f21 mid">Q3-budget.xlsx</span></div></Place>
-          <Place x={390} y={258} w={86} h={104} r={-14} z={2}><Flying corner="#4b8df8"><span className="flying-lines" /></Flying></Place>
-          <Place x={360} y={474} w={108} h={118} r={-10} z={2}><Flying corner="transparent"><span className="flying-photo" /></Flying></Place>
-          <Place x={1046} y={322} w={100} h={108} r={13} z={2}><Flying corner="#2bb36b"><span className="flying-grid" /></Flying></Place>
-          <Place x={1036} y={502} w={100} h={124} r={13} z={2}><Flying corner="#ef4b45"><FileTile kind="pdf" className="flying-pdf" /></Flying></Place>
+          <Place x={52} y={164} w={236} h={222} r={-6} z={2} phone={false}><div className="card source"><Envelope /><span className="f21 mid">from billing@</span></div></Place>
+          <Place x={74} y={538} w={236} h={232} r={-6} z={2} phone={false}><div className="card source"><Camera /><span className="f21 mid">IMG_4827.jpg</span></div></Place>
+          <Place x={1244} y={212} w={254} h={222} r={5} z={2} phone={false}><div className="card source source-laptop"><Laptop /><span className="f21 mid">Q3-budget.xlsx</span></div></Place>
+          <Place x={390} y={258} w={86} h={104} r={-14} z={2} phone={false}><Flying corner="#4b8df8"><span className="flying-lines" /></Flying></Place>
+          <Place x={360} y={474} w={108} h={118} r={-10} z={2} phone={false}><Flying corner="transparent"><span className="flying-photo" /></Flying></Place>
+          <Place x={1046} y={322} w={100} h={108} r={13} z={2} phone={false}><Flying corner="#2bb36b"><span className="flying-grid" /></Flying></Place>
+          <Place x={1036} y={502} w={100} h={124} r={13} z={2} phone={false}><Flying corner="#ef4b45"><FileTile kind="pdf" className="flying-pdf" /></Flying></Place>
           <Ticks style={{ left: '48.8em', top: '15.6em', width: '4.4em', height: '5.4em' }} turn={-110} />
           <Ticks style={{ left: '100.4em', top: '15.6em', width: '4.4em', height: '5.4em' }} turn={-10} />
           <Ticks style={{ left: '56.2em', top: '31.2em', width: '5em', height: '5.4em' }} turn={-90} />

@@ -1,7 +1,7 @@
 # Fonts
 
 Chest self-hosts four families under the SIL Open Font License 1.1, each with
-its licence beside it. The WOFF2 files come from Fontsource's distributions
+its license beside it. The WOFF2 files come from Fontsource's distributions
 (`@fontsource-variable/inter`, `@fontsource-variable/archivo`,
 `@fontsource/ibm-plex-mono`, `@fontsource-variable/caveat`, 5.3.0).
 

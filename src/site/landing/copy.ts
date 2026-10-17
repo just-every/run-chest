@@ -1,5 +1,5 @@
 // Every line of the homepage's copy, exactly as the owner accepted it on the desk (desk-chest/README.md and
-// page-01 … page-09). CLAIMS.md in the evidence folder maps each capability claim to the code that backs it.
+// page-01 … page-09). docs/CLAIMS.md maps each capability claim to the code that backs it.
 
 export const heroCopy = {
   sub: 'Chest stores, syncs and shares your team’s files,\nreads every scan, and quietly files what arrives.',

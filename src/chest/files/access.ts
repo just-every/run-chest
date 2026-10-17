@@ -9,7 +9,7 @@ import { rank, live, type Item, type Link, type Role, type Space } from './model
 export type Who = { email: string; principals: string[]; groups: Row<Group>[]; opened: string[] }
 export type State = { role: Role | null; manager: boolean; noDownload: boolean; trash: Row<Item> | null }
 export type Ctx = { space: Row<Space>; chain: Row<Item>[]; state: State; links: Row<Link>[]; fences: Row[] }
-// Organisation links a person has opened come from the durable audit, never from a grant.
+// Organization links a person has opened come from the durable audit, never from a grant.
 export const who = (env: Bindings, s: Session) => whoFor(env, s.operator.email)
 export async function whoFor(env: Bindings, email: string): Promise<Who> {
  const groups = (await list<Group>(env, 'group')).filter(g => g.payload.members.includes(email))

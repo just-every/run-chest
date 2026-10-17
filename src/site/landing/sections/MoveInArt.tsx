@@ -9,21 +9,21 @@ const BoxMark = () => <span className="box-word" aria-hidden="true">box</span>
 /** Page 6, top: three imports from the old drives, one still copying, and old shared links rewritten. */
 export function MoveInArt() {
   return (
-    <Stage w={746} h={440} crop={{ x: 100, y: 30, w: 520, h: 400 }} className="movein-art" label="Moving in: Google Drive 12,480 files done, Dropbox 3,201 files done, Box 980 files at 71%, and 214 shared links rewritten.">
+    <Stage w={746} h={440} flow className="movein-art" label="Moving in: Google Drive 12,480 files done, Dropbox 3,201 files done, Box 980 files at 71%, and 214 shared links rewritten.">
       <Arrow kind="up" style={{ left: '1.6em', top: '14em', width: '7.4em', height: '5.6em' }} />
       <Ticks style={{ left: '6.8em', top: '2em', width: '4.4em', height: '4.4em' }} turn={-60} />
       <Place x={110} y={52} w={475} h={363}>
         <div className="card import-card">
-          <div className="row import-row"><span className="brand-ico"><Drive /></span><span className="f19 ink">Google Drive</span><span className="f17 dim">· 12,480 files</span><span className="grow" /><span className="done"><Icon name="check" /></span></div>
-          <div className="row import-row"><span className="brand-ico"><Dropbox /></span><span className="f19 ink">Dropbox</span><span className="f17 dim">· 3,201 files</span><span className="grow" /><span className="done"><Icon name="check" /></span></div>
+          <div className="row import-row"><span className="brand-ico"><Drive /></span><span className="import-name"><span className="f19 ink">Google Drive</span> <span className="f17 dim">· 12,480 files</span></span><span className="grow" /><span className="done"><Icon name="check" /></span></div>
+          <div className="row import-row"><span className="brand-ico"><Dropbox /></span><span className="import-name"><span className="f19 ink">Dropbox</span> <span className="f17 dim">· 3,201 files</span></span><span className="grow" /><span className="done"><Icon name="check" /></span></div>
           <div className="import-row import-busy">
-            <div className="row"><span className="brand-ico"><BoxMark /></span><span className="f19 ink">Box</span><span className="f17 dim">· 980 files</span><span className="grow" /><span className="f17 ink">71%</span></div>
+            <div className="row"><span className="brand-ico"><BoxMark /></span><span className="import-name"><span className="f19 ink">Box</span> <span className="f17 dim">· 980 files</span></span><span className="grow" /><span className="f17 ink">71%</span></div>
             <span className="bar"><i style={{ width: '68%' }} /></span>
           </div>
           <div className="row import-links"><Icon name="link" /><span className="f16 ink">Shared links rewritten</span><span className="f16 dim">· 214</span></div>
         </div>
       </Place>
-      <Place x={598} y={206} w={128} h={150} r={-9} z={2}><Sticky className="movein-sticky" underline>Your<br />content<br />moves<br />with you.</Sticky></Place>
+      <Place x={598} y={206} w={128} h={150} r={-9} z={2} phone={false}><Sticky className="movein-sticky" underline>Your<br />content<br />moves<br />with you.</Sticky></Place>
     </Stage>
   )
 }

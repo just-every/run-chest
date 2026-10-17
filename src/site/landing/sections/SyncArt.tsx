@@ -12,14 +12,14 @@ const rows = [
 /** Page 2, top: the menu-bar Chest with four files in four sync states, and a phone that just uploaded a photo. */
 export function SyncArt() {
   return (
-    <Stage w={976} h={490} crop={{ x: 128, y: 30, w: 520, h: 460 }} className="sync-art" label="Chest in the Mac menu bar: a contract synced, a photo folder on demand, a budget syncing at 62% and a conflict kept as both copies; a phone shows IMG_4827.jpg uploaded.">
-      <Place x={175} y={40} w={440} h={46} z={2}>
+    <Stage w={976} h={490} flow className="sync-art" label="Chest in the Mac menu bar: a contract synced, a photo folder on demand, a budget syncing at 62% and a conflict kept as both copies; a phone shows IMG_4827.jpg uploaded.">
+      <Place x={175} y={40} w={440} h={46} z={2} phone={false}>
         <div className="menubar row">
           <span className="menubar-blank" />
           <span className="menubar-app"><img src="/brand/favicon-32.svg" alt="" width="24" height="24" /></span>
           <Icon name="wifi" /><Icon name="search" />
           <svg className="battery" viewBox="0 0 30 16" aria-hidden="true"><rect x="1" y="2" width="24" height="12" rx="3" /><rect x="3.5" y="4.5" width="17" height="7" rx="1.5" className="battery-fill" /><path d="M27 6v4" /></svg>
-          <span className="f14 ink nowrap">Mon Oct 14&nbsp;&nbsp;9:41 AM</span>
+          <span className="f14 ink nowrap">Wed Oct 14&nbsp;&nbsp;9:41 AM</span>
         </div>
       </Place>
       <Place x={145} y={96} w={440} h={336} z={3}>
@@ -34,10 +34,10 @@ export function SyncArt() {
           ))}
         </div>
       </Place>
-      <Place x={12} y={370} w={122} h={120} r={-14} z={4}><Sticky className="sync-sticky">Same<br />files<br />everywhere</Sticky></Place>
+      <Place x={12} y={370} w={122} h={120} r={-14} z={4} phone={false}><Sticky className="sync-sticky">Same<br />files<br />everywhere</Sticky></Place>
       <Arrow kind="up" style={{ left: '15.6em', top: '42.4em', width: '7.4em', height: '5.2em', zIndex: 4 }} />
       <Ticks style={{ left: '8.6em', top: '4em' }} turn={-60} />
-      <Place x={606} y={60} w={272} h={560} r={7} z={2}>
+      <Place x={606} y={60} w={272} h={560} r={7} z={2} phone={false}>
         <div className="phone">
           <div className="phone-screen">
             <div className="row phone-status"><span className="f12">9:41</span><span className="phone-island" /><span className="phone-icons" /></div>
