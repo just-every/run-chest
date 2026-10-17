@@ -236,6 +236,85 @@ try{
   assert.deepEqual(await state(),changed);assert.equal((await h.api(`/items/${quote.id}`,people.mo)).versions.length,4);
   await h.api(`/rewind/${applied.id}/undo`,people.mo,{},409);
  });
+ await check('SHARE-001 links for anyone',async()=>{
+  // A signed-out recipient with no account: password, expiry, a download limit under parallel downloads, the audit,
+  // a folder link that never reaches a restricted subfolder, Shared too widely with Make private, and one-click revoke.
+  const out=(path,init={})=>h.fetch(path,init),page=async(path,cookie,status=200)=>{const r=await out(path,{headers:cookie?{cookie}:{}});assert.equal(r.status,status,`${path} ${r.status}`);return r.text()};
+  const folder=await h.api('/items',people.mo,{space:space.id,type:'folder',name:'Deliveries'}),pdf=Buffer.from('%PDF-1.4 signed quote');
+  const quote=await upload(people.ana,{parent:folder.id,name:'quote.pdf',base64:b64(pdf)}),internal=await h.api('/items',people.mo,{parent:folder.id,type:'folder',name:'Internal'});
+  const secret=await upload(people.mo,{parent:internal.id,name:'margin.txt',base64:b64('our margin')});await h.api(`/items/${internal.id}/settings`,people.mo,{restricted:true});
+  const expires=new Date(Date.now()+30*day).toISOString().slice(0,10),monthDay=new Date(`${expires}T12:00:00Z`).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+  await h.api(`/items/${quote.id}/public-links`,people.ben,{limit:3},403);
+  await h.api(`/items/${quote.id}/public-links`,people.ana,{password:'short'},400);
+  const made=await h.api(`/items/${quote.id}/public-links`,people.ana,{password:'correct horse',expires,limit:3}),path=new URL(made.url).pathname;assert.match(path,/^\/l\/chest_pub_/);
+  const gate=await page(path);assert.match(gate,/Enter the password/);assert.ok(!gate.includes('quote.pdf'),'the name stays behind the password');
+  assert.equal((await out(`${path}/f/${quote.id}`)).status,401);
+  const post=(body,headers={origin:h.origin})=>out(path,{method:'POST',headers:{...headers,'content-type':'application/x-www-form-urlencoded'},body});
+  assert.equal((await post('password=wrong')).status,401);assert.equal((await post('password=correct+horse',{})).status,403,'a post from another origin is refused');
+  const unlocked=await post('password=correct+horse');assert.equal(unlocked.status,303);const cookie=unlocked.headers.getSetCookie()[0].split(';')[0];
+  const opened=await page(path,cookie);assert.match(opened,/quote\.pdf/);assert.match(opened,/3 of 3 downloads left/);
+  // Five parallel downloads at a limit of three: exactly three get the bytes.
+  const tries=await Promise.all(Array.from({length:5},()=>out(`${path}/f/${quote.id}`,{headers:{cookie}})));
+  const got=tries.filter(r=>r.status===200);assert.equal(got.length,3,tries.map(r=>r.status).join());for(const r of got)assert.equal(sha(Buffer.from(await r.arrayBuffer())),sha(pdf));
+  assert.ok(tries.filter(r=>r.status!==200).every(r=>r.status===410));assert.match(await page(path,cookie,410),/Download limit reached/);
+  const listed=(await h.api(`/items/${quote.id}`,people.ana)).publicLinks.find(l=>l.id===made.link.id);assert.equal(listed.summary,`Expires ${monthDay} · 3 of 3 downloads · password`);
+  const trail=(await h.api('/audit',people.owner)).filter(e=>e.actor==='anyone with the link');
+  assert.equal(trail.filter(e=>e.action==='link.download'&&e.object_id===quote.id).length,3);assert.ok(trail.some(e=>e.action==='link.view'&&e.object_id===quote.id));assert.equal(trail.filter(e=>e.action==='link.password.refused').length,1);
+  // A folder link with no password: the restricted subfolder never shows or downloads; an aged expiry ends it.
+  const whole=await h.api(`/items/${folder.id}/public-links`,people.ana,{}),wpath=new URL(whole.url).pathname,listing=await page(wpath);
+  assert.match(listing,/quote\.pdf/);assert.ok(!listing.includes('margin.txt')&&!listing.includes('Internal'));
+  assert.equal((await out(`${wpath}/f/${secret.id}`)).status,404);assert.equal((await out(`${wpath}/f/${quote.id}`)).status,200);
+  const short=await h.api(`/items/${quote.id}/public-links`,people.ana,{expires});await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.expires',?) WHERE id=?",new Date(Date.now()-1000).toISOString(),short.link.id);
+  assert.match(await page(new URL(short.url).pathname,null,410),/Link expired/);assert.equal((await out(`${new URL(short.url).pathname}/f/${quote.id}`)).status,410);
+  // Shared too widely lists the public folder link; Make private turns off its links and keeps the named people.
+  await h.api(`/items/${folder.id}/shares`,people.ana,{principal:'dee@example.test',role:'viewer'});
+  const wide=(await h.api('/links',people.ana)).wide.find(w=>w.item===folder.id);assert.ok(wide.links[0].reasons.includes('Never expires'));
+  assert.ok(!(await h.api('/links',people.eve)).wide.some(w=>w.item===folder.id),'only people who can share it see it');
+  await h.api(`/items/${folder.id}/make-private`,people.ben,{},403);await h.api(`/items/${folder.id}/make-private`,people.ana,{});
+  assert.match(await page(wpath,null,410),/Link turned off/);assert.equal((await out(`${wpath}/f/${quote.id}`)).status,410);
+  assert.equal((await h.api(`/items/${folder.id}`,people.dee)).role,'viewer');assert.equal((await h.api(`/items/${folder.id}`,people.ben)).role,'viewer');
+  assert.ok(!(await h.api('/links',people.ana)).wide.some(w=>w.item===folder.id));
+  // One Revoke ends a working link on the next request; trashing the file ends every link to it.
+  const fresh=await h.api(`/items/${quote.id}/public-links`,people.ana,{}),fpath=new URL(fresh.url).pathname;assert.equal((await out(`${fpath}/f/${quote.id}`)).status,200);
+  await h.api(`/public-links/${fresh.link.id}/revoke`,people.eve,{},403);await h.api(`/public-links/${fresh.link.id}/revoke`,people.ana,{});
+  assert.equal((await out(`${fpath}/f/${quote.id}`)).status,410);assert.match(await page(fpath,null,410),/Link turned off/);
+  const again=await h.api(`/items/${quote.id}/public-links`,people.ana,{}),apath=new URL(again.url).pathname;await h.api(`/items/${quote.id}/trash`,people.ana,{});
+  assert.equal((await out(`${apath}/f/${quote.id}`)).status,404);await h.api(`/items/${quote.id}/restore`,people.ana,{});assert.equal((await out(`${apath}/f/${quote.id}`)).status,200);
+  assert.equal((await audit('link.revoke')).filter(e=>e.object_id===quote.id).length,1);assert.equal((await audit('item.make-private')).filter(e=>e.object_id===folder.id).length,1);
+ });
+ await check('SHARE-002 file requests',async()=>{
+  // Anyone with the request link uploads into the chosen folder with no account and sees nothing else there.
+  const folder=await h.api('/items',people.mo,{space:space.id,type:'folder',name:'Vendor uploads'});await upload(people.mo,{parent:folder.id,name:'existing-contract.txt',base64:b64('already here')});
+  const deadline=new Date(Date.now()+10*day).toISOString().slice(0,10);
+  await h.api(`/items/${folder.id}/file-requests`,people.ben,{title:'W-9'},403);await h.api(`/items/${space.terms}/file-requests`,people.ana,{title:'W-9'},400);
+  const made=await h.api(`/items/${folder.id}/file-requests`,people.ana,{title:'W-9 for Acme Supply',message:'Please send your signed W-9.',types:'pdf, png',maxMegabytes:'1',deadline}),path=new URL(made.url).pathname;
+  const form=await h.fetch(path);assert.equal(form.status,200);const html=await form.text();
+  assert.match(html,/W-9 for Acme Supply/);assert.ok(!html.includes('existing-contract')&&!html.includes('Vendor uploads'),'the uploader sees nothing in the folder');
+  const send=(files,headers={origin:h.origin})=>{const f=new FormData();f.set('name','Vic Vendor');f.set('email','vic@vendor.test');for(const [name,bytes] of files)f.append('files',new Blob([bytes]),name);return h.fetch(path,{method:'POST',headers,body:f})};
+  const w9=Buffer.from('%PDF-1.7 W-9 Acme Supply'),sent=await send([['W-9 Acme Supply.pdf',w9]]);assert.equal(sent.status,200);const receipt=await sent.text();
+  assert.match(receipt,/Files received/);assert.ok(receipt.includes(sha(w9).slice(0,12)),'the receipt names the checksum');
+  assert.equal((await send([['W-9 Acme Supply.pdf',w9]])).status,200);
+  const names=(await h.api(`/items/${folder.id}`,people.ana)).children.map(c=>c.name).sort();assert.deepEqual(names,['W-9 Acme Supply (2).pdf','W-9 Acme Supply.pdf','existing-contract.txt']);
+  const arrived=(await h.api(`/items/${folder.id}`,people.ana)).children.find(c=>c.name==='W-9 Acme Supply.pdf'),file=await h.api(`/items/${arrived.id}`,people.ana);
+  assert.equal(file.versions[0].actor,'vic@vendor.test via file request');assert.equal(sha(await bytesOf('ana',arrived.id,file.item.current)),sha(w9));
+  assert.ok((await h.api('/notices',people.ana)).some(n=>n.payload.type==='file-request.upload'&&n.payload.item===arrived.id&&n.payload.email.startsWith('accepted')));
+  assert.equal(mail('ana@example.test',/uploaded "W-9 Acme Supply\.pdf"/).length,1);
+  // Type, size, path and origin limits; nothing they refuse is stored.
+  const refused=async(files,status,pattern,headers)=>{const r=await send(files,headers);assert.equal(r.status,status);if(pattern)assert.match(await r.text(),pattern)};
+  await refused([['notes.txt',Buffer.from('plain text')]],415,/Accepted: pdf, png/);
+  await refused([['big.pdf',Buffer.concat([Buffer.from('%PDF-'),Buffer.alloc(1_100_000,65)])]],413,/1 MB each/);
+  await refused([['../../evil.pdf',w9]],422,/file name is not accepted/);
+  await refused([['other.pdf',w9]],403,null,{});
+  assert.equal((await h.api(`/items/${folder.id}`,people.ana)).children.length,3);
+  assert.equal((await audit('file-request.upload')).filter(e=>e.actor==='vic@vendor.test via file request').length,2);
+  // Closing, or a passed deadline, stops new uploads at once.
+  const listed=(await h.api('/links',people.ana)).requests.find(r=>r.id===made.request.id);assert.equal(listed.uploads,2);assert.equal(listed.open,true);
+  await h.api(`/file-requests/${made.request.id}/close`,people.ben,{},403);await h.api(`/file-requests/${made.request.id}/close`,people.ana,{});
+  assert.equal((await h.fetch(path)).status,410);assert.equal((await send([['late.pdf',w9]])).status,410);
+  const later=await h.api(`/items/${folder.id}/file-requests`,people.ana,{deadline});await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.deadline',?) WHERE id=?",new Date(Date.now()-1000).toISOString(),later.request.id);
+  assert.equal((await h.fetch(new URL(later.url).pathname)).status,410);assert.equal((await h.api(`/items/${folder.id}`,people.ana)).children.length,3);
+  assert.equal((await h.fetch('/r/chest_req_'+'x'.repeat(43))).status,404);
+ });
  await check('SYNC-001 server protocol',async()=>{
   const device=await h.api('/devices',people.ana,{name:'Ana desktop',platform:'windows'}),auth={authorization:`Bearer ${device.token}`},sync=(path,init={})=>h.fetch('/api/chest'+path,{...init,headers:{...auth,...init.headers}});
   assert.equal((await h.fetch('/api/chest/sync/tree')).status,401);assert.equal((await h.fetch('/api/chest/sync/tree',{headers:{authorization:'Bearer chest_dev_'+'x'.repeat(43)}})).status,401);

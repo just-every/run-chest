@@ -12,6 +12,7 @@ function compose(env: Bindings, n: Notice) {
  if (n.type === 'share') return { subject: `${n.from} shared a file with you`, text: `${n.message}\n\nOpen it in Chest: ${open}\nFind everything shared with you: ${base}/app/shared` }
  if (n.type === 'request') return { subject: `${n.from} asked for access`, text: `${n.message}\n\nApprove or decline: ${base}/app/requests/${n.request}` }
  if (n.type === 'request.decision' || n.type === 'request.expired') return { subject: 'Your access request', text: `${n.message}\n\n${open}` }
+ if (n.type === 'file-request.upload') return { subject: 'New files from your file request', text: `${n.message}\n\nOpen them in Chest: ${open}` }
  if (n.type === 'share.expiring') return { subject: 'Access expires tomorrow', text: `${n.message}\n\nOpen the item to extend access: ${open}` }
  return { subject: 'Chest notice', text: `${n.message}\n\n${open}` }
 }

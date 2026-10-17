@@ -7,6 +7,9 @@ import { addVersion, bytes, copy, createItem, itemSettings, move, nameVersion, r
 import { erase, restore, trash, trashView } from './trash'
 import { decide, extend, markRead, notices, pending, prefs, requestAccess, requestView, share, sharedWithMe, unshare } from './shares'
 import { changeLink, createLink, openLink } from './links'
+import { createPublicLink, revokePublicLink } from './public-links'
+import { closeFileRequest, createFileRequest } from './file-requests'
+import { linksView, makePrivate } from './exposure'
 import { devices, enrol, revoke } from './devices'
 import { createSpace, members, settings } from './spaces'
 import { home, itemView, search, spaceView } from './views'
@@ -18,7 +21,7 @@ import { begin, cancel, complete, receive, status, unfinished } from './uploads'
 import type { AccessRequest } from './model'
 // /api/chest routes for everyday files. Every route reads the person's current groups and links first; the UI's form
 // posts reach the same functions through execute().
-const roots = new Set(['uploads', 'rewind', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'devices', 'policy', 'search'])
+const roots = new Set(['uploads', 'rewind', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search'])
 export async function filesExecute(env: Bindings, request: Request, s: Session, method: string, parts: string[], input: any, url: URL): Promise<unknown> {
  if (!roots.has(parts[0])) return undefined
  const w = await who(env, s), [head, key, sub, version, verb] = parts, get = method === 'GET', post = method === 'POST'
@@ -52,7 +55,7 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && sub === 'versions' && !version) return addVersion(env, s, w, key, fromBase64(input.base64), input)
   if (post && sub === 'versions' && verb === 'name') return nameVersion(env, s, w, key, version, input)
   if (post && sub === 'versions' && verb === 'restore') return restoreVersion(env, s, w, key, version)
-  const actions: Record<string, () => Promise<unknown>> = { rename: () => rename(env, s, w, key, input), move: () => move(env, s, w, key, input), copy: () => copy(env, s, w, key, input), settings: () => itemSettings(env, s, w, key, input), trash: () => trash(env, s, w, key), restore: () => restore(env, s, w, key), erase: () => erase(env, s, w, key), shares: () => share(env, s, w, key, input), unshare: () => unshare(env, s, w, key, input), extend: () => extend(env, s, w, key, input), links: () => createLink(env, s, w, key, input), 'access-requests': () => requestAccess(env, s, w, key, input), prefs: () => prefs(env, s, w, key, input), comments: () => comment(env, s, w, key, input) }
+  const actions: Record<string, () => Promise<unknown>> = { rename: () => rename(env, s, w, key, input), move: () => move(env, s, w, key, input), copy: () => copy(env, s, w, key, input), settings: () => itemSettings(env, s, w, key, input), trash: () => trash(env, s, w, key), restore: () => restore(env, s, w, key), erase: () => erase(env, s, w, key), shares: () => share(env, s, w, key, input), unshare: () => unshare(env, s, w, key, input), extend: () => extend(env, s, w, key, input), links: () => createLink(env, s, w, key, input), 'public-links': () => createPublicLink(env, s, w, key, input), 'file-requests': () => createFileRequest(env, s, w, key, input), 'make-private': () => makePrivate(env, s, w, key), 'access-requests': () => requestAccess(env, s, w, key, input), prefs: () => prefs(env, s, w, key, input), comments: () => comment(env, s, w, key, input) }
   if (post && sub && actions[sub] && !version) return actions[sub]()
  }
  if (head === 'requests') {
@@ -60,6 +63,9 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (get && key) return requestView(env, s, w, key)
   if (post && key) return decide(env, s, w, key, input)
  }
+ if (get && head === 'links' && !key) return linksView(env, s, w)
+ if (post && head === 'public-links' && key && sub === 'revoke') return revokePublicLink(env, s, w, key)
+ if (post && head === 'file-requests' && key && sub === 'close') return closeFileRequest(env, s, w, key)
  if (post && head === 'links' && key === 'open') return openLink(env, s, String(input.token ?? ''))
  if (post && head === 'links' && key) return changeLink(env, s, w, key, input)
  if (head === 'devices') {

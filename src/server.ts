@@ -3,6 +3,7 @@ import start from '@tanstack/react-start/server-entry'
 import { Hono } from 'hono'
 import { apiResponse } from './chest/api'
 import { uiResponse } from './chest/ui'
+import { publicResponse } from './chest/files/public'
 import { dispatch } from './base/dispatch'
 import { staticAssetResponse } from './base/static-assets'
 import { deploymentHealth } from './base/deployment-health'
@@ -30,6 +31,8 @@ export default withDemo({
     const env = runtimeBindings(original)
     const publicPage = await setupStateResponse(request, env) ?? await lobbyResponse(request, env, identity)
     if (publicPage) return documentResponse(publicPage)
+    const shared = await publicResponse(request, env)
+    if (shared) return documentResponse(shared)
     const auth = await authResponse(request, env)
     if (auth) return documentResponse(auth)
     const product = await apiResponse(request, env) ?? await uiResponse(request, env)

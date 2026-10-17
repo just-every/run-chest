@@ -10,10 +10,18 @@ export type Who = { email: string; principals: string[]; groups: Row<Group>[]; o
 export type State = { role: Role | null; manager: boolean; noDownload: boolean; trash: Row<Item> | null }
 export type Ctx = { space: Row<Space>; chain: Row<Item>[]; state: State; links: Row<Link>[]; fences: Row[] }
 // Organisation links a person has opened come from the durable audit, never from a grant.
-export async function who(env: Bindings, s: Session): Promise<Who> {
- const groups = (await list<Group>(env, 'group')).filter(g => g.payload.members.includes(s.operator.email))
- const opened = (await env.DB.prepare("SELECT DISTINCT object_id FROM chest_audit WHERE actor=? AND action='link.open'").bind(s.operator.email).all()).results.map((r: any) => String(r.object_id))
- return { email: s.operator.email, principals: [s.operator.email, ...groups.map(g => g.id)], groups, opened }
+export const who = (env: Bindings, s: Session) => whoFor(env, s.operator.email)
+export async function whoFor(env: Bindings, email: string): Promise<Who> {
+ const groups = (await list<Group>(env, 'group')).filter(g => g.payload.members.includes(email))
+ const opened = (await env.DB.prepare("SELECT DISTINCT object_id FROM chest_audit WHERE actor=? AND action='link.open'").bind(email).all()).results.map((r: any) => String(r.object_id))
+ return { email, principals: [email, ...groups.map(g => g.id)], groups, opened }
+}
+// The person who made a link or file request must still be active and still allowed to share the item; their access
+// is recomputed on every public request, so removing them from a space or deactivating them ends the link too.
+export async function stillSharing(env: Bindings, email: string, key: string): Promise<Ctx | null> {
+ if (!await env.DB.prepare("SELECT 1 FROM oa_operators WHERE email=? AND status='active'").bind(email).first()) return null
+ const ctx = await context(env, await whoFor(env, email), key)
+ return ctx.state.trash || !allowed(ctx, 'share') ? null : ctx
 }
 const best = (a: Role | null, b: Role | null) => !b ? a : !a || rank[b] > rank[a] ? b : a
 const granted = (grants: { principal: string; role: Role; expires?: string }[], w: Who) => grants.filter(g => w.principals.includes(g.principal) && live(g)).reduce<Role | null>((r, g) => best(r, g.role), null)

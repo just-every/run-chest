@@ -725,7 +725,7 @@ Chest integrates Microsoft 365, Google Workspace and Collabora Online editing en
 
 The first buyer operates in the United States. Commercial costs and estimates are USD, dates are unambiguous, stored times retain UTC plus the selected US business time zone, and guest collection/signature flows support US business counterparties. Chest does not replace payroll, tax, accounting or payment products; it stores their files and integrates authorized sources. No unmeasured price, storage capacity, throughput, vendor fidelity, accessibility certification or compliance outcome is claimed.
 
-Today, searchable extraction admits UTF-8 text up to 500 kB; originals sent through the plain upload form or the JSON API have an 8 MB admission limit and resumable uploads take up to 4 GB per file; move-in archives have 100-item/16 MB JSON bounds. Current PDF/raster viewing uses the browser. These are implementation gaps against TRANSFER-001, PREVIEW-001 and SEARCH-001, not target exclusions. Native clients, computer-folder backup, external links, item sharing and access requests, guest collaborators, organisation sharing policy, the five-level role model, delegated admin roles, native MFA, ransomware protection, bulk archive download, OCR, broad editors, mail add-ins, Zapier/Make apps, AI jobs, space-creation control and new-space defaults, storage limits, Office desktop presence and locks, built-in eSignature, migration link rewriting, availability probes, second-copy durability scrubs and incident notices, creating new files from blank or templates, search filters by type, people, date and location, the shipped Collabora Online editor and its review loop (attributed comments, @mentions, assigned comments and tracked suggestions), personal notification settings, migrated open review work (comments, assigned action items and suggestions moved in from incumbents), in-editor Chest file links, file and folder Ask panels, typed fields read from scans (SEARCH-002), a documented install on the owner's own server (OWN-001), third-party app control, and the Google Meet, Calendar, Chat and Forms companion are not implemented today, and no SCALE-001 run has been made; trash and restore are owner-only today (CHEST-13 partial). Real vendor accounts, production email/hosting, representative migrations and operational backups need the acceptance below before a buyer relies on them. Sync is never the only backup.
+Today, searchable extraction admits UTF-8 text up to 500 kB; originals sent through the plain upload form or the JSON API have an 8 MB admission limit and resumable uploads take up to 4 GB per file; move-in archives have 100-item/16 MB JSON bounds. Current PDF/raster viewing uses the browser. These are implementation gaps against TRANSFER-001, PREVIEW-001 and SEARCH-001, not target exclusions. Native clients, computer-folder backup, named-guest and domain links, item sharing and access requests, guest collaborators, organisation sharing policy, the five-level role model, delegated admin roles, native MFA, ransomware protection, bulk archive download, OCR, broad editors, mail add-ins, Zapier/Make apps, AI jobs, space-creation control and new-space defaults, storage limits, Office desktop presence and locks, built-in eSignature, migration link rewriting, availability probes, second-copy durability scrubs and incident notices, creating new files from blank or templates, search filters by type, people, date and location, the shipped Collabora Online editor and its review loop (attributed comments, @mentions, assigned comments and tracked suggestions), personal notification settings, migrated open review work (comments, assigned action items and suggestions moved in from incumbents), in-editor Chest file links, file and folder Ask panels, typed fields read from scans (SEARCH-002), a documented install on the owner's own server (OWN-001), third-party app control, and the Google Meet, Calendar, Chat and Forms companion are not implemented today, and no SCALE-001 run has been made; trash and restore are owner-only today (CHEST-13 partial). Real vendor accounts, production email/hosting, representative migrations and operational backups need the acceptance below before a buyer relies on them. Sync is never the only backup.
 
 CHEST-12 and RECOVER-002 specify Chest's product-specific Base portability replacement: credential-free semantic data plus original objects, local integrity-bound empty-target restore and regenerated installation authority, with no dispatch replay. CHEST-11 preserves reviewed Base D1 import publication and conflict-safe undo. These are the recorded implementation policies, not an assertion of equivalence to every Base clause. New records and background outcomes must join the same portable graph; erasure fencing/minimized permanent audit remain explicit target work in ERASE-001/AUDIT-001. An archive digest proves byte consistency, not provenance; an old offline archive cannot reveal later erasure without the later journal. Trash is reversible; it is never a substitute for erasure or a legal hold.
 
@@ -752,7 +752,7 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 15 | "open on demand without filling your disk" | SYNC-001 | partial |
 | 16 | "Links with a password, an expiry and a download limit" | SHARE-001 | partial |
 | 17 | "Revoke any link in one click" | SHARE-001 | partial |
-| 18 | "ask anyone to upload with a file request" | SHARE-002 | missing |
+| 18 | "ask anyone to upload with a file request" | SHARE-002 | partial |
 | 19 | "Chest reads every document and scan, so search finds the words inside" | SEARCH-001 | partial |
 | 20 | "and only shows what you are allowed to see" | CHEST-06 | done |
 | 21 | "Word, Excel and PowerPoint files open right in the browser" | PREVIEW-001, EDIT-001 | partial |
@@ -764,7 +764,7 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 27 | "Approvals stay with the exact version signed off" | CHEST-07, CHEST-08 | done |
 | 28 | "Agents file what arrives from email and apps" | AGENT-001, CONNECT-006 | missing |
 | 29 | "merge duplicates" | AGENT-002 | missing |
-| 30 | "flag links shared too widely" (and "Make private") | AGENT-005 | missing |
+| 30 | "flag links shared too widely" (and "Make private") | AGENT-005 | partial |
 | 31 | Mascot filing files from email, phone and laptop; "312 files filed this week" | AGENT-001, CONNECT-006, MOBILE-001 | partial |
 | 32 | "Move from Google Drive, Dropbox or Box with folders, permissions, versions and shared links" | MIGRATE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 | partial |
 | 33 | "Old links forward to the new ones" (and "Shared links redirected · 214") (correction sent to br: vendor URLs cannot forward) | MIGRATE-007 | missing |
@@ -774,7 +774,7 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 37 | "storage limits" (1.2 TB of 5 TB) | QUOTA-001, ADMIN-002 | partial |
 | 38 | "Run Chest on your own computer or server and keep every file. Export everything, any time." (Your own storage · Your own computer or server · Export any time; terminal: `git clone`, `cd chest`, `rer install`, `rer setup`, `rer dev`) | OWN-001, CHEST-12, RECOVER-002 | partial |
 | 39a | "Exact-version approvals: Sign-off sticks to the version that was approved." | CHEST-07, CHEST-08 | done |
-| 39b | "File requests: Anyone can upload to the folder you choose." | SHARE-002 | missing |
+| 39b | "File requests: Anyone can upload to the folder you choose." | SHARE-002 | partial |
 | 39c | "Large files: Big uploads resume where they stopped." | TRANSFER-001 | partial |
 | 39d | "Trash you can undo: Deleted files come back for 30 days." (correction sent to br: trash keeps items until erasure, not 30 days) | CHEST-13 | done |
 | 39e | "Previews: Documents, video and design files open in the browser." | PREVIEW-001 | partial |
@@ -789,8 +789,8 @@ Judged from the code and tests at commit `506ad550417537048ed74c928fdab4b8946197
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 13 | 0 | 0 | 13 |
-| Target and push further | 3 | 25 | 44 | 72 |
-| All | 16 | 25 | 44 | 85 |
+| Target and push further | 3 | 27 | 42 | 72 |
+| All | 16 | 27 | 42 | 85 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -821,8 +821,8 @@ Judged from the code and tests at commit `506ad550417537048ed74c928fdab4b8946197
 | `SYNC-006` | Computer folder backup | target | missing |  | No delivered product workflow. |
 | `SYNC-007` | Office desktop presence, newer-version alerts and locks | target | missing |  | No delivered product workflow. |
 | `MOBILE-001` | Native iOS and Android file access | target | partial | `src/chest/ui-library.ts`; `src/chest/files/ui-item.ts`; `public/chest-upload.js`; `tests/chest/journey.mjs`; `tests/chest/browser-files.mjs` | Responsive browser browse and resumable upload with the phone's camera or file picker exist; native apps, background/offline sync and mobile sharing do not. |
-| `SHARE-001` | Policy-controlled external links | target | partial | `src/chest/files/links.ts`; `tests/chest/files.mjs` | Organisation links at viewer/commenter/editor, discoverable or not, removal ending access on the next request, no-download and hash-only tokens exist; named-guest, domain and public links, passwords, expiry, download counts, pinned or approved-only versions and POLICY-001 defaults do not. |
-| `SHARE-002` | Upload-only file requests | target | missing |  | No delivered product workflow. |
+| `SHARE-001` | Policy-controlled external links | target | partial | `src/chest/files/links.ts`; `src/chest/files/public-links.ts`; `src/chest/files/capability.ts`; `src/chest/files/public.ts`; `src/chest/files/ui-links.ts`; `tests/chest/files.mjs` | Organisation links (viewer/commenter/editor, discoverable or not) and public links for anyone with no account exist, with an optional password (salted PBKDF2 hash only, attempts throttled), expiry date and download-count limit enforced atomically, folder links that never reach restricted or trashed descendants, no-download refusal, hash-only tokens, every open and download audited, the item and Links lists ("Expires Nov 30 · 3 of 10 downloads") and one-click Revoke; named-guest and domain audiences, approved-only or pinned versions, POLICY-001 defaults and a 1440/390 browser test of the link journey do not. |
+| `SHARE-002` | Upload-only file requests | target | partial | `src/chest/files/file-requests.ts`; `src/chest/files/public.ts`; `src/chest/files/ui-public.ts`; `tests/chest/files.mjs` | Upload-only request links for a folder with title, message, accepted types, per-file size (up to 8 MB), deadline, close, a receipt with checksums, no listing of the folder, attributed arrivals and an email and notice to the asker exist; resumable large uploads, checklists, submitter verification, replacing one's own submission and quarantine do not. |
 | `SHARE-003` | Delivery receipts and large-file transfers | target | missing |  | No delivered product workflow. |
 | `SHARE-004` | Item sharing, Shared with me and access requests | target | done | `src/chest/files/shares.ts`; `src/chest/files/notify.ts`; `src/chest/files/people.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
 | `SHARE-005` | External collaborators who edit, comment and upload | target | missing |  | No delivered product workflow. |
@@ -876,6 +876,6 @@ Judged from the code and tests at commit `506ad550417537048ed74c928fdab4b8946197
 | `AGENT-002` | Reconcile duplicates and superseded versions | push-further | missing |  | No delivered product workflow. |
 | `AGENT-003` | Repair permitted synchronization and verify bytes | push-further | missing |  | No delivered product workflow. |
 | `AGENT-004` | Finish collection and prove the right version arrived | push-further | missing |  | No delivered product workflow. |
-| `AGENT-005` | Continuously repair broken and over-shared links | push-further | missing |  | No delivered product workflow. |
+| `AGENT-005` | Continuously repair broken and over-shared links | push-further | partial | `src/chest/files/exposure.ts`; `src/chest/files/ui-links.ts`; `tests/chest/files.mjs` | The Links view flags public, long-lived and past-limit links and discoverable or long-lived organisation links, naming each link and why, and Make private removes every broad link in one click while keeping named grants; the agent that scans ACLs, guests and outcomes, proposes repairs and runs preauthorised revocations does not. |
 | `AGENT-006` | Build and validate a trustworthy move-in | push-further | partial | `src/chest/archive.ts`; `tests/chest/flows.mjs` | Manual hash/gap reconciliation and reversible staging exist; agent/provider mappings and collaborator validation do not. |
 | `AGENT-007` | Evidence-grounded questions and custom jobs | push-further | missing |  | No delivered product workflow. |
