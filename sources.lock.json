@@ -141,7 +141,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "1356ebddd7ada8af597c81bc9fc16edea6e347ea3e2b6c0da8942e4049219446",
+      "sha256": "07478b3ebfc3c3bd83de4e8e8d8fcbcc28455dcf2b6244dcb47c913dea464d68",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -165,7 +165,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "0bbec925924e1786c02655283978e9e2bd6b6be3ad7413c846c6c8bf837a4970",
+      "sha256": "cd175edddfa19ca7fdc60adb18b6ed4ea0fa0e64922f6681980b874d53b3cb45",
       "executable": false
     },
     "DEMO.md": {

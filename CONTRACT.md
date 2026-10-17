@@ -736,7 +736,7 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | # | Claim | Clause(s) | Status |
 | --- | --- | --- | --- |
 | 1 | "Chest stores … your team's files" | SPACE-001, CHEST-03 | partial |
-| 2 | "syncs" | SYNC-001, SYNC-002 | missing |
+| 2 | "syncs" | SYNC-001, SYNC-002 | partial |
 | 3 | "shares your team's files" | SHARE-004, SHARE-001, CHEST-10 | partial |
 | 4 | "reads every scan" | SEARCH-001 | partial |
 | 5 | "quietly files what arrives" | AGENT-001, RULE-001, CONNECT-006 | missing |
@@ -745,11 +745,11 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 8 | Collage: contract co-edited by Dana and Luis | EDIT-001 | missing |
 | 9 | Collage: receipt "Uploading 62%" | TRANSFER-001, MOBILE-001 | partial |
 | 10 | Collage: share link "expires Nov 30 · 3 of 10 downloads" | SHARE-001 | partial |
-| 11 | Collage: version stack v7 (approved), v6, v5 | CHEST-07, VERSION-001 | partial |
+| 11 | Collage: version stack v7 (approved), v6, v5 | CHEST-07, VERSION-001 | done |
 | 12 | Collage: scanned NDA with extracted fields boxed | SEARCH-002 | missing |
 | 13 | Collage: "Filed W-9 Acme Supply.pdf → Vendors / Acme / Tax · Undo" | AGENT-001, RULE-001 | missing |
 | 14 | "Files stay in sync on Mac, Windows, iPhone and Android" | SYNC-001, SYNC-002, MOBILE-001 | partial |
-| 15 | "open on demand without filling your disk" | SYNC-001 | missing |
+| 15 | "open on demand without filling your disk" | SYNC-001 | partial |
 | 16 | "Links with a password, an expiry and a download limit" | SHARE-001 | partial |
 | 17 | "Revoke any link in one click" | SHARE-001 | partial |
 | 18 | "ask anyone to upload with a file request" | SHARE-002 | missing |
@@ -758,8 +758,8 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 21 | "Word, Excel and PowerPoint files open right in the browser" | PREVIEW-001, EDIT-001 | partial |
 | 22 | "Edit at the same time, comment" | EDIT-001, EDIT-003 | partial |
 | 23 | "and keep one copy" | EDIT-001 | missing |
-| 24 | "Go back to any earlier version of a file" | VERSION-001 | partial |
-| 25 | "or a whole folder" (and "Restore Clients / Harbor Freight to Oct 12") | RECOVER-001 | partial |
+| 24 | "Go back to any earlier version of a file" | VERSION-001 | done |
+| 25 | "or a whole folder" (and "Restore Clients / Harbor Freight to Oct 12") | RECOVER-001 | done |
 | 26 | "see who changed what" | AUDIT-001, VERSION-001 | partial |
 | 27 | "Approvals stay with the exact version signed off" | CHEST-07, CHEST-08 | done |
 | 28 | "Agents file what arrives from email and apps" | AGENT-001, CONNECT-006 | missing |
@@ -776,7 +776,7 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 39a | "Exact-version approvals: Sign-off sticks to the version that was approved." | CHEST-07, CHEST-08 | done |
 | 39b | "File requests: Anyone can upload to the folder you choose." | SHARE-002 | missing |
 | 39c | "Large files: Big uploads resume where they stopped." | TRANSFER-001 | partial |
-| 39d | "Trash you can undo: Deleted files come back for 30 days." (correction sent to br: trash keeps items until erasure, not 30 days) | CHEST-13 | partial |
+| 39d | "Trash you can undo: Deleted files come back for 30 days." (correction sent to br: trash keeps items until erasure, not 30 days) | CHEST-13 | done |
 | 39e | "Previews: Documents, video and design files open in the browser." | PREVIEW-001 | partial |
 | 39f | "Activity log: Every view, share and change, recorded." | AUDIT-001, CHEST-13 | partial |
 | 40 | "Open source file storage for your whole team." | OPEN-001, SPACE-001 | partial |
@@ -784,13 +784,13 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 
 ## Status
 
-Judged from the code and tests at commit `2f3bbf6c237545b96c6f072de2507074535d7565` (16 October 2026).
+Judged from the code and tests at commit `506ad550417537048ed74c928fdab4b8946197ea` (17 October 2026).
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 12 | 1 | 0 | 13 |
-| Target and push further | 0 | 24 | 48 | 72 |
-| All | 12 | 25 | 48 | 85 |
+| Published | 13 | 0 | 0 | 13 |
+| Target and push further | 3 | 25 | 44 | 72 |
+| All | 16 | 25 | 44 | 85 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -806,48 +806,48 @@ Judged from the code and tests at commit `2f3bbf6c237545b96c6f072de2507074535d75
 | `CHEST-10` | People and group grants | published | done | `src/chest/access.ts`; `src/chest/metadata.ts`; `tests/chest/flows.mjs`; `tests/chest/restore.mjs` |  |
 | `CHEST-11` | Reviewed reversible archive admission | published | done | `src/chest/archive.ts`; `src/chest/archive-target.ts`; `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-12` | Complete independent local recovery | published | done | `scripts/installer/local.mjs`; `scripts/check-public-assets.mjs`; `tests/chest/restore.mjs`; `tests/chest/journey.mjs` |  |
-| `CHEST-13` | Self-service reversible trash and mutation audit | published | partial | `src/chest/documents.ts`; `src/chest/store.ts`; `src/chest/api.ts`; `tests/chest/flows.mjs`; `tests/chest/journey.mjs` | Reversible indefinite trash, identical-version restore and audit exist, but trash and restore are owner-only (`src/chest/documents.ts` `owner_required`); self-service user restore, space-manager restore and folder-tree trash do not. |
-| `SPACE-001` | Team spaces and ordinary files | target | partial | `src/chest/metadata.ts`; `src/chest/access.ts`; `tests/chest/flows.mjs` | Collections and access exist; folder trees, ordinary untyped files, team ownership and delegation do not. |
-| `SPACE-002` | Space creation control and new-space defaults | target | missing |  | No delivered product workflow. |
-| `ROLE-001` | Five-level roles and delegated sharing | target | partial | `src/chest/access.ts`; `src/chest/metadata.ts`; `tests/chest/flows.mjs` | Reader/editor/reviewer collection grants exist; commenter, contributor, content-manager and manager levels, file-level roles, delegated and editor sharing and no-download settings do not. |
-| `VERSION-001` | File version history and restore by editors | target | partial | `src/chest/model.ts`; `src/chest/api.ts`; `tests/chest/flows.mjs` | Immutable versions with author, time, size and per-version download exist; a version-history view, restore as current, version naming and the per-role restore rules do not. |
+| `CHEST-13` | Self-service reversible trash and mutation audit | published | done | `src/chest/files/trash.ts`; `src/chest/documents.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
+| `SPACE-001` | Team spaces and ordinary files | target | partial | `src/chest/files/spaces.ts`; `src/chest/files/items.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` | Team spaces, personal areas, nested folders, create/rename/move/copy, untyped upload, stable IDs, restricted subfolders, star, recent, shortcuts and offboarding to a successor exist; single-item ownership offers, effective-access explanation, the EDIT-004 New menu and a SCALE-001 reference-size run do not. |
+| `SPACE-002` | Space creation control and new-space defaults | target | missing |  | Anyone may create a team space; no creation rule or new-space defaults. |
+| `ROLE-001` | Five-level roles and delegated sharing | target | partial | `src/chest/files/access.ts`; `tests/chest/files.mjs` | Viewer, commenter, contributor, content manager and manager on spaces, file-level viewer/commenter/editor, restricted inheritance, per-space and per-item no-download and the editor sharing switch exist; EDIT-001 comment-and-suggest sessions, a per-role browser matrix and the BULK-001 archive door do not. |
+| `VERSION-001` | File version history and restore by editors | target | done | `src/chest/files/items.ts`; `src/chest/documents.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
 | `TRANSFER-001` | Resumable files and whole-folder uploads | target | partial | `src/chest/blobs.ts`; `src/chest/documents.ts`; `src/chest/archive.ts`; `tests/chest/flows.mjs` | Single bounded originals/archive admission only; no folder or resumable large transfer. |
 | `BULK-001` | Multi-select actions and archive download | target | missing |  | No delivered product workflow. |
-| `SYNC-001` | Windows and macOS filesystem clients | target | missing |  | No delivered product workflow. |
-| `SYNC-002` | Offline edits and lossless conflict reconciliation | target | missing |  | No delivered product workflow. |
-| `SYNC-003` | Visible sync operations and device control | target | partial | `src/chest/blobs.ts`; `src/chest/ui.ts`; `tests/chest/flows.mjs` | Upload success/error exists; device fleet, progress and sync queues are absent. |
+| `SYNC-001` | Windows and macOS filesystem clients | target | partial | `src/chest/files/sync.ts`; `src/chest/files/devices.ts`; `tests/chest/files.mjs` | The server protocol a client needs exists (device keys, tree, change journal with cursors, ranged hydration, create/upload with base version, rename/move/delete); the signed macOS File Provider and Windows Cloud Files clients do not. |
+| `SYNC-002` | Offline edits and lossless conflict reconciliation | target | partial | `src/chest/files/sync.ts`; `tests/chest/files.mjs` | A save from an outdated base keeps the remote version current and files the client bytes as a named conflict copy, and revoked access refuses the upload; the client side (offline queue, cutover, private recovery copy) does not exist. |
+| `SYNC-003` | Visible sync operations and device control | target | partial | `src/chest/files/devices.ts`; `tests/chest/files.mjs` | Device list with last contact, revoke and deactivation-stops-devices exist; client states, proxy and bandwidth settings and wipe do not. |
 | `SYNC-004` | Creative assets stream and lock safely | target | missing |  | No delivered product workflow. |
 | `SYNC-005` | Hybrid local cache and storage | target | missing |  | No delivered product workflow. |
 | `SYNC-006` | Computer folder backup | target | missing |  | No delivered product workflow. |
 | `SYNC-007` | Office desktop presence, newer-version alerts and locks | target | missing |  | No delivered product workflow. |
 | `MOBILE-001` | Native iOS and Android file access | target | partial | `src/chest/ui-library.ts`; `src/chest/documents.ts`; `tests/chest/journey.mjs` | Responsive browser browse/upload exists; native apps, camera, background/offline sync and mobile sharing do not. |
-| `SHARE-001` | Policy-controlled external links | target | partial | `src/chest/access.ts`; `src/chest/api.ts`; `tests/chest/flows.mjs` | Private identity ACLs exist; external links and per-link policies are absent. |
+| `SHARE-001` | Policy-controlled external links | target | partial | `src/chest/files/links.ts`; `tests/chest/files.mjs` | Organisation links at viewer/commenter/editor, discoverable or not, removal ending access on the next request, no-download and hash-only tokens exist; named-guest, domain and public links, passwords, expiry, download counts, pinned or approved-only versions and POLICY-001 defaults do not. |
 | `SHARE-002` | Upload-only file requests | target | missing |  | No delivered product workflow. |
 | `SHARE-003` | Delivery receipts and large-file transfers | target | missing |  | No delivered product workflow. |
-| `SHARE-004` | Item sharing, Shared with me and access requests | target | missing |  | No delivered product workflow. |
+| `SHARE-004` | Item sharing, Shared with me and access requests | target | done | `src/chest/files/shares.ts`; `src/chest/files/notify.ts`; `src/chest/files/people.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
 | `SHARE-005` | External collaborators who edit, comment and upload | target | missing |  | No delivered product workflow. |
 | `POLICY-001` | Organisation sharing policy | target | missing |  | No delivered product workflow. |
 | `PREVIEW-001` | Office, Google, video and design previews | target | partial | `src/chest/blobs.ts`; `tests/chest/flows.mjs`; `tests/chest/browser-preview.mjs` | Only basic PDF/raster/text previews exist; no broad renderer or processor. |
-| `SEARCH-001` | Full-text and scanned-content search | target | partial | `src/chest/api.ts`; `src/chest/blobs.ts`; `tests/chest/flows.mjs` | Title/metadata and bounded admitted UTF-8 text search (`q`) with a trash switch only; OCR/broad extraction/indexing and the Type, People, Modified, Location and Version filters are absent. |
+| `SEARCH-001` | Full-text and scanned-content search | target | partial | `src/chest/files/views.ts`; `src/chest/api.ts`; `src/chest/blobs.ts`; `tests/chest/files.mjs` | File search over names and extracted text filtered by current access and space exists; OCR, broad extraction and the named filters do not. |
 | `SEARCH-002` | Typed fields read from scans and shown where they were found | target | missing |  | Typed fields are entered by people today (`src/chest/fields.ts`); no OCR, field reading, source-region boxes or confirm/correct/reject workflow exist. |
 | `EDIT-001` | Office and independent browser co-authoring | target | missing |  | No delivered product workflow. |
 | `EDIT-002` | Google-format collaboration without hidden loss | target | missing |  | No delivered product workflow. |
-| `EDIT-003` | Contextual comments and collaborative tasks | target | partial | `src/chest/reviews.ts`; `tests/chest/flows.mjs` | Exact-version review comments exist; annotation geometry, mentions, threads, task resolution, threads for in-editor comments and migrated threads do not. |
+| `EDIT-003` | Contextual comments and collaborative tasks | target | partial | `src/chest/files/comments.ts`; `src/chest/reviews.ts`; `tests/chest/files.mjs` | Version-bound file comments (commenter and above) and exact-version review comments exist; mentions, threads, tasks and annotations do not. |
 | `EDIT-004` | New documents, spreadsheets and presentations from blank or templates | target | missing |  | No delivered product workflow. |
 | `SIGN-001` | Built-in eSignature on PDF and DOCX files | target | missing |  | No delivered product workflow. |
-| `RECOVER-001` | Folder and account point-in-time recovery | target | partial | `src/chest/documents.ts`; `tests/chest/flows.mjs` | Document versions/trash restore exist; folder/account rewind does not. |
+| `RECOVER-001` | Folder and account point-in-time recovery | target | done | `src/chest/files/rewind.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
 | `RECOVER-002` | Scheduled independent backups and upgrade recovery | target | partial | `scripts/installer/local.mjs`; `tests/chest/restore.mjs` | Manual complete local recovery exists; schedules, remote targets, new-model archives and in-place upgrade drill are absent. |
 | `ADMIN-001` | Federation and lifecycle provisioning | target | missing |  | No delivered product workflow. |
 | `ADMIN-002` | Admin reporting and legible USD costs | target | partial | `src/chest/api.ts`; `src/chest/store.ts`; `tests/chest/flows.mjs` | Activity endpoint and logical byte total exist; comprehensive reports, cost/usage attribution and quotas do not. |
 | `ADMIN-003` | Several admins, delegated admin roles and owner transfer | target | partial | `src/chest/identity.ts`; `src/chest/access.ts`; `tests/chest/flows.mjs` | One owner with owner-only administration and invited member staff exist; additional super admins, delegated or custom admin roles, content-free admin scope and owner transfer do not. |
 | `ADMIN-004` | Enforced multi-factor sign-in without an identity provider | target | missing |  | No delivered product workflow. |
 | `QUOTA-001` | Storage limits for users and spaces | target | missing |  | No delivered product workflow. |
-| `SECURITY-001` | Scoped encryption and secret custody | target | partial | `src/chest/api.ts`; `src/chest/access.ts`; `scripts/installer/local.mjs`; `tests/chest/flows.mjs`; `tests/chest/restore.mjs` | Private HTTP/ACL and archive exclusions exist; complete device/provider encryption and key rotation coverage does not. |
+| `SECURITY-001` | Scoped encryption and secret custody | target | partial | `src/chest/api.ts`; `src/chest/access.ts`; `src/chest/files/devices.ts`; `src/chest/files/links.ts`; `scripts/installer/local.mjs`; `tests/chest/files.mjs`; `tests/chest/restore.mjs` | Private HTTP/ACL, hash-only device keys and link tokens and archive exclusions exist; complete device/provider encryption and key rotation coverage does not. |
 | `SECURITY-002` | Content threats and classification policy | target | missing |  | No delivered product workflow. |
 | `SECURITY-003` | Ransomware and mass-corruption protection | target | missing |  | No delivered product workflow. |
 | `GOVERN-001` | Retention, legal hold and discovery integrations | target | missing |  | No delivered product workflow. |
-| `AUDIT-001` | Durable complete action history | target | partial | `src/chest/store.ts`; `src/chest/api.ts`; `tests/chest/flows.mjs` | Read/mutation activity exists but endpoint is bounded; full execution history, durable jobs and anonymization are absent. |
-| `ERASE-001` | Deliberate erasure separate from trash | target | missing |  | No Chest permanent-erasure public workflow; `src/chest/documents.ts` provides reversible trash only. |
+| `AUDIT-001` | Durable complete action history | target | partial | `src/chest/store.ts`; `src/chest/api.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs` | Read/mutation activity and a file activity panel exist; export and pagination, durable job outcomes and view-history settings do not. |
+| `ERASE-001` | Deliberate erasure separate from trash | target | partial | `src/chest/files/trash.ts`; `tests/chest/files.mjs` | Manager/owner erasure of trashed files and trees with a receipt, unshared original bytes removed and minimized audit details exists; identity erasure, backups, holds and governed records do not. |
 | `OPS-001` | Responsive accessible and observable operation | target | partial | `src/chest/ui-shell.ts`; `src/chest/ui.ts`; `tests/chest/browser-flow.mjs`; `tests/chest/journey.mjs` | Current library has responsive journeys; native/admin expansion, accessibility conformance and hosted acceptance are unproven. |
 | `SCALE-001` | Stated operating scale and responsiveness | target | missing |  | No delivered product workflow. |
 | `OPS-002` | Availability target, durability of originals and incident status | target | partial | `src/server.ts`; `src/chest/blobs.ts`; `tests/chest/journey.mjs`; `tests/chest/flows.mjs` | A health endpoint and admission checksums exist; external probes, availability measurement, second copies, scrubs and incident notices do not. |
@@ -866,12 +866,12 @@ Judged from the code and tests at commit `2f3bbf6c237545b96c6f072de2507074535d75
 | `CONNECT-004` | Docusign execution and return custody | target | missing |  | No delivered product workflow. |
 | `CONNECT-005` | Zoom meeting file exchange | target | missing |  | No delivered product workflow. |
 | `CONNECT-006` | Email and app intake | target | missing |  | No delivered product workflow. |
-| `CONNECT-007` | Public API, webhooks and scoped agents | target | partial | `src/chest/api.ts`; `tests/chest/flows.mjs` | Private session-bound Chest HTTP API exists; delegated public API/MCP and webhook product integration do not. |
+| `CONNECT-007` | Public API, webhooks and scoped agents | target | partial | `src/chest/api.ts`; `src/chest/files/sync-api.ts`; `src/chest/files/devices.ts`; `tests/chest/files.mjs` | The sync device protocol is a documented credentialed API for clients; OAuth apps, MCP, webhooks and app control do not. |
 | `CONNECT-008` | Gmail and Outlook compose and save add-ins | target | missing |  | No delivered product workflow. |
 | `CONNECT-009` | Zapier and Make automation apps | target | missing |  | No delivered product workflow. |
 | `CONNECT-010` | Google Meet, Calendar, Chat and Forms file companion | target | missing |  | No delivered product workflow. |
 | `RULE-001` | Reversible arrival rules | target | missing |  | No delivered product workflow. |
-| `FOLLOW-001` | Persistent collaboration follow-up | target | partial | `src/chest/ui-library.ts`; `src/chest/documents.ts`; `tests/chest/flows.mjs` | Due/upcoming work and evidence completion exist; background reminders, mobile push, provider outcomes, email reply/resolve and personal notification settings do not. |
+| `FOLLOW-001` | Persistent collaboration follow-up | target | partial | `src/chest/ui-library.ts`; `src/chest/documents.ts`; `src/chest/files/notify.ts`; `tests/chest/flows.mjs`; `tests/chest/files.mjs` | Due/upcoming work, evidence completion and share, request and expiry notices by in-app notice and email exist; background reminders, mobile push, provider outcomes, replies by email and personal notification settings do not. |
 | `AGENT-001` | File and classify authorized arrivals | push-further | missing |  | No delivered product workflow. |
 | `AGENT-002` | Reconcile duplicates and superseded versions | push-further | missing |  | No delivered product workflow. |
 | `AGENT-003` | Repair permitted synchronization and verify bytes | push-further | missing |  | No delivered product workflow. |
