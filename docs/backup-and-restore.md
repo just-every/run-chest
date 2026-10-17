@@ -49,10 +49,11 @@ the import again. Your archive is never changed by a restore.
 ## After a restore
 
 Restored people come back with their grants, but not their sign-ins. Set up the
-owner again, start Chest and invite your staff again with the same emails:
+owner again with your name (without `--owner-name` Chest calls you "Owner"),
+start Chest and invite your staff again with the same emails:
 
 ```sh
-rer setup --owner-email you@example.com
+rer setup --owner-email you@example.com --owner-name "Your Name"
 rer dev
 ```
 
