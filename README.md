@@ -21,7 +21,9 @@ accountable review, typed metadata and enforced collection/document access.
 Phase one needs no provider account. Local D1 and R2 persist under
 `.wrangler/state`; local runs send no email.
 
-The project site is at https://run-chest.com.
+The project site is live at https://run-chest.com, and https://run-chest.com/run
+shows how to run Chest. A local `rer dev` serves the same page at `/run` on the
+`RER_SITE` address it prints.
 
 Open the `RER_OPEN` link on this computer and finish first-run setup. Treat that
 link as a credential. Create staff from **People & settings**; with outbound
