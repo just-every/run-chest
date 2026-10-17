@@ -478,7 +478,7 @@ Chest is free, open-source software. The whole product, every capability in this
 ### OWN-001 — Owner-run installation on a computer, a server or the owner's cloud account.
 
 The owner runs Chest on infrastructure they control, with no Chest-operated service in the path, on any of three targets:
-- **Their own computer** (macOS, Linux, or Windows with WSL2), with the documented commands `git clone`, `cd chest`, `rer install`, `rer setup` and `rer dev`.
+- **Their own computer** (macOS, Linux, or Windows with WSL2), with one line, `npx -y @runeditrun/rer dev just-every/run-chest`, which clones, installs, sets up a local owner and starts Chest; `rer dev` inside the checkout starts it again.
 - **Their own server**: a Linux host or VM they operate, on premises or rented, serving staff over HTTPS on the owner's domain with the owner's mail provider and object storage.
 - **Their own cloud account**: Cloudflare, as `deploy.json` describes.
 
@@ -772,7 +772,7 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 35 | "automatic user setup" (User sync · 42 people) | ADMIN-001 | missing |
 | 36 | "team spaces" | SPACE-001, SPACE-002 | partial |
 | 37 | "storage limits" (1.2 TB of 5 TB) | QUOTA-001, ADMIN-002 | partial |
-| 38 | "Run Chest on your own computer or server and keep every file. Export everything, any time." (Your own storage · Your own computer or server · Export any time; terminal: `git clone`, `cd chest`, `rer install`, `rer setup`, `rer dev`) | OWN-001, CHEST-12, RECOVER-002 | partial |
+| 38 | "Run Chest on your own computer or server and keep every file. Export everything, any time." (Your own storage · Your own computer or server · Export any time; terminal: `npx -y @runeditrun/rer dev just-every/run-chest`) | OWN-001, CHEST-12, RECOVER-002 | partial |
 | 39a | "Exact-version approvals: Sign-off sticks to the version that was approved." | CHEST-07, CHEST-08 | done |
 | 39b | "File requests: Anyone can upload to the folder you choose." | SHARE-002 | partial |
 | 39c | "Large files: Big uploads resume where they stopped." | TRANSFER-001 | partial |
