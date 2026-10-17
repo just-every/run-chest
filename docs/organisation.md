@@ -24,14 +24,19 @@ Open **People & settings › Company sign-in › Set up company sign-in**. It sh
   Connect), how Chest sends the secret, the provider sign-in page and the
   provider certificate (SAML).
 
-After **Save identity provider**, **Test company sign-in** signs you in through
+**Save identity provider** checks the provider address at once: for OpenID
+Connect, Chest reads the provider's published sign-in settings (its discovery
+document) and says so, or says what is wrong with the address. Then **Test
+company sign-in** signs you in through
 the provider and comes back to Chest. Then you may set **Email-link sign-in →
 Off**: everyone else is signed out and unused links stop working. You stay signed
 in, and `rer signin --environment NAME --env-file chest.env` on the computer that
 deployed Chest still gets the owner in if the provider is down.
 
 What Chest checks, for your security team: OpenID Connect uses the authorization
-code flow with PKCE (S256) and `openid email profile`, ID tokens signed RS256 or
+code flow with PKCE (S256) and `openid email profile` at the endpoints the
+provider's discovery document names (each https and on the public internet; they
+may be on different domains, as Google's are), ID tokens signed RS256 or
 ES256, and needs `email_verified` true. SAML needs a persistent NameID, an `email`
 (or the standard emailaddress) attribute, and both the response and the assertion
 signed with SHA-256. Client secrets are stored encrypted and never returned.
@@ -45,7 +50,8 @@ there say **not available yet**.
 The provider guides follow each provider's admin pages as of October 2026. The
 OpenID Connect, SAML and SCIM flows are proven end to end against Run Edit Run's
 own identity provider (see the integration test below), not against live Okta,
-Google or Microsoft tenants.
+Google or Microsoft tenants. Google's live discovery document and the sign-in
+request Chest sends to Google were checked against a hosted Chest.
 
 ## Automatic user setup
 

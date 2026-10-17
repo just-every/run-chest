@@ -144,7 +144,10 @@ The restore checks the backup's checksums, that the database versions match and
 that the new Chest holds nothing yet, before it writes anything. It puts every
 original back, then replaces the database with the backup's. People sign in
 again by email. If you read scans with an AI model key, enter the key again
-under **People & settings**.
+under **People & settings**. Company sign-in is locked to the deployment it was
+saved in, so the restore switches it off: if you used it, enter your provider's
+details again under **People & settings › Company sign-in** and test it. SCIM
+tokens, links and file requests keep working.
 
 ## Remove a hosted Chest
 

@@ -49,10 +49,14 @@ while (tables.length < schema.length) {
   const next = schema.find(t => !placed.has(t.name) && schema.every(c => placed.has(c.name) || c.name === t.name || !refs.get(c.name).has(t.name))) ?? schema.find(t => !placed.has(t.name));
   tables.push(next.name); placed.add(next.name);
 }
+// Company sign-in is sealed with the deployment's own SESSION_SECRET, which a fresh deployment does not share, and
+// its in-flight sign-ins are useless there: those rows are cleared, so everyone signs in by email and the owner enters
+// the provider again. SCIM tokens, links and people are hashed without that secret and keep working.
+const deploymentBound = ['chest_sso_config', 'chest_sso_transactions', 'chest_saml_requests'].filter(t => tables.includes(t));
 const plan = join(opts.input, `restore-${Date.now()}.sql`);
 const triggers = await query(creds, id, "SELECT name, sql FROM sqlite_master WHERE type='trigger' AND sql IS NOT NULL");
-writeFileSync(plan, ['PRAGMA defer_foreign_keys = TRUE;', ...triggers.map(t => `DROP TRIGGER "${t.name}";`), ...tables.map(t => `DELETE FROM "${t}";`), dump, ...triggers.map(t => `${t.sql};`)].join('\n') + '\n', { mode: 0o600 });
+writeFileSync(plan, ['PRAGMA defer_foreign_keys = TRUE;', ...triggers.map(t => `DROP TRIGGER "${t.name}";`), ...tables.map(t => `DELETE FROM "${t}";`), dump, ...deploymentBound.map(t => `DELETE FROM "${t}";`), ...triggers.map(t => `${t.sql};`)].join('\n') + '\n', { mode: 0o600 });
 console.log(`Replacing the database of ${n.worker} with the backup`);
 try { wrangler(creds, ['d1', 'execute', n.database, '--remote', '--file', plan, '--yes']); } finally { rmSync(plan, { force: true }); }
 const restored = (await query(creds, id, 'SELECT COUNT(*) AS n FROM chest_records'))[0].n;
-console.log(`Restored ${restored} file and record entries and ${files.length} original file(s) into ${n.worker}. People sign in again by email.`);
+console.log(`Restored ${restored} file and record entries and ${files.length} original file(s) into ${n.worker}. People sign in again by email; if you used company sign-in, enter your provider again under People & settings.`);

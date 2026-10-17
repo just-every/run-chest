@@ -19,9 +19,9 @@ import { readerCard,testReceipt } from './read/ui'
 import { filingPage,filingInput } from './filing/ui'
 import { documentReadings } from './read/api'
 import { card,esc } from './ui-shared'
-import { ssoView } from './organisation/settings'
+import { providerOrigin,ssoView } from './organisation/settings'
 import { scimView } from './organisation/scim'
-import { organisationCard,tokenReceipt } from './organisation/ui'
+import { organisationCard,ssoReceipt,tokenReceipt } from './organisation/ui'
 import { quotaAdminCard } from './quota/ui'
 export async function uiResponse(request:Request,original:Bindings){const url=new URL(request.url);if(url.pathname!=='/app'&&!url.pathname.startsWith('/app/')&&!url.pathname.startsWith('/s/'))return null;const env=runtimeBindings(original)
  let back='/app/files'
@@ -44,6 +44,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   if(filesPath(input.path))filesInput(input)
   const result=await execute(env,request,s,'POST',input.path,input);kick(env,request)
   if(input.path==='/organisation/scim/tokens')return page(tokenReceipt(result),me,'/app/admin')
+  if(input.path==='/organisation/sso')return page(ssoReceipt(result),me,'/app/admin')
   const secret=filesReceipt(input,result);if(secret)return page(secret,me,returnTo)
   if(input.path==='/reading/settings/test')return page(testReceipt(result),me,'/app/admin')
   if(input.path==='/archive/preview')return page(mappingPage(input,result),me,'/app/archive')
@@ -62,7 +63,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
  else if(url.pathname.startsWith('/app/documents/')){const key=url.pathname.split('/').at(-1)!;const row=await execute(env,request,s,'GET',`/documents/${key}`,{}),readers=me.role==='owner'?await execute(env,request,s,'GET',`/documents/${key}/readers`,{}):[],mine=(await roles(env,s,row.payload)).roles;body=documentPage(row,data,readers,mine.includes('reviewer'),{readings:await documentReadings(env,row.id,row.payload),editor:mine.includes('editor')})}
  else return new Response('Not found',{status:404})
  const response=page(body,me,url.pathname)
- if(url.pathname==='/app/admin'){const provider=await ssoView(env);if(provider.configured){const origin=new URL(provider.entryPoint||provider.issuer!).origin;response.headers.set('content-security-policy',response.headers.get('content-security-policy')!.replace("form-action 'self'",`form-action 'self' ${origin}`))}}
+ if(url.pathname==='/app/admin'){const provider=await ssoView(env);if(provider.configured){const origin=providerOrigin(provider as any);response.headers.set('content-security-policy',response.headers.get('content-security-policy')!.replace("form-action 'self'",`form-action 'self' ${origin}`))}}
  return response
  }catch(e){const error=failure(e);if(error.status===401)return new Response(null,{status:303,headers:{location:'/signin?returnTo='+encodeURIComponent(url.pathname)}});return refusedPage(await error.json() as any,error.status,error.status===404&&request.method==='GET'?'/app/files':back)}
 }

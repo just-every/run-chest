@@ -33,5 +33,18 @@ const words: Record<string, string> = {
  file_too_large: 'That file is larger than Chest takes in one file.',
  invalid_origin: 'This form came from another site, so it was not accepted. Open Chest and try again.',
  service_unavailable: 'Chest could not finish that just now. Try again in a moment.',
+ provider_issuer_mismatch: 'Your provider names itself with a different address than the Provider address. Copy the address your provider’s guide gives, such as https://accounts.google.com for Google Workspace.',
+ provider_unreachable: 'Chest could not reach your provider at the Provider address. Check the address, such as https://your-company.okta.com or https://accounts.google.com, with nothing after it.',
+ provider_request_failed: 'Your provider did not answer Chest at the Provider address. Check the address, such as https://your-company.okta.com or https://accounts.google.com, with nothing after it.',
+ invalid_provider_response: 'The Provider address did not answer as an OpenID Connect provider. Check the address, or choose SAML 2.0 if your provider uses SAML.',
+ invalid_provider_url: 'Enter the Provider address as a full web address starting with https://.',
+ provider_requires_https: 'Enter the Provider address as a full web address starting with https://, with nothing after a question mark or #.',
+ provider_private_address_refused: 'Chest connects only to providers on the public internet.',
+ provider_requires_code_and_pkce: 'This provider does not offer the secure sign-in Chest uses (authorization code with PKCE). Choose SAML 2.0 if your provider offers it.',
+ client_secret_required: 'Paste the client secret your provider showed when you created the app for Chest.',
+ provider_signin_denied: 'Your provider did not sign you in. Ask whoever runs your company sign-in to give you access to the Chest app.',
+ provider_identity_not_verified: 'Your provider did not confirm your email address, so Chest cannot match you to an account.',
+ sso_signin_expired_or_used: 'That sign-in attempt expired or was already used. Go back to the sign-in page and try again.',
 }
+export const hasProblemWords = (code?: string) => Object.hasOwn(words, code ?? '')
 export const problemWords = (code?: string) => words[code ?? ''] ?? 'Chest did not accept that. Go back and check what you entered.'

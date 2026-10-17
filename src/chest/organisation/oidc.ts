@@ -3,10 +3,12 @@ import type { Bindings } from '../../auth.server'
 import { operatorAuth } from '../../auth.server'
 const opaqueToken=()=>Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url')
 const constantEqual=(a:unknown,b:unknown)=>{if(typeof a!=='string'||typeof b!=='string'||a.length!==b.length)return false;let diff=0;for(let i=0;i<a.length;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i);return diff===0}
-import { insist } from '../model'
+import { ChestError, insist } from '../model'
 import { discovery,providerJson } from './provider-http'
 import { seal,unseal,ssoSettings,type SsoConfig } from './settings'
 const enc=new TextEncoder()
+// Google documents that its ID tokens may name their issuer without the scheme (accounts.google.com).
+const googleIssuers=(issuer:string)=>issuer==='https://accounts.google.com'?[issuer,'accounts.google.com']:issuer
 const hash=async(v:string)=>Buffer.from(await crypto.subtle.digest('SHA-256',enc.encode(v))).toString('base64url')
 const cookieName=(env:Bindings)=>`${env.AUTH_ORIGIN.startsWith('https:')?'__Host-chest_sso':'chest_sso_local'}_${new URL(env.AUTH_ORIGIN).port||'https'}`
 export const correlationCookie=(env:Bindings,value:string,age=600,post=false)=>`${cookieName(env)}=${value}; Path=/; HttpOnly; SameSite=${post?'None':'Lax'}; Max-Age=${age}${env.AUTH_ORIGIN.startsWith('https:')?'; Secure':''}`
@@ -14,7 +16,7 @@ export async function transaction(env:Bindings,payload:any,post=false) {const st
 export async function consume(env:Bindings,request:Request,state:string) {
  insist(typeof state==='string'&&/^[A-Za-z0-9_-]{43}$/.test(state),'invalid_sso_state')
  const values=(request.headers.get('cookie')||'').split(';').map(s=>s.trim()).filter(s=>s.startsWith(cookieName(env)+'='));insist(values.length===1,'sso_browser_binding_required');const binding=values[0].slice(cookieName(env).length+1)
- const row=await env.DB.prepare('DELETE FROM chest_sso_transactions WHERE state_hash=? AND binding_hash=? AND expires_at>? RETURNING payload').bind(await hash(state),await hash(binding),Date.now()).first<{payload:string}>();insist(row,'sso_signin_expired_or_used');return unseal<any>(env,row.payload)
+ const row=await env.DB.prepare('DELETE FROM chest_sso_transactions WHERE state_hash=? AND binding_hash=? AND expires_at>? RETURNING payload').bind(await hash(state),await hash(binding),Date.now()).first<{payload:string}>();insist(row,'sso_signin_expired_or_used');try{return await unseal<any>(env,row.payload)}catch{throw new ChestError('sso_signin_expired_or_used')}
 }
 export async function finish(env:Bindings,request:Request,tx:any,principal:any) {
  const current=await ssoSettings(env);insist(current&&current.revision===tx.revision,'sso_configuration_changed',409)
@@ -37,7 +39,7 @@ export async function oidcCallback(env:Bindings,request:Request) {
  const body=new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:`${env.AUTH_ORIGIN}/auth/company/callback`,code_verifier:tx.verifier,client_id:config.clientId!}),headers:Record<string,string>={'content-type':'application/x-www-form-urlencoded'}
  if(config.authMethod==='client_secret_post')body.set('client_secret',config.clientSecret!);else headers.authorization=`Basic ${Buffer.from(`${encodeURIComponent(config.clientId!)}:${encodeURIComponent(config.clientSecret!)}`).toString('base64')}`
  const tokens=await providerJson(env,tx.metadata.token_endpoint,{method:'POST',headers,body:body.toString()});insist(typeof tokens.id_token==='string','provider_id_token_required',502)
- const keys=await providerJson(env,tx.metadata.jwks_uri),{payload}=await jwtVerify(tokens.id_token,createLocalJWKSet(keys),{issuer:config.issuer,audience:config.clientId,algorithms:['RS256','ES256'],clockTolerance:30,maxTokenAge:'10m',requiredClaims:['exp','iat','sub','nonce']})
+ const keys=await providerJson(env,tx.metadata.jwks_uri),{payload}=await jwtVerify(tokens.id_token,createLocalJWKSet(keys),{issuer:googleIssuers(config.issuer),audience:config.clientId,algorithms:['RS256','ES256'],clockTolerance:30,maxTokenAge:'10m',requiredClaims:['exp','iat','sub','nonce']})
  insist(constantEqual(payload.nonce,tx.nonce)&&typeof payload.sub==='string'&&typeof payload.email==='string'&&payload.email_verified===true,'provider_identity_not_verified',403)
  insist(payload.azp===undefined?!(Array.isArray(payload.aud)&&payload.aud.length>1):payload.azp===config.clientId,'provider_audience_mismatch',403)
  if(payload.at_hash){insist(typeof tokens.access_token==='string','invalid_access_token');const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(tokens.access_token)));insist(constantEqual(payload.at_hash,Buffer.from(digest.slice(0,16)).toString('base64url')),'invalid_access_token')}
