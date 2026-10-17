@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+**A restored hosted Chest lets everyone sign in, and the Google Workspace guide works (stranger journey 3).**
+
+- `rer run hosted-restore` into a freshly deployed Chest no longer leaves **Sign in** and **People & settings**
+  answering "Company sign-in did not finish … service_unavailable". Company sign-in is locked to the deployment that
+  saved it, so the restore switches it off and says so; people sign in by email and the owner enters the provider
+  again. SCIM tokens, links and file requests keep working. A saved provider that cannot be opened (for example
+  after the deployment's secret changed) never blocks email sign-in or People & settings, which asks for it again.
+- Company sign-in with OpenID Connect uses the endpoints the provider's discovery document names, each https and on
+  the public internet, instead of requiring them on the provider address's own domain. Google's are on four
+  domains, so the "Google Workspace, step by step" guide stopped at `provider_endpoint_origin_mismatch`; it now
+  sends people to Google. ID tokens Google issues as `accounts.google.com` are accepted.
+- **Save identity provider** reads the provider's settings at once and confirms ("Identity provider saved … Chest
+  reached https://accounts.google.com"), or says in plain words what is wrong with the address. Company sign-in
+  errors name what to check instead of always blaming "your administrator".
+- An expiry or deadline picked as a date (links for anyone, file requests, shares) ends at the end of that day on
+  the creator's clock, not in UTC. Public link and file request pages show it, and the "Files received" time, on
+  the visitor's own clock.
+- Shared with me shows when each item was last updated. Storage reads in KB, MB and GB instead of raw bytes.
+  Search says when words in scans and photos are not searchable yet and why. A filing rule's file type field
+  explains what a type such as application/pdf is.
+
 **Hosted backup, company sign-in and email intake work from their pages alone (stranger journey 2).**
 
 - The hosting guide backs up, restores and removes with `rer run hosted-backup` and `rer run hosted-restore`, which
