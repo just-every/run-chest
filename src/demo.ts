@@ -19,6 +19,10 @@ export async function seedDemo(env: Bindings, { ownerEmail, now }: { ownerEmail:
   const audit: unknown[][] = []
   const log = (actor: string, action: string, object: string, when: string) => audit.push([`demo-audit-${audit.length + 1}`, actor, action, object, JSON.stringify({ sample: true }), when])
 
+  // The owner claim leaves the default name 'Owner'; name the demo owner from their email as the team are named.
+  const ownerName = me.split('@')[0].split(/[._-]+/).filter(Boolean).map(part => part[0].toUpperCase() + part.slice(1)).join(' ')
+  if (ownerName) await statement("UPDATE oa_operators SET display_name = ? WHERE id = ? AND display_name = 'Owner'", ownerName, owner.id).run()
+
   // The team are real operator identities, as an accepted invitation leaves them; the
   // library's people mirror them the way Chest's identity sync does.
   await env.DB.batch(team.map(person => statement('INSERT INTO oa_operators(id, email, display_name, role, status, created_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING', person.id, person.email, person.name, person.role, person.status, now.getTime() - 200 * 86_400_000)))
