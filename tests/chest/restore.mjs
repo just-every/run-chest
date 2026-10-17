@@ -13,7 +13,7 @@ export async function restoreJourney({root,target,port,oldCookie,expected,oldMem
  assert.deepEqual(graph.find(r=>r.id===custody.trash.id).payload,custody.trash.payload);assert.equal(custody.trash.payload.trash,true);
  assert.deepEqual(graph.find(r=>r.id===custody.imported.id).payload,custody.imported.payload);assert.equal(custody.imported.payload.private,true);assert.ok(custody.imported.payload.source);
  assert.ok(expected.payload.versions.some(v=>v.state==='submitted'));assert.ok(expected.payload.approved);
- assert.ok(before[0].objects.length>0);assert.ok(before[0].excludedTables.some(n=>n==='oa_sessions'));assert.ok(before[0].tables.some(t=>t.name==='chest_records'));
+ assert.ok(before[0].objects.length>0);assert.ok(before[0].excludedTables.some(n=>n==='oa_sessions'));assert.ok(before[0].excludedTables.includes('chest_device_credentials'),'sync device credentials never leave the installation');assert.ok(before[0].tables.some(t=>t.name==='chest_records'));
  // A filename change, JSON spacing and a long prefix must not publish private data.
  const renamed=before.map((record,index)=>(index===0?' '.repeat(4096):'')+JSON.stringify(record).replaceAll(':',': ')).join('\n')+'\n';
  await writeFile(join(root,'public/exposure.txt'),renamed,{mode:0o600});

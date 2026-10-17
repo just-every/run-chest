@@ -15,5 +15,6 @@ export async function roles(env:Bindings,s:Session,doc:Document):Promise<{roles:
 export async function access(env:Bindings,s:Session,doc:Document,role='reader') {
  const r=await roles(env,s,doc); insist(r.roles.includes(role)||(role==='reader'&&r.roles.length>0),'not_found',404);return r.fences
 }
-export async function documents(env:Bindings,s:Session,trash=false) { const rows=await list<Document>(env,'document');const result:Row<Document>[]=[];for(const row of rows)if(row.payload.trash===trash&&(await roles(env,s,row.payload)).roles.length)result.push(row);return result }
+// A person's trash holds the records they trashed while they still hold editor access; the owner's holds every one.
+export async function documents(env:Bindings,s:Session,trash=false) { const rows=await list<Document>(env,'document');const result:Row<Document>[]=[];for(const row of rows){if(row.payload.trash!==trash)continue;if(trash&&!isOwner(s)){if(row.payload.trashedBy===s.operator.email&&(await roles(env,s,{...row.payload,trash:false})).roles.includes('editor'))result.push(row)}else if((await roles(env,s,row.payload)).roles.length)result.push(row)}return result }
 export async function validPerson(env:Bindings,email:unknown) { insist(typeof email==='string','invalid_person');const p=await get(env,'person',email.toLowerCase());insist(p.payload.status!=='inactive','inactive_person');return p.id }

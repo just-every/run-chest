@@ -27,7 +27,8 @@
     "check": "rer check",
     "deps": "rer install",
     "rer": "rer",
-    "test:chest": "rer queue test:chest -- node tests/chest/flows.mjs",
+    "test:chest": "rer queue test:chest -- sh -c \"node tests/chest/flows.mjs && node tests/chest/files.mjs\"",
+    "test:browser": "node tests/chest/browser-files.mjs",
     "test:journey": "node tests/chest/journey.mjs",
     "test:site": "node tests/chest/site.mjs"
   },
