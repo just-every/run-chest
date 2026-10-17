@@ -91,7 +91,7 @@ async function journey(width){
  assert.equal(await p.ben.locator('[data-upload]').count(),0);await p.ben.getByLabel('Comment',{exact:true}).fill('Section 2 is right');await press(p.ben,'Post comment');await p.ben.getByText('Section 2 is right').waitFor();
  assert.equal((await call(p.ben,`/items/${plan}/versions`,{base64:b64('edit')})).status(),403);
  const refused=await go(p.dee,`/app/items/${plan}`);await p.dee.getByRole('heading',{name:'Request access'}).waitFor();assert.ok(!(await refused.text()).includes(`plan-${width}`));
- await p.dee.getByLabel('Access you need').selectOption('editor');await p.dee.getByLabel('Message (optional)').fill('I run the launch');await press(p.dee,'Request access');await p.dee.getByText('editor · pending',{exact:false}).waitFor();
+ await p.dee.getByLabel('Access you need').selectOption('editor');await p.dee.getByLabel('Message (optional)').fill('I run the launch');await press(p.dee,'Request access');await p.dee.getByText('editor access to the item you asked for',{exact:false}).waitFor();assert.equal(await p.dee.getByText(`plan-${width}.txt`).count(),0);
  const email=h.mails.findLast(m=>[m.to].flat().includes('ana@example.test')&&/\/app\/requests\//.test(m.text)),requestPath=new URL(email.text.match(/https:\/\/\S+\/app\/requests\/\S+/)[0]).pathname;
  await go(p.ana,requestPath);await fit(p.ana,'request',width);await p.ana.getByLabel('Grant role').selectOption('viewer');await press(p.ana,'Approve');
  await go(p.dee,'/app/notices');await p.dee.getByText(`"plan-${width}.txt" was approved as viewer`,{exact:false}).waitFor();await go(p.dee,`/app/items/${plan}`);await p.dee.locator('.doc-side').getByText('viewer',{exact:false}).first().waitFor();

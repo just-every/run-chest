@@ -2957,7 +2957,7 @@
       "executable": false
     },
     "tests/chest/browser-files.mjs": {
-      "sha256": "8803fcce3c6d89228a3e78b28d3b25b37cd0c7affcea75af74a24ab345a04c9f",
+      "sha256": "33f116bfa6b4d0cc3a0598cd6ce4d18f5eb2f4142f436a3118f757fd23c93429",
       "executable": false
     },
     "tests/chest/browser-flow.mjs": {
