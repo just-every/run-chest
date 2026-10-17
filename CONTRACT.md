@@ -6,6 +6,17 @@ This is the product we are building towards. The status table measures current i
 
 The primary journey is: create a team space, migrate originals and rights, install staff clients, upload/open/edit ordinary files, collaborate and share outside the team, find the right version, and recover it independently. Each named clause states an observable outcome and its acceptance journey through a public UI, HTTP, client, command or provider door. `done` requires implementing source and an existing exercising test; `partial` names the delivered subset and remaining work; `missing` has no delivered product workflow. Acceptance journeys for future work are requirements, not tests claimed to have run.
 
+## Product target
+
+Chest is the owned business cloud file system a US operations lead at a 10–100 person business buys instead of Google Drive, Dropbox Business, Box or OneDrive / SharePoint, and it must also beat Egnyte, LucidLink and Nextcloud on governed collaboration, streamed creative assets and owner-controlled deployment.
+
+| | |
+| --- | --- |
+| Category | Business cloud file storage, sync and sharing |
+| Incumbents a buyer switches from | Google Drive (Google Workspace), Dropbox Business, Box, Microsoft OneDrive / SharePoint |
+| Up-and-comers it must also beat | Egnyte, LucidLink, Nextcloud |
+| First buyer | A US operations lead at a 10–100 person business replacing its everyday file store, sync and sharing; costs in USD |
+
 ## Identity, original custody and governed records
 
 ### CHEST-01 — Owner and ordinary staff identity.
@@ -762,7 +773,7 @@ Judged from the code and tests at commit `2f3bbf6c237545b96c6f072de2507074535d75
 | `ERASE-001` | Deliberate erasure separate from trash | target | missing |  | No Chest permanent-erasure public workflow; `src/chest/documents.ts` provides reversible trash only. |
 | `OPS-001` | Responsive accessible and observable operation | target | partial | `src/chest/ui-shell.ts`; `src/chest/ui.ts`; `tests/chest/browser-flow.mjs`; `tests/chest/journey.mjs` | Current library has responsive journeys; native/admin expansion, accessibility conformance and hosted acceptance are unproven. |
 | `SCALE-001` | Stated operating scale and responsiveness | target | missing |  | No delivered product workflow. |
-| `OPS-002` | Availability target, durability of originals and incident status | target | partial | `src/server.ts`; `/health`; `src/chest/blobs.ts`; `tests/chest/journey.mjs`; `tests/chest/flows.mjs` | A health endpoint and admission checksums exist; external probes, availability measurement, second copies, scrubs and incident notices do not. |
+| `OPS-002` | Availability target, durability of originals and incident status | target | partial | `src/server.ts`; `src/chest/blobs.ts`; `tests/chest/journey.mjs`; `tests/chest/flows.mjs` | A health endpoint and admission checksums exist; external probes, availability measurement, second copies, scrubs and incident notices do not. |
 | `MIGRATE-001` | Reconciled migration and controlled cutover | target | partial | `src/chest/archive.ts`; `src/chest/archive-target.ts`; `tests/chest/flows.mjs` | Reviewed bounded synthetic archive import exists; vendor discovery, complete histories, migrated open review work and delta/cutover do not. |
 | `MIGRATE-002` | Google Drive and Shared Drives migration | target | missing |  | No delivered product workflow. |
 | `MIGRATE-003` | Dropbox Business migration | target | missing |  | No delivered product workflow. |
