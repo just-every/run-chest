@@ -10,7 +10,7 @@ export function AgentsArt() {
         <div className="card agents-card">
           <div className="row agent-row"><FileTile kind="doc" /><div className="stack grow"><span className="f16 ink">Filed W-9 Acme Supply.pdf <span aria-hidden="true">→</span></span><span className="f15 dim">Vendors / Acme / Tax · <span className="undo">Undo</span></span></div></div>
           <div className="row agent-row"><span className="tile agent-merge"><Icon name="merge" /></span><span className="f16 ink grow">Merged 3 copies of Logo_final.png</span></div>
-          <div className="row agent-row"><span className="tile agent-alert"><Icon name="link" /></span><span className="f16 ink grow">Payroll 2026 is shared publicly <span className="dim">·</span></span><span className="private-btn f16">Make private</span></div>
+          <div className="row agent-row"><span className="tile agent-alert"><Icon name="link" /></span><span className="f16 ink grow">Payroll 2026 is shared publicly<span className="sep dim"> ·</span></span><span className="private-btn f16">Make private</span></div>
         </div>
       </Place>
       <Place x={576} y={288} w={126} h={120} r={-9} z={3} phone={false}><Sticky className="agents-sticky" underline>Agents<br />keep things<br />tidy</Sticky></Place>

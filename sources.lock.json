@@ -2505,7 +2505,7 @@
       "executable": false
     },
     "src/site/landing/art/art.css": {
-      "sha256": "53733cb280ad7328926d692ffede3f220239d4c49104158505fd0f264a44c0c9",
+      "sha256": "41662a01fd7a3cc5f80165a562a46011c26617f9e859e4aec0f82d815617cd81",
       "executable": false
     },
     "src/site/landing/art/icons.tsx": {
@@ -2529,11 +2529,11 @@
       "executable": false
     },
     "src/site/landing/hero/cards.tsx": {
-      "sha256": "4a8ffbeae30fdd168ab869e7df84042a06b15a66ef0ffc7e991550915759db96",
+      "sha256": "463b3765f0e4dbf0d7878bdca2608e65b5e6b445812f7195b1df3958c6c2e1af",
       "executable": false
     },
     "src/site/landing/hero/hero.css": {
-      "sha256": "b8b57dd42cc47bd3dada6892455cac8b717c199691f0e7bf63248cd9a57e2eb4",
+      "sha256": "5f68629a636d4ad563debe25668d7a879e1b8d4d5323f787264f70791a546979",
       "executable": false
     },
     "src/site/landing/hero/Hero.tsx": {
@@ -2541,7 +2541,7 @@
       "executable": false
     },
     "src/site/landing/hero/HeroCollage.tsx": {
-      "sha256": "36c4d2e1c826c8e152fa56dba45f51f56cc6a2b9ab4f77ef7d548dffb96bcb42",
+      "sha256": "d74f0c16a9a00b4dfe7be9f211ff3e37372fe47273c5a499551431ab506b4906",
       "executable": false
     },
     "src/site/landing/hero/PhotosCard.tsx": {
@@ -2549,11 +2549,11 @@
       "executable": false
     },
     "src/site/landing/hero/ScanCards.tsx": {
-      "sha256": "724f09c2b9960dcd2d223731b3e7cee8bda03afbe884280e8c9e2c59f84f0b13",
+      "sha256": "ac80f0c575ef51487db418f681d5aa306b49cbdcb8abc5e69540828091b289e4",
       "executable": false
     },
     "src/site/landing/landing.css": {
-      "sha256": "03df17eba0b9b8c2e6f869c5b1def8ec5da437466abf405e6c40984264186048",
+      "sha256": "240e408425e18753fd6ccbe863b2e1f8261c08461c6a023062a67ead1d5b5e68",
       "executable": false
     },
     "src/site/landing/Landing.tsx": {
@@ -2565,11 +2565,11 @@
       "executable": false
     },
     "src/site/landing/sections/AgentsArt.tsx": {
-      "sha256": "2b417d2ccb6a4ee7e579a5e6727662dcfdadeaa4be68618290d16e86fc57eeda",
+      "sha256": "34174fb0d4a5cdacec3325f67e26fd7e953fb54d6e17ef5fb91b2acdb2c6f68c",
       "executable": false
     },
     "src/site/landing/sections/closing.css": {
-      "sha256": "19841f8cb4b0e7cc0debe0ad0655a851e893d60cdadccbd47524e82421105a6d",
+      "sha256": "64665e81b3626e3a56394463f486279e7a1b52edde2bb0a89ca3b38de0a50822",
       "executable": false
     },
     "src/site/landing/sections/Closing.tsx": {
@@ -2577,7 +2577,7 @@
       "executable": false
     },
     "src/site/landing/sections/details.css": {
-      "sha256": "d32607305071add37dcdb0a0b77350df89fa46688ba44710b3aeb28ea11b43f4",
+      "sha256": "46b82115e95b5449ba037f56da8fc79082b4abf8a8bd6a3bf2546fec481f3659",
       "executable": false
     },
     "src/site/landing/sections/Details.tsx": {
@@ -2585,11 +2585,11 @@
       "executable": false
     },
     "src/site/landing/sections/index.tsx": {
-      "sha256": "42f1830f6da7c302eea222c4549895bb3f10f948eff1dec7c2b59381daab2b60",
+      "sha256": "92349de981517eb00fdbf62c7c10c64cef366cde780a9dd2c43678bfe596f6f3",
       "executable": false
     },
     "src/site/landing/sections/interlude.css": {
-      "sha256": "33586f4f5be7c4fa4352d4535ddee921034af5b8826b2ccfcb653850cab148c8",
+      "sha256": "f61dcf1fafe207ab0d3dcbe6d4c82160a9799a0cc74fc854672f2b1f12cbb567",
       "executable": false
     },
     "src/site/landing/sections/Interlude.tsx": {
@@ -2597,15 +2597,15 @@
       "executable": false
     },
     "src/site/landing/sections/movein-teams.css": {
-      "sha256": "04eec321bfd4eecdadf9430a67402952f751afdfc0acd4bdff742d184bf0dd5b",
+      "sha256": "f0a9d1b348903ccc241c9136af30f4145b777f5dd631cae1bf06a711364a9532",
       "executable": false
     },
     "src/site/landing/sections/MoveInArt.tsx": {
-      "sha256": "1717bf2c2cf093e77475f187c6ea39266a1525556b07b2e2c5a35f5b6aab75a3",
+      "sha256": "95608c1862f7f8eacee88967e7a563f043c513c0adcea84697a2b9a120599e59",
       "executable": false
     },
     "src/site/landing/sections/ownership.css": {
-      "sha256": "6b906c920476219197d625127d79f042bb45ae7bd376b240c3b441c4a3928cb7",
+      "sha256": "16a47a5c2d39d4934f832055abc9ba6dda777a6978721358668f614e123c290e",
       "executable": false
     },
     "src/site/landing/sections/Ownership.tsx": {
@@ -2613,11 +2613,11 @@
       "executable": false
     },
     "src/site/landing/sections/search-together.css": {
-      "sha256": "c5ff3cf2c5121dcb2096f763dde6ef30260ae158500cfa5bb19b388a9aa6c47d",
+      "sha256": "9d2ee1bc2c0497225ed32b22fc166edf8299a89a9d46cddfb7dbee3356dbfa84",
       "executable": false
     },
     "src/site/landing/sections/SearchArt.tsx": {
-      "sha256": "bea9f24f6a9439525f2319e47454089b1e7cabb605cfb5fa15987668f4aa32f2",
+      "sha256": "8311b7673ffa31a9a3fde6bc9704b0072048af4fd2d92f586da5bf47c8d63182",
       "executable": false
     },
     "src/site/landing/sections/ShareArt.tsx": {
@@ -2625,15 +2625,15 @@
       "executable": false
     },
     "src/site/landing/sections/sync-share.css": {
-      "sha256": "51215c4e41fc4aeb0afd619c00b39ebca5b8ebed90f7f17b3602c2d68ae18570",
+      "sha256": "66682a2a4d9e990008d00d9f239d6947391b56a321e08cb01769041609343ac7",
       "executable": false
     },
     "src/site/landing/sections/SyncArt.tsx": {
-      "sha256": "d879e6e8dcc108f64ae2398ac9485a45643f0e663f93b5d0206b32f0c96db03b",
+      "sha256": "52ecd32a9eb7df499fedb82b2115b4ad96e0c912dbe122f1e7576ada17cf1924",
       "executable": false
     },
     "src/site/landing/sections/TeamsArt.tsx": {
-      "sha256": "82d5c38fa740dea380c778756c1fe6d7585f7d12880347d2529659e323534963",
+      "sha256": "c1b79962ab75a264204ec5b5771a394196903155604670b74cacd2852b1cf9bb",
       "executable": false
     },
     "src/site/landing/sections/TogetherArt.tsx": {
@@ -2641,11 +2641,11 @@
       "executable": false
     },
     "src/site/landing/sections/versions-agents.css": {
-      "sha256": "aa47cb77f1063fc31deaa989dac7a94827b7c3c0c32a3974052debf1ce6ea095",
+      "sha256": "56fa7106187ec9a2753c6451f37e874a3ee9aff543522b61891ae74bcc78ab28",
       "executable": false
     },
     "src/site/landing/sections/VersionsArt.tsx": {
-      "sha256": "757841f8f685b9bde08bd5970c74a150680a993d2f806e6b946b1bd80771920d",
+      "sha256": "ba53b1093792bd7cca0cb8ac9c40846bbc3d7722ce4da7c86eb230da1be60711",
       "executable": false
     },
     "src/site/pages.tsx": {

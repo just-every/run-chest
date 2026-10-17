@@ -13,7 +13,7 @@
 .detail-mark { position: absolute; left: 13.4em; top: 2.6em; width: 4.8em; height: 4.8em; fill: none; stroke: #5a2ce8; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .detail h3 { margin-top: 1.05em; color: var(--chest-site-ink); font: 780 3.05em/1.1 var(--chest-font-ui); letter-spacing: -0.04em; white-space: nowrap; }
 .detail p { margin-top: 0.45em; max-width: 13.9em; color: #4f5464; font: 400 2.45em/1.45 var(--chest-font-ui); letter-spacing: -0.01em; }
-@media (max-width: 999px) {
+@media (max-width: 1279px) {
   .details { height: auto; padding: 6.4em var(--gutter) 2em; }
   .details-eyebrow { margin-left: 0; font-size: 1.35em; }
   .details h2 { font-size: clamp(3.8em, 9.6vw, 6.4em); margin-left: 0; }

@@ -9,10 +9,14 @@ const rows = [
   { kind: 'slides', name: 'Proposal.key', state: <span className="sync-state sync-warn f14"><Icon name="alert" /> conflict, kept both</span> },
 ] as const
 
-/** Page 2, top: the menu-bar Chest with four files in four sync states, and a phone that just uploaded a photo. */
+/**
+ * Page 2, top: the menu-bar Chest with four files in four sync states, and a phone that just uploaded a photo. The
+ * drawing sits 30 desk px right of the desk's, since this heading sets wider than the desk's lettering and the
+ * period of "phone." must clear the panel as it does on page-02.
+ */
 export function SyncArt() {
   return (
-    <Stage w={976} h={490} flow className="sync-art" label="Chest in the Mac menu bar: a contract synced, a photo folder on demand, a budget syncing at 62% and a conflict kept as both copies; a phone shows IMG_4827.jpg uploaded.">
+    <Stage w={946} h={490} flow className="sync-art" label="Chest in the Mac menu bar: a contract synced, a photo folder on demand, a budget syncing at 62% and a conflict kept as both copies; a phone shows IMG_4827.jpg uploaded.">
       <Place x={175} y={40} w={440} h={46} z={2} phone={false}>
         <div className="menubar row">
           <span className="menubar-blank" />

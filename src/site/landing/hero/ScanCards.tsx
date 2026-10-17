@@ -42,7 +42,7 @@ export function NdaCard() {
       <div className="row nda-head"><FileTile kind="pdf" /><div className="stack"><b className="f16 ink">NDA.pdf</b><span className="f13 dim">Scanned · 3 pages</span></div></div>
       <div className="scan">
         <p className="scan-title">Non-disclosure agreement</p>
-        <p className="scan-text">Acme Supply Co. · Harbor Freight</p>
+        <p className="scan-text">Acme Supply Co.<span className="then"><span className="sep"> · </span>Harbor Freight</span></p>
         <dl className="scan-fields">
           <div><dt>Date:</dt><dd><span className="field">Oct 1, 2026</span></dd></div>
           <div><dt>Party:</dt><dd><span className="field field-wide">Acme Supply Co.</span></dd></div>

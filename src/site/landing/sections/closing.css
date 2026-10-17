@@ -10,7 +10,7 @@
 .closing-actions .btn { font-size: 2.4em; min-height: 2.65em; padding: 0 2.35em; }
 .closing-actions .text-link { font-size: 2.2em; }
 .closing-licence { margin-top: 2.8em; color: #4f5464; font: 400 2em/1.3 var(--chest-font-ui); }
-@media (max-width: 999px) {
+@media (max-width: 1279px) {
   .closing { height: auto; padding: 4em var(--gutter) 0; display: flex; flex-direction: column; }
   .closing-copy { position: static; justify-items: start; text-align: left; }
   .closing h2 { font-size: clamp(4.4em, 12vw, 7.2em); }

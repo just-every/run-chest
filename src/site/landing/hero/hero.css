@@ -24,16 +24,20 @@
 .hl-green { padding: 0.15em 0.25em; border-radius: 0.25em; background: #dcf3df; color: #2a8642; }
 .clause-green { margin-top: 0.9em !important; }
 .contract mark { position: relative; }
-.contract .cursor { font-size: 0.667em; }
-.contract .cursor { right: 3em; top: 0.9em; }
-.contract .cursor svg { width: 3.6em; height: 3.6em; }
-/* The tag hangs left of the arrow, in the space after the next (short) line, so it never runs off the card. */
-.contract .cursor b { left: auto; right: 0.4em; top: 1.6em; }
+/* As on page-01: each arrow hangs below its highlight, the tip on the highlight's lower edge, and the name tag sits
+   below and right of it, past the end of the shorter line underneath. */
+.contract .cursor { top: 100%; font-size: 0.667em; }
+.contract .cursor svg { top: -0.3em; width: 3.6em; height: 3.6em; }
+.contract .cursor b { left: 1.5em; top: 1.7em; }
+.contract .cursor-dana { left: 57%; }
+.contract .cursor-luis { left: 74%; }
+/* The contract ends one line under Luis's clause, so his tag rides beside that line, inside the card. */
+.contract .cursor-luis b { top: 0.8em; }
 
 .receipt-frame { width: 100%; height: 100%; padding: 1.1em; border-radius: 2.2em; background: #fff; }
 .receipt-photo { position: relative; height: 100%; overflow: hidden; border-radius: 1.6em; }
 /* The printing on the blank receipt plate: thermal mono, multiplied into the paper. */
-.receipt-print { position: absolute; left: 13%; right: 9%; top: 15%; color: #26252c; font: 400 1.2em/1.42 var(--chest-font-mono); letter-spacing: -0.03em; text-align: center; mix-blend-mode: multiply; opacity: 0.88; rotate: 0.6deg; }
+.receipt-print { position: absolute; left: 13%; right: 9%; top: 15%; color: #26252c; font: 400 max(1.2em, 11px)/1.42 var(--chest-font-mono); letter-spacing: -0.03em; text-align: center; mix-blend-mode: multiply; opacity: 0.88; rotate: 0.6deg; }
 .receipt-name { font-size: 1.5em; font-weight: 500; letter-spacing: 0.02em; margin-bottom: 0.5em !important; }
 .receipt-date { margin-top: 0.4em !important; }
 .receipt-print dl { margin: 0.9em 0 0; text-align: left; }
@@ -48,7 +52,7 @@
 .nda-head { gap: 1.4em; }
 .scan { position: relative; margin-top: 1.8em; height: 26.4em; padding: 2.6em 2.4em 0 2.6em; background: #f1efea url("/site/scan-paper.webp") center / cover; border-radius: 0.4em; box-shadow: inset 0 0 3em rgba(80, 70, 50, 0.08); }
 .scan-title { color: #23222a; font: 400 1.6em/1 var(--chest-font-type); letter-spacing: 0.02em; text-transform: uppercase; text-align: center; }
-.scan-text { margin-top: 1.4em !important; color: #3a3840; font: 400 1.22em/1.4 var(--chest-font-type); letter-spacing: -0.01em; }
+.scan-text { margin-top: 1.4em !important; color: #3a3840; font: 400 max(1.22em, 11px)/1.4 var(--chest-font-type); letter-spacing: -0.01em; }
 .scan-fields { display: grid; gap: 1.1em; margin: 1.6em 0 0; }
 .scan-fields div { display: flex; align-items: center; gap: 1.2em; }
 .scan-fields dt { width: 5.6em; color: #2b2a30; font: 400 1.35em/1 var(--chest-font-doc); }
@@ -77,7 +81,7 @@
 .hero-sticky { font-size: 2.9em; padding: 0.5em 0.55em; place-items: start; line-height: 1.12; }
 .hero-sticky span { padding-top: 0.2em; }
 
-@media (max-width: 999px) {
+@media (max-width: 1279px) {
   .hero { height: auto; display: flex; flex-direction: column; gap: 2em; padding: 4.4em var(--gutter) 2em; }
   .hero-copy, .hero-art { position: static; width: auto; }
   .hero h1 { font-size: clamp(5em, 13.6vw, 8.6em); }
@@ -90,5 +94,11 @@
   .stage-flow .contract { padding: 2em 2em 2.4em; }
   .stage-flow .contract-head .avatar-grey { display: none; }
   .stage-flow .contract-head .avatars .avatar { width: 2.4em; height: 2.4em; }
+  .stage-flow .contract-head b.nowrap { white-space: normal; }
   .stage-flow .clause { margin-top: 1.8em !important; }
+  /* The paper stays in the column: the scanned NDA grows to its text, and the receipt photo keeps the desk's own
+     size (one desk pixel to one CSS pixel here), so its printing sits on the paper exactly as drawn. */
+  .stage-flow .nda-card { padding: 1.8em 1.8em 2em; }
+  .stage-flow .scan { height: auto; padding: 2.4em 2em; }
+  .stage-flow .receipt-frame { width: 25.6em; height: 29.6em; margin: 0 auto; }
 }

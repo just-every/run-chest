@@ -16,14 +16,14 @@ export function SearchArt() {
           <div className="search-hit row">
             <FileTile kind="word" />
             <div className="stack grow">
-              <span className="f16 ink">MSA_2026_v7.docx <span className="dim">· page 4</span></span>
+              <span className="f16 ink">MSA_2026_v7.docx<span className="dim then"><span className="sep"> · </span>page&nbsp;4</span></span>
               <span className="f15 mid search-snippet">... each&nbsp; party shall defend, <mark className="hl-search">indemnification</mark> and hold harmless the other party from and against any and all claims, losses, damages ...</span>
             </div>
           </div>
           <div className="search-hit search-hit-scan row">
             <FileTile kind="pdf" />
             <div className="stack grow">
-              <span className="f16 ink">NDA_scan.pdf <span className="dim">· scanned · page 2</span></span>
+              <span className="f16 ink">NDA_scan.pdf<span className="dim then"><span className="sep"> · </span>scanned · page&nbsp;2</span></span>
               <div className="scan scan-excerpt">
                 <p><span className="clause-no">7.</span> <span className="scan-hit">Indemnification.</span></p>
                 <p>Each party agrees to indemnify, defend and hold harmless the other party, its affiliates and their respective officers, directors, employees and agents from and against any and all claims, losses, damages, liabilities and expenses (including reasonable attorneys’ fees) arising out of or relating to this Agreement.</p>

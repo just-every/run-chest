@@ -47,7 +47,7 @@
 .request-ico { display: grid; place-items: center; width: 4.8em; height: 4.8em; border-radius: 1.1em; background: #e6efff; color: #2457e6; flex: none; }
 .request-ico .ico { width: 2.6em; height: 2.6em; stroke-width: 2.4; }
 .share-sticky { font-size: 2.3em; line-height: 1.05; }
-@media (max-width: 999px) {
+@media (max-width: 1279px) {
   .stage-flow .sync-panel { padding: 0.6em 1.8em 0; }
   .stage-flow .sync-row { gap: 1.2em; }
   .stage-flow .share-card { padding: 1.8em 1.8em 2em; }

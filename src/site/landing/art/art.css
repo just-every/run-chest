@@ -3,8 +3,9 @@
    Containers keep the stage's em; only text sets its own size (.f13 = 13 desk px). */
 .stage { --art: min(10px, calc(100vw / 153.6)); position: relative; margin: 0; font-size: var(--art); flex: none; }
 .at { position: absolute; }
-.stage .f11 { font-size: 1.1em; } .stage .f12 { font-size: 1.2em; } .stage .f13 { font-size: 1.3em; } .stage .f14 { font-size: 1.4em; }
-.stage .f125 { font-size: 1.25em; } .stage .f135 { font-size: 1.35em; } .stage .f15 { font-size: 1.5em; } .stage .f165 { font-size: 1.65em; } .stage .f16 { font-size: 1.6em; } .stage .f17 { font-size: 1.7em; } .stage .f18 { font-size: 1.8em; }
+/* Desk sizes under 13.2 px would fall under 11 px between 1280 and 1408 px wide, so they stop at 11 px. */
+.stage .f11 { font-size: max(1.1em, 11px); } .stage .f12 { font-size: max(1.2em, 11px); } .stage .f13 { font-size: max(1.3em, 11px); } .stage .f14 { font-size: 1.4em; }
+.stage .f125 { font-size: max(1.25em, 11px); } .stage .f135 { font-size: 1.35em; } .stage .f15 { font-size: 1.5em; } .stage .f165 { font-size: 1.65em; } .stage .f16 { font-size: 1.6em; } .stage .f17 { font-size: 1.7em; } .stage .f18 { font-size: 1.8em; }
 .stage .f20 { font-size: 2em; } .stage .f22 { font-size: 2.2em; }
 .stage p, .stage b, .stage span { line-height: 1.35; }
 .stage { letter-spacing: -0.006em; }
@@ -21,7 +22,7 @@
 .row { display: flex; align-items: center; }
 .grow { flex: 1; min-width: 0; }
 .stack { display: grid; }
-.nowrap { white-space: nowrap; }
+.nowrap, .then { white-space: nowrap; }
 
 .ico { width: 2.2em; height: 2.2em; flex: none; display: block; }
 .ico.more { width: 2.4em; height: 2.4em; color: #3d4150; }

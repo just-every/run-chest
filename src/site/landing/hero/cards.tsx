@@ -4,7 +4,7 @@ import { Avatar, Cursor } from '../art/marks'
 
 /**
  * The Acme Supply contract with Dana's and Luis's cursors on two highlighted clauses. The lines break where the desk
- * broke them, so each name tag lands in the space after a short line instead of on the words.
+ * broke them; each arrow hangs below its highlight and its name tag lands past the end of the shorter line beneath.
  */
 export function ContractCard({ cursors = true }: { cursors?: boolean }) {
   return (
@@ -28,7 +28,7 @@ export function ShareLinkCard() {
   return (
     <div className="card share-link row">
       <span className="round-ico"><Icon name="link" /></span>
-      <div className="stack grow"><b className="f16 ink">Share link</b><span className="f13 mid">expires Nov 30 · 3 of 10 downloads</span></div>
+      <div className="stack grow"><b className="f16 ink">Share link</b><span className="f13 mid nowrap">expires Nov 30<span className="then"><span className="sep"> · </span>3 of 10 downloads</span></span></div>
       <More />
     </div>
   )

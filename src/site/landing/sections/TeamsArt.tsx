@@ -14,8 +14,8 @@ export function TeamsArt() {
     <Stage w={680} h={470} flow className="teams-art" label="Team settings: single sign-on with Okta on, user sync for 42 people, team spaces Finance, Legal and Clients, and storage at 1.2 TB of 5 TB.">
       <Place x={131} y={7} w={418} h={433}>
         <div className="card teams-card">
-          <div className="row teams-row"><span className="soft-ico"><Icon name="shield" /></span><span className="f165 ink"><b>Single sign-on</b> <span className="dim">·</span> <span className="mid">Okta</span></span><span className="grow" /><span className="done"><Icon name="check" /></span></div>
-          <div className="row teams-row"><span className="soft-ico"><Icon name="users" /></span><span className="f165 ink"><b>User sync</b> <span className="dim">·</span> <span className="mid">42 people</span></span></div>
+          <div className="row teams-row"><span className="soft-ico"><Icon name="shield" /></span><span className="f165 ink"><b>Single sign-on</b><span className="mid then"><span className="sep dim"> · </span>Okta</span></span><span className="grow" /><span className="done"><Icon name="check" /></span></div>
+          <div className="row teams-row"><span className="soft-ico"><Icon name="users" /></span><span className="f165 ink"><b>User sync</b><span className="mid then"><span className="sep dim"> · </span>42 people</span></span></div>
           <p className="f155 mid teams-label">Team spaces</p>
           <div className="spaces">
             {spaces.map(space => (

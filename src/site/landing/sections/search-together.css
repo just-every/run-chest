@@ -10,7 +10,7 @@
 .search-snippet { line-height: 1.5 !important; }
 .hl-search { padding: 0.05em 0.2em; border-radius: 0.25em; background: #e5dcff; color: #2c1aa6; font-weight: 500; }
 .scan-excerpt { height: auto; margin-top: 0.4em; padding: 1.2em 1.4em; }
-.scan-excerpt p { color: #26252b; font: 400 1.22em/1.4 var(--chest-font-type); letter-spacing: -0.01em; }
+.scan-excerpt p { color: #26252b; font: 400 max(1.22em, 11px)/1.4 var(--chest-font-type); letter-spacing: -0.01em; }
 .scan-excerpt p + p { margin-top: 0.3em !important; text-indent: 1.4em; }
 .clause-no { margin-left: 2.6em; }
 .scan-hit { padding: 0 0.3em; border: 0.12em solid #5a2ce8; border-radius: 0.2em; font-weight: 700; color: #111; }
@@ -46,8 +46,8 @@
 .caret-at .cursor-doc b { left: 0.6em; top: 2.4em; }
 .comment { position: absolute; left: 54.2em; top: 21.6em; width: 21.2em; white-space: nowrap; padding: 1.4em 1.6em; border-radius: 1.2em; }
 .comment-head { gap: 0.8em; margin-bottom: 0.8em; }
-.comment .avatar { width: 2.6em; height: 2.6em; font-size: 1.2em; border: 0; }
-@media (max-width: 999px) {
+.comment .avatar { width: 2.6em; height: 2.6em; font-size: max(1.2em, 11px); border: 0; }
+@media (max-width: 1279px) {
   .stage-flow .search-card { padding: 1.6em 1.4em; }
   .stage-flow .search-hit { gap: 1.2em; padding: 1.2em; }
   .stage-flow .search-hit .tile { width: 3.8em; height: 3.8em; }
@@ -60,9 +60,10 @@
   .stage-flow .editor-page { width: auto; padding: 2em 2em 3.6em; }
   .stage-flow .doc-title { font-size: 2.6em; }
   .stage-flow .comment { position: relative; left: auto; top: auto; width: auto; margin: 0 2em 2em; white-space: normal; }
-  /* Where the text wraps is up to the phone, so each cursor takes room in its own line and hangs its tag left. */
-  .stage-flow .editor-page .cursor-doc { position: relative; left: auto; top: auto; display: inline-block; width: 0; height: 5.8em; vertical-align: top; }
-  .stage-flow .editor-page .cursor-doc svg { top: 1.2em; left: -0.6em; }
-  .stage-flow .editor-page .cursor-doc b { left: auto; right: 0.6em; top: 2.6em; }
+  /* Where the text wraps is up to the phone, so each cursor takes room in its own line: the arrow hangs below the
+     words it points at and the tag hangs left of it. */
+  .stage-flow .editor-page .cursor-doc { position: relative; left: auto; top: auto; display: inline-block; width: 0; height: 6.6em; vertical-align: top; }
+  .stage-flow .editor-page .cursor-doc svg { top: 2.2em; left: -0.6em; }
+  .stage-flow .editor-page .cursor-doc b { left: auto; right: 0.6em; top: 2.9em; }
   .stage-flow .hl-blue, .stage-flow .hl-amber { white-space: nowrap; }
 }

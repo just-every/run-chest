@@ -15,7 +15,7 @@ import './movein-teams.css'
 
 /** Pages 2 to 4 of the desk, two ideas per page, the drawing alternating sides. Geometry in desk pixels. */
 export const pairs: FeatureProps[] = [
-  { id: 'sync', ...featureCopy.sync, art: <SyncArt />, side: 'right', height: 530, copy: { x: 92, y: 122, w: 660 }, at: { x: 560, y: 40 }, size: 88, leadSize: 22.5 },
+  { id: 'sync', ...featureCopy.sync, art: <SyncArt />, side: 'right', height: 530, copy: { x: 92, y: 122, w: 660 }, at: { x: 590, y: 40 }, size: 88, leadSize: 22.5 },
   { id: 'sharing', ...featureCopy.sharing, art: <ShareArt />, side: 'left', height: 494, copy: { x: 876, y: 78, w: 620 }, at: { x: 80, y: 30 }, size: 95, leadSize: 23 },
   { id: 'search', ...featureCopy.search, art: <SearchArt />, side: 'right', height: 530, copy: { x: 100, y: 106, w: 640 }, at: { x: 740, y: 40 }, size: 78, leadSize: 26, tracked: true, panels: [{ x: 34, y: 28, w: 1468, h: 494 }] },
   { id: 'together', ...featureCopy.together, art: <TogetherArt />, side: 'left', height: 494, copy: { x: 958, y: 90, w: 540 }, at: { x: 84, y: 36 }, size: 80, leadSize: 25, tracked: true, panels: [{ x: 34, y: 10, w: 1468, h: 470 }] },

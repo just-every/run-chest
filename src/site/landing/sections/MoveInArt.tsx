@@ -14,10 +14,10 @@ export function MoveInArt() {
       <Ticks style={{ left: '6.8em', top: '2em', width: '4.4em', height: '4.4em' }} turn={-60} />
       <Place x={110} y={52} w={475} h={363}>
         <div className="card import-card">
-          <div className="row import-row"><span className="brand-ico"><Drive /></span><span className="import-name"><span className="f19 ink">Google Drive</span> <span className="f17 dim">· 12,480 files</span></span><span className="grow" /><span className="done"><Icon name="check" /></span></div>
-          <div className="row import-row"><span className="brand-ico"><Dropbox /></span><span className="import-name"><span className="f19 ink">Dropbox</span> <span className="f17 dim">· 3,201 files</span></span><span className="grow" /><span className="done"><Icon name="check" /></span></div>
+          <div className="row import-row"><span className="brand-ico"><Drive /></span><span className="import-name"><span className="f19 ink">Google Drive</span> <span className="f17 dim then"><span className="sep">· </span>12,480 files</span></span><span className="grow" /><span className="done"><Icon name="check" /></span></div>
+          <div className="row import-row"><span className="brand-ico"><Dropbox /></span><span className="import-name"><span className="f19 ink">Dropbox</span> <span className="f17 dim then"><span className="sep">· </span>3,201 files</span></span><span className="grow" /><span className="done"><Icon name="check" /></span></div>
           <div className="import-row import-busy">
-            <div className="row"><span className="brand-ico"><BoxMark /></span><span className="import-name"><span className="f19 ink">Box</span> <span className="f17 dim">· 980 files</span></span><span className="grow" /><span className="f17 ink">71%</span></div>
+            <div className="row"><span className="brand-ico"><BoxMark /></span><span className="import-name"><span className="f19 ink">Box</span> <span className="f17 dim then"><span className="sep">· </span>980 files</span></span><span className="grow" /><span className="f17 ink">71%</span></div>
             <span className="bar"><i style={{ width: '68%' }} /></span>
           </div>
           <div className="row import-links"><Icon name="link" /><span className="f16 ink">Shared links rewritten</span><span className="f16 dim">· 214</span></div>
