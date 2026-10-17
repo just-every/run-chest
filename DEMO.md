@@ -49,16 +49,19 @@ dependency modules are not wired into Chest.
 `.github/workflows/run-demo.yml` deploys it on manual dispatch (or each push to
 `main` once `RUN_DEMO_DEPLOY` is `true`) from the `run-demo` environment. With
 `test_only` it deploys the separate test host `demo.test.run-chest.com` with
-Turnstile's test keys; `test_only` with `remove_test` removes that host and
-reads back that it is gone. Each visitor gets their own container running
-Chest's image (`deploy.json` `platforms` includes `container`, workerd engine),
-signed in through the signed owner claim at `/auth/owner-claim`, which
+Turnstile's test keys; `remove` removes the selected host and reads back that it
+is gone. The workflow is Base's `export/run-demo.yml`, recorded in
+`base-copies.json`. Each visitor gets their own isolate on rer's native Worker
+Loader host: `DB` is a SQLite facet and `BLOBS` (R2) objects live in the
+visitor's own Durable Object storage, so every copy, its documents and its
+originals are erased together after 60 minutes or 15 idle minutes. The visitor
+is signed in through the signed owner claim at `/auth/owner-claim`, which
 `src/auth.server.ts` serves only when `RER_OWNER_CLAIM_PUBLIC_KEYS` is set.
 `rer deploy` refuses any declaration or settings carrying `RER_DEMO`.
 
 ## Base copy
 
-`src/modules/demo` is Base `modules/demo` at tag `rer-v0.2.24`
-(`1ee378e41142c673a9098f60af21664c6d8477d1`), unchanged. It uses
+`src/modules/demo` is Base `modules/demo` at tag `rer-v0.2.40`
+(`9eb83c85a9088c16ffe94a3af43e8a2e95acc377`), unchanged. It uses
 `src/modules/operator-auth/http.mjs` and `csp.mjs`, recorded with the other
 operator-auth copies in `base-copies.json` at the same revision.

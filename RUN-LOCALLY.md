@@ -1,6 +1,6 @@
 # Run it locally
 
-Start Chest with one line, `npx -y @runeditrun/rer dev just-every/run-chest` (without Node, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-chest` brings its own); to only set it up, run `npx -y @runeditrun/rer setup just-every/run-chest`. Chest pins the published `@runeditrun/rer` 0.2.20; every verb runs that package. `rer demo` runs a throwaway demo with sample data; see [DEMO.md](DEMO.md).
+Start Chest with one line, `npx -y @runeditrun/rer dev just-every/run-chest` (without Node, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-chest` brings its own); to only set it up, run `npx -y @runeditrun/rer setup just-every/run-chest`. Chest pins the published `@runeditrun/rer` 0.2.40; every verb runs that package. `rer demo` runs a throwaway demo with sample data; see [DEMO.md](DEMO.md).
 
 ## Launch with one command
 
