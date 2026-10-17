@@ -1,7 +1,6 @@
-import { esc,field,select,form,hidden,card,icon,personPicker } from './ui-shared'
+import { esc,field,select,form,hidden,card,icon,personPicker,bytes } from './ui-shared'
 import { grantEditor,principalName } from './ui-grants'
 const inline={className:'form form-inline',buttonClass:'btn btn-outline'}
-const bytes=(n:number)=>n<1024?`${n} bytes`:n<1048576?`${(n/1024).toFixed(1)} KB`:n<1073741824?`${(n/1048576).toFixed(1)} MB`:`${(n/1073741824).toFixed(2)} GB`
 // A closed settings row: manila tab, icon, name and a mono summary; opening it shows its editor form unchanged.
 const fold=(iconName:'document'|'people',name:string,summary:string,body:string)=>`<li class="row-tabbed"><span class="tab tab-plain" aria-hidden="true"></span><details class="row-card row-fold"><summary class="row-sum">${icon(iconName)}<strong class="row-name">${esc(name)}</strong><span class="row-facts">${summary}</span>${icon('chevron')}</summary><div class="row-body">${body}</div></details></li>`
 const chips=(items:string[],none:string)=>items.length?items.map(t=>`<span class="chip mono" title="${esc(t)}">${esc(t)}</span>`).join(''):`<span class="mono quiet">${esc(none)}</span>`

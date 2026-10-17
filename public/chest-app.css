@@ -375,6 +375,7 @@ body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: 
   .audit tr:last-child { border-bottom: 0; }
   .audit td, .audit td:nth-child(-n+2) { display: block; padding: 0; border: 0; white-space: normal; overflow-wrap: anywhere; }
   .audit td::before { content: attr(data-label); display: block; color: var(--chest-muted); font: 400 13px/1.4 var(--chest-font-sans); }
+  .audit td:empty { display: none; }
   .audit td:first-child { white-space: nowrap; }
 }
 

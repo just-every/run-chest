@@ -6,6 +6,7 @@ import { insist, now, type Group, type Row } from '../model'
 import { commit, fresh, maybe, next, type Op } from './repo'
 import { allowed, context, demand, descend, everything, isAdmin, level, start, type Who } from './access'
 import { deliver, notice } from './notify'
+import { personLine } from '../names'
 import { day, live, rank, role, shareRoles, type AccessRequest, type Expiry, type Grant, type Item, type Link, type Notice, type Prefs, type Space } from './model'
 // Item sharing (SHARE-004): people with share rights grant viewer, commenter or editor to colleagues or groups with
 // an optional message and expiry; recipients get an in-app notice and an email and find the item under Shared with me.
@@ -35,7 +36,7 @@ export async function share(env: Bindings, s: Session, w: Who, key: string, inpu
  const { principal, emails } = await recipients(env, input.principal); insist(principal !== s.operator.email, 'cannot_share_with_self')
  const message = optional(input.message, 'message'), expires = await expiry(env, input.expires)
  const grant: Grant = { principal, role: r, by: s.operator.email, at: now(), ...(expires ? { expires } : {}), ...(message ? { message } : {}) }
- const notices = emails.filter(e => e !== s.operator.email).map(e => notice(e, 'share', key, s.operator.email, `${s.operator.displayName} (${s.operator.email}) shared "${item.payload.name}" with you as ${r}.${message ? `\n\n${message}` : ''}${expires ? `\n\nAccess expires ${expires.slice(0, 10)}.` : ''}`))
+ const notices = emails.filter(e => e !== s.operator.email).map(e => notice(e, 'share', key, s.operator.email, `${personLine(s.operator.displayName, s.operator.email)} shared "${item.payload.name}" with you as ${r}.${message ? `\n\n${message}` : ''}${expires ? `\n\nAccess expires ${expires.slice(0, 10)}.` : ''}`))
  await commit(env, s, [{ row: next(item, { ...item.payload, grants: [...item.payload.grants.filter(g => g.principal !== principal), grant] }), previous: item }, ...await expiryOps(env, key, principal, grant), ...notices.map(row => ({ row }))], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'share.grant', object: key, detail: { principal, role: r, expires: expires ?? null } }] })
  await deliver(env, s, notices)
  return get<Item>(env, 'item', key)
@@ -98,7 +99,7 @@ export async function requestAccess(env: Bindings, s: Session, w: Who, key: stri
  if (open) return { request: open.id, status: open.payload.status }
  const approvers = await approversFor(env, ctx.space, ctx.chain), at = now()
  const row = fresh<AccessRequest>('request', { item: key, requester: s.operator.email, role: r, message, at, expiresAt: new Date(Date.parse(at) + 30 * day).toISOString(), status: 'pending', approvers })
- const notices = approvers.map(e => notice(e, 'request', key, s.operator.email, `${s.operator.displayName} (${s.operator.email}) asked for ${r} access to "${item.payload.name}".${message ? `\n\n${message}` : ''}`, row.id))
+ const notices = approvers.map(e => notice(e, 'request', key, s.operator.email, `${personLine(s.operator.displayName, s.operator.email)} asked for ${r} access to "${item.payload.name}".${message ? `\n\n${message}` : ''}`, row.id))
  await commit(env, s, [{ row }, ...notices.map(row => ({ row }))], { fences: ctx.fences, audits: [{ action: 'access.request', object: key, detail: { request: row.id, role: r, approvers: approvers.length } }] })
  await deliver(env, s, notices)
  return { request: row.id, status: 'pending' }

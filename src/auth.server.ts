@@ -5,6 +5,7 @@ import { operatorMail } from './mail.server.mjs'
 import { createOwnerClaimHandler, OwnerClaimError } from './modules/owner-claim/index.mjs'
 import branding from './branding.json'
 import { companyResponse } from './chest/organisation/routes'
+import { namingInviter } from './chest/invitation-mail'
 
 // The edition's declared theme (public/rer-theme.css), as Base frames link it.
 const theme = { href: '/rer-theme.css', productName: branding.name, accentColor: branding.primaryColor }
@@ -42,8 +43,9 @@ export interface Bindings {
 
 export const runtimeBindings = (env: Bindings): Bindings => env.RER_DEV_ORIGIN && env.AUTH_LOCAL === 'true' ? { ...env, AUTH_ORIGIN: env.RER_DEV_ORIGIN } : env
 export const authConfig = (env: Bindings): AuthConfig => ({ origin: env.AUTH_ORIGIN, local: env.AUTH_LOCAL === 'true', OWNER_EMAIL: env.OWNER_EMAIL, SESSION_SECRET: env.SESSION_SECRET, SETUP_TOKEN: env.SETUP_TOKEN, MAIL_FROM: env.MAIL_FROM, branding: { productName: branding.name, accentColor: branding.primaryColor, signInPath: '/signin', theme: theme.href } })
-export function operatorAuth(env: Bindings) {
- return createOperatorAuth({ db: env.DB, config: authConfig(env), mailSender: operatorMail(env), clientIp: request => request.headers.get('CF-Connecting-IP') ?? '' })
+// `inviter` names who sends the invitation this instance mails (src/chest/invitation-mail.ts).
+export function operatorAuth(env: Bindings, inviter?: string) {
+ return createOperatorAuth({ db: env.DB, config: authConfig(env), mailSender: inviter ? namingInviter(operatorMail(env), inviter) : operatorMail(env), clientIp: request => request.headers.get('CF-Connecting-IP') ?? '' })
 }
 
 export async function authResponse(request: Request, original: Bindings): Promise<Response | null> {

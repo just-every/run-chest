@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+**People are named, and the stranger's smaller notes are fixed (stranger journey 1, notes).**
+
+- Finish setup asks for your name. Invitation emails say who invited you ("Rosa Diaz (rosa@…) invited you to
+  Chest"). File request pages, share, access-request and comment emails, and the Audit trail use that name too, or
+  the email address until a name is set, never "Owner". Chest has no organisation name, so none is shown.
+- A resumed upload drops its "Unfinished uploads" line once it starts, so only the live progress shows. "Checking
+  every byte" shows the time so far and an estimate for the file's size.
+- The Audit trail's Who column shows names, and sizes read as KB or MB. On a phone, rows without details leave out
+  the empty label.
+- The Files and Library search placeholders fit on a 390-pixel phone ("Search names and text", "Search titles,
+  fields, text").
+- Runs on `@runeditrun/rer` 0.2.47, with every Base copy at rer-v0.2.47 (this includes dm's 0.2.45 refresh). The run
+  site's licence-to-license rewrite is gone, because Base's Run page now says "license" itself.
+
 **Setup pages work on their own (stranger journey 1).**
 
 - Team space members are added by email with a role, given another role or removed on their row; when the owner
@@ -31,4 +45,4 @@
   `deploy.json` is never edited; it names the guide (`deployGuide`).
 - `node scripts/hosted-backup.mjs` saves the hosted database (`wrangler d1 export --remote`) and every original from
   R2 into an owner-only folder; `node scripts/hosted-restore.mjs` restores it into a fresh deployment.
-- `@runeditrun/rer` is pinned at 0.2.45, whose `rer export --origin <hosted>` refuses and names the hosted export.
+- `rer export --origin <hosted>` (rer 0.2.45 and later) refuses and names the hosted export.

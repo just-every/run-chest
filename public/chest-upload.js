@@ -18,6 +18,10 @@
   }
   const size = n => n < 1024 ? `${n} bytes` : n < 1048576 ? `${(n / 1024).toFixed(1)} KB` : n < 1073741824 ? `${(n / 1048576).toFixed(1)} MB` : `${(n / 1073741824).toFixed(2)} GB`
   const wait = ms => new Promise(r => setTimeout(r, ms))
+  const clock = s => s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')} s`
+  // Checking every byte reads the whole file through twice on the server, one request with no progress of its own.
+  // Measured locally at 17 to 22 MB a second (1 GB took about 60 s), so the estimate uses the slower figure.
+  const CHECK_RATE = 16 * 1048576
   class Refused extends Error { constructor(code) { super(code); this.code = code } }
   async function api(method, path, body) {
     let response
@@ -45,19 +49,34 @@
     const total = job.file.size, got = Math.min(total, job.received + (job.inflight || 0)), pct = total ? Math.floor(got * 100 / total) : 0
     const label = { waiting: 'Waiting', starting: 'Starting', uploading: `Uploading ${pct}%`, paused: `Paused at ${pct}%`, retrying: `Connection lost at ${pct}% · resumes by itself`, verifying: 'Checking every byte', done: 'Uploaded', failed: 'Not uploaded', cancelled: 'Cancelled' }[job.state]
     job.row.dataset.state = job.state
-    job.bar.value = job.state === 'done' ? 100 : pct
     job.status.textContent = label
-    job.bytes.textContent = job.state === 'done' ? `${size(total)} · SHA-256 ${job.checksum.slice(0, 6)}…${job.checksum.slice(-7)}` : `${size(got)} of ${size(total)}`
+    if (job.state === 'verifying') {
+      job.checking ??= { since: Date.now(), tick: setInterval(() => draw(job), 1000) }
+      job.bar.removeAttribute('value')
+      job.bytes.textContent = `${clock(Math.round((Date.now() - job.checking.since) / 1000))} so far · up to about ${clock(Math.max(1, Math.round(total / CHECK_RATE)))} for ${size(total)}`
+    } else {
+      if (job.checking) { clearInterval(job.checking.tick); job.checking = null }
+      job.bar.value = job.state === 'done' ? 100 : pct
+      job.bytes.textContent = job.state === 'done' ? `${size(total)} · SHA-256 ${job.checksum.slice(0, 6)}…${job.checksum.slice(-7)}` : `${size(got)} of ${size(total)}`
+    }
     job.pause.hidden = !['uploading', 'retrying', 'paused'].includes(job.state)
     job.pause.textContent = job.state === 'paused' ? 'Resume' : 'Pause'
     job.cancel.hidden = ['done', 'failed', 'cancelled', 'verifying'].includes(job.state)
+  }
+  // A resumed upload shows its live progress only: its line under Unfinished uploads goes, and the list with its last.
+  function resumed(job) {
+    const panel = job.row.closest('[data-upload]'), line = panel.querySelector(`[data-waiting="${CSS.escape(job.id)}"]`)
+    if (!line) return
+    line.remove()
+    const waiting = panel.querySelector('.upload-waiting')
+    if (waiting && !waiting.querySelector('[data-waiting]')) waiting.remove()
   }
   async function send(job) {
     job.state = 'starting'; job.problem.textContent = ''; draw(job)
     for (let attempt = 0; ; attempt++) {
       try {
         const u = await api('POST', '/uploads', { ...job.target, name: job.file.name, size: job.file.size, lastModified: job.file.lastModified })
-        job.id = u.id; job.received = u.received; job.state = 'uploading'; draw(job)
+        job.id = u.id; job.received = u.received; job.state = 'uploading'; draw(job); resumed(job)
         const have = new Set(u.parts), count = Math.ceil(job.file.size / u.partSize)
         for (let n = 1; n <= count; n++) {
           if (have.has(n)) continue

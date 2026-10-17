@@ -3,6 +3,7 @@ import { serve, digest } from '../blobs'
 import { officePreview } from '../office/codec'
 import { officeDocument } from '../office/service'
 import { ChestError, insist, type Person, type Version } from '../model'
+import { personName } from '../names'
 import { failure } from '../api'
 import { commit, maybe, next } from './repo'
 import { passwordMatches, unlockCookie, unlocked } from './capability'
@@ -74,7 +75,7 @@ async function ask(env: Bindings, secret: string) {
  const found = await resolveRequest(env, secret); if (!found) return missingRequest(); if (!found.ctx) return closedRequest()
  return requestPage(`/r/${secret}`, { ...found.request.payload, asker: await asker(env, found.request.payload.createdBy) })
 }
-async function asker(env: Bindings, email: string) { return (await maybe<Person>(env, 'person', email))?.payload.name || email }
+async function asker(env: Bindings, email: string) { return personName((await maybe<Person>(env, 'person', email))?.payload.name, email) }
 const plain: Record<string, (r: { types: string[]; maxBytes: number }) => string> = {
  storage_limit_exceeded: () => 'This space has reached its storage limit. Ask the person who sent this request to contact the owner before uploading again.',
  type_not_allowed: r => `That type of file is not accepted here. Accepted: ${r.types.join(', ')}.`,

@@ -2,7 +2,8 @@ import { operatorAuth,runtimeBindings,type Bindings } from '../auth.server'
 import { authenticated,overview,execute,headers,failure } from './api'
 import { syncPeople } from './identity'
 import { owner,roles } from './access'
-import { insist,type Schema } from './model'
+import { insist,type Person,type Schema } from './model'
+import { personName } from './names'
 import { get,list } from './store'
 import { typedValues } from './ui-fields'
 import { page,refusedPage } from './ui-shell'
@@ -67,5 +68,6 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
 }
 // Names for the audit trail: files, folders, spaces, records, collections, types, groups, people and devices.
 async function recordNames(env:Bindings){const names=new Map<string,string>()
- for(const [kind,field] of [['item','name'],['space','name'],['document','title'],['collection','name'],['schema','name'],['group','name'],['person','email'],['device','name'],['public-link','item'],['file-request','title'],['upload','name']])for(const r of await list<any>(env,kind))names.set(r.id,kind==='public-link'?`link to ${names.get(r.payload.item)??'a file'}`:kind==='upload'?`upload of ${r.payload.name}`:kind==='space'&&r.payload.kind==='personal'?`${r.payload.owner}'s personal area`:String(r.payload[field]??''))
+ for(const r of await list<Person>(env,'person'))names.set(r.id,personName(r.payload.name,r.id))
+ for(const [kind,field] of [['item','name'],['space','name'],['document','title'],['collection','name'],['schema','name'],['group','name'],['device','name'],['public-link','item'],['file-request','title'],['upload','name']])for(const r of await list<any>(env,kind))names.set(r.id,kind==='public-link'?`link to ${names.get(r.payload.item)??'a file'}`:kind==='upload'?`upload of ${r.payload.name}`:kind==='space'&&r.payload.kind==='personal'?`${names.get(r.payload.owner)??r.payload.owner}'s personal area`:String(r.payload[field]??''))
  return names}
