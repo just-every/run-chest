@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import {harness} from './harness.mjs';
 import {pdf} from './fixtures.mjs';
+import {xlsx} from './office-fixtures.mjs';
 const h=await harness(),b64=x=>Buffer.from(x).toString('base64');
 try{
  await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const owner=await h.signIn(h.vars.OWNER_EMAIL);
@@ -25,6 +26,7 @@ try{
  await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.updatedAt',?) WHERE id=?",'2026-10-15T02:00:00.000Z',a.id);
  await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.updatedAt',?) WHERE id=?",'2026-10-15T12:00:00.000Z',b.id);
  assert.deepEqual((await search({location:root.id,modifiedFrom:'2026-10-14',modifiedTo:'2026-10-14',timeZone:'America/Los_Angeles',type:'pdfs,spreadsheets'})).results.map(r=>r.id),[a.id]);
+ const sheet=await h.api('/items',owner,{space:team.id,name:'Forecast.bin',base64:b64(xlsx())});for(let i=0;i<30;i++){if((await h.api(`/items/${sheet.id}/reading?work=1`,owner)).reading?.state==='done')break;await new Promise(r=>setTimeout(r,100))}assert.deepEqual((await search({q:'Harbor logistics',type:'spreadsheets'})).results.map(r=>r.id),[sheet.id],'Office package contents determine type even with an unknown extension');
  const opts=(await search({})).options;assert.ok(!opts.locations.some(l=>l.id===hidden.id),'inaccessible folders are absent from suggestions');
  await h.api(`/spaces/${team.id}/members`,owner,{members:[{principal:h.vars.OWNER_EMAIL,role:'manager'}]});assert.equal((await search({location:root.id,versions:'any'})).count,0,'revocation wins on the next search');
  await h.api('/search?type=invalid',dana,undefined,400);await h.api('/search?modifiedFrom=2026-02-30',dana,undefined,400);

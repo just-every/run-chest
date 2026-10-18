@@ -12,19 +12,19 @@ export function filters(q: URLSearchParams) {
  const timeZone = q.get('timeZone') || 'America/New_York'
  try { new Intl.DateTimeFormat('en-US', { timeZone }).format() } catch { insist(false, 'invalid_search_timezone') }
  const date = (key: string) => { const v = q.get(key) || ''; insist(!v || /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v)) && new Date(v).toISOString().slice(0,10) === v, 'invalid_search_date'); return v }
- let modifiedFrom = date('modifiedFrom'), modifiedTo = date('modifiedTo');
+ const customFrom = date('modifiedFrom'), customTo = date('modifiedTo'); let modifiedFrom = customFrom, modifiedTo = customTo;
  const modified = q.get('modified') || ''; insist(['','today','7','30','year','lastYear'].includes(modified), 'invalid_search_modified')
  if (modified && !modifiedFrom && !modifiedTo) {
   const parts = new Intl.DateTimeFormat('en-US',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(), today = ['year','month','day'].map(t => parts.find(p => p.type === t)!.value).join('-'), year = Number(today.slice(0,4))
   modifiedTo = modified === 'lastYear' ? `${year-1}-12-31` : today
   modifiedFrom = modified === 'year' ? `${year}-01-01` : modified === 'lastYear' ? `${year-1}-01-01` : modified === 'today' ? today : new Date(Date.parse(today)- (Number(modified)-1)*86_400_000).toISOString().slice(0,10)
  } insist(!modifiedFrom || !modifiedTo || modifiedFrom <= modifiedTo, 'invalid_search_date_range')
- return { modified, type, owner, creator, sharedBy, modifiedFrom, modifiedTo, timeZone, versions, location: q.get('location') || q.get('space') || 'anywhere' }
+ return { customFrom, customTo, modified, type, owner, creator, sharedBy, modifiedFrom, modifiedTo, timeZone, versions, location: q.get('location') || q.get('space') || 'anywhere' }
 }
 // The original's byte signature and extraction format determine its category, never its filename.
 export function category(v?: FileVersion, format = ''): string {
  if (!v) return 'other'
- if (/spreadsheet/i.test(format)) return 'spreadsheets'
+ if (/spreadsheet|excel|workbook/i.test(format)) return 'spreadsheets'
  if (/presentation/i.test(format)) return 'presentations'
  if (/word|document/i.test(format)) return 'documents'
  if (v.mediaType === 'application/pdf') return 'pdfs'

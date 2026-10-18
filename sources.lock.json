@@ -937,7 +937,7 @@
       "executable": false
     },
     "src/chest/files/search-filters.ts": {
-      "sha256": "b1562e5086ca180e95aa4e628f19b2d81e4a60dfed22da0e3d27e30c260fa6ea",
+      "sha256": "063d5cce8c6f4f5eca5d185fb062c1f0549dfb802562299217e43f3d375ea514",
       "executable": false
     },
     "src/chest/files/search.ts": {
@@ -1017,7 +1017,7 @@
       "executable": false
     },
     "src/chest/files/ui-search.ts": {
-      "sha256": "e4a8785c790be839102b2c29806a5436a85cb3bcb490e4ae72a1d0e34092d5e3",
+      "sha256": "9643f93ed997d999bcf67ec029e3e87a5fe787e81ad62b1670ea97828efbac71",
       "executable": false
     },
     "src/chest/files/ui-space-policy.ts": {
@@ -3297,7 +3297,7 @@
       "executable": false
     },
     "tests/chest/browser-search.mjs": {
-      "sha256": "7290a0dbd2f9fd9c64705efb1a557a4f913ee0c6b650b5d072e7c3f6d5bfbc42",
+      "sha256": "6468ff0c47c1e3efd91d1e885a53f906b021bde0bf694ab0789d96541c86c93b",
       "executable": false
     },
     "tests/chest/browser-session.mjs": {
@@ -3417,7 +3417,7 @@
       "executable": false
     },
     "tests/chest/search.mjs": {
-      "sha256": "20bbd81563bcd1b73fb3490bca8281e00f2dbda60826a4bd18f72cab78e263b7",
+      "sha256": "1df26deb6c89fa4007bd60690eb6693c8fe01d006483cf335b7d9f21376ec9ea",
       "executable": false
     },
     "tests/chest/site.mjs": {
