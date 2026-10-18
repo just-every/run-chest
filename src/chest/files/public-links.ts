@@ -10,6 +10,7 @@ import { normalizeLinkVersion, linkedVersion } from './link-versions'
 import { effectiveLinkPolicy, creatorLinkPolicy, demandLinkPolicy } from './link-policy'
 import { dayEnd } from './zone'
 import { folderSnapshot, publicVersion } from './link-snapshots'
+import { sharePolicy,publicPolicyReason } from './sharing-policy'
 import { externalAudience } from './guest-links'
 // Links for anyone (SHARE-001): a file or folder opens without an account, behind an optional password, until an
 // optional expiry and for an optional number of downloads. Every request re-reads the link, the item's path and the
@@ -28,10 +29,9 @@ function limitOf(value: unknown) {
 }
 export async function createPublicLink(env: Bindings, s: Session, w: Who, key: string, input: any) {
  const ctx = await context(env, w, key); demand(ctx, 'share'); insist(!ctx.state.noDownload || input.download === false, 'download_restricted', 403)
- const policy=await effectiveLinkPolicy(env,w,ctx.space.id);demandLinkPolicy(policy.rules,'public')
+ const audience=externalAudience(input),policy=await sharePolicy(env,w,ctx,audience.guests??(audience.domain?[audience.domain]:['Anyone with this link']),input,audience.audience)
  insist(input.download === undefined || typeof input.download === 'boolean','invalid_download')
  insist(input.role === undefined || input.role === 'viewer' || input.role === 'commenter','invalid_external_link_role')
- const audience=externalAudience(input)
  const choice=normalizeLinkVersion(ctx.chain.at(-1)!.payload,input)
  const snapshot=ctx.chain.at(-1)!.payload.type==='folder' && choice.versionMode==='pinned'?await folderSnapshot(env,ctx.chain.at(-1)!):null
  const password = input.password === undefined || input.password === '' ? null : await hashPassword(input.password)
@@ -63,7 +63,7 @@ export function linkSummary(l: PublicLink) {
  return parts.join(' · ')
 }
 export const describe = (row: Row<PublicLink>) => ({ id: row.id, item: row.payload.item, audience: row.payload.audience ?? 'public', role:row.payload.role ?? 'viewer', snapshot:!!row.payload.snapshot, versionMode: row.payload.versionMode ?? 'current', version: row.payload.version, download: row.payload.download ?? true, guests: row.payload.guests, domain: row.payload.domain, password: !!row.payload.password, expires: row.payload.expires, limit: row.payload.limit, downloads: row.payload.downloads, createdBy: row.payload.createdBy, at: row.payload.at, revokedAt: row.payload.revokedAt ?? null, state: linkState(row.payload), summary: linkSummary(row.payload) })
-export async function describePolicy(env: Bindings,row: Row<PublicLink>,space: string | undefined){if(!space)return {...describe(row),unavailable:true,policyBlocked:false};const p=await creatorLinkPolicy(env,row.payload.custodian ?? row.payload.createdBy,space);return {...describe(row),policyBlocked:!p.rules.allowPublic}}
+export async function describePolicy(env: Bindings,row: Row<PublicLink>,space: string | undefined){if(!space)return {...describe(row),unavailable:true,policyBlocked:false};const p=await creatorLinkPolicy(env,row.payload.custodian ?? row.payload.createdBy,space);return {...describe(row),policyBlocked:!!publicPolicyReason(p.rules,row.payload),policyReason:publicPolicyReason(p.rules,row.payload)}}
 export async function linksOn(env: Bindings,key:string){const item=await get<Item>(env,'item',key);return Promise.all((await where<PublicLink>(env,'public-link','$.item',key)).map(l=>describePolicy(env,l,item.payload.space)))}
 // The public door. Resolution answers why a link cannot be used, never which item it was for.
 export type Resolved = { link: Row<PublicLink>; root: Row<Item>; state: State; fences: Row[] }
@@ -73,7 +73,7 @@ export async function resolveLink(env: Bindings, secret: string): Promise<Resolv
  const [link] = await where<PublicLink>(env, 'public-link', '$.tokenHash', await tokenHash(secret)); if (!link) return { refused: 'not_found' }
  const s = linkState(link.payload); if (s !== 'active') return { refused: s === 'revoked' ? 'revoked' : s === 'expired' ? 'expired' : 'limit' }
  const ctx = await stillSharing(env, link.payload.custodian ?? link.payload.createdBy, link.payload.item); if (!ctx) return { refused: 'unavailable' }
- const policy=await creatorLinkPolicy(env,link.payload.custodian ?? link.payload.createdBy,ctx.space.id);if(!policy.rules.allowPublic)return {refused:'policy'}
+ const policy=await creatorLinkPolicy(env,link.payload.custodian ?? link.payload.createdBy,ctx.space.id);if(publicPolicyReason(policy.rules,link.payload))return {refused:'policy'}
  if(ctx.chain.at(-1)!.payload.type==='file' && !linkedVersion(ctx.chain.at(-1)!.payload,link.payload))return {refused:'unavailable'}
  let state = start(ctx.space.payload, nobody); for (const node of ctx.chain) state = descend(state, node, nobody, [])
  if (state.trash) return { refused: 'unavailable' }

@@ -5,6 +5,7 @@ import { resetFactor } from './security/reset'
 import { collectionExecute } from './collection'
 import { operatorAuth,runtimeBindings,type Bindings } from '../auth.server'
 import type { Session } from '../modules/operator-auth/index.mjs'
+import { SharingConfirmation } from './files/sharing-policy'
 import { ChestError,insist,type Document,type Person,type Schema } from './model'
 import { fieldIssues } from './fields'
 import { get,list,recordAccess } from './store'
@@ -95,7 +96,7 @@ export function failure(error:unknown){
  const symbolic=typeof e?.code==='string'&&/^[A-Za-z][A-Za-z0-9_]+$/.test(e.code)?e.code:typeof e?.message==='string'?e.message.match(/^([A-Z][A-Z0-9_]+)(?::|$)/)?.[1]:undefined
  const code=error instanceof ChestError?e.code:symbolic||'service_unavailable'
  const status=error instanceof ChestError?e.status:Number.isInteger(e?.status)&&e.status>=400&&e.status<600?e.status:code.startsWith('INVALID_')?400:symbolic&&code!=='D1_ERROR'?409:503
- return Response.json({error:code,...(code==='test_company_signin_first'?{message:'Save an identity provider and complete Test company sign-in before turning off email links.'}:{}),...(code==='storage_limit_exceeded'?{message:'This space has reached its storage limit. Ask the owner to raise the limit or permanently erase retained files.'}:{}),...(code==='provider_not_available_yet'?{message:'Provider connections are not available yet on RER Managed.'}:{}),...(code==='NATIVE_EDIT_CONFLICT'?{message:'The imported record was edited. Undo preserves that edit. Recover the earlier library from a separate pre-import snapshot.'}:{})},{status,headers})
+ return Response.json({error:code,...(error instanceof SharingConfirmation?{recipients:error.recipients,message:'Sharing policy requires confirmation of these external recipients. Send confirmExternal: true only after confirming.'}:{}),...(code==='test_company_signin_first'?{message:'Save an identity provider and complete Test company sign-in before turning off email links.'}:{}),...(code==='storage_limit_exceeded'?{message:'This space has reached its storage limit. Ask the owner to raise the limit or permanently erase retained files.'}:{}),...(code==='provider_not_available_yet'?{message:'Provider connections are not available yet on RER Managed.'}:{}),...(code==='NATIVE_EDIT_CONFLICT'?{message:'The imported record was edited. Undo preserves that edit. Recover the earlier library from a separate pre-import snapshot.'}:{})},{status,headers})
 }
 export async function apiResponse(request:Request,original:Bindings){const pathname=new URL(request.url).pathname;if(!pathname.startsWith('/api/chest/'))return null;const env=runtimeBindings(original)
  // Sync clients authenticate with their device credential, never a browser cookie.

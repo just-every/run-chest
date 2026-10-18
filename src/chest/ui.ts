@@ -1,3 +1,5 @@
+import { SharingConfirmation } from './files/sharing-policy'
+import { hidden,form } from './ui-shared'
 import { administrationPage,administrationInput } from './administration/ui'
 import { mfaAdminCard } from './security/ui'
 import { collectionPage, collectionInput } from './collection'
@@ -52,7 +54,9 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   if(input.path.startsWith('/filing/'))filingInput(input)
   if(filesPath(input.path))filesInput(input)
   if(input.path==='/audit/privacy'&&input.scope==='organization')input.groups=Object.keys(input).filter(k=>k.startsWith('group:')).map(k=>k.slice(6))
-  const result=await execute(env,request,s,'POST',input.path,input);kick(env,request)
+  let result:any
+  try{result=await execute(env,request,s,'POST',input.path,input)}catch(error){if(!(error instanceof SharingConfirmation))throw error;const values=[...fields].filter(([k,v])=>typeof v==='string'&&!['path','returnTo','confirmExternal'].includes(k)).map(([k,v])=>hidden(k,String(v))).join('');return page(card('Confirm external sharing',`<p>Your sharing policy requires confirmation before giving access outside the organization.</p><p>Recipients: <strong>${error.recipients.map(esc).join(', ')}</strong></p>${form(input.path,values+hidden('confirmExternal','true'),'Confirm external sharing',returnTo)}<a class="link" href="${esc(returnTo)}">Cancel</a>`),me,returnTo)}
+  kick(env,request)
   if(result?.signInAgain)return new Response(null,{status:303,headers:{...headers,location:'/signin'}})
   if(input.path==='/administration/recovery'&&result?.id)return new Response(null,{status:303,headers:{...headers,location:`/app/administration/recovery/${result.id}`}})
   if(input.path.startsWith('/administration/recovery/')&&result?.id)return new Response(null,{status:303,headers:{...headers,location:`/app/administration/recovery/${result.id}`}})

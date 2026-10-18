@@ -24,7 +24,7 @@ try {
   await h.api(`/public-links/${link.link.id}/revoke`,owner,{});assert.equal((await h.fetch(path+'/f/'+file.id,{headers:{cookie:both}})).status,410);
  }
  const active=await h.api(`/items/${file.id}/links`,owner,{audience:'domain',domain:'acme.test'});
- await h.api('/link-policy',owner,{scope:'organisation',allowPublic:false,allowOrganisation:true,allowDiscovery:true,defaultAudience:'organisation',defaultRole:'viewer'});
+ await h.api('/link-policy',owner,{scope:'organisation',allowExternal:false,allowPublic:false,allowOrganisation:true,allowDiscovery:true,defaultAudience:'organisation',defaultRole:'viewer'});
  assert.equal((await h.fetch(new URL(active.url).pathname)).status,410,'policy change stops existing external audiences');
  console.log('SHARE-001 named guests/domain verification, one-time mail, scoped cookies, password, restricted descendants, revoke and policy passed');
 }finally{await h.close()}

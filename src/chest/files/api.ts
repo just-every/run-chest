@@ -1,3 +1,4 @@
+import { removeSuspendedGrant } from './policy-suspensions'
 import { transfersExecute } from '../transfers/service'
 import { repairs, authorizeResume } from '../sync-repair/service'
 import { linkRepairsExecute } from '../filing/link-repairs'
@@ -61,6 +62,7 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && key && sub === 'cancel') return cancelOwnership(env, s, w, key)
   if (post && key && !sub) return decideOwnership(env, s, w, key, input)
  }
+ if(head==='link-policy'&&key==='grants'&&post)return removeSuspendedGrant(env,s,input)
  if(head==='link-policy')return get?linkPolicies(env,s):saveLinkPolicy(env,s,input)
  if (get && head === 'files') return home(env, s, w)
  if (get && head === 'search') return search(env, w, url)

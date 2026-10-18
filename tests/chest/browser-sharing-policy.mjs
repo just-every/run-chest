@@ -1,0 +1,35 @@
+// POLICY-001: live named/guest policy, explicit recipient confirmation and scoped administration through public doors.
+import assert from 'node:assert/strict';
+import {mkdir} from 'node:fs/promises';
+import {chromium} from '@playwright/test';
+import {harness} from './harness.mjs';
+const h=await harness();let browser;
+const rules={allowPublic:true,allowOrganisation:true,allowDiscovery:true,defaultAudience:'organisation',defaultRole:'viewer',allowExternal:true,allowNonMembers:true,allowEditors:true,warnExternal:false,trustedDomains:null,organizationDomains:['example.test']};
+const press=async(page,button)=>Promise.all([page.waitForNavigation(),button.click()]);
+async function shot(page,width,name){await page.evaluate(()=>document.fonts.ready);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'page fits '+width);await page.screenshot({path:`test-results/${width}-sharing-policy-${name}.png`,fullPage:true})}
+try{
+ await mkdir('test-results',{recursive:true});await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const owner=await h.signIn(h.vars.OWNER_EMAIL);await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
+ const sessions={};for(const email of ['dana@example.test','luis@partner.test','sam@untrusted.test']){await h.api('/people',owner,{action:'invite',email,name:email.split('@')[0]});sessions[email]=await h.signIn(email,true)}
+ browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+ for(const width of [1440,390]){
+  await h.api('/link-policy',owner,{scope:'organisation',...rules});const area=(await h.api('/files',owner)).personal,file=await h.api('/items',owner,{space:area,type:'file',name:`Harbor supplier terms ${width}.txt`,base64:Buffer.from('Contract renewal is due on November 30.').toString('base64')});
+  const anonymous=await h.api(`/items/${file.id}/public-links`,owner,{}),oldGuest=await h.api(`/items/${file.id}/links`,owner,{audience:'guests',guests:['sam@untrusted.test']});
+  await h.api(`/items/${file.id}/shares`,owner,{principal:'sam@untrusted.test',role:'viewer'});
+  await h.api('/link-policy',owner,{scope:'organisation',...rules,allowPublic:false,trustedDomains:['partner.test'],warnExternal:true});
+  const refused=await h.raw('/api/chest'+`/items/${file.id}/links`,owner,{audience:'guests',guests:['sam@untrusted.test']});assert.equal(refused.status,403);assert.equal((await refused.json()).error,'sharing_policy_domain_not_trusted');
+  for(const link of [anonymous,oldGuest])for(const path of ['',`/p/${file.id}`,`/f/${file.id}`])assert.equal((await h.fetch(new URL(link.url).pathname+path)).status,410);
+  await h.api(`/items/${file.id}`,sessions['sam@untrusted.test'],undefined,403);assert.equal((await h.api('/search?q=Harbor',sessions['sam@untrusted.test'])).count,0);
+  await h.api(`/items/${file.id}/links`,owner,{audience:'guests',guests:['luis@partner.test']},409);const trusted=await h.api(`/items/${file.id}/links`,owner,{audience:'guests',guests:['luis@partner.test'],confirmExternal:true});assert.equal((await h.fetch(new URL(trusted.url).pathname)).status,200);
+  const context=await browser.newContext({viewport:{width,height:960},ignoreHTTPSErrors:true});await context.addCookies(owner.split('; ').map(s=>{const at=s.indexOf('=');return {name:s.slice(0,at),value:s.slice(at+1),url:h.origin}}));const page=await context.newPage();
+  await page.goto(h.origin+'/app/items/'+file.id);const share=page.locator('section.card').filter({has:page.getByRole('heading',{name:'Share',exact:true})});await share.getByLabel('Person or group').selectOption('luis@partner.test');await share.locator('select[name=role]').selectOption('commenter');await share.getByLabel('Message (optional)').fill('Please review the renewal date.');await press(page,share.getByRole('button',{name:'Share',exact:true}));await page.getByRole('heading',{name:'Confirm external sharing',exact:true}).waitFor();assert.ok(await page.getByText('luis@partner.test',{exact:true}).count());await h.api(`/items/${file.id}`,sessions['luis@partner.test'],undefined,403);await shot(page,width,'confirm-recipient');
+  await press(page,page.getByRole('button',{name:'Confirm external sharing',exact:true}));assert.equal((await h.api(`/items/${file.id}`,sessions['luis@partner.test'])).role,'commenter');assert.ok(h.mails.some(m=>[m.to].flat().includes('luis@partner.test')&&m.text.includes('Please review the renewal date.')));
+  await page.goto(h.origin+'/app/links');await page.locator('#link-policy summary').click();await page.getByRole('heading',{name:'Suspended by sharing policy',exact:true}).waitFor();await shot(page,width,'suspended');assert.ok((await h.api('/link-policy',owner)).suspended.some(r=>r.principal==='sam@untrusted.test'));
+  await h.api('/link-policy',owner,{scope:'organisation',...rules});assert.equal((await h.api(`/items/${file.id}`,sessions['sam@untrusted.test'])).role,'viewer');assert.equal((await h.fetch(new URL(oldGuest.url).pathname)).status,200);
+  await h.api('/link-policy',owner,{scope:'organisation',...rules,allowExternal:false});await page.reload();await page.locator('#link-policy summary').click();const blocked=page.locator('#link-policy li').filter({hasText:'sam@untrusted.test'}).filter({has:page.getByRole('button',{name:'Remove suspended grant',exact:true})});await press(page,blocked.getByRole('button',{name:'Remove suspended grant',exact:true}));await shot(page,width,'removed-grant');await h.api('/link-policy',owner,{scope:'organisation',...rules});await h.api(`/items/${file.id}`,sessions['sam@untrusted.test'],undefined,403);
+  // A group cannot relax a space restriction. Tightening also suspends an existing organization link for outsiders.
+  const space=await h.api('/spaces',owner,{name:`Harbor operations ${width}`}),team=await h.api('/items',owner,{space:space.id,type:'file',name:'Internal dispatch.txt',base64:Buffer.from('Dispatch plan').toString('base64')});await h.api(`/spaces/${space.id}/members`,owner,{members:[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:'dana@example.test',role:'content_manager'}]});
+  const link=await h.api(`/items/${team.id}/links`,owner,{audience:'organisation'});await h.api('/links/open',sessions['luis@partner.test'],{token:link.url.split('/s/')[1]});await h.api('/link-policy',owner,{scope:`space:${space.id}`,...Object.fromEntries(Object.entries(rules).filter(([k])=>k!=='organizationDomains')),allowNonMembers:false,allowEditors:false});await h.api(`/items/${team.id}`,sessions['luis@partner.test'],undefined,403);await h.api(`/items/${team.id}/shares`,owner,{principal:'luis@partner.test',role:'viewer'},403);await h.api(`/items/${team.id}/shares`,sessions['dana@example.test'],{principal:h.vars.OWNER_EMAIL,role:'viewer'},403);
+  await context.close();
+ }
+ console.log('POLICY-001 browser confirmation, domain/public refusal, live named/guest suspension, reallow/removal and member/editor restrictions passed at 1440/390');
+}finally{await browser?.close();await h.close()}

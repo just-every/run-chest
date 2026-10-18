@@ -2,6 +2,7 @@ import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { createPublicLink, linkDate } from './public-links'
 import { effectiveLinkPolicy, creatorLinkPolicy, demandLinkPolicy } from './link-policy'
+import { sharePolicy } from './sharing-policy'
 import { who } from './access'
 import { get } from '../store'
 import { insist, now, type Row } from '../model'
@@ -16,13 +17,14 @@ import { randomToken, tokenHash, tokenShape } from './capability'
 export async function createLink(env: Bindings, s: Session, w: Who, key: string, input: any) {
  const ctx = await context(env, w, key); demand(ctx, 'share')
  const policy=await effectiveLinkPolicy(env,w,ctx.space.id), audience=input.audience ?? policy.rules.defaultAudience
- demandLinkPolicy(policy.rules,['guests','domain'].includes(audience)?'public':audience,input.discoverable === true)
+ if(!['public','guests','domain'].includes(audience))demandLinkPolicy(policy.rules,audience,input.discoverable === true)
+ const sharing=await sharePolicy(env,w,ctx,[],input,audience)
  if(['public','guests','domain'].includes(audience))return createPublicLink(env,s,w,key,input)
  insist(!input.password && !input.limit && (!input.versionMode || input.versionMode==='current') && !input.version && input.download!==false,'public_link_controls_only')
  insist(audience!=='restricted' || !input.discoverable,'restricted_links_not_discoverable')
  const r = role(input.role ?? policy.rules.defaultRole, shareRoles); insist(rank[r] <= rank[ctx.state.role!], 'role_above_own', 403); insist(input.discoverable === undefined || typeof input.discoverable === 'boolean', 'invalid_discoverable')
  const secret = randomToken('chest_link_'), row = fresh<Link>('link', { item: key, tokenHash: await tokenHash(secret), audience, expires:linkDate(input.expires,input.zone), role: r, discoverable: input.discoverable ?? false, createdBy: s.operator.email, at: now() })
- await commit(env, s, [{ row }], { fences: [...ctx.fences,...policy.fences], changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.create', object: key, detail: { link: row.id, role: r, discoverable: row.payload.discoverable } }] })
+ await commit(env, s, [{ row }], { fences: [...ctx.fences,...policy.fences,...sharing.fences], changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.create', object: key, detail: { link: row.id, role: r, discoverable: row.payload.discoverable } }] })
  return { link: { id: row.id, ...row.payload, tokenHash: undefined }, url: `${env.AUTH_ORIGIN}/s/${secret}` }
 }
 export async function changeLink(env: Bindings, s: Session, w: Who, id: string, input: any) {
@@ -35,10 +37,10 @@ export async function changeLink(env: Bindings, s: Session, w: Who, id: string, 
  // Removing a link narrows access, so it stays possible while the item is in trash.
  demand(input.remove === true ? { ...ctx, state: { ...ctx.state, trash: null } } : ctx, 'share')
  if (input.remove === true) { await commit(env, s, [{ row: link, previous: link, remove: true }], { fences: ctx.fences, changes: [{ item: link.payload.item, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.remove', object: link.payload.item, detail: { link: id } }] }); return { removed: true } }
- const policy=await effectiveLinkPolicy(env,w,ctx.space.id);demandLinkPolicy(policy.rules,link.payload.audience,input.discoverable ?? link.payload.discoverable)
+ const sharing=await sharePolicy(env,w,ctx,[],input,link.payload.audience),policy=await effectiveLinkPolicy(env,w,ctx.space.id);demandLinkPolicy(policy.rules,link.payload.audience,input.discoverable ?? link.payload.discoverable)
  const r = input.role === undefined ? link.payload.role : role(input.role, shareRoles); insist(rank[r] <= rank[ctx.state.role!], 'role_above_own', 403); insist(input.discoverable === undefined || typeof input.discoverable === 'boolean', 'invalid_discoverable')
  const payload = { ...link.payload, role: r, discoverable: input.discoverable ?? link.payload.discoverable }
- await commit(env, s, [{ row: next(link, payload), previous: link }], { fences: [...ctx.fences,...policy.fences], changes: [{ item: link.payload.item, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.change', object: link.payload.item, detail: { link: id, before: { role: link.payload.role, discoverable: link.payload.discoverable }, after: { role: r, discoverable: payload.discoverable } } }] })
+ await commit(env, s, [{ row: next(link, payload), previous: link }], { fences: [...ctx.fences,...policy.fences,...sharing.fences], changes: [{ item: link.payload.item, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.change', object: link.payload.item, detail: { link: id, before: { role: link.payload.role, discoverable: link.payload.discoverable }, after: { role: r, discoverable: payload.discoverable } } }] })
  return { link: { id, ...payload, tokenHash: undefined } }
 }
 export async function openLink(env: Bindings, s: Session, secret: string) {

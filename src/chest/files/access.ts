@@ -2,6 +2,8 @@ import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get, list } from '../store'
 import { ChestError, insist, type Group, type Row } from '../model'
+import { policyItems } from './sharing-policy'
+import { creatorLinkPolicy } from './link-policy'
 import { permittedLinks } from './link-policy'
 import { rank, live, type Item, type Link, type Role, type Space } from './model'
 // Current access, computed on every request from the space, each folder on the path and the person's live groups.
@@ -23,7 +25,8 @@ export async function whoFor(env: Bindings, email: string): Promise<Who> {
 export async function stillSharing(env: Bindings, email: string, key: string): Promise<Ctx | null> {
  if (!await env.DB.prepare("SELECT 1 FROM oa_operators WHERE email=? AND status='active'").bind(email).first()) return null
  const ctx = await context(env, await whoFor(env, email), key)
- return ctx.state.trash || !allowed(ctx, 'share') ? null : ctx
+ const policy=await creatorLinkPolicy(env,email,ctx.space.id)
+ return ctx.state.trash || !allowed(ctx, 'share') || !policy.rules.allowEditors&&!ctx.state.manager ? null : {...ctx,fences:[...ctx.fences,...policy.fences]}
 }
 const best = (a: Role | null, b: Role | null) => !b ? a : !a || rank[b] > rank[a] ? b : a
 const granted = (grants: { principal: string; role: Role; expires?: string }[], w: Who) => grants.filter(g => w.principals.includes(g.principal) && live(g)).reduce<Role | null>((r, g) => best(r, g.role), null)
@@ -45,10 +48,11 @@ export async function chain(env: Bindings, key: string): Promise<{ space: Row<Sp
  return { space: await get<Space>(env, 'space', nodes[0].payload.space), chain: nodes }
 }
 export async function context(env: Bindings, w: Who, key: string): Promise<Ctx> {
- const { space, chain: nodes } = await chain(env, key), links = await permittedLinks(env, await list<Link>(env, 'link'), new Map(nodes.map(n => [n.id,n.payload.space])))
+ const { space, chain: nodes } = await chain(env, key), links = await permittedLinks(env, await list<Link>(env, 'link'), new Map(nodes.map(n => [n.id,n.payload.space])),w)
+ const filtered=await policyItems(env,w,[space],nodes)
  let state = start(space.payload, w)
- for (const node of nodes) state = descend(state, node, w, links)
- return { space, chain: nodes, state, links, fences: [space, ...nodes, ...w.groups, ...links] }
+ for (const node of filtered.items) state = descend(state, node, w, links)
+ return { space, chain: nodes, state, links, fences: [space, ...nodes, ...w.groups, ...links,...filtered.fences] }
 }
 export const level = (s: State) => s.role ? rank[s.role] : 0
 export type Action = 'view' | 'download' | 'comment' | 'contribute' | 'manage' | 'share' | 'administer'
@@ -72,7 +76,7 @@ export const isAdmin = (s: Session) => s.operator.role === 'owner' || s.operator
 // Every item with the person's current state, computed once per request for search, Shared with me, recent and trash.
 export type Entry = { row: Row<Item>; space: Row<Space>; state: State }
 export async function everything(env: Bindings, w: Who): Promise<Map<string, Entry>> {
- const spaces = new Map((await list<Space>(env, 'space')).map(r => [r.id, r])), rows = new Map((await list<Item>(env, 'item')).map(r => [r.id, r])), links = await permittedLinks(env, await list<Link>(env, 'link'), new Map([...rows.values()].map(r => [r.id,r.payload.space]))), memo = new Map<string, Entry>()
+ const spaces = new Map((await list<Space>(env, 'space')).map(r => [r.id, r])), original=await list<Item>(env,'item'),filtered=await policyItems(env,w,[...spaces.values()],original), rows = new Map(filtered.items.map(r => [r.id, r])), links = await permittedLinks(env, await list<Link>(env, 'link'), new Map([...rows.values()].map(r => [r.id,r.payload.space])),w), memo = new Map<string, Entry>()
  const visit = (key: string, depth = 0): Entry | undefined => {
   const known = memo.get(key); if (known) return known
   const row = rows.get(key), space = row && spaces.get(row.payload.space); if (!row || !space || depth > 200) return undefined

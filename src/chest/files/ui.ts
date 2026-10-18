@@ -39,6 +39,7 @@ import { templatesPage } from '../office/new-ui'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
 export const filesPath = (path: string) => /^\/(sync-repair|transfers|space-policy|space-requests|new-files|templates|creation-settings|items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
+ if(input.path==='/link-policy' && input.domainRestriction==='false')input.trustedDomains=null
  if (input.path === '/new-files') { if (input.name === '') delete input.name; if (input.template === '') delete input.template }
  if (input.path === '/templates' && typeof input.templateAudience === 'string') {
   const [type, ...rest] = input.templateAudience.split(':'), value = rest.join(':')
@@ -47,7 +48,7 @@ export function filesInput(input: any) {
  if (input.path === '/space-policy' && input.scope === 'organisation') input.creatorGroups = Object.keys(input).filter(k => k.startsWith('creatorGroup:') && input[k] === 'true').map(k => k.slice(13))
  if (input.path === '/creation-settings') input.groups = Object.entries(input).filter(([key, value]) => key.startsWith('format:') && value).map(([key, format]) => ({ group: key.slice(7), format }))
  if (typeof input.storageLimitBytes === 'string') input.storageLimitBytes = input.storageLimitBytes.trim() === '' ? null : Number(input.storageLimitBytes)
- for (const key of ['scanIntake', 'externalAccess', 'nonMemberAccess', 'contentManagerFolderSharing', 'managerOverride', 'confirmOverLimit', 'noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove', 'retainEditor', 'allowPublic', 'allowOrganisation', 'allowDiscovery', 'download']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
+ for (const key of ['confirmExternal', 'allowExternal', 'allowNonMembers', 'allowEditors', 'warnExternal', 'scanIntake', 'externalAccess', 'nonMemberAccess', 'contentManagerFolderSharing', 'managerOverride', 'confirmOverLimit', 'noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove', 'retainEditor', 'allowPublic', 'allowOrganisation', 'allowDiscovery', 'download']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
  if (input.path === '/items' && input.type === 'file' && !input.name) input.name = input.filename
  if (typeof input.destination === 'string') { const [kind, id] = input.destination.split(':'); if (kind === 'space') { input.space = id; input.parent = null } else input.parent = id }
  if (/^\/items\/[^/]+\/office$/.test(input.path)) input.changes = Object.fromEntries(Object.entries(input).filter(([k]) => k.startsWith('office:')).map(([k, v]) => [k.slice(7), v]))

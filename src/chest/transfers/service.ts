@@ -32,7 +32,7 @@ export async function transfersExecute(env:Bindings,_request:Request,s:Session,m
  const limit=input.limit===undefined||input.limit===''?null:Number(input.limit);insist(limit===null||Number.isInteger(limit)&&limit>=1&&limit<=100000,'invalid_download_limit')
  const receipt=input.receipt===true||input.receipt==='true'
  if(input.sendTo){const to=String(input.sendTo).trim().toLowerCase();insist(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)&&to.length<=254,'invalid_email');insist(operatorMail(env)&&env.MAIL_FROM,'mail_not_configured',503)}
- const created=await createPublicLink(env,s,w,item.id,{audience:input.audience??'public',guests:input.guests,versionMode:'pinned',...(item.payload.type==='file'?{version:item.payload.current}:{}),expires:input.expires,zone:input.zone,password:input.password})
+ const created=await createPublicLink(env,s,w,item.id,{audience:input.audience??'public',guests:input.guests,confirmExternal:input.confirmExternal,versionMode:'pinned',...(item.payload.type==='file'?{version:item.payload.current}:{}),expires:input.expires,zone:input.zone,password:input.password})
  const row=fresh<Package>('transfer-package',{link:created.link.id,item:item.id,title,createdBy:s.operator.email,at:now(),receipt,limit,started:0})
  await commit(env,s,[{row}],{fences:ctx.fences,audits:[{action:'transfer.create',object:item.id,detail:{transfer:row.id,link:created.link.id}}]})
  let email='not_requested'

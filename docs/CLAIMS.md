@@ -77,6 +77,8 @@ public-door tests; their status matches the CONTRACT.md Status cell.
 | Version-pinned delivery packages, resumable original downloads and distinct receipt events | SHARE-003 | done | `src/chest/transfers/service.ts`; `src/chest/transfers/public.ts`; `src/chest/transfers/ui.ts`; `tests/chest/transfers.mjs`; `tests/chest/browser-transfers.mjs` |
 | Match requested records to exact approvals and intended-recipient confirmations, with scoped reminders and reopening | AGENT-004 | done | `src/chest/collection/api.ts`; `src/chest/collection/evidence.ts`; `src/chest/collection/reminders.ts`; `src/chest/collection/ui.ts`; `tests/chest/collection.mjs`; `tests/chest/browser-collection.mjs` |
 
+| External-sharing, trusted-domain and member/editor policy with recipient confirmation and reversible grant suspension | POLICY-001 | partial | `src/chest/files/sharing-policy.ts`; `src/chest/files/policy-suspensions.ts`; `src/chest/files/link-policy.ts`; `src/chest/files/ui-link-policy.ts`; `tests/chest/link-policy.mjs`; `tests/chest/browser-sharing-policy.mjs` |
+
 SHARE-003 was selected because sending originals and distinguishing delivery from
 human receipt is central to browser file exchange. Signed sync/mobile clients
 (SYNC-001/002, MOBILE-001, and dependent SPACE-001/SHARE-001 sentences) and direct
@@ -95,3 +97,11 @@ AGENT-003 is done: `src/chest/sync-repair/service.ts`, `src/chest/sync-repair/ui
 CHEST-24 is done: `tests/chest/upgrade.mjs` and `tests/chest/upgrade-local.mjs` prove a populated genuine 0.1.0 installation upgrades in place with all earlier application rows and original objects preserved, every Library version downloadable by its original hash, and Files usable at 1440/390. This upgrade clause has no separate homepage claim; broader own-server and native-client claims retain their existing status.
 
 ADMIN-003 and ADMIN-004 are done: `src/chest/administration/`, `src/chest/security/`, `tests/chest/administration.mjs` and `tests/chest/security.mjs` deliver enforced TOTP/WebAuthn, single-use recovery and help-desk resets, live delegated scopes, custom roles, content-free account/space recovery and accepted ownership transfer. Both browser journeys run at 1440/390. ADMIN-004 was selected because email verification alone should not open a team's browser file store; ADMIN-003 reduces dependence on one owner. Neither needs signing credentials or a provider developer application. Native-client clauses, provider migrations/connectors and signature-provider integrations were skipped because they require the owner's signing credentials, consented provider tenants or developer applications. These clauses have no separate homepage row; aggregate homepage rows retain their incomplete dependencies.
+
+
+POLICY-001 was selected because browser teams must prevent unintended external
+access and apply tighter rules to grants already issued. The browser and API
+workflow needs no new provider account. It remains partial because the contract
+also requires the same acceptance in provider connectors that have not shipped.
+Signed native clients and direct provider migrations remain skipped for signing
+credentials and provider developer applications respectively.
