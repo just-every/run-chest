@@ -79,6 +79,8 @@ public-door tests; their status matches the CONTRACT.md Status cell.
 
 | External-sharing, trusted-domain and member/editor policy with recipient confirmation and reversible grant suspension | POLICY-001 | partial | `src/chest/files/sharing-policy.ts`; `src/chest/files/policy-suspensions.ts`; `src/chest/files/link-policy.ts`; `src/chest/files/ui-link-policy.ts`; `tests/chest/link-policy.mjs`; `tests/chest/browser-sharing-policy.mjs` |
 
+| Independent encrypted R2 backup schedules, retention, status and clean-target recovery | RECOVER-002 | partial | `scripts/backup/hosted.mjs`; `scripts/backup/schedule.mjs`; `src/chest/backups/service.ts`; `src/chest/backups/ui.ts`; `tests/chest/backup-archive.mjs`; `tests/chest/browser-backups.mjs` |
+
 SHARE-003 was selected because sending originals and distinguishing delivery from
 human receipt is central to browser file exchange. Signed sync/mobile clients
 (SYNC-001/002, MOBILE-001, and dependent SPACE-001/SHARE-001 sentences) and direct
@@ -105,3 +107,10 @@ workflow needs no new provider account. It remains partial because the contract
 also requires the same acceptance in provider connectors that have not shipped.
 Signed native clients and direct provider migrations remain skipped for signing
 credentials and provider developer applications respectively.
+
+RECOVER-002 was selected because keeping an independent recoverable copy of a
+team's original files is core browser-file-system work and needs no signed client
+or provider developer app. The owner can configure a schedule and retention in
+Administration; the separate runner owns encryption and independent storage.
+The clause remains partial until its real-provider recovery and interrupted-
+upgrade drills, including publication-failure behavior, are proven.

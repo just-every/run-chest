@@ -5,6 +5,7 @@ import { resetFactor } from './security/reset'
 import { collectionExecute } from './collection'
 import { operatorAuth,runtimeBindings,type Bindings } from '../auth.server'
 import type { Session } from '../modules/operator-auth/index.mjs'
+import { backupView,backupAction } from './backups/service'
 import { SharingConfirmation } from './files/sharing-policy'
 import { ChestError,insist,type Document,type Person,type Schema } from './model'
 import { fieldIssues } from './fields'
@@ -87,6 +88,7 @@ async function dispatch(env:Bindings,request:Request,s:Session,method:string,pat
  if(path==='/audit/identities/erase'&&method==='POST')return eraseAuditIdentity(env,s,input)
  if(path==='/audit/export'&&method==='GET')return exportHistory(env,s,url.searchParams)
  if(path==='/audit'&&method==='GET'){const page=await history(env,s,url.searchParams,url.searchParams.has('paginate')?undefined:300);return url.searchParams.has('paginate')?page:page.rows}
+ if(path==='/backups')return method==='GET'?backupView(env,s):backupAction(env,s,input)
  const files=await filesExecute(env,request,s,method,parts,input,url);if(files!==undefined)return files
  insist(false,'not_found',404)
 }

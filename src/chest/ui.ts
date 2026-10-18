@@ -50,6 +50,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   const archiveFile=fields.get('archiveFile');if(archiveFile&&typeof archiveFile!=='string')input.archive=await archiveFile.text()
   if(input.path==='/archive/job')input.path=`/archive/${encodeURIComponent(input.job)}`
   administrationInput(input)
+  if(input.path==='/backups'){if(input.enabled!==undefined)input.enabled=input.enabled==='true';if(input.confirm!==undefined)input.confirm=input.confirm==='true';for(const key of ['everyHours','retentionDays'])if(input[key]!==undefined)input[key]=Number(input[key])}
   if(input.path.startsWith('/collection'))collectionInput(input)
   if(input.path.startsWith('/filing/'))filingInput(input)
   if(filesPath(input.path))filesInput(input)
