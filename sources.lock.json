@@ -837,7 +837,7 @@
       "executable": false
     },
     "src/chest/administration/people.ts": {
-      "sha256": "430bbbf57d45d646ac533e41a87a0c22c21978a66adb6cd7445b72e900719cc6",
+      "sha256": "56c25fe1e5d42da3a9f1df76531fb82b9cbb6de5b477e91f6ca8284d15d0fb26",
       "executable": false
     },
     "src/chest/administration/recovery.ts": {

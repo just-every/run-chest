@@ -1,6 +1,7 @@
 import type { Bindings } from '../../auth.server'
 import { authConfig } from '../../auth.server'
 import { createOperatorAuth,type Session } from '../../modules/operator-auth/index.mjs'
+import { personLine } from '../names'
 import { namingInviter } from '../invitation-mail'
 import { operatorMail } from '../../mail.server.mjs'
 import { insist,now,type Group } from '../model'
@@ -21,15 +22,16 @@ export async function administrativePersonAction(env:Bindings,request:Request,s:
   const resend=action==='resend-invite',target=resend?await env.DB.prepare("SELECT display_name AS name FROM oa_operators WHERE email=? AND status='invited'").bind(email).first<{name:string}>():null
   if(resend){insist(target,'invitation_not_found',404);await requireAdmin(env,s,'help-desk',email)}
   else if(input.group)await requireAdminGroup(env,s,'user-management',String(input.group));else await requireAdmin(env,s,'user-management',email)
-  const auth=createOperatorAuth({db:env.DB,config:authConfig(env),mailSender:namingInviter(operatorMail(env),s.operator.displayName),clientIp:r=>r.headers.get('CF-Connecting-IP')??'',rolePolicy:async({actor,action,role})=>actor.id===s.operator.id&&action==='operators:invite'&&role==='member'&&!!await env.DB.prepare(`SELECT 1 WHERE (${sessionPredicate(s).sql})`).bind(...sessionPredicate(s).params).first()})
+  const auth=createOperatorAuth({db:env.DB,config:authConfig(env),mailSender:namingInviter(operatorMail(env),personLine(s.operator.displayName,s.operator.email)),clientIp:r=>r.headers.get('CF-Connecting-IP')??'',rolePolicy:async({actor,action,role})=>actor.id===s.operator.id&&action==='operators:invite'&&role==='member'&&!!await env.DB.prepare(`SELECT 1 WHERE (${sessionPredicate(s).sql})`).bind(...sessionPredicate(s).params).first()})
   await auth.invite(request,{email,displayName:target?.name??String(input.name),role:'member',returnTo:'/app/files'})
   const audited=Object.assign({...s},{predicate:undefined})
   if(resend)await requireAdmin(env,audited,'help-desk',email);else if(input.group)await requireAdminGroup(env,audited,'user-management',String(input.group));else await requireAdmin(env,audited,'user-management',email)
-  const ops:Op[]=[]
-  if(input.group){const group=await getGroup(env,String(input.group));ops.push({row:next(group,{...group.payload,members:[...new Set([...group.payload.members,email])]}),previous:group})}
+  const identity=await env.DB.prepare('SELECT email,display_name AS name,role,status FROM oa_operators WHERE email=?').bind(email).first<{email:string;name:string;role:string;status:string}>();insist(identity,'person_not_found',404)
+  const previous=await maybe(env,'person',email),payload={...identity,development:email.endsWith('@dev.localhost')},ops:Op[]=[{row:previous?next(previous,payload):fresh('person',payload,email),previous:previous??undefined}]
+  if(input.group&&!resend){const group=await getGroup(env,String(input.group));ops.push({row:next(group,{...group.payload,members:[...new Set([...group.payload.members,email])]}),previous:group})}
   await commit(env,audited,ops,{audits:[{action:resend?'admin.person.resend-invite':'admin.person.invite',object:email,detail:{group:input.group??null}}]});return {invited:true}
  }
- const target=await env.DB.prepare('SELECT id,email,status,role,version FROM oa_operators WHERE email=?').bind(email).first<{id:string;email:string;status:string;role:string;version:number}>();insist(target,'person_not_found',404)
+ const target=await env.DB.prepare('SELECT id,email,display_name AS name,status,role,version FROM oa_operators WHERE email=?').bind(email).first<{id:string;email:string;name:string;status:string;role:string;version:number}>();insist(target,'person_not_found',404)
  if(action==='sessions'||action==='revoke-session'||action==='revoke-sessions'||action==='revoke-devices'){
   await requireAdmin(env,s,'help-desk',email)
   if(action==='sessions'){await commit(env,s,[],{audits:[{action:'admin.person.sessions',object:email}]});return (await env.DB.prepare("SELECT a.id,a.kind,a.created_at AS createdAt,a.expires_at AS expiresAt,a.revoked_at AS revokedAt,CASE WHEN a.revoked_at IS NULL AND a.expires_at>? AND a.operator_version=o.version AND o.status='active' THEN 1 ELSE 0 END AS active FROM oa_sessions a JOIN oa_operators o ON o.id=a.operator_id WHERE a.operator_id=? ORDER BY a.created_at DESC").bind(Date.now(),target.id).all()).results.map((r:any)=>({...r,active:!!r.active}))}
@@ -38,7 +40,7 @@ export async function administrativePersonAction(env:Bindings,request:Request,s:
  }
  if(action==='deactivate'||action==='reactivate'||action==='offboard'){
   await requireAdmin(env,s,'user-management',email);insist(email!==s.operator.email&&target.role!=='owner','owner_required',403);await guardAdminDeactivation(env,s,email)
-  const ops:Op[]=[],statements:{sql:string;params:unknown[]}[]=[{sql:'INSERT INTO chest_assert(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM oa_operators WHERE id=? AND version=? AND status=?) THEN 1 ELSE 0 END',params:[target.id,target.version,target.status]}]
+  const previous=await maybe(env,'person',email),person={email,name:target.name,role:target.role,status:action==='reactivate'?'active':'inactive',development:email.endsWith('@dev.localhost')},ops:Op[]=[{row:previous?next(previous,person):fresh('person',person,email),previous:previous??undefined}],statements:{sql:string;params:unknown[]}[]=[{sql:'INSERT INTO chest_assert(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM oa_operators WHERE id=? AND version=? AND status=?) THEN 1 ELSE 0 END',params:[target.id,target.version,target.status]}]
   if(action==='offboard'){
    const successor=String(input.to??'').toLowerCase();insist(successor!==email&&await env.DB.prepare("SELECT 1 FROM oa_operators WHERE email=? AND status='active'").bind(successor).first(),'invalid_successor');await requireAdmin(env,s,'user-management',successor)
    const area=await maybe<Space>(env,'space',personalId(email)),old=await maybe(env,'offboarding',`offboarding:${email}`),payload={from:email,to:successor,by:s.operator.email,at:now()};if(area)ops.push({row:next(area,{...area.payload,owner:successor,formerOwner:email,name:`Files from ${email}`}),previous:area});ops.push(old?{row:next(old,payload),previous:old}:{row:fresh('offboarding',payload,`offboarding:${email}`)})
