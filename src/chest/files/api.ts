@@ -23,6 +23,8 @@ import { closeFileRequest, createFileRequest } from './file-requests'
 import { linksView, makePrivate } from './exposure'
 import { devices, enrol, revoke } from './devices'
 import { createSpace, member, members, settings } from './spaces'
+import { requestSpace, saveSpacePolicy, spacePolicyView } from './space-policy'
+import { spaceSettingsView } from './space-settings'
 import { home, itemView, search, spaceView } from './views'
 import { sharingPolicy } from './people'
 import { list } from '../store'
@@ -34,11 +36,14 @@ import { begin, cancel, complete, receive, status, unfinished } from './uploads'
 import type { AccessRequest } from './model'
 // /api/chest routes for everyday files. Every route reads the person's current groups and links first; the UI's form
 // posts reach the same functions through execute().
-const roots = new Set(['link-repairs', 'new-files', 'templates', 'creation-settings', 'link-policy', 'uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search'])
+const roots = new Set(['space-policy', 'space-requests', 'link-repairs', 'new-files', 'templates', 'creation-settings', 'link-policy', 'uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search'])
 export async function filesExecute(env: Bindings, request: Request, s: Session, method: string, parts: string[], input: any, url: URL): Promise<unknown> {
  if (!roots.has(parts[0])) return undefined
  if(parts[0]==='link-repairs')return linkRepairsExecute(env,s,method,parts,input)
  const w = await who(env, s), [head, key, sub, version, verb] = parts, get = method === 'GET', post = method === 'POST'
+ if (head === 'space-policy' && !key && (get || post)) return get ? spacePolicyView(env, s) : saveSpacePolicy(env, s, input)
+ if (head === 'space-policy' && key && !sub && (get || post)) { if (get) return spaceSettingsView(env, s, key); await spaceSettingsView(env, s, key); return settings(env, s, w, key, input) }
+ if (head === 'space-requests' && post && !key) return requestSpace(env, s, w, input)
  if (post && head === 'new-files' && !key) return createFile(env, s, w, input)
  if (head === 'templates') {
   if (get && !key) return listTemplates(env, s, w, Object.fromEntries(url.searchParams))

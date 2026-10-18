@@ -8,6 +8,7 @@ import { allowed, context, demand, descend, everything, isAdmin, level, start, t
 import { deliver, notice } from './notify'
 import { personLine } from '../names'
 import { day, live, rank, role, shareRoles, type AccessRequest, type Expiry, type Grant, type Item, type Link, type Notice, type Prefs, type Space } from './model'
+import { memberRecipients } from './space-sharing'
 import { dayEnd } from './zone'
 // Item sharing (SHARE-004): people with share rights grant viewer, commenter or editor to colleagues or groups with
 // an optional message and expiry; recipients get an in-app notice and an email and find the item under Shared with me.
@@ -35,10 +36,11 @@ export async function share(env: Bindings, s: Session, w: Who, key: string, inpu
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'share')
  const r = role(input.role, shareRoles); insist(rank[r] <= rank[ctx.state.role!], 'role_above_own', 403)
  const { principal, emails } = await recipients(env, input.principal); insist(principal !== s.operator.email, 'cannot_share_with_self')
+ const memberFences=await memberRecipients(env,ctx,emails)
  const message = optional(input.message, 'message'), expires = await expiry(env, input.expires, input.zone)
  const grant: Grant = { principal, role: r, by: s.operator.email, at: now(), ...(expires ? { expires } : {}), ...(message ? { message } : {}) }
  const notices = emails.filter(e => e !== s.operator.email).map(e => notice(e, 'share', key, s.operator.email, `${personLine(s.operator.displayName, s.operator.email)} shared "${item.payload.name}" with you as ${r}.${message ? `\n\n${message}` : ''}${expires ? `\n\nAccess expires ${expires.slice(0, 10)}.` : ''}`))
- await commit(env, s, [{ row: next(item, { ...item.payload, grants: [...item.payload.grants.filter(g => g.principal !== principal), grant] }), previous: item }, ...await expiryOps(env, key, principal, grant), ...notices.map(row => ({ row }))], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'share.grant', object: key, detail: { principal, role: r, expires: expires ?? null } }] })
+ await commit(env, s, [{ row: next(item, { ...item.payload, grants: [...item.payload.grants.filter(g => g.principal !== principal), grant] }), previous: item }, ...await expiryOps(env, key, principal, grant), ...notices.map(row => ({ row }))], { fences: [...ctx.fences,...memberFences], changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'share.grant', object: key, detail: { principal, role: r, expires: expires ?? null } }] })
  await deliver(env, s, notices)
  return get<Item>(env, 'item', key)
 }
@@ -88,7 +90,7 @@ export async function approversFor(env: Bindings, space: Row<Space>, nodes: Row<
  for (const p of people) {
   const mine = groups.filter(g => g.payload.members.includes(p.email)), w: Who = { email: p.email, principals: [p.email, ...mine.map(g => g.id)], groups: mine, opened: [] }
   let state = start(space.payload, w); for (const node of nodes) state = descend(state, node, w, [])
-  if (allowed({ space, state }, 'share')) ranked.push([state.role === 'owner' ? 0 : state.role === 'manager' ? 2 : 1, p.email])
+  if (allowed({ space, state, chain:nodes }, 'share')) ranked.push([state.role === 'owner' ? 0 : state.role === 'manager' ? 2 : 1, p.email])
  }
  return ranked.length ? ranked.sort((a, b) => a[0] - b[0]).map(r => r[1]) : people.filter(p => p.role === 'owner' || p.role === 'admin').map(p => p.email)
 }
@@ -117,6 +119,7 @@ export async function decide(env: Bindings, s: Session, w: Who, id: string, inpu
  const ctx = await context(env, w, req.payload.item), item = ctx.chain.at(-1)!; insist(!ctx.state.trash, 'not_found', 404)
  const share = allowed(ctx, 'share'); insist(share || isAdmin(s), 'share_refused', 403)
  insist(input.decision === 'approve' || input.decision === 'decline', 'invalid_decision')
+ const memberFences=input.decision==='approve'?await memberRecipients(env,ctx,[req.payload.requester]):[]
  const ops: Op[] = [], at = now(); let granted: Grant | undefined
  if (input.decision === 'approve') {
   const r = role(input.role ?? req.payload.role, shareRoles); insist(rank[r] <= rank[req.payload.role], 'role_above_request'); insist(!share || rank[r] <= level(ctx.state), 'role_above_own', 403)
@@ -125,7 +128,7 @@ export async function decide(env: Bindings, s: Session, w: Who, id: string, inpu
  }
  const decided = next(req, { ...req.payload, status: input.decision === 'approve' ? 'approved' as const : 'declined' as const, decidedBy: s.operator.email, decidedAt: at, ...(granted ? { grantedRole: granted.role } : {}) })
  const told = notice(req.payload.requester, 'request.decision', granted ? item.id : null, s.operator.email, granted ? `Your access request for "${item.payload.name}" was approved as ${granted.role}.` : 'Your access request was declined.', id)
- await commit(env, s, [...ops, { row: decided, previous: req }, { row: told }], { fences: ctx.fences, changes: granted ? [{ item: item.id, space: ctx.space.id, kind: 'access' }] : [], audits: [{ action: `access.${input.decision}`, object: item.id, detail: { request: id, role: granted?.role ?? null } }] })
+ await commit(env, s, [...ops, { row: decided, previous: req }, { row: told }], { fences: [...ctx.fences,...memberFences], changes: granted ? [{ item: item.id, space: ctx.space.id, kind: 'access' }] : [], audits: [{ action: `access.${input.decision}`, object: item.id, detail: { request: id, role: granted?.role ?? null } }] })
  await deliver(env, s, [told])
  return { id, status: decided.payload.status, grantedRole: granted?.role ?? null }
 }

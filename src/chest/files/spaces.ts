@@ -5,7 +5,9 @@ import { validPerson } from '../access'
 import { peopleAction } from '../identity'
 import { insist, now, text, type Row } from '../model'
 import { commit, fresh, maybe, next } from './repo'
-import { start, type Who } from './access'
+import { start, who, type Who } from './access'
+import { creationPolicy, newSpaceDefaults } from './space-policy'
+import { changeSpaceSettings } from './space-settings'
 import { personalId, role, spaceRoles, type Grant, type Space } from './model'
 // Team spaces are created by staff, who become their first manager; a personal area exists for every person.
 export async function personal(env: Bindings, s: Session): Promise<Row<Space>> {
@@ -16,8 +18,13 @@ export async function personal(env: Bindings, s: Session): Promise<Row<Space>> {
  return row
 }
 export async function createSpace(env: Bindings, s: Session, input: any) {
- const at = now(), row = fresh<Space>('space', { name: text(input.name, 'name'), kind: 'team', owner: '', members: [{ principal: s.operator.email, role: 'manager', by: s.operator.email, at }], settings: { noDownload: false, editorSharing: true }, createdBy: s.operator.email, createdAt: at })
- await commit(env, s, [{ row }], { audits: [{ action: 'space.create', object: row.id, detail: { name: row.payload.name } }] })
+ const w = await who(env, s), policy = await newSpaceDefaults(env, w), creation = await creationPolicy(env, s, w, policy.organisation)
+ insist(creation.allowed, creation.rule, 403)
+ const { storageLimitBytes, ...defaults } = policy.defaults
+ // Until space defaults are configured, ordinary link-policy defaults remain authoritative.
+ if(!policy.fences.some(r=>r.kind==='space-policy'))delete (defaults as Partial<typeof defaults>).defaultLinkAudience
+ const at = now(), row = fresh<Space>('space', { name: text(input.name, 'name'), kind: 'team', owner: '', members: [{ principal: s.operator.email, role: 'manager', by: s.operator.email, at }], settings: { ...defaults, editorSharing: true }, storageLimitBytes, createdBy: s.operator.email, createdAt: at })
+ await commit(env, s, [{ row }], { fences: policy.fences, statements: policy.statements, audits: [{ action: 'space.create', object: row.id, detail: { name: row.payload.name, defaults: policy.defaults, creationRule: creation.rule } }] })
  return row
 }
 export async function grantsFrom(env: Bindings, input: unknown, roles: string[], by: string): Promise<Grant[]> {
@@ -58,10 +65,6 @@ export async function member(env: Bindings, request: Request, s: Session, w: Who
  return members(env, s, w, key, { members: list })
 }
 export async function settings(env: Bindings, s: Session, w: Who, key: string, input: any) {
- const space = await get<Space>(env, 'space', key); insist(space.payload.kind === 'team' && start(space.payload, w).role === 'manager', 'administer_refused', 403)
- for (const k of ['noDownload', 'editorSharing']) insist(input[k] === undefined || typeof input[k] === 'boolean', 'invalid_settings')
- const after = { noDownload: input.noDownload ?? space.payload.settings.noDownload, editorSharing: input.editorSharing ?? space.payload.settings.editorSharing }
- await commit(env, s, [{ row: next(space, { ...space.payload, settings: after }), previous: space }], { fences: w.groups, changes: [{ item: space.id, space: space.id, kind: 'access' }], audits: [{ action: 'space.settings', object: space.id, detail: { before: space.payload.settings, after } }] })
- return get<Space>(env, 'space', key)
+ return changeSpaceSettings(env, s, w, key, input)
 }
 export async function visibleSpaces(env: Bindings, w: Who) { return (await list<Space>(env, 'space')).filter(r => r.payload.kind === 'team' ? start(r.payload, w).role : r.payload.owner === w.email) }

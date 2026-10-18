@@ -1,0 +1,66 @@
+// SPACE-002 through deployed HTTP doors. Mail is captured only at the provider edge by the shared harness.
+import assert from 'node:assert/strict';
+import {harness} from './harness.mjs';
+const h=await harness(),people={};
+const postForm=(cookie,input)=>h.fetch('/app/action',{method:'POST',headers:{cookie,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams(input).toString()});
+try{
+ await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Owner'});people.owner=await h.signIn(h.vars.OWNER_EMAIL);
+ await h.fetch('/setup',{method:'POST',headers:{cookie:people.owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
+ for(const n of ['lead','staff','viewer']){await h.api('/people',people.owner,{action:'invite',email:n+'@example.test',name:n});people[n]=await h.signIn(n+'@example.test',true)}
+ assert.equal((await h.raw('/auth/invite',people.owner,{email:'admin@example.test',displayName:'Service admin',role:'admin',returnTo:'/app/files'})).status,202);people.admin=await h.signIn('admin@example.test',true);
+ const earlier=await h.api('/spaces',people.lead,{name:'Existing operations'}),before=(await h.api(`/spaces/${earlier.id}`,people.lead)).settings;
+ const group=await h.api('/groups',people.owner,{name:'Ops leads',members:['lead@example.test']});
+ const original=(await h.api('/space-policy',people.admin)).policy;
+ const locked={...original.defaults,externalAccess:false,nonMemberAccess:false,contentManagerFolderSharing:false,noDownload:true,defaultLinkAudience:'restricted',storageLimitBytes:64,managerOverride:false};
+ await h.api('/space-policy',people.staff,{creation:'admins'},403);
+ await h.api('/space-policy',people.admin,{creation:'groups',creatorGroups:[group.id],defaults:locked});
+ assert.equal((await h.api('/files',people.staff)).spaceCreation.allowed,false);
+ assert.equal((await h.api('/spaces',people.staff,{name:'Refused'},403)).error,'space_creation_named_groups_only');
+ const refused=await postForm(people.staff,{path:'/spaces',name:'Refused form',returnTo:'/app/files'});assert.equal(refused.status,403);assert.match(await refused.text(),/space_creation_named_groups_only/);
+ const request=await h.api('/space-requests',people.staff,{name:'Field operations',message:'A shared project tree for the field crew'});
+ assert.ok((await h.api('/notices',people.admin)).some(n=>n.payload.type==='space.request'&&n.payload.from==='staff@example.test'));
+ assert.ok((await h.api('/space-policy',people.admin)).requests.some(r=>r.id===request.id));
+ const created=await h.api('/spaces',people.lead,{name:'Governed operations'}),view=await h.api(`/spaces/${created.id}`,people.lead);
+ for(const [k,v]of Object.entries(locked))assert.deepEqual(view.settings[k],v,'new space receives saved '+k);
+ assert.deepEqual((await h.api(`/spaces/${earlier.id}`,people.lead)).settings,before,'changing defaults leaves existing space settings intact');
+ await h.api(`/spaces/${created.id}/settings`,people.lead,{externalAccess:true},403).then(r=>assert.equal(r.error,'space_manager_override_disabled'));
+ await h.api(`/spaces/${created.id}/settings`,people.lead,{managerOverride:true},403).then(r=>assert.equal(r.error,'space_manager_override_admin_only'));
+ await h.api(`/space-policy/${created.id}`,people.staff,undefined,403);
+ await h.api(`/space-policy/${created.id}`,people.admin,{externalAccess:true});
+ assert.equal((await h.api(`/spaces/${created.id}`,people.lead)).settings.externalAccess,true);
+ await h.api(`/space-policy/${created.id}`,people.admin,{managerOverride:true});
+ await h.api(`/spaces/${created.id}/settings`,people.lead,{externalAccess:false});
+ await h.api(`/spaces/${created.id}/members`,people.lead,{members:[{principal:'lead@example.test',role:'manager'},{principal:'viewer@example.test',role:'viewer'}]});
+ const file=await h.api('/items',people.lead,{space:created.id,type:'file',name:'Instructions.txt',base64:Buffer.from('Crew dispatch instructions').toString('base64')});
+ await h.api(`/items/${file.id}/bytes/${file.payload.current}?download=true`,people.viewer,undefined,403);
+ await h.api('/items',people.lead,{space:created.id,type:'file',name:'Too large.txt',base64:Buffer.from('x'.repeat(100)).toString('base64')},413);
+ await h.api(`/space-policy/${created.id}`,people.admin,{storageLimitBytes:1},409).then(r=>assert.equal(r.error,'space_storage_limit_confirmation_required'));
+ await h.api(`/space-policy/${created.id}`,people.admin,{storageLimitBytes:1,confirmOverLimit:true});
+ // Defaults govern actual sharing doors and live access, rather than only appearing in settings.
+ const protectedFolder=await h.api('/items',people.lead,{space:created.id,type:'folder',name:'Crew records'});
+ await h.api(`/items/${file.id}/links`,people.lead,{audience:'public'},403);
+ await h.api(`/items/${file.id}/shares`,people.lead,{principal:'staff@example.test',role:'viewer'},403).then(r=>assert.equal(r.error,'space_non_member_access_disabled'));
+ assert.equal((await h.api(`/items/${file.id}/links`,people.lead,{})).link.audience,'restricted');
+ await h.api(`/spaces/${created.id}/members`,people.lead,{members:[{principal:'lead@example.test',role:'manager'},{principal:'viewer@example.test',role:'viewer'},{principal:'staff@example.test',role:'content_manager'}]});
+ await h.api(`/items/${protectedFolder.id}/links`,people.staff,{audience:'restricted'},403).then(r=>assert.equal(r.error,'space_folder_sharing_managers_only'));
+ await h.api(`/items/${file.id}/links`,people.staff,{audience:'restricted'});
+ await h.api(`/space-policy/${created.id}`,people.admin,{externalAccess:true,nonMemberAccess:true});
+ const external=await h.api(`/items/${file.id}/links`,people.lead,{audience:'public',download:false}),externalPath=new URL(external.url).pathname;
+ assert.equal((await h.fetch(externalPath)).status,200);
+ await h.api(`/space-policy/${created.id}`,people.admin,{externalAccess:false});assert.equal((await h.fetch(externalPath)).status,410,'new policy ends an existing external link');
+ await h.api(`/items/${file.id}/shares`,people.lead,{principal:'admin@example.test',role:'viewer'});await h.api(`/items/${file.id}`,people.admin);
+ await h.api(`/space-policy/${created.id}`,people.admin,{nonMemberAccess:false});await h.api(`/items/${file.id}`,people.admin,undefined,403);
+ const groupDefaults={...locked,externalAccess:true,noDownload:false,storageLimitBytes:256,managerOverride:true};
+ await h.api('/space-policy',people.admin,{scope:`group:${group.id}`,defaults:groupDefaults});
+ const override=await h.api('/spaces',people.lead,{name:'Group defaults'});
+ assert.equal(override.payload.settings.externalAccess,groupDefaults.externalAccess);assert.equal(override.payload.storageLimitBytes,groupDefaults.storageLimitBytes);
+ await h.api('/space-policy',people.admin,{scope:`group:${group.id}`,remove:true});
+ const inherited=await h.api('/spaces',people.lead,{name:'Organization defaults again'});assert.equal(inherited.payload.settings.externalAccess,locked.externalAccess);
+ await h.api('/space-policy',people.admin,{creation:'admins'});
+ await h.api('/spaces',people.lead,{name:'Admin only refusal'},403).then(r=>assert.equal(r.error,'space_creation_admins_only'));
+ await h.api('/spaces',people.admin,{name:'Admin created'});
+ await h.api('/space-policy',people.admin,{creation:'everyone'});await h.api('/spaces',people.staff,{name:'Everyone can create again'});
+ const noOrigin=await h.fetch('/api/chest/space-policy',{method:'POST',headers:{cookie:people.admin,'content-type':'application/json'},body:JSON.stringify({creation:'admins'})});assert.equal(noOrigin.status,403);
+ const audit=await h.api('/audit',people.owner),changes=audit.filter(r=>['policy.spaces','space.settings'].includes(r.action));assert.ok(changes.length);assert.ok(changes.every(r=>{const d=JSON.parse(r.detail);return Object.hasOwn(d,'before')&&Object.hasOwn(d,'after')}));assert.ok(audit.some(r=>r.action==='space.request'&&r.object_id===request.id));
+ console.log('SPACE-002 HTTP creation rules, admin requests, preserved spaces, defaults, manager locks, group overrides and audit passed');
+}finally{await h.close()}

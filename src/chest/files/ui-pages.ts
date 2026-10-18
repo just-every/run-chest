@@ -2,6 +2,7 @@ import { esc, field, select, form, hidden, card, details, personPicker, stamp } 
 import { noticeWords } from '../ui-words'
 import { addHere, listing, restores, rewindForm } from './ui-item'
 import { storagePanel } from '../quota/ui'
+import { spaceCreationPanel, spaceSettingsCard } from './ui-space-policy'
 // Files pages: the files home, a space, Shared with me, trash, notices, access requests and sync devices.
 const inline = { className: 'form form-inline', buttonClass: 'btn btn-outline' }
 const head = (title: string, lede = '') => `<div class="page-head"><h1>${esc(title)}</h1>${lede ? `<p class="lede">${lede}</p>` : ''}</div>`
@@ -10,7 +11,7 @@ const search = (q = '') => `<form class="search" method="get" action="/app/files
 export function homePage(d: any) {
  const spaces = d.spaces.map((s: any) => `<li class="row-tabbed"><span class="tab tab-plain" aria-hidden="true"></span><div class="row-card person"><div class="person-facts"><strong><a href="/app/spaces/${s.id}">${esc(s.name)}</a></strong><span class="mono">${esc(s.kind === 'personal' ? 'personal area' : String(s.role).replace('_', ' '))}</span></div></div></li>`).join('')
  return head('Files', 'Team spaces, your personal area and everything shared with you. Every replacement keeps the earlier versions.') + `<div class="lib-tools">${search()}${filesLinks(d)}</div>
- <div class="with-side"><div class="records">${card('My files', `<p><a class="btn" href="/app/spaces/${d.personal}">Open My files</a></p>`)}${card('Team spaces', `${spaces ? `<ul class="rows">${spaces}</ul>` : '<p class="quiet">You are not a member of a team space yet.</p>'}${form('/spaces', field('New team space name', 'name'), 'Create team space', '/app/files', { className: 'form form-create' })}`)}
+ <div class="with-side"><div class="records">${card('My files', `<p><a class="btn" href="/app/spaces/${d.personal}">Open My files</a></p>`)}${card('Team spaces', `${spaces ? `<ul class="rows">${spaces}</ul>` : '<p class="quiet">You are not a member of a team space yet.</p>'}${spaceCreationPanel(d)}`)}
  ${d.shortcuts.length ? `<h2 class="section-title">Shortcuts in My files</h2>${listing(d.shortcuts, '')}` : ''}${d.starred.length ? `<h2 class="section-title">Starred</h2>${listing(d.starred, '')}` : ''}<h2 class="section-title">Recent</h2>${listing(d.recent, 'Files you open appear here.')}</div></div>`
 }
 const roleLabel = (r: string) => ({ viewer: 'Viewer', commenter: 'Commenter', contributor: 'Contributor', content_manager: 'Content manager', manager: 'Manager' } as Record<string, string>)[r] ?? r
@@ -29,7 +30,7 @@ function memberRows(d: any, people: any[], groups: any[], manager: boolean, retu
 export function spacePage(d: any, people: any[], groups: any[]) {
  const returnTo = `/app/spaces/${d.id}`, manager = d.kind === 'team' && d.can.administer
  const members = d.kind === 'team' ? card('Members', memberRows(d, people, groups, manager, returnTo), 'side-card') : ''
- const settings = manager ? card('Space settings', form(`/spaces/${d.id}/settings`, select('No download for viewers and commenters', 'noDownload', [{ id: 'false', label: 'Off' }, { id: 'true', label: 'On' }], String(d.settings.noDownload)) + select('Content managers may share', 'editorSharing', [{ id: 'true', label: 'Yes' }, { id: 'false', label: 'No: managers only' }], String(d.settings.editorSharing)), 'Save space settings', returnTo, { buttonClass: 'btn btn-outline btn-block' }), 'side-card') : ''
+ const settings = manager ? spaceSettingsCard(d) : ''
  return head(d.name, d.kind === 'team' ? `Team space · your role: ${esc(String(d.role).replace('_', ' '))}` : 'Your personal area. Share any file or folder from its page.') + `<div class="lib-tools">${search()}${filesLinks()}</div><div class="with-side doc"><div class="doc-main">${d.can.contribute ? addHere({ space: d.id }, returnTo, d.uploads, d.can.administer || d.kind === 'personal' ? rewindForm({ space: d.id }, returnTo) : '', d.creation) : ''}${listing(d.children.map((c: any) => ({ ...c, space: { name: d.name } })), 'Nothing here yet.')}${restores(d.rewinds, returnTo)}</div><div class="doc-side">${members}${settings}${storagePanel(d.storage, d.quotaOwner)}</div></div>`
 }
 // Words in scans and photos are searchable only once they are read; without a working AI key the page says why.

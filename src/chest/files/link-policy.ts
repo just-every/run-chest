@@ -13,6 +13,7 @@ const key = (scope: string) => `link-policy:${scope}`
 // the permission switches are read on every subsequent request, including already-issued original URLs.
 export async function effectiveLinkPolicy(env: Bindings, w: Pick<Who,'groups'>, space: string) {
  const scopes = ['organisation', `space:${space}`, ...w.groups.map(g => `group:${g.id}`)], records = (await Promise.all(scopes.map(scope => maybe<LinkPolicy>(env, 'link-policy', key(scope))))).filter((r): r is Row<LinkPolicy> => !!r)
+ const spaceRow=await maybe<Space>(env,'space',space)
  const base = records.find(r => r.id === key('organisation'))?.payload ?? defaults
  const result = { ...base }
  const overrides=records.filter(r => r.id !== key('organisation'))
@@ -22,8 +23,13 @@ export async function effectiveLinkPolicy(env: Bindings, w: Pick<Who,'groups'>, 
   if (order[row.payload.defaultAudience] < order[result.defaultAudience]) result.defaultAudience = row.payload.defaultAudience
   if (ranks[row.payload.defaultRole] < ranks[result.defaultRole]) result.defaultRole = row.payload.defaultRole
  }
+ if(spaceRow?.payload.kind==='team'){
+  const settings=spaceRow.payload.settings
+  result.allowPublic &&= settings.externalAccess!==false && settings.nonMemberAccess!==false
+  if(settings.defaultLinkAudience && (!overrides.length || order[settings.defaultLinkAudience]<order[result.defaultAudience]))result.defaultAudience=settings.defaultLinkAudience
+ }
  if (result.defaultAudience === 'public' && !result.allowPublic || result.defaultAudience === 'organisation' && !result.allowOrganisation) result.defaultAudience = 'restricted'
- return { rules: result, fences: records }
+ return { rules: result, fences: [...records,...(spaceRow?[spaceRow]:[])] }
 }
 export async function creatorLinkPolicy(env: Bindings, email: string, space: string) {
  const groups = (await list<Group>(env, 'group')).filter(g => g.payload.members.includes(email))

@@ -24,5 +24,5 @@ const events: Record<string, string> = {
 }
 // An unlisted code still reads as words: "thing.done-now" becomes "thing done now".
 export const eventWords = (code: string) => events[code] ?? code.replace(/[._-]+/g, ' ')
-const notices: Record<string, string> = { filing: 'File filed', 'ownership.request': 'Ownership offered to you', 'ownership.accepted': 'Ownership accepted', 'ownership.declined': 'Ownership declined', 'ownership.cancelled': 'Ownership request cancelled', share: 'Shared with you', 'share.expiring': 'Access ending soon', request: 'Access request', 'request.decision': 'Your access request', 'request.expired': 'Access request ran out', 'file-request.upload': 'Files received' }
+const notices: Record<string, string> = { 'space.request': 'Team space requested', filing: 'File filed', 'ownership.request': 'Ownership offered to you', 'ownership.accepted': 'Ownership accepted', 'ownership.declined': 'Ownership declined', 'ownership.cancelled': 'Ownership request cancelled', share: 'Shared with you', 'share.expiring': 'Access ending soon', request: 'Access request', 'request.decision': 'Your access request', 'request.expired': 'Access request ran out', 'file-request.upload': 'Files received' }
 export const noticeWords = (type: string) => notices[type] ?? eventWords(type)

@@ -76,6 +76,12 @@
       "clauses": [
         "AGENT-001"
       ]
+    },
+    {
+      "id": "space-creation-controls",
+      "clauses": [
+        "SPACE-002"
+      ]
     }
   ],
   "nonGoals": [

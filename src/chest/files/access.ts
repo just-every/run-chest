@@ -8,7 +8,7 @@ import { rank, live, type Item, type Link, type Role, type Space } from './model
 // Inherited roles accumulate down the tree; a restricted folder or file stops inheritance except for space managers.
 // Expired grants, removed links and trashed ancestors take effect on the next request through every door.
 export type Who = { email: string; principals: string[]; groups: Row<Group>[]; opened: string[] }
-export type State = { role: Role | null; manager: boolean; noDownload: boolean; trash: Row<Item> | null }
+export type State = { role: Role | null; manager: boolean; noDownload: boolean; trash: Row<Item> | null; memberOnlyRefused?: boolean }
 export type Ctx = { space: Row<Space>; chain: Row<Item>[]; state: State; links: Row<Link>[]; fences: Row[] }
 // Organization links a person has opened come from the durable audit, never from a grant.
 export const who = (env: Bindings, s: Session) => whoFor(env, s.operator.email)
@@ -30,13 +30,14 @@ const granted = (grants: { principal: string; role: Role; expires?: string }[], 
 export function start(space: Space, w: Who): State {
  if (space.kind === 'personal') return { role: space.owner === w.email ? 'owner' : null, manager: space.owner === w.email, noDownload: false, trash: null }
  const role = granted(space.members, w)
- return { role, manager: role === 'manager', noDownload: space.settings.noDownload, trash: null }
+ return { role, manager: role === 'manager', noDownload: space.settings.noDownload, trash: null, memberOnlyRefused: space.settings.nonMemberAccess===false && !role }
 }
 export function descend(state: State, node: Row<Item>, w: Who, links: Row<Link>[]): State {
+ if(state.memberOnlyRefused)return {...state,role:null,trash:state.trash ?? (node.payload.trash?node:null),noDownload:state.noDownload || node.payload.noDownload}
  let role = node.payload.restricted ? (state.manager ? (state.role === 'owner' ? 'owner' : 'manager') : null) : state.role
  role = best(role, granted(node.payload.grants, w))
  for (const l of links) if (l.payload.item === node.id && (l.payload.discoverable || w.opened.includes(l.id))) role = best(role, l.payload.role)
- return { role, manager: state.manager, noDownload: state.noDownload || node.payload.noDownload, trash: state.trash ?? (node.payload.trash ? node : null) }
+ return { role, manager: state.manager, memberOnlyRefused:state.memberOnlyRefused, noDownload: state.noDownload || node.payload.noDownload, trash: state.trash ?? (node.payload.trash ? node : null) }
 }
 export async function chain(env: Bindings, key: string): Promise<{ space: Row<Space>; chain: Row<Item>[] }> {
  const nodes: Row<Item>[] = []
@@ -51,19 +52,20 @@ export async function context(env: Bindings, w: Who, key: string): Promise<Ctx> 
 }
 export const level = (s: State) => s.role ? rank[s.role] : 0
 export type Action = 'view' | 'download' | 'comment' | 'contribute' | 'manage' | 'share' | 'administer'
-export function allowed(ctx: { space: Row<Space>; state: State }, action: Action) {
+export function allowed(ctx: { space: Row<Space>; state: State; chain?: Row<Item>[] }, action: Action) {
  const r = level(ctx.state)
  if (action === 'view') return r >= 1
  if (action === 'download') return r >= 1 && !(ctx.state.noDownload && r < 3)
  if (action === 'comment') return r >= 2
  if (action === 'contribute') return r >= 3
  if (action === 'manage') return r >= 4
- if (action === 'share') return r >= 4 && (ctx.space.payload.kind === 'personal' || ctx.space.payload.settings.editorSharing || r >= 5)
+ if (action === 'share') return !(ctx.chain?.at(-1)?.payload.type==='folder' && ctx.space.payload.settings.contentManagerFolderSharing===false && r<5) && r >= 4 && (ctx.space.payload.kind === 'personal' || ctx.space.payload.settings.editorSharing || r >= 5)
  return r >= 5
 }
 // No access reads as "request access" without the item's name; a trashed item is gone from every ordinary door.
 export function demand(ctx: Ctx, action: Action) {
  if (ctx.state.trash || !allowed(ctx, 'view')) throw new ChestError(ctx.state.trash ? 'not_found' : 'access_required', ctx.state.trash ? 404 : 403)
+ if(action==='share' && ctx.chain.at(-1)?.payload.type==='folder' && ctx.space.payload.settings.contentManagerFolderSharing===false && level(ctx.state)>=4 && level(ctx.state)<5)throw new ChestError('space_folder_sharing_managers_only',403)
  if (!allowed(ctx, action)) throw new ChestError(action === 'download' ? 'download_restricted' : action === 'share' && level(ctx.state) >= 4 ? 'editor_sharing_off' : `${action}_refused`, 403)
 }
 export const isAdmin = (s: Session) => s.operator.role === 'owner' || s.operator.role === 'admin'

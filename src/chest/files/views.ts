@@ -13,6 +13,7 @@ import { linksOn } from './public-links'
 import { linksForItem } from './links'
 import { requestsOn } from './file-requests'
 import { personal, visibleSpaces } from './spaces'
+import { creationPolicy, spaceDefaults } from './space-policy'
 import type { Prefs, Space } from './model'
 import { extraction, textHits } from '../read/jobs'
 import { mergeView,hiddenMerged } from '../filing/duplicate-view'
@@ -36,13 +37,13 @@ export async function recent(env: Bindings, w: Who, all: Map<string, Entry>) {
 export async function home(env: Bindings, s: Session, w: Who) {
  const mine = await personal(env, s), all = await everything(env, w), prefs = await prefsOf(env, w), pick = (ids: string[]) => ids.map(id => all.get(id)).filter((e): e is Entry => !!e && !!e.state.role && !e.state.trash).map(brief)
  const spaces = (await visibleSpaces(env, w)).filter(r => r.id !== mine.id).map(r => ({ id: r.id, name: r.payload.name, kind: r.payload.kind, role: start(r.payload, w).role }))
- return { me: { email: s.operator.email, name: s.operator.displayName, role: s.operator.role }, personal: mine.id, spaces, recent: await recent(env, w, all), starred: pick(prefs.starred), shortcuts: pick(prefs.shortcuts), requests: (await pending(env, w)).length }
+ return { spaceCreation: await creationPolicy(env, s, w).then(p => ({ allowed: p.allowed, rule: p.rule })), me: { email: s.operator.email, name: s.operator.displayName, role: s.operator.role }, personal: mine.id, spaces, recent: await recent(env, w, all), starred: pick(prefs.starred), shortcuts: pick(prefs.shortcuts), requests: (await pending(env, w)).length }
 }
 export async function spaceView(env: Bindings, w: Who, key: string) {
  const space = await get<Space>(env, 'space', key), state = start(space.payload, w); insist(state.role, 'not_found', 404)
  const ctx: Ctx = { space, chain: [], state, links: [], fences: [] }
  const manager = state.role === 'manager' || state.role === 'owner'
- return { id: space.id, name: label(space.payload, w), kind: space.payload.kind, role: state.role, can: can(ctx), settings: space.payload.settings, storage: { id: space.id, limitBytes: space.payload.storageLimitBytes ?? null, ...await storage(env, space.id) }, members: space.payload.kind === 'team' ? space.payload.members : [], children: (await children(env, w, ctx, null)).map(brief), uploads: await unfinished(env, w, { space: space.id, parent: null }), rewinds: manager ? await rewinds(env, `space:${space.id}`) : [] }
+ return { id: space.id, name: label(space.payload, w), kind: space.payload.kind, role: state.role, can: can(ctx), settings: { ...space.payload.settings, ...spaceDefaults(space.payload) }, storage: { id: space.id, limitBytes: space.payload.storageLimitBytes ?? null, ...await storage(env, space.id) }, members: space.payload.kind === 'team' ? space.payload.members : [], children: (await children(env, w, ctx, null)).map(brief), uploads: await unfinished(env, w, { space: space.id, parent: null }), rewinds: manager ? await rewinds(env, `space:${space.id}`) : [] }
 }
 export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'view')

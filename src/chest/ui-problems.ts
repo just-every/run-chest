@@ -1,5 +1,13 @@
 // What a refused action says, in plain words. The code stays on the page in small print for anyone reporting it.
 const words: Record<string, string> = {
+ space_creation_named_groups_only: 'Only members of the administrator’s named creator groups may create team spaces. Request a space from Files.',
+ space_creation_admins_only: 'Only service-settings admins may create team spaces. Request a space from Files.',
+ space_manager_override_disabled: 'Your administrator has locked this space’s defaulted settings. Ask a service-settings admin to change them.',
+ space_manager_override_admin_only: 'Only a service-settings admin can allow managers to change defaulted settings.',
+ space_non_member_access_disabled: 'This space allows file and folder access only for space members. Add the person to the space first.',
+ space_folder_sharing_managers_only: 'This space permits only managers to share folders. Content managers may still share files where allowed.',
+ service_settings_admin_required: 'Only an admin with service-settings access may change space creation and defaults.',
+
  invalid_password: 'Use a link password between 8 and 200 characters, or leave it empty for no password.',
  ownership_personal_only: 'Only an item in your personal area can be offered. Team-space items belong to the team.',
  ownership_changed: 'This request or the item changed. Reload to see its current state.',
