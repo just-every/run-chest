@@ -1,3 +1,5 @@
+import { transfersExecute, transferView } from '../transfers/service'
+import { transfersPage, transferPage } from '../transfers/ui'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { list } from '../store'
@@ -34,7 +36,7 @@ import { listTemplates } from '../office/create-templates'
 import { creationSettings } from '../office/create-settings'
 import { templatesPage } from '../office/new-ui'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
-export const filesPath = (path: string) => /^\/(space-policy|space-requests|new-files|templates|creation-settings|items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
+export const filesPath = (path: string) => /^\/(transfers|space-policy|space-requests|new-files|templates|creation-settings|items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
  if (input.path === '/new-files') { if (input.name === '') delete input.name; if (input.template === '') delete input.template }
  if (input.path === '/templates' && typeof input.templateAudience === 'string') {
@@ -57,6 +59,7 @@ export function filesInput(input: any) {
 }
 // Pages that must show a one-time secret instead of redirecting.
 export function filesReceipt(input: any, result: any) {
+ if (input.path === '/transfers') return secretPage('Delivery package created',result.url,`Copy this link now. Email: ${result.email}. Email acknowledgment is not a recipient receipt.`, '/app/transfers/'+result.id)
  if (input.path === '/space-requests') return `<div class="page-head"><h1>Space request sent</h1></div><p>Your request is recorded and appears in Notices for ${esc(result.notifiedAdmins)} service-settings admin(s).</p><p><a class="link" href="/app/files">Back to Files</a></p>`
  if (/^\/items\/[^/]+\/links$/.test(input.path)) return secretPage('Link created', result.url, 'Copy this link now. Chest keeps only a fingerprint of it and cannot show it again.', input.returnTo || '/app/files')
  if (/^\/items\/[^/]+\/public-links$/.test(input.path)) return secretPage('Link created', result.url, `Copy this link now and send it to the people who need the ${result.link.password ? 'file; send the password separately' : 'file'}. Chest keeps only a fingerprint of it and cannot show it again. Revoke it any time from the file's page or Links.`, input.returnTo || '/app/links')
@@ -76,10 +79,11 @@ async function destinations(env: Bindings, w: Awaited<ReturnType<typeof who>>) {
 export async function filesPage(env: Bindings, request: Request, s: Session, url: URL): Promise<{ body: string } | { redirect: string } | null> {
  const path = url.pathname, parts = path.split('/').filter(Boolean)
  if (parts[0] === 's' && parts[1]) return { redirect: `/app/items/${(await openLink(env, s, parts[1])).item}` }
- if (parts[0] !== 'app' || !['templates', 'files', 'ownership', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in'].includes(parts[1])) return null
+ if (parts[0] !== 'app' || !['transfers', 'templates', 'files', 'ownership', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in'].includes(parts[1])) return null
  if (path === '/app/storage') return { body: quotasPage(await quotas(env, s)) }
  if (parts[1] === 'spaces' && parts[2] && parts[3] === 'quota') return { body: quotaPage(await quotaView(env, s, parts[2])) }
  const w = await who(env, s), people = (await list<Person>(env, 'person')).filter(p => p.payload.status !== 'inactive'), groups = await list<Group>(env, 'group')
+ if(parts[1]==='transfers')return {body:parts[2]?transferPage(await transferView(env,s,w,parts[2])):transfersPage(await transfersExecute(env,request,s,'GET',['transfers'],{}) as any[])}
  if (path === '/app/templates') return { body: templatesPage(await listTemplates(env, s, w), await creationSettings(env, s, w), groups, isAdmin(s)) }
  if (path === '/app/ownership') return { body: ownershipInboxPage(await ownershipInbox(env, s, w)) }
  if (parts[1] === 'ownership' && parts[2]) return { body: ownershipPage(await ownershipView(env, s, w, parts[2])) }

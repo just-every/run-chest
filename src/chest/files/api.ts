@@ -1,3 +1,4 @@
+import { transfersExecute } from '../transfers/service'
 import { linkRepairsExecute } from '../filing/link-repairs'
 import {setQuota,quotaView} from '../quota/api'
 import type { Bindings } from '../../auth.server'
@@ -36,8 +37,9 @@ import { begin, cancel, complete, receive, status, unfinished } from './uploads'
 import type { AccessRequest } from './model'
 // /api/chest routes for everyday files. Every route reads the person's current groups and links first; the UI's form
 // posts reach the same functions through execute().
-const roots = new Set(['space-policy', 'space-requests', 'link-repairs', 'new-files', 'templates', 'creation-settings', 'link-policy', 'uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search'])
+const roots = new Set(['transfers', 'space-policy', 'space-requests', 'link-repairs', 'new-files', 'templates', 'creation-settings', 'link-policy', 'uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search'])
 export async function filesExecute(env: Bindings, request: Request, s: Session, method: string, parts: string[], input: any, url: URL): Promise<unknown> {
+ if(parts[0]==='transfers')return transfersExecute(env,request,s,method,parts,input)
  if (!roots.has(parts[0])) return undefined
  if(parts[0]==='link-repairs')return linkRepairsExecute(env,s,method,parts,input)
  const w = await who(env, s), [head, key, sub, version, verb] = parts, get = method === 'GET', post = method === 'POST'

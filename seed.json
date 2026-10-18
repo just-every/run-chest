@@ -94,6 +94,12 @@
       "clauses": [
         "SEARCH-002"
       ]
+    },
+    {
+      "id": "version-pinned-deliveries",
+      "clauses": [
+        "SHARE-003"
+      ]
     }
   ],
   "nonGoals": [

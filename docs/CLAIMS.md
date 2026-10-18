@@ -65,3 +65,19 @@ Status, as the contract defines it:
 | 39f | "Activity log: Every view, share and change, recorded." | done | AUDIT-001 (done), CHEST-13 (done) | `src/chest/store.ts`; `src/chest/api.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs`; `src/chest/files/trash.ts`; `src/chest/documents.ts`; `tests/chest/browser-files.mjs`; `src/chest/audit/journal.ts`; `src/chest/audit/history.ts`; `src/chest/audit/privacy.ts`; `src/chest/audit/public.ts`; `src/chest/audit/ui.ts`; `src/chest/store.ts`; `src/chest/files/repo.ts`; `src/chest/files/views.ts`; `src/chest/read/jobs.ts`; `src/chest/files/notify.ts`; `src/mail.server.mjs`; `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs` |
 | 40 | "Open source file storage for your whole team." | partial | OPEN-001 (partial), SPACE-001 (partial) | `LICENSE`; `src/chest/files/spaces.ts`; `src/chest/files/items.ts`; `src/chest/files/uploads.ts`; `src/chest/files/ui-item.ts`; `src/chest/files/ownership.ts`; `src/chest/files/ui-ownership.ts`; `src/chest/files/access-explanation.ts`; `tests/chest/ownership.mjs`; `tests/chest/browser-ownership.mjs`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `src/chest/office/create-service.ts`; `src/chest/office/create-templates.ts`; `src/chest/office/new-ui.ts`; `src/chest/files/governance.ts`; `tests/chest/new-files.mjs`; `tests/chest/governance.mjs`; `tests/chest/browser-new-files.mjs`; `src/chest/files/folder-metadata.ts`; `src/chest/files/ui-folder-metadata.ts`; `tests/chest/browser-governance.mjs` |
 | 41 | "Free and open source, MIT licensed." | partial | OPEN-001 (partial) | `LICENSE` |
+
+## Browser contract catch-up
+
+The aggregate homepage rows above retain their incomplete dependencies. The
+following browser clauses now have their own delivered workflows and exercising
+public-door tests; their status matches the CONTRACT.md Status cell.
+
+| Capability | Clause | Status | Code |
+| --- | --- | --- | --- |
+| Version-pinned delivery packages, resumable original downloads and distinct receipt events | SHARE-003 | done | `src/chest/transfers/service.ts`; `src/chest/transfers/public.ts`; `src/chest/transfers/ui.ts`; `tests/chest/transfers.mjs`; `tests/chest/browser-transfers.mjs` |
+
+SHARE-003 was selected because sending originals and distinguishing delivery from
+human receipt is central to browser file exchange. Signed sync/mobile clients
+(SYNC-001/002, MOBILE-001, and dependent SPACE-001/SHARE-001 sentences) and direct
+provider migrations/connectors were skipped: the former need the owner's signing
+credentials, and the latter need provider developer applications or test tenants.

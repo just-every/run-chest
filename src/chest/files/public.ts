@@ -1,3 +1,4 @@
+import { transferPublic } from '../transfers/public'
 import { runtimeBindings, type Bindings } from '../../auth.server'
 import { publicVersion } from './link-snapshots'
 import { externalComments, externalComment } from './link-comments'
@@ -23,6 +24,7 @@ export async function publicResponse(request: Request, original: Bindings): Prom
  try {
   if (request.method === 'POST') insist(request.headers.get('origin') === env.AUTH_ORIGIN && request.headers.get('sec-fetch-site') !== 'cross-site', 'invalid_origin', 403)
   else insist(request.method === 'GET' || request.method === 'HEAD', 'method_not_allowed', 405)
+  if (door === 'l') { const transfer=await transferPublic(env,request,secret,sub,key);if(transfer)return transfer }
   if (door === 'l' && (sub === 'verify' || sub === 'confirm')) {
    const r=await resolveLink(env,secret);if('refused' in r)return refusedLink(r.refused)
    insist(r.link.payload.audience==='guests' || r.link.payload.audience==='domain','not_found',404)

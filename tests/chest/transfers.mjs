@@ -1,0 +1,40 @@
+// SHARE-003 public packages: actual stored originals, range resume and explicit verified receipt.
+import assert from 'node:assert/strict';
+import {harness} from './harness.mjs';
+const h=await harness();let owner;
+const post=(path,cookie,body)=>h.fetch(path,{method:'POST',headers:{origin:h.origin,...(cookie?{cookie}:{})},body:new URLSearchParams(body)});
+try {
+ await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});owner=await h.signIn(h.vars.OWNER_EMAIL);
+ await post('/setup',owner,{confirm:'yes'});
+ const space=(await h.api('/files',owner)).personal,folder=await h.api('/items',owner,{space,type:'folder',name:'Harbor delivery'}),bytes=Buffer.from('Original signed procurement terms — version one.'),file=await h.api('/items',owner,{parent:folder.id,name:'Terms.txt',base64:bytes.toString('base64')}),version=file.payload.current;
+ const pack=await h.api('/transfers',owner,{item:folder.id,title:'Harbor approved handover',limit:1,receipt:true,sendTo:'recipient@example.test'}),base=new URL(pack.url).pathname;
+ let view=await h.api('/transfers/'+pack.id,owner);assert.equal(view.events.filter(e=>e.kind==='mail_accepted').length,1);assert.ok(!view.events.some(e=>e.kind==='confirmed'));
+ await h.fetch(base,{headers:{'user-agent':'Microsoft SafeLinks PreviewBot'}});view=await h.api('/transfers/'+pack.id,owner);assert.ok(view.events.some(e=>e.kind==='scanner_view'));assert.ok(!view.events.some(e=>e.kind==='confirmed'));
+ await h.api(`/items/${file.id}/versions`,owner,{base64:Buffer.from('Replacement, never in the package').toString('base64'),filename:'Terms.txt'});
+ assert.equal((await h.fetch(base+'/f/'+file.id)).status,403,'no download session means no bytes');
+ const started=await post(base+'/start',null,{});assert.equal(started.status,303);const cookie=started.headers.get('set-cookie').split(';')[0];
+ assert.equal((await post(base+'/start',null,{})).status,410,'new sessions hit the limit');
+ const part=await h.fetch(base+'/f/'+file.id,{headers:{cookie,range:'bytes=0-11'}});assert.equal(part.status,206);assert.deepEqual(Buffer.from(await part.arrayBuffer()),bytes.subarray(0,12));
+ assert.equal((await h.api('/transfers/'+pack.id,owner)).events.filter(e=>e.kind==='bytes_completed').length,0);
+ await h.stop();await h.start();
+ const rest=await h.fetch(base+'/f/'+file.id,{headers:{cookie,range:'bytes=12-'}});assert.equal(rest.status,206);assert.deepEqual(Buffer.from(await rest.arrayBuffer()),bytes.subarray(12));
+ view=await h.api('/transfers/'+pack.id,owner);assert.equal(view.events.filter(e=>e.kind==='bytes_completed'&&e.version===version).length,1);assert.ok(!view.events.some(e=>e.kind==='confirmed'));
+ const invalid=await h.fetch(base+'/f/'+file.id,{headers:{cookie,range:'bytes=999999-'}});assert.equal(invalid.status,416);
+ await h.fetch(base+'/f/'+file.id,{headers:{cookie,range:'bytes=0-11'}}).then(r=>r.arrayBuffer());assert.equal((await h.api('/transfers/'+pack.id,owner)).events.filter(e=>e.kind==='bytes_completed').length,1);
+ const bad=await h.fetch(base+'/received',{method:'POST',headers:{cookie},body:new URLSearchParams({received:'yes'})});assert.equal(bad.status,403,'CSRF confirmation refused');
+ assert.equal((await post(base+'/received',cookie,{})).status,400);
+ assert.equal((await post(base+'/received',cookie,{received:'yes'})).status,303);assert.equal((await post(base+'/received',cookie,{received:'yes'})).status,303);
+ view=await h.api('/transfers/'+pack.id,owner);assert.equal(view.events.filter(e=>e.kind==='confirmed').length,1);assert.equal(view.events.find(e=>e.kind==='confirmed').actor,'anyone with the link');
+ await h.api(`/transfers/${pack.id}/revoke`,owner,{});assert.equal((await h.fetch(base+'/f/'+file.id,{headers:{cookie,range:'bytes=12-'}})).status,410);
+ const invited=await h.api('/transfers',owner,{item:file.id,title:'Verified delivery',audience:'guests',guests:['vendor@example.test'],receipt:true}),ib=new URL(invited.url).pathname;
+ assert.match(await(await h.fetch(ib)).text(),/Verify your email/);
+ await post(ib+'/verify',null,{email:'vendor@example.test'});
+ const message=h.mails.findLast(m=>[m.to].flat().includes('vendor@example.test')),token=new URL(message.text.match(/https?:\/\/[^\s]+/)[0]).searchParams.get('token');
+ const confirmation=await post(ib+'/confirm',null,{token}),verified=confirmation.headers.get('set-cookie').split(';')[0];assert.equal(confirmation.status,303);
+ const begin=await post(ib+'/start',verified,{}),guestCookie=verified+'; '+begin.headers.get('set-cookie').split(';')[0];
+ await post(ib+'/received',guestCookie,{received:'yes'});view=await h.api('/transfers/'+invited.id,owner);assert.equal(view.events.find(e=>e.kind==='confirmed').actor,'vendor@example.test');
+ const expired=await h.api('/transfers',owner,{item:file.id,expires:'2099-01-01'});const ep=new URL(expired.url).pathname,er=await post(ep+'/start',null,{}),ec=er.headers.get('set-cookie').split(';')[0];
+ await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.expires','2000-01-01T00:00:00.000Z') WHERE kind='public-link' AND id=(SELECT json_extract(payload,'$.link') FROM chest_records WHERE id=?)",expired.id);
+ assert.equal((await h.fetch(ep+'/f/'+file.id,{headers:{cookie:ec,range:'bytes=0-5'}})).status,410);
+ console.log('SHARE-003 pinned packages, scanner/provider distinctions, restart/range resume, count limit, verified confirmation, expiry/revoke passed');
+}finally {await h.close()}
