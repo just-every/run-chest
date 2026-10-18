@@ -11,10 +11,11 @@ import { day, type FileRequest, type Link, type PublicLink } from './model'
 // The Links view: every link and file request the person made or may manage, and "Shared too widely": links that
 // are public, long-lived or past their limit, each with Make private. Admins see every link in the installation.
 const longLived = 90 * day
-export function reasons(l: { audience: 'public' | 'organisation' | 'restricted'; at: string; expires: string | null; state: string; discoverable?: boolean; policyBlocked?: boolean }, at = Date.now()) {
+export function reasons(l: { audience: 'public' | 'organisation' | 'restricted' | 'guests' | 'domain'; at: string; expires: string | null; state: string; discoverable?: boolean; policyBlocked?: boolean }, at = Date.now()) {
  if(l.audience==='restricted')return []
  if(l.policyBlocked)return ['Blocked by link policy until the policy permits it again']
  if (l.audience === 'organisation') return [...(l.discoverable ? ['Every colleague can find it in search'] : []), ...(at - Date.parse(l.at) > longLived ? ['Open to the whole organization for more than 90 days'] : [])]
+ if(l.audience==='guests' || l.audience==='domain')return !l.expires?['Verified external audience link never expires']:[]
  if (l.state === 'expired') return ['Past its expiry but not revoked']
  if (l.state === 'limit reached') return ['Download limit used up but not revoked']
  return ['Anyone with the link can open it without signing in', ...(!l.expires ? ['Never expires'] : Date.parse(l.expires) - at > longLived ? ['Stays open for more than 90 more days'] : [])]

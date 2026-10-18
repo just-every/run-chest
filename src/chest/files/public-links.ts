@@ -9,6 +9,7 @@ import type { Item, PublicLink } from './model'
 import { normalizeLinkVersion, linkedVersion } from './link-versions'
 import { effectiveLinkPolicy, creatorLinkPolicy, demandLinkPolicy } from './link-policy'
 import { dayEnd } from './zone'
+import { externalAudience } from './guest-links'
 // Links for anyone (SHARE-001): a file or folder opens without an account, behind an optional password, until an
 // optional expiry and for an optional number of downloads. Every request re-reads the link, the item's path and the
 // custodian's current right to share it, so revoking, trashing, restricting or removing the sharer ends the link at
@@ -29,10 +30,11 @@ export async function createPublicLink(env: Bindings, s: Session, w: Who, key: s
  const policy=await effectiveLinkPolicy(env,w,ctx.space.id);demandLinkPolicy(policy.rules,'public')
  insist(input.download === undefined || typeof input.download === 'boolean','invalid_download')
  insist(input.role === undefined || input.role === 'viewer','public_link_viewer_only')
+ const audience=externalAudience(input)
  const choice=normalizeLinkVersion(ctx.chain.at(-1)!.payload,input)
  const password = input.password === undefined || input.password === '' ? null : await hashPassword(input.password)
- const secret = randomToken(publicPrefix), row = fresh<PublicLink>('public-link', { ...choice, download: input.download ?? true, item: key, tokenHash: await tokenHash(secret), password, expires: linkDate(input.expires, input.zone), limit: limitOf(input.limit), downloads: 0, createdBy: s.operator.email, at: now() })
- await commit(env, s, [{ row }], { fences: [...ctx.fences,...policy.fences], changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.create', object: key, detail: { link: row.id, audience: 'public', versionMode: choice.versionMode, version: choice.version, download: row.payload.download, password: !!password, expires: row.payload.expires, limit: row.payload.limit } }] })
+ const secret = randomToken(publicPrefix), row = fresh<PublicLink>('public-link', { ...audience, ...choice, download: input.download ?? true, item: key, tokenHash: await tokenHash(secret), password, expires: linkDate(input.expires, input.zone), limit: limitOf(input.limit), downloads: 0, createdBy: s.operator.email, at: now() })
+ await commit(env, s, [{ row }], { fences: [...ctx.fences,...policy.fences], changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.create', object: key, detail: { link: row.id, audience: audience.audience, versionMode: choice.versionMode, version: choice.version, download: row.payload.download, password: !!password, expires: row.payload.expires, limit: row.payload.limit } }] })
  return { link: describe(row), url: `${env.AUTH_ORIGIN}/l/${secret}` }
 }
 // The creator, anyone who may share the item now, or an admin revokes in one step; it only narrows access, so it works
@@ -58,7 +60,7 @@ export function linkSummary(l: PublicLink) {
  if(l.download === false)parts.push('preview only')
  return parts.join(' · ')
 }
-export const describe = (row: Row<PublicLink>) => ({ id: row.id, item: row.payload.item, audience: 'public' as const, versionMode: row.payload.versionMode ?? 'current', version: row.payload.version, download: row.payload.download ?? true, password: !!row.payload.password, expires: row.payload.expires, limit: row.payload.limit, downloads: row.payload.downloads, createdBy: row.payload.createdBy, at: row.payload.at, revokedAt: row.payload.revokedAt ?? null, state: linkState(row.payload), summary: linkSummary(row.payload) })
+export const describe = (row: Row<PublicLink>) => ({ id: row.id, item: row.payload.item, audience: row.payload.audience ?? 'public', versionMode: row.payload.versionMode ?? 'current', version: row.payload.version, download: row.payload.download ?? true, guests: row.payload.guests, domain: row.payload.domain, password: !!row.payload.password, expires: row.payload.expires, limit: row.payload.limit, downloads: row.payload.downloads, createdBy: row.payload.createdBy, at: row.payload.at, revokedAt: row.payload.revokedAt ?? null, state: linkState(row.payload), summary: linkSummary(row.payload) })
 export async function describePolicy(env: Bindings,row: Row<PublicLink>,space: string | undefined){if(!space)return {...describe(row),unavailable:true,policyBlocked:false};const p=await creatorLinkPolicy(env,row.payload.custodian ?? row.payload.createdBy,space);return {...describe(row),policyBlocked:!p.rules.allowPublic}}
 export async function linksOn(env: Bindings,key:string){const item=await get<Item>(env,'item',key);return Promise.all((await where<PublicLink>(env,'public-link','$.item',key)).map(l=>describePolicy(env,l,item.payload.space)))}
 // The public door. Resolution answers why a link cannot be used, never which item it was for.

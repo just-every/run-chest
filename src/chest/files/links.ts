@@ -16,8 +16,8 @@ import { randomToken, tokenHash, tokenShape } from './capability'
 export async function createLink(env: Bindings, s: Session, w: Who, key: string, input: any) {
  const ctx = await context(env, w, key); demand(ctx, 'share')
  const policy=await effectiveLinkPolicy(env,w,ctx.space.id), audience=input.audience ?? policy.rules.defaultAudience
- demandLinkPolicy(policy.rules,audience,input.discoverable === true)
- if(audience==='public')return createPublicLink(env,s,w,key,input)
+ demandLinkPolicy(policy.rules,['guests','domain'].includes(audience)?'public':audience,input.discoverable === true)
+ if(['public','guests','domain'].includes(audience))return createPublicLink(env,s,w,key,input)
  insist(!input.password && !input.limit && (!input.versionMode || input.versionMode==='current') && !input.version && input.download!==false,'public_link_controls_only')
  insist(audience!=='restricted' || !input.discoverable,'restricted_links_not_discoverable')
  const r = role(input.role ?? policy.rules.defaultRole, shareRoles); insist(rank[r] <= rank[ctx.state.role!], 'role_above_own', 403); insist(input.discoverable === undefined || typeof input.discoverable === 'boolean', 'invalid_discoverable')

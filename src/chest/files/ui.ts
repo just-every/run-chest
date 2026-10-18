@@ -43,7 +43,7 @@ export function filesInput(input: any) {
  if (input.path === '/items' && input.type === 'file' && !input.name) input.name = input.filename
  if (typeof input.destination === 'string') { const [kind, id] = input.destination.split(':'); if (kind === 'space') { input.space = id; input.parent = null } else input.parent = id }
  if (/^\/items\/[^/]+\/office$/.test(input.path)) input.changes = Object.fromEntries(Object.entries(input).filter(([k]) => k.startsWith('office:')).map(([k, v]) => [k.slice(7), v]))
- if(input.audience==='public')delete input.role
+ if(['public','guests','domain'].includes(input.audience))delete input.role
  if(typeof input.linkVersion==='string'){if(input.linkVersion.startsWith('pinned:')){input.versionMode='pinned';input.version=input.linkVersion.slice(7)}else input.versionMode=input.linkVersion==='approved'?'approved':'current'}
  if (input.expires === '') delete input.expires
  // The restore preview's checkboxes name the items to restore.

@@ -77,9 +77,9 @@ function sharing(d: any, people: any[], groups: any[], returnTo: string) {
 // Links for anyone: an optional password, expiry and download limit; each link shows "Expires Nov 30 · 3 of 10
 // downloads" and one Revoke. Make private ends every link on the item and keeps named people and groups.
 function publicLinks(d: any, returnTo: string) {
- const live = d.publicLinks.filter((l: any) => l.state !== 'revoked'), rows = live.map((l: any) => `<li><span class="mono">Link for anyone · ${linkFacts(l)}</span>${form(`/public-links/${l.id}/revoke`, '', 'Revoke', returnTo, inline)}</li>`).join('')
+ const live = d.publicLinks.filter((l: any) => l.state !== 'revoked'), rows = live.map((l: any) => `<li><span class="mono">${l.audience==='guests'?'Named guests':l.audience==='domain'?`Verified domain · ${esc(l.domain)}`:'Link for anyone'} · ${linkFacts(l)}</span>${form(`/public-links/${l.id}/revoke`, '', 'Revoke', returnTo, inline)}</li>`).join('')
  const wide = live.length + d.links.length ? form(`/items/${d.id}/make-private`, '', 'Make private', returnTo, inline) : ''
- return rows || wide ? card('Links for anyone', `<p class="quiet">Existing links and their current download usage. Revoke ends access on the next request.</p>${rows ? `<ul class="events">${rows}</ul>` : ''}${wide}`, 'side-card') : ''
+ return rows || wide ? card('External links', `<p class="quiet">Existing links and their current download usage. Revoke ends access on the next request.</p>${rows ? `<ul class="events">${rows}</ul>` : ''}${wide}`, 'side-card') : ''
 }
 // A folder's file requests: anyone with the request link uploads here and sees nothing else.
 function fileRequests(d: any, returnTo: string) {
