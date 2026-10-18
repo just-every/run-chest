@@ -14,7 +14,7 @@ export async function mutate(env: Bindings,auth: Authorized,key: string,path: st
  try {
   const raw=await run(scoped),result=raw&&typeof raw==='object'&&'kind' in raw&&(raw as any).kind==='item'?publicItem(raw as any):raw;insist(await maybe(env,'integration-receipt',id),'integration_mutation_not_atomic',503)
   const current=await live(env,auth) as Authorized
-  await commit(env,current.session,[],{statements:[insertSecret(`response:${id}`,await seal(env,`response:${id}`,result))]});return result
+  await commit(env,current.session,[],{statements:[insertSecret(`response:${id}`,await seal(env,`response:${id}`,result),current.session.operator.email)]});return result
  } catch(error) {
   const saved=await maybe<Receipt>(env,'integration-receipt',id)
   if(saved){await live(env,auth);insist(saved.payload.fingerprint===fingerprint,'idempotency_key_reused',409);const response=await secret<any>(env,`response:${id}`);return response?.value??{receipt:id,state:'committed',result:saved.payload.result,response:'The mutation committed; its original response was not recorded. Reusing this key never repeats it.'}}

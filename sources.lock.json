@@ -241,7 +241,7 @@
       "executable": false
     },
     "docs/integrations.md": {
-      "sha256": "33a5a3f5c3bbc61f4fba5d6050a66a4fc7546b9cc8a607b722adbe92f39f899e",
+      "sha256": "08eda49e86c33f66290ecd97a2daddacc2ca74efa3ee9ff2ea72becafc5e40f0",
       "executable": false
     },
     "docs/introduction.md": {
@@ -401,7 +401,7 @@
       "executable": false
     },
     "migrations/core/0023_integrations.sql": {
-      "sha256": "d739ed8c8767a687a117841f839d5f84809c63c9f71a518b0f2f521aff1ca3ad",
+      "sha256": "fce2e61d1aea821fdeefdf99c2e0c1c187e8d0478bb246d269484507f42f4800",
       "executable": false
     },
     "ONBOARDING.md": {
@@ -1061,7 +1061,7 @@
       "executable": false
     },
     "src/chest/erasure/identity.ts": {
-      "sha256": "637a376279b4e9577de26bf06f74d2410c36045f31f47c7f9e1da06f903faef1",
+      "sha256": "320fc2f25e220e61115ec77ed9f7605221dce313922020af41ce7beba89dacbe",
       "executable": false
     },
     "src/chest/erasure/journal.ts": {
@@ -1481,7 +1481,7 @@
       "executable": false
     },
     "src/chest/integrations/clients.ts": {
-      "sha256": "95db9de3d9135debc225a1cf8d4275694e943f0abc12e5798d4789717c4d4026",
+      "sha256": "ca545b5bfab3dfddb0729cb2d99bdd96d2c867f8ab495504af7b271fd2421a34",
       "executable": false
     },
     "src/chest/integrations/events.ts": {
@@ -1501,11 +1501,11 @@
       "executable": false
     },
     "src/chest/integrations/mutations.ts": {
-      "sha256": "6e4c6c272933dc4951134c6f913916cf8702310014c3fb77189f3577e3fb151a",
+      "sha256": "d0783890d319ad2c2861e98bdaec7606f8ecf9a1f60d93504a165ba5d94e2dba",
       "executable": false
     },
     "src/chest/integrations/oauth.ts": {
-      "sha256": "70a4f91eb0e1428f57aad4d9d0a7cf86721bc72421d29055f675a6c356c3744e",
+      "sha256": "0d17fbf1029dd77b59a88ffdeecce2065895bb7164cb6da72ad1dd49d0713bc7",
       "executable": false
     },
     "src/chest/integrations/policy.ts": {
@@ -1521,7 +1521,7 @@
       "executable": false
     },
     "src/chest/integrations/secrets.ts": {
-      "sha256": "94c269661c5dc068fa8d37f9275f1c24d23f514833b8ede7d7046e275bf07122",
+      "sha256": "28b6ef719956762646e0cf15e6d77358ede886b8cb94d91d52a8343e1a9ec3c0",
       "executable": false
     },
     "src/chest/integrations/service.ts": {
@@ -1533,7 +1533,7 @@
       "executable": false
     },
     "src/chest/integrations/webhooks.ts": {
-      "sha256": "a5f7a2c7847441de442059745ccadb72a28a8678c9d71f462f26cd1d6d3865fe",
+      "sha256": "aa689bafe1c3c16a4eb9f79b5dea404725fd25430ee72719548926ccb738f1bb",
       "executable": false
     },
     "src/chest/invitation-mail.ts": {
@@ -3853,7 +3853,7 @@
       "executable": false
     },
     "tests/chest/integrations.mjs": {
-      "sha256": "69afb020428875f0bea5157621ab45b655cd53f5df7651bd34efa99a89a3f736",
+      "sha256": "95e6bf69477be9b8ccb03897736b41c7d376d2ebe2a6369b18317250c10911c0",
       "executable": false
     },
     "tests/chest/journey.mjs": {

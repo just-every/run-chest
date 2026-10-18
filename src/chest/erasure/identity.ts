@@ -12,7 +12,8 @@ export async function identityPlan(env: Bindings, s: Session, email: string) {
  insist(person&&person.role!=='owner','person_not_erasable',409)
  const hash=await digest(new TextEncoder().encode(email)), alias=`Erased person ${hash.slice(0,12)}`, statements:{sql:string;params:unknown[]}[]=[], ops:Op[]=[]
  // Discover current authentication tables by schema. Revocation also covers factors and sessions added later.
- const tables=(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND (name LIKE 'oa_%' OR name LIKE 'chest_mfa_%' OR name IN ('chest_device_credentials','chest_scim_resources'))").all<{name:string}>()).results
+ const tables=(await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND (name LIKE 'oa_%' OR name LIKE 'chest_mfa_%' OR name IN ('chest_device_credentials','chest_scim_resources','chest_integration_secrets'))").all<{name:string}>()).results
+ statements.push({sql:"DELETE FROM chest_mfa_verified WHERE session_id IN (SELECT 'integration:'||id FROM chest_records WHERE kind='integration-grant' AND json_extract(payload,'$.operator')=?)",params:[person.id]})
  const sessions=(await env.DB.prepare('SELECT id FROM oa_sessions WHERE operator_id=?').bind(person.id).all<{id:string}>()).results.map(r=>r.id)
  for(const {name} of tables){
   if(name==='oa_operators')continue

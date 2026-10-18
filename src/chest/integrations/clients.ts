@@ -12,6 +12,6 @@ export async function registerClient(env: Bindings,s: Session,input: any) {
  insist(redirects.length>0&&redirects.length<=20&&origins.length<=20,'invalid_app_redirects')
  const urls=redirects.map(v=>endpoint(v,env.AUTH_LOCAL==='true').href),pickerOrigins=origins.map(v=>{const u=endpoint(v,env.AUTH_LOCAL==='true');insist(u.href===u.origin+'/'||u.href===u.origin,'picker_requires_exact_origin');return u.origin})
  const confidential=input.confidential===true,row=fresh<Client>('integration-client',{name:text(input.name,'app_name',120),owner:s.operator.email,redirects:[...new Set(urls)],pickerOrigins:[...new Set(pickerOrigins)],actions:scopeList(input.actions),confidential,at:now()}),clientSecret=confidential?random('chest_client_'):null
- await commit(env,s,[{row}],{audits:[{action:'integration.client.register',object:row.id,detail:{name:row.payload.name,actions:row.payload.actions,confidential}}],statements:clientSecret?[insertSecret(`client:${row.id}`,await seal(env,`client:${row.id}`,{hash:await (await import('./secrets')).hash(clientSecret)}))]:[]})
+ await commit(env,s,[{row}],{audits:[{action:'integration.client.register',object:row.id,detail:{name:row.payload.name,actions:row.payload.actions,confidential}}],statements:clientSecret?[insertSecret(`client:${row.id}`,await seal(env,`client:${row.id}`,{hash:await (await import('./secrets')).hash(clientSecret)}),s.operator.email)]:[]})
  return {client:{id:row.id,...row.payload},...(clientSecret?{clientSecret}:{})}
 }
