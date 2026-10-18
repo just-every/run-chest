@@ -1,3 +1,4 @@
+import { attempt } from '../audit/journal'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { insist, now, text, type Row } from '../model'
@@ -33,7 +34,7 @@ async function preview(env: Bindings, s: Session, w: Who, input: any) {
  const source = [v.text, extracted?.payload.text ?? ''].filter(Boolean).join('\n').slice(0, 24_000)
  // The provider sees only files and folder paths that this live actor may read; no tools accompany the request.
  await commit(env, s, [], { fences: [...ctx.fences, ...folders.flatMap(f => f.fences), ...extracted ? [extracted] : []], audits: [{ action: 'filing.agent.read', object: item.id, detail: { version: v.id, model: state.config.model } }] })
- const answer = await classify(state.config, { name: item.payload.name, text: source, version: v.id, destinations: folders.map(({ id, path }) => ({ id, path })) })
+ const answer = await attempt(env,s.operator.email,'provider.classify',item.id,{authority:`${s.kind}:${s.operator.role}`,version:v.id,provider:state.config.provider,model:state.config.model},()=>classify(state.config, { name: item.payload.name, text: source, version: v.id, destinations: folders.map(({ id, path }) => ({ id, path })) }))
  const live = await context(env, await who(env, s), item.id); demand(live, 'manage')
  insist(live.chain.at(-1)!.revision === item.revision, 'filing_stale', 409)
  const destination = folders.find(f => f.id === answer.destination)

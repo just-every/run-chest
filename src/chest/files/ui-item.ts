@@ -1,3 +1,4 @@
+import { fileActivity } from '../audit/ui'
 import { esc, field, area, select, form, hidden, details, card, icon, stamp } from '../ui-shared'
 import { zones } from './zone'
 import { eventWords } from '../ui-words'
@@ -95,7 +96,7 @@ export function itemPage(d: any, extra: { people: any[]; groups: any[]; destinat
   : `<div class="doc-actions">${current && d.can.download ? `<a class="btn" href="/api/chest/items/${d.id}/bytes/${current.id}?download=true">Download</a>` : ''}${d.can.contribute ? details('Upload a new version', form(`/items/${d.id}/versions`, field('Replacement file', 'file', '', 'file'), 'Upload new version', returnTo), 'btn btn-outline').replace('<details class="disclosure">', '<details class="disclosure" data-upload-fallback>') : ''}</div>${d.can.contribute ? uploader({ item: d.id }, d.uploads, returnTo) : ''}
    ${officePanel(d)}${textInside(d.reading, { poll: `/api/chest/items/${d.id}/reading`, page: n => `/api/chest/items/${d.id}/pages/${d.item.current}/${n}`, retry: d.can.contribute ? `/items/${d.id}/reading` : undefined, returnTo, owner: d.ownerRole })}
    <h2 class="section-title">Version history</h2><div class="versions">${d.versions.map((v: any) => version(v, d, returnTo)).join('')}</div>
-   <h2 class="section-title">Activity</h2>${d.activity.length ? `<ol class="events">${d.activity.map((a: any) => `<li><span>${esc(a.actor)} ${esc(eventWords(a.action))} · <span class="nowrap">${stamp(a.at)}</span></span>${a.detail.source ? `<p>from version ${number(d, a.detail.source) || 'an earlier version'}</p>` : a.detail.after && typeof a.detail.after === 'string' ? `<p class="mono">${esc(a.detail.before)} → ${esc(a.detail.after)}</p>` : ''}</li>`).join('')}</ol>` : ''}
+   ${fileActivity(d.activity,d.id,d.versions)}
    <h2 class="section-title">Comments</h2>${d.comments.length ? `<ol class="events">${d.comments.map((c: any) => `<li><span class="mono">${esc(c.author)} · <span class="nowrap">${stamp(c.at)}</span></span><p>${esc(c.message)}</p></li>`).join('')}</ol>` : '<p class="quiet">No comments yet.</p>'}${d.can.comment ? form(`/items/${d.id}/comments`, area('Comment', 'message', ''), 'Post comment', returnTo, { buttonClass: 'btn btn-outline' }) : ''}`
  const manage = d.can.manage ? details('Move', form(`/items/${d.id}/move`, select('Destination', 'destination', extra.destinations.filter(x => x.id !== `folder:${d.id}`)), 'Move here', returnTo), 'btn btn-outline') + form(`/items/${d.id}/trash`, '', 'Move to trash', parentHref, { className: 'form form-inline', buttonClass: 'btn btn-outline' }) : ''
  const rename = d.can.contribute ? details('Rename', form(`/items/${d.id}/rename`, field('Name', 'name', d.item.name), 'Save name', returnTo), 'btn btn-outline') : ''

@@ -1,3 +1,4 @@
+import { attempt } from '../audit/journal'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { operatorMail } from '../../mail.server.mjs'
@@ -26,7 +27,7 @@ export async function deliver(env: Bindings, actor: Session | null, rows: Row<No
  for (const row of rows) {
   let outcome = managed ? MAIL_MANAGED_LINE : 'not_configured'
   if (sender && env.MAIL_FROM) {
-   try { const message = compose(env, row.payload, personName((await maybe<Person>(env, 'person', row.payload.from))?.payload.name, row.payload.from)), result = await sender.send({ deliveryId: row.id, from: env.MAIL_FROM, to: [row.payload.to], subject: message.subject, text: message.text, html: `<p>${message.text.replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`).replace(/\n/g, '<br>')}</p>`, headers: { 'Auto-Submitted': 'auto-generated' } }); outcome = result.status === 'development' ? 'suppressed' : `${result.status}${result.providerMessageId ? ':' + result.providerMessageId : ''}` }
+   try { const message = compose(env, row.payload, personName((await maybe<Person>(env, 'person', row.payload.from))?.payload.name, row.payload.from)), result = await attempt(env,actor?.operator.email ?? 'chest:notifications','provider.mail',row.payload.item ?? row.id,{authority:actor?`${actor.kind}:${actor.operator.role}`:'notice delivery',notice:row.id,provider:String(env.MAIL_PROVIDER)},()=>sender.send({ deliveryId: row.id, from: env.MAIL_FROM!, to: [row.payload.to], subject: message.subject, text: message.text, html: `<p>${message.text.replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`).replace(/\n/g, '<br>')}</p>`, headers: { 'Auto-Submitted': 'auto-generated' } })); outcome = result.status === 'development' ? 'suppressed' : `${result.status}${result.providerMessageId ? ':' + result.providerMessageId : ''}` }
    catch (e: any) { outcome = `failed:${typeof e?.code === 'string' ? e.code : 'send_error'}` }
   }
   updated.push({ row: next(row, { ...row.payload, email: outcome }), previous: row })

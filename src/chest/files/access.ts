@@ -14,7 +14,8 @@ export type Ctx = { space: Row<Space>; chain: Row<Item>[]; state: State; links: 
 export const who = (env: Bindings, s: Session) => whoFor(env, s.operator.email)
 export async function whoFor(env: Bindings, email: string): Promise<Who> {
  const groups = (await list<Group>(env, 'group')).filter(g => g.payload.members.includes(email))
- const opened = (await env.DB.prepare("SELECT DISTINCT object_id FROM chest_audit WHERE actor=? AND action='link.open'").bind(email).all()).results.map((r: any) => String(r.object_id))
+ const auditActor=await (await (await import('../audit/privacy')).identityRedactor(env))(email)
+ const opened = (await env.DB.prepare("SELECT DISTINCT object_id FROM chest_audit WHERE actor IN (?,?) AND action='link.open'").bind(email,auditActor).all()).results.map((r: any) => String(r.object_id))
  return { email, principals: [email, ...groups.map(g => g.id)], groups, opened }
 }
 // The person who made a link or file request must still be active and still allowed to share the item; their access

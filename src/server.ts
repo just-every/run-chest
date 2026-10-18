@@ -4,6 +4,7 @@ import { Hono } from 'hono'
 import { apiResponse } from './chest/api'
 import { uiResponse } from './chest/ui'
 import { scimResponse } from './chest/organisation/scim'
+import { publicAttempt } from './chest/audit/public'
 import { publicResponse } from './chest/files/public'
 import { dispatch } from './base/dispatch'
 import { staticAssetResponse } from './base/static-assets'
@@ -34,7 +35,7 @@ export default withDemo({
     const env = runtimeBindings(original)
     const publicPage = await setupStateResponse(request, env) ?? await lobbyResponse(request, env, identity)
     if (publicPage) return documentResponse(publicPage)
-    const shared = await publicResponse(request, env)
+    const shared = await publicAttempt(env, request, ()=>publicResponse(request, env))
     if (shared) return documentResponse(shared)
     const provisioning = await scimResponse(request, env)
     if (provisioning) return provisioning

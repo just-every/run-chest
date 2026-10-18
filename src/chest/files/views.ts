@@ -22,6 +22,7 @@ import { accessExplanation } from './access-explanation'
 import { ownershipForItem } from './ownership'
 import { metadataView } from './folder-metadata'
 import { storage } from '../quota/storage'
+import { history } from '../audit/history'
 // Read models for the files pages and API: what a person may see, with the actions their current role allows.
 const can = (ctx: { space: any; state: any }) => Object.fromEntries((['download', 'comment', 'contribute', 'manage', 'share', 'administer'] as const).map(a => [a, allowed(ctx, a)]))
 const label = (space: Space, w: Who) => space.kind === 'personal' ? (space.owner !== w.email ? 'Shared with me' : space.formerOwner ? space.name : 'My files') : space.name
@@ -60,18 +61,12 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
   publicLinks: sharer ? await linksOn(env, key) : [],
   fileRequests: sharer && item.payload.type === 'folder' ? await requestsOn(env, key) : [],
   requests: sharer ? (await pending(env, w, key)).map(r => ({ id: r.id, requester: r.payload.requester, role: r.payload.role, message: r.payload.message, at: r.payload.at })) : [],
-  activity: await activity(env, key, allowed(ctx, 'contribute'), allowed(ctx,'administer')),
+  activity: (await history(env,s,new URLSearchParams({object:key,limit:'100'}))).rows.map(r=>({...r,detail:JSON.parse(r.detail)})),
   comments: (await comments(env, key)).map(c => ({ id: c.id, ...c.payload })).sort((a, b) => a.at.localeCompare(b.at)),
   starred: prefs.starred.includes(key), shortcut: prefs.shortcuts.includes(key),
   uploads: allowed(ctx, 'contribute') ? await unfinished(env, w, item.payload.type === 'folder' ? { parent: key } : { item: key }) : [],
   rewinds: item.payload.type === 'folder' && allowed(ctx, 'contribute') ? await rewinds(env, `folder:${key}`) : [],
  }
-}
-// A file's activity: uploads, restores, renames, moves, sharing and trash for everyone who can open it; who viewed or
-// downloaded it only for people who can edit it.
-async function activity(env: Bindings, key: string, editor: boolean, manager: boolean) {
- const rows = (await env.DB.prepare('SELECT actor, action, detail, at FROM chest_audit WHERE object_id=? ORDER BY at DESC LIMIT 100').bind(key).all()).results as { actor: string; action: string; detail: string; at: string }[]
- return rows.filter(r => editor || !['item.read', 'version.download', 'version.preview', 'sync.hydrate', 'link.view', 'link.preview', 'link.download', 'link.password.refused', 'link.guest.verified'].includes(r.action)).map(r => ({ actor: !manager && r.action.startsWith('link.') && !['link.create','link.remove','link.change','link.revoke'].includes(r.action) ? 'Link visitor' : r.actor, action: r.action, at: r.at, detail: JSON.parse(r.detail) }))
 }
 // Names, the current version's text (a UTF-8 file's own text, or text read from a PDF, scan or photo) and folders;
 // hits, counts and snippets follow current access exactly.

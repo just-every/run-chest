@@ -1,3 +1,4 @@
+import { attempt } from '../audit/journal'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { ChestError, insist, now, text, type Row } from '../model'
@@ -44,6 +45,9 @@ async function saveRule(env: Bindings, s: Session, w: Who, input: any) {
 }
 // Each original arrival gets one durable outcome. Replays and Undo never start a second filing.
 export async function runArrival(env: Bindings, s: Session, _w: Who, supplied: Row<Item>, sender?: string): Promise<{ item: Row<Item>; move: Row<FilingMove> | null }> {
+ return attempt(env,s.operator.email,'automation.filing',supplied.id,{authority:'standing arrival rule',version:supplied.payload.current},()=>arrival(env,s,_w,supplied,sender))
+}
+async function arrival(env: Bindings, s: Session, _w: Who, supplied: Row<Item>, sender?: string): Promise<{ item: Row<Item>; move: Row<FilingMove> | null }> {
  const item = await get<Item>(env, 'item', supplied.id)
  if (item.payload.type !== 'file' || !item.payload.current || item.payload.trash) return { item, move: null }
  const key = `filing-arrival:${item.id}:${item.payload.current}`, known = await maybe<FilingMove>(env, 'filing_move', key)

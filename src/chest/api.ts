@@ -21,6 +21,9 @@ import { kick,textHits } from './read/jobs'
 import { totalStorage } from './quota/storage'
 import { saveSso,localPolicy,ssoView } from './organisation/settings'
 import { issueScimToken,revokeScimToken,scimView } from './organisation/scim'
+import { operation } from './audit/journal'
+import { history, exportHistory } from './audit/history'
+import { privacy, savePrivacy, eraseAuditIdentity } from './audit/privacy'
 export const headers={'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'same-origin'}
 export async function overview(env:Bindings,s:Session,url:URL){
  const rows=await documents(env,s,url.searchParams.get('trash')==='true'),q=(url.searchParams.get('q')||'').toLowerCase(),read=await textHits(env,q)
@@ -33,6 +36,9 @@ export async function overview(env:Bindings,s:Session,url:URL){
  return {me:{email:s.operator.email,name:s.operator.displayName,role:s.operator.role},documents:diagnosed,count:filtered.length,collections:visible,schemas,people:await list<Person>(env,'person'),groups:s.operator.role==='owner'?groups:[],storage:s.operator.role==='owner'?{logicalBytes:await totalStorage(env)}:null}
 }
 export async function execute(env:Bindings,request:Request,s:Session,method:string,path:string,input:any):Promise<any>{
+ return operation(env,s,method,path,()=>dispatch(env,request,s,method,path,input))
+}
+async function dispatch(env:Bindings,request:Request,s:Session,method:string,path:string,input:any):Promise<any>{
  const parts=path.split('/').filter(Boolean),url=new URL(request.url)
  if(path==='/organisation/sso') {owner(s);return method==='POST'?saveSso(env,s,input):ssoView(env)}
  if(path==='/organisation/policy'&&method==='POST')return localPolicy(env,s,input)
@@ -54,7 +60,7 @@ export async function execute(env:Bindings,request:Request,s:Session,method:stri
   const row=await get<Document>(env,'document',parts[1]);if(!(method==='POST'&&parts[2]==='lifecycle'))await access(env,s,row.payload)
   if(method==='GET'&&parts.length===2){await recordAccess(env,s,row,'document.read');const schema=await get<Schema>(env,'schema',row.payload.schema);return {...row,fieldIssues:fieldIssues(schema.payload,row.payload.fields)}}
   if(method==='GET'&&parts[2]==='readers'){owner(s);const people=await list<Person>(env,'person'),readers=[];for(const p of people){if(p.payload.status==='inactive'||!await env.DB.prepare("SELECT id FROM oa_operators WHERE email=? AND status='active'").bind(p.id).first())continue;const r=await roles(env,{...s,operator:{...s.operator,email:p.id,role:p.payload.role as any}},row.payload);if(r.roles.length)readers.push({email:p.id,name:p.payload.name,roles:r.roles})}return readers}
-  if(method==='GET'&&parts[2]==='bytes'){const version=row.payload.versions.find(v=>v.id===parts[3]);insist(version,'version_not_found',404);const download=url.searchParams.get('download')==='true';const response=await serve(env,version,download);await access(env,s,(await get<Document>(env,'document',row.id)).payload);await recordAccess(env,s,row,download?'version.download':'version.preview');return response}
+  if(method==='GET'&&parts[2]==='bytes'){const version=row.payload.versions.find(v=>v.id===parts[3]);insist(version,'version_not_found',404);const download=url.searchParams.get('download')==='true';const response=await serve(env,version,download);await access(env,s,(await get<Document>(env,'document',row.id)).payload);await recordAccess(env,s,row,download?'version.download':'version.preview',version.id);return response}
   if(method==='POST'&&parts[2]==='versions')return upload(env,s,input,row)
   if(method==='POST'&&parts[2]==='filing')return updateFiling(env,s,row,input)
   if(method==='POST'&&parts[2]==='grants')return grants(env,s,'document',row.id,input)
@@ -67,7 +73,10 @@ export async function execute(env:Bindings,request:Request,s:Session,method:stri
  if(path==='/archive/preview'&&method==='POST')return (await previewArchive(env,s,input)).summary
  if(path==='/archive/apply'&&method==='POST')return applyArchive(env,s,input)
  if(parts[0]==='archive'&&parts[1]&&parts[1]!=='preview'&&parts[1]!=='apply')return archiveAction(env,s,parts[1],method==='POST'?input.action:'status')
- if(path==='/audit'&&method==='GET'){const rows=await env.DB.prepare('SELECT * FROM chest_audit ORDER BY at DESC LIMIT 300').all();if(s.operator.role==='owner')return rows.results;const files=[...(await everything(env,await who(env,s))).values()].filter(e=>e.state.role&&!e.state.trash).map(e=>e.row.id),visible=new Set([...(await documents(env,s)).map(r=>r.id),...files]);return rows.results.filter((r:any)=>visible.has(r.object_id))}
+ if(path==='/audit/privacy')return method==='POST'?savePrivacy(env,s,input):privacy(env,s.operator.email)
+ if(path==='/audit/identities/erase'&&method==='POST')return eraseAuditIdentity(env,s,input)
+ if(path==='/audit/export'&&method==='GET')return exportHistory(env,s,url.searchParams)
+ if(path==='/audit'&&method==='GET'){const page=await history(env,s,url.searchParams,url.searchParams.has('paginate')?undefined:300);return url.searchParams.has('paginate')?page:page.rows}
  const files=await filesExecute(env,request,s,method,parts,input,url);if(files!==undefined)return files
  insist(false,'not_found',404)
 }

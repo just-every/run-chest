@@ -52,6 +52,12 @@
         "SHARE-001",
         "POLICY-001"
       ]
+    },
+    {
+      "id": "complete-action-history",
+      "clauses": [
+        "AUDIT-001"
+      ]
     }
   ],
   "nonGoals": [

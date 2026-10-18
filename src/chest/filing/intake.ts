@@ -1,3 +1,4 @@
+import { attempt } from '../audit/journal'
 import PostalMime from 'postal-mime'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -45,7 +46,7 @@ async function intakeActor(env: Bindings, config: Row<Intake>): Promise<Session>
  return { id: `intake:${config.id}`, operator: { id: op.id, email: op.email, role: op.role, displayName: op.display_name }, predicate: { sql: `(${fence.sql}) AND EXISTS(SELECT 1 FROM oa_operators WHERE id=? AND status='active' AND version=?)`, params: [...fence.params,op.id,op.version] } } as unknown as Session
 }
 export async function receiveIntake(env: Bindings, message: ForwardableEmailMessage) {
- try {
+ try { return await attempt(env,message.from,'automation.intake','email intake',{authority:'standing email intake grant'},async()=>{
   insist(available(env),'email_intake_not_available_yet',409)
   const configs = await where<Intake>(env,'intake','$.address',message.to.toLowerCase()), config = configs.find(r=>r.payload.enabled)
   insist(config,'intake_address_not_configured',404)
@@ -67,6 +68,6 @@ export async function receiveIntake(env: Bindings, message: ForwardableEmailMess
    const v=await admit(env,bytes,filename,sender,'email')
    const item=await createItem(env,s,w,{space:config.payload.space,parent:config.payload.folder,name:filename},'email',bytes,{version:v,sender,ops:item=>[{row:fresh<IntakeReceipt>('intake-receipt',{space:config.payload.space,intake:config.id,item:item.id,messageId,sender,envelopeFrom:message.from,date:email.date??'',subject:email.subject??'',filename:original,checksum:v.checksum,at:now()},receiptId)}]})
   }
- }catch(error){message.setReject(error instanceof Error && /^[a-z_]+$/.test(error.message)?error.message:'Attachment filing could not finish; contact the space manager.')}
+ })}catch(error){message.setReject(error instanceof Error && /^[a-z_]+$/.test(error.message)?error.message:'Attachment filing could not finish; contact the space manager.')}
 }
 async function hash(bytes:Uint8Array){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes as BufferSource))).map(b=>b.toString(16).padStart(2,'0')).join('')}

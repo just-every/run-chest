@@ -1,3 +1,4 @@
+import { attempt } from '../audit/journal'
 import type { Bindings } from '../../auth.server'
 import { insist } from '../model'
 import { deviceSession } from './devices'
@@ -6,6 +7,7 @@ import { changes, create, hydrate, relocate, remove, tree, upload } from './sync
 // /api/chest/sync: device-credential routes for sync clients. No cookie or browser origin is involved.
 export async function syncRoute(env: Bindings, request: Request, path: string): Promise<unknown> {
  const s = await deviceSession(env, request), url = new URL(request.url), [, , key, sub] = path.split('/').filter(Boolean), method = request.method
+ return attempt(env,s.operator.email,`device.${method.toLowerCase()}.${sub ?? key ?? 'request'}`,key ?? 'sync',{authority:`device:${(s as any).device}`},async()=>{
  await sweep(env)
  if (method === 'GET' && path === '/sync/tree') return tree(env, s)
  if (method === 'GET' && path === '/sync/changes') return changes(env, s, url)
@@ -15,4 +17,5 @@ export async function syncRoute(env: Bindings, request: Request, path: string): 
  if (key && sub === 'move' && method === 'POST') return relocate(env, s, key, url)
  if (key && !sub && method === 'DELETE') return remove(env, s, key)
  insist(false, 'not_found', 404)
+ })
 }

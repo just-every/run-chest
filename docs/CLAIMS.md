@@ -13,7 +13,7 @@ Status, as the contract defines it:
 
 ## Summary
 
-46 claims: **7 done**, **38 partial**, **1 missing**.
+46 claims: **9 done**, **36 partial**, **1 missing**.
 
 ## Claims
 
@@ -44,7 +44,7 @@ Status, as the contract defines it:
 | 23 | "and keep one copy" | partial | EDIT-001 (partial) | `src/chest/office/service.ts`; `src/chest/files/items.ts`; `tests/chest/office.mjs`; `docs/office.md` |
 | 24 | "Go back to any earlier version of a file" | done | VERSION-001 (done) | `src/chest/files/items.ts`; `src/chest/documents.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |
 | 25 | "or a whole folder" (and "Restore Clients / Harbor Freight to Oct 12") | done | RECOVER-001 (done) | `src/chest/files/rewind.ts`; `src/chest/files/ui-item.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |
-| 26 | "see who changed what" | partial | AUDIT-001 (partial), VERSION-001 (done) | `src/chest/store.ts`; `src/chest/api.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs`; `src/chest/files/items.ts`; `src/chest/documents.ts`; `tests/chest/browser-files.mjs` |
+| 26 | "see who changed what" | done | AUDIT-001 (done), VERSION-001 (done) | `src/chest/store.ts`; `src/chest/api.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs`; `src/chest/files/items.ts`; `src/chest/documents.ts`; `tests/chest/browser-files.mjs`; `src/chest/audit/journal.ts`; `src/chest/audit/history.ts`; `src/chest/audit/privacy.ts`; `src/chest/audit/public.ts`; `src/chest/audit/ui.ts`; `src/chest/store.ts`; `src/chest/files/repo.ts`; `src/chest/files/views.ts`; `src/chest/read/jobs.ts`; `src/chest/files/notify.ts`; `src/mail.server.mjs`; `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs` |
 | 27 | "Approvals stay with the exact version signed off" | done | CHEST-07 (done), CHEST-08 (done) | `src/chest/documents.ts`; `src/chest/reviews.ts`; `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |
 | 28 | "Agents file what arrives from email and apps" | partial | AGENT-001 (partial), CONNECT-006 (partial) | `src/chest/filing/intake.ts`; `src/chest/filing/rules.ts`; `src/chest/filing/agent.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs` |
 | 29 | "merge duplicates" | partial | AGENT-002 (partial) | `src/chest/filing/duplicates.ts`; `src/chest/filing/duplicate-view.ts`; `tests/chest/filing.mjs` |
@@ -62,6 +62,6 @@ Status, as the contract defines it:
 | 39c | "Large files: Big uploads resume where they stopped." | partial | TRANSFER-001 (partial) | `src/chest/files/uploads.ts`; `src/chest/blobs.ts`; `public/chest-upload.js`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |
 | 39d | "Trash you can undo: Deleted files come back for 30 days." (correction sent to br: trash keeps items until erasure, not 30 days) | done | CHEST-13 (done) | `src/chest/files/trash.ts`; `src/chest/documents.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |
 | 39e | "Previews: Documents, video and design files open in the browser." | partial | PREVIEW-001 (partial) | `src/chest/blobs.ts`; `tests/chest/flows.mjs`; `tests/chest/browser-preview.mjs` |
-| 39f | "Activity log: Every view, share and change, recorded." | partial | AUDIT-001 (partial), CHEST-13 (done) | `src/chest/store.ts`; `src/chest/api.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs`; `src/chest/files/trash.ts`; `src/chest/documents.ts`; `tests/chest/browser-files.mjs` |
+| 39f | "Activity log: Every view, share and change, recorded." | done | AUDIT-001 (done), CHEST-13 (done) | `src/chest/store.ts`; `src/chest/api.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs`; `src/chest/files/trash.ts`; `src/chest/documents.ts`; `tests/chest/browser-files.mjs`; `src/chest/audit/journal.ts`; `src/chest/audit/history.ts`; `src/chest/audit/privacy.ts`; `src/chest/audit/public.ts`; `src/chest/audit/ui.ts`; `src/chest/store.ts`; `src/chest/files/repo.ts`; `src/chest/files/views.ts`; `src/chest/read/jobs.ts`; `src/chest/files/notify.ts`; `src/mail.server.mjs`; `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs` |
 | 40 | "Open source file storage for your whole team." | partial | OPEN-001 (partial), SPACE-001 (partial) | `LICENSE`; `src/chest/files/spaces.ts`; `src/chest/files/items.ts`; `src/chest/files/uploads.ts`; `src/chest/files/ui-item.ts`; `src/chest/files/ownership.ts`; `src/chest/files/ui-ownership.ts`; `src/chest/files/access-explanation.ts`; `tests/chest/ownership.mjs`; `tests/chest/browser-ownership.mjs`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `src/chest/office/create-service.ts`; `src/chest/office/create-templates.ts`; `src/chest/office/new-ui.ts`; `src/chest/files/governance.ts`; `tests/chest/new-files.mjs`; `tests/chest/governance.mjs`; `tests/chest/browser-new-files.mjs`; `src/chest/files/folder-metadata.ts`; `src/chest/files/ui-folder-metadata.ts`; `tests/chest/browser-governance.mjs` |
 | 41 | "Free and open source, MIT licensed." | partial | OPEN-001 (partial) | `LICENSE` |

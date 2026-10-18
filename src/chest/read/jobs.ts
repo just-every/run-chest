@@ -1,3 +1,4 @@
+import { attempt } from '../audit/journal'
 import { waitUntil } from 'cloudflare:workers'
 import type { Bindings } from '../../auth.server'
 import { now, type Document, type Schema } from '../model'
@@ -105,7 +106,7 @@ async function readPage(env: Bindings, row: Row<Extraction>, config: ReaderConfi
  else {
   await env.BLOBS.put(copyKey(checksum, page.n), image.bytes, { httpMetadata: { contentType: image.mediaType } })
   try {
-   const t = await transcribe(config, image, x.mediaType === 'application/pdf' ? `page ${page.n} of ${pages.length} of a scanned PDF` : 'this photo of a document')
+   const t = await attempt(env,'chest:reader','provider.ocr',row.id,{authority:'installation reader',provider:config.provider,model:config.model,page:page.n,checksum:row.id.slice(8)},()=>transcribe(config, image, x.mediaType === 'application/pdf' ? `page ${page.n} of ${pages.length} of a scanned PDF` : 'this photo of a document'))
    Object.assign(mine, { state: 'done', chars: t.text.length, language: t.language, confidence: t.confidence, image: { mediaType: image.mediaType, width: image.width, height: image.height }, problem: t.readable ? undefined : 'No legible text on this page.', attempts: undefined })
    texts[page.n - 1] = t.text.replaceAll(SEP, ' ')
    x.usage = added(x.usage, t.usage)
@@ -131,7 +132,7 @@ async function readDocument(env: Bindings, row: Row<Reading>, config: ReaderConf
  const pages: { n: number; image: PageImage }[] = []
  for (const p of scanned) { const copy = await env.BLOBS.get(copyKey(r.checksum, p.n)); if (copy) pages.push({ n: p.n, image: { mediaType: p.image!.mediaType as PageImage['mediaType'], bytes: new Uint8Array(await copy.arrayBuffer()), width: p.image!.width, height: p.image!.height } }) }
  try {
-  const { proposals, usage } = await readFields(config, pages, wanted, schema!.payload.name)
+  const { proposals, usage } = await attempt(env,'chest:reader','provider.fields',r.document,{authority:'installation reader',provider:config.provider,model:config.model,version:r.version},()=>readFields(config, pages, wanted, schema!.payload.name))
   return save(env, row, { ...r, state: 'done', proposals, model: config.model, usage: added(r.usage, usage), lease: null, problem: null })
  } catch (e) {
   const message = e instanceof ReaderError ? e.message : 'The AI model gave no usable reading.'
@@ -170,7 +171,7 @@ export function advance(env: Bindings, budget = 4000, fresh = false): Promise<vo
     let found = await nextUnit(env)
     if (!found && Date.now() - looked > 2000) { looked = Date.now(); if (await discover(env)) found = await nextUnit(env) }
     if (!found) break
-    await unit(env, found)
+    await attempt(env,'chest:reader','automation.read',found.payload.document ?? found.id,{authority:'installation reader',version:found.payload.version ?? null,checksum:found.payload.checksum ?? found.id.slice(8)},()=>unit(env, found!))
    }
   } catch (e) { console.error('chest reading', e) }
  })().finally(() => { running = null })

@@ -22,6 +22,9 @@ import { card,esc } from './ui-shared'
 import { providerOrigin,ssoView } from './organisation/settings'
 import { scimView } from './organisation/scim'
 import { organisationCard,ssoReceipt,tokenReceipt } from './organisation/ui'
+import { history } from './audit/history'
+import { privacy } from './audit/privacy'
+import { auditScreen } from './audit/ui'
 import { quotaAdminCard } from './quota/ui'
 export async function uiResponse(request:Request,original:Bindings){const url=new URL(request.url);if(url.pathname!=='/app'&&!url.pathname.startsWith('/app/')&&!url.pathname.startsWith('/s/'))return null;const env=runtimeBindings(original)
  let back='/app/files'
@@ -42,6 +45,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   if(input.path==='/archive/job')input.path=`/archive/${encodeURIComponent(input.job)}`
   if(input.path.startsWith('/filing/'))filingInput(input)
   if(filesPath(input.path))filesInput(input)
+  if(input.path==='/audit/privacy'&&input.scope==='organization')input.groups=Object.keys(input).filter(k=>k.startsWith('group:')).map(k=>k.slice(6))
   const result=await execute(env,request,s,'POST',input.path,input);kick(env,request)
   if(input.path==='/organisation/scim/tokens')return page(tokenReceipt(result),me,'/app/admin')
   if(input.path==='/organisation/sso')return page(ssoReceipt(result),me,'/app/admin')
@@ -59,7 +63,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
  else if(url.pathname==='/app/library')body=library(data,url.searchParams.get('q')||'',url.searchParams.get('trash')==='true')
  else if(url.pathname==='/app/admin'){owner(s);body=adminPage({...data,local:env.AUTH_LOCAL==='true'},readerCard(await readerView(env))+organisationCard(await ssoView(env),await scimView(env),env.AUTH_ORIGIN)+await quotaAdminCard(env,s))}
  else if(url.pathname==='/app/archive'){owner(s);body=archivePage(data)}
- else if(url.pathname==='/app/audit')body=auditPage(await execute(env,request,s,'GET','/audit',{}),await recordNames(env))
+ else if(url.pathname==='/app/audit')body=auditScreen(await history(env,s,url.searchParams),await recordNames(env),url.searchParams,await privacy(env,s.operator.email),s.operator.role==='owner',s.operator.role==='owner'?await list(env,'group'):[])
  else if(url.pathname.startsWith('/app/documents/')){const key=url.pathname.split('/').at(-1)!;const row=await execute(env,request,s,'GET',`/documents/${key}`,{}),readers=me.role==='owner'?await execute(env,request,s,'GET',`/documents/${key}/readers`,{}):[],mine=(await roles(env,s,row.payload)).roles;body=documentPage(row,data,readers,mine.includes('reviewer'),{readings:await documentReadings(env,row.id,row.payload),editor:mine.includes('editor')})}
  else return new Response('Not found',{status:404})
  const response=page(body,me,url.pathname)

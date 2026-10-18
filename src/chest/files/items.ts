@@ -116,7 +116,7 @@ export async function bytes(env: Bindings, s: Session, w: Who, key: string, vers
  if (download || (!allowed(ctx, 'download') && v.preview !== 'text')) demand(ctx, 'download')
  const response = range ? await ranged(env, v, range) : await serve(env, v as unknown as Version, download)
  demand(await context(env, w, key), download || range ? 'download' : 'view')
- await recordAccess(env, s, item, action ?? (download || range ? 'version.download' : 'version.preview'))
+ await recordAccess(env, s, item, action ?? (download || range ? 'version.download' : 'version.preview'), v.id)
  return response
 }
 async function ranged(env: Bindings, v: FileVersion, range: string) {
