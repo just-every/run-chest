@@ -76,7 +76,7 @@ async function carried(env: Bindings, key: string, from: string, to: string): Pr
  walk(key); return ops
 }
 const freeName = async (env: Bindings, p: Item, key: string, wanted: string) => (await spaceItems(env, p.space)).some(r => r.id !== key && r.payload.parent === p.parent && !r.payload.trash && r.payload.name.toLowerCase() === wanted.toLowerCase()) ? `${wanted} (restored)` : wanted
-const restored = (ctx: Awaited<ReturnType<typeof context>>, p: Item, source: string, actor: string, at: string) => { const from = p.versions.find(v => v.id === source)!, v: FileVersion = { ...from, id: id(), at, actor, arrival: 'restore', name: '', restoredFrom: from.id }; delete v.device; Object.assign(p, versionPublication(ctx, p, v)) }
+const restored = async (env: Bindings, ctx: Awaited<ReturnType<typeof context>>, p: Item, source: string, actor: string, at: string) => { const from = p.versions.find(v => v.id === source)!, v: FileVersion = { ...from, id: id(), at, actor, arrival: 'restore', name: '', restoredFrom: from.id }; delete v.device; Object.assign(p, await versionPublication(env, ctx, p, v)) }
 export async function apply(env: Bindings, s: Session, w: Who, input: any) {
  const preview = await plan(env, s, w, input); insist(input.fingerprint === preview.fingerprint, 'rewind_plan_changed', 409)
  const chosen = Array.isArray(input.items) ? new Set(input.items.map(String)) : null, done: string[] = [], receipt: Receipt = { scope: preview.scope, at: preview.at, by: s.operator.email, appliedAt: now(), items: [], undone: null }
@@ -84,14 +84,14 @@ export async function apply(env: Bindings, s: Session, w: Who, input: any) {
  const depth = async (key: string) => (await chain(env, key)).chain.length, ordered: [number, Change][] = []
  for (const c of preview.changes) if (!chosen || chosen.has(c.id)) ordered.push([await depth(c.id), c])
  for (const [, c] of ordered.sort((a, b) => a[0] - b[0])) {
-  const item = await get<Item>(env, 'item', c.id), p = structuredClone(item.payload), at = now()
-  if (c.version) restored(await context(env, w, c.id), p, c.version, s.operator.email, at)
+  const item = await get<Item>(env, 'item', c.id), p = structuredClone(item.payload), at = now(), ctx=await context(env,w,c.id)
+  if (c.version) await restored(env, ctx, p, c.version, s.operator.email, at)
   if (c.renameTo) p.name = await freeName(env, p, c.id, c.renameTo)
   if (c.moveTo && (c.moveTo.parent === null || await maybe<Item>(env, 'item', c.moveTo.parent))) { p.space = c.moveTo.space; p.parent = c.moveTo.parent }
   if (c.trash !== undefined) p.trash = c.trash ? { by: s.operator.email, at, role: preview.role } : null
   p.updatedAt = at
   const row = next(item, p)
-  await commit(env, s, [{ row, previous: item }, ...await carried(env, c.id, item.payload.space, p.space)], { changes: [{ item: c.id, space: p.space, kind: 'rewind' }], audits: [{ action: 'rewind.item', object: c.id, detail: { at: preview.at, kinds: c.kinds, version: p.current } }] })
+  await commit(env, s, [{ row, previous: item }, ...await carried(env, c.id, item.payload.space, p.space)], { fences:ctx.fences, changes: [{ item: c.id, space: p.space, kind: 'rewind' }], audits: [{ action: 'rewind.item', object: c.id, detail: { at: preview.at, kinds: c.kinds, version: p.current } }] })
   receipt.items.push({ id: c.id, name: c.name, kinds: c.kinds, revision: row.revision, before: before(item.payload) }); done.push(c.id)
  }
  const record = fresh<Receipt>('rewind', receipt)
@@ -107,12 +107,12 @@ export async function undo(env: Bindings, s: Session, w: Who, key: string) {
  const restoredIds: string[] = [], skipped: string[] = []
  for (const entry of [...r.items].reverse()) {
   const item = await maybe<Item>(env, 'item', entry.id); if (!item || item.revision !== entry.revision) { skipped.push(entry.id); continue }
-  const p = structuredClone(item.payload), b = entry.before, at = now()
-  if (b.current && b.current !== p.current) restored(await context(env, w, entry.id), p, b.current, s.operator.email, at)
+  const p = structuredClone(item.payload), b = entry.before, at = now(), ctx=await context(env,w,entry.id)
+  if (b.current && b.current !== p.current) await restored(env, ctx, p, b.current, s.operator.email, at)
   if (b.space !== p.space || b.parent !== p.parent) { p.space = b.space; p.parent = b.parent }
   if (b.name !== p.name) p.name = await freeName(env, p, entry.id, b.name)
   p.trash = b.trash; p.updatedAt = at
-  await commit(env, s, [{ row: next(item, p), previous: item }, ...await carried(env, entry.id, item.payload.space, p.space)], { changes: [{ item: entry.id, space: p.space, kind: 'rewind' }], audits: [{ action: 'rewind.undo.item', object: entry.id, detail: { receipt: key, version: p.current } }] })
+  await commit(env, s, [{ row: next(item, p), previous: item }, ...await carried(env, entry.id, item.payload.space, p.space)], { fences:ctx.fences, changes: [{ item: entry.id, space: p.space, kind: 'rewind' }], audits: [{ action: 'rewind.undo.item', object: entry.id, detail: { receipt: key, version: p.current } }] })
   restoredIds.push(entry.id)
  }
  const done = next(record, { ...r, undone: { by: s.operator.email, at: now(), restored: restoredIds, skipped } })

@@ -50,7 +50,7 @@ export async function saveOffice(env: Bindings, s: Session, w: Who, key: string,
  insist(Object.keys(changed).length, 'office_no_changes', 409)
  const bytes = await officeEdit(currentBytes, changed), rendered = await officePreview(bytes); insist(rendered, 'office_format_unsupported', 415)
  const v = await admit(env, bytes, current.filename, s.operator.email, 'browser edit', {}, { text: rendered.text, parser: 'chest:office:1' })
- const row = next(item, versionPublication(ctx, item.payload, v))
+ const row = next(item, await versionPublication(env, ctx, item.payload, v, input))
  try {
   await commit(env, s, [{ row, previous: item }], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'version' }], audits: [{ action: 'version.edit', object: key, detail: { version: v.id, base: base.id, previous: current.id } }] })
  } catch (error) {

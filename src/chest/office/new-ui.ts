@@ -3,11 +3,11 @@ import { card, details, esc, field, form, hidden, select } from '../ui-shared'
 const kinds = [{ id: 'document', label: 'Document' }, { id: 'spreadsheet', label: 'Spreadsheet' }, { id: 'presentation', label: 'Presentation' }]
 const where = (target: { space?: string; parent?: string }) => target.parent ? hidden('parent', target.parent) : hidden('space', target.space!)
 
-export function newFileMenu(target: { space?: string; parent?: string }, returnTo: string, gallery: any) {
+export function newFileMenu(target: { space?: string; parent?: string }, returnTo: string, gallery: any, filing = '') {
  if (!gallery) return ''
  const forms = kinds.map(kind => {
   const templates = gallery.templates.filter((t: any) => t.kind === kind.id)
-  return form('/new-files', where(target) + hidden('kind', kind.id) + hidden('key', crypto.randomUUID()) + field(`New ${kind.id} name (optional)`, 'name', '', 'text', false) + select(`${kind.label} template`, 'template', [{ id: '', label: 'Blank' }, ...templates.map((t: any) => ({ id: t.id, label: `${t.name} · ${t.category}` }))], '', false), `Create ${kind.id}`, returnTo)
+  return form('/new-files', where(target) + filing + hidden('kind', kind.id) + hidden('key', crypto.randomUUID()) + field(`New ${kind.id} name (optional)`, 'name', '', 'text', false) + select(`${kind.label} template`, 'template', [{ id: '', label: 'Blank' }, ...templates.map((t: any) => ({ id: t.id, label: `${t.name} · ${t.category}` }))], '', false), `Create ${kind.id}`, returnTo)
  }).join('')
  return details('New', `<p class="quiet">Create an independent ${gallery.format === 'odf' ? 'OpenDocument' : 'Office'} file here. Documents and spreadsheets in Office format open in Chest’s text and cell editor. Presentations and OpenDocument files can be downloaded for editing.</p>${forms}`, 'btn')
 }

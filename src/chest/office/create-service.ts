@@ -60,7 +60,7 @@ export async function createFile(env: Bindings, s: Session, w: Who, input: any) 
  if (extension === 'docx' || extension === 'xlsx' || extension === 'pptx') text = (await officePreview(bytes))?.text ?? text
  const version = await admit(env, bytes, filename, s.operator.email, 'created', {}, { mediaType: mediaTypes[extension], text, parser: 'chest:new-file:1', ...(template ? { template } : {}) })
  try {
-  return await createItem(env, s, w, { space: destination.space.id, parent, name: filename, type: 'file' }, 'created', undefined, {
+  return await createItem(env, s, w, { ...input, space: destination.space.id, parent, name: filename, type: 'file' }, 'created', undefined, {
    version, fences,
    ops: (row: Row<Item>) => [{ row: fresh<CreationReceipt>('office-create', { actor: s.operator.email, fingerprint, item: row.id }, key) }],
   })

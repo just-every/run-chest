@@ -24,3 +24,8 @@ export function typedValues(schema:{id:string,payload:Schema},input:Record<strin
   fields[f.name]=f.type==='number'&&Number.isFinite(Number(raw))?Number(raw):f.type==='boolean'?raw==='true'?true:raw==='false'?false:raw:raw}
  return fields
 }
+
+// An upload-request recipient supplies values for the destination's fixed type, without choosing another type.
+export function fixedTypeFields(schema:{id:string,payload:Schema},fields:Record<string,unknown>={}) {
+ return `<fieldset class="types"><legend class="field-label">${esc(schema.payload.name)}</legend><input type="hidden" name="schema" value="${esc(schema.id)}"><div class="form-grid">${schema.payload.fields.map(f=>input(schema.id,f,fields[f.name])).join('')}</div></fieldset>`
+}

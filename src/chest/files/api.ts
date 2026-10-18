@@ -6,6 +6,7 @@ import { insist } from '../model'
 import { who } from './access'
 import { offerOwnership, ownershipView, ownershipInbox, decideOwnership, cancelOwnership } from './ownership'
 import { linkPolicies, saveLinkPolicy } from './link-policy'
+import { updateItemFiling } from './folder-metadata'
 import { setGovernance, reviewVersion } from './governance'
 import { createFile } from '../office/create-service'
 import { listTemplates, publishTemplate, unpublishTemplate } from '../office/create-templates'
@@ -87,6 +88,7 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && sub === 'versions' && verb === 'name') return nameVersion(env, s, w, key, version, input)
   if (post && sub === 'versions' && verb === 'restore') return restoreVersion(env, s, w, key, version)
   if (post && sub === 'versions' && verb === 'review') return reviewVersion(env, s, w, key, version, input)
+  if (post && sub === 'filing') return updateItemFiling(env, s, w, key, input)
   if (post && sub === 'governance') return setGovernance(env, s, w, key, input)
   const actions: Record<string, () => Promise<unknown>> = { ownership: () => offerOwnership(env, s, w, key, input), rename: () => rename(env, s, w, key, input), move: () => move(env, s, w, key, input), copy: () => copy(env, s, w, key, input), settings: () => itemSettings(env, s, w, key, input), trash: () => trash(env, s, w, key), restore: () => restore(env, s, w, key), erase: () => erase(env, s, w, key), shares: () => share(env, s, w, key, input), unshare: () => unshare(env, s, w, key, input), extend: () => extend(env, s, w, key, input), links: () => createLink(env, s, w, key, input), 'public-links': () => createPublicLink(env, s, w, key, input), 'file-requests': () => createFileRequest(env, s, w, key, input), 'make-private': () => makePrivate(env, s, w, key), 'access-requests': () => requestAccess(env, s, w, key, input), prefs: () => prefs(env, s, w, key, input), comments: () => comment(env, s, w, key, input) }
   if (post && sub && actions[sub] && !version) return actions[sub]()

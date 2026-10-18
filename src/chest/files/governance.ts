@@ -5,11 +5,15 @@ import { insist, now, text } from '../model'
 import { context, demand, type Ctx, type Who } from './access'
 import type { FileVersion, Item } from './model'
 import { commit, next } from './repo'
+import { get } from '../store'
+import type { Schema } from '../model'
+import { effectiveGovernance, prepareFiling } from './folder-metadata'
 
 // A folder opts new originals into exact-version review. Assignment never grants access.
 // A file retains its governance when moved out, so moving it cannot bypass review.
-export function versionPublication(ctx: Ctx, item: Item, original: FileVersion): Item {
- const policy = [...ctx.chain].reverse().find(n => n.payload.type === 'folder' && n.payload.governance)?.payload.governance ?? item.governance
+export async function versionPublication(env: Bindings, ctx: Ctx, item: Item, original: FileVersion, input: any = {}): Promise<Item> {
+ item = await prepareFiling(env, ctx, item, input, item.createdBy || original.actor)
+ const policy = effectiveGovernance(ctx, item)
  const version = { ...original }; delete version.review
  if (policy) version.review = { reviewer: policy.reviewer, state: 'submitted' }
  return { ...item, ...(policy ? { governance: policy, approved: item.approved ?? null } : {}), versions: [...item.versions, version], current: policy && item.approved ? item.approved : version.id, updatedAt: version.at }
@@ -18,7 +22,12 @@ export function versionPublication(ctx: Ctx, item: Item, original: FileVersion):
 export async function setGovernance(env: Bindings, s: Session, w: Who, key: string, input: any) {
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'administer')
  insist(item.payload.type === 'folder', 'governance_requires_folder')
- const reviewer = await validPerson(env, input.reviewer), policy = { reviewer }
+ const reviewer = await validPerson(env, input.reviewer)
+ ctx.fences.push(await get(env, 'person', reviewer))
+ const schema = input.schema === undefined ? item.payload.governance?.schema : input.schema
+ insist(schema === undefined || schema === null || typeof schema === 'string', 'invalid_schema')
+ if (schema) ctx.fences.push(await get<Schema>(env, 'schema', schema))
+ const policy = { reviewer, ...(schema ? { schema } : {}) }
  await commit(env, s, [{ row: next(item, { ...item.payload, governance: policy }), previous: item }], { fences: ctx.fences, audits: [{ action: 'folder.governance', object: key, detail: { before: item.payload.governance ?? null, after: policy } }] })
  return { reviewer }
 }

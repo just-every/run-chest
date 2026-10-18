@@ -20,6 +20,7 @@ import { summary } from '../read/api'
 import { effectiveLinkPolicy } from './link-policy'
 import { accessExplanation } from './access-explanation'
 import { ownershipForItem } from './ownership'
+import { metadataView } from './folder-metadata'
 import { storage } from '../quota/storage'
 // Read models for the files pages and API: what a person may see, with the actions their current role allows.
 const can = (ctx: { space: any; state: any }) => Object.fromEntries((['download', 'comment', 'contribute', 'manage', 'share', 'administer'] as const).map(a => [a, allowed(ctx, a)]))
@@ -50,7 +51,7 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
  const lineage=await mergeView(env,s,w,item)
  await recordAccess(env, s, item, 'item.read')
  return {
-  linkCreation: (await effectiveLinkPolicy(env,w,ctx.space.id)).rules, id: key, item: { ...item.payload, versions: undefined, grants: undefined, trash: undefined }, revision: item.revision, ownership: await ownershipForItem(env, s, w, key), accessExplanation: accessExplanation(ctx, w), role: ctx.state.role, can: can(ctx), space: { id: ctx.space.id, name: label(ctx.space.payload, w), kind: ctx.space.payload.kind, member: !!start(ctx.space.payload, w).role }, path,
+  metadata: await metadataView(env, ctx), linkCreation: (await effectiveLinkPolicy(env,w,ctx.space.id)).rules, id: key, item: { ...item.payload, versions: undefined, grants: undefined, trash: undefined }, revision: item.revision, ownership: await ownershipForItem(env, s, w, key), accessExplanation: accessExplanation(ctx, w), role: ctx.state.role, can: can(ctx), space: { id: ctx.space.id, name: label(ctx.space.payload, w), kind: ctx.space.payload.kind, member: !!start(ctx.space.payload, w).role }, path,
   versions: lineage.versions.map(v => ({ ...v, text: undefined, textLength: v.text.length })), mergedInto:lineage.mergedInto, merges:lineage.merges,
   reading: currentVersion ? summary((await extraction(env, currentVersion.checksum))?.payload ?? null, currentVersion.mediaType) : null,
   children: item.payload.type === 'folder' ? (await children(env, w, ctx, key)).map(brief) : [],
@@ -81,7 +82,7 @@ export async function search(env: Bindings, w: Who, url: URL) {
   if(hidden.has(e.row.id))continue
   if (!e.state.role || e.state.trash || (space && e.space.id !== space)) continue
   const v = e.row.payload.versions.find(v => v.id === e.row.payload.current), text = v?.text.toLowerCase() ?? '', inName = e.row.payload.name.toLowerCase().includes(q), at = q ? text.indexOf(q) : -1, inside = v ? read.get(v.checksum) : undefined
-  if (q && !inName && at < 0 && inside === undefined) continue
+  if (q && !inName && at < 0 && inside === undefined && !JSON.stringify(e.row.payload.filing?.fields ?? {}).toLowerCase().includes(q)) continue
   result.push({ ...brief(e), space: { id: e.space.id, name: label(e.space.payload, w) }, snippet: at >= 0 ? v!.text.slice(Math.max(0, at - 60), at + q.length + 60) : inside ?? '' })
  }
  return { q, count: result.length, results: result.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 200) }

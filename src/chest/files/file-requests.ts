@@ -56,7 +56,7 @@ function freeName(taken: Set<string>, filename: string) {
  const ext = extension(filename), stem = ext ? filename.slice(0, -ext.length - 1) : filename
  for (let n = 1; ; n++) { const candidate = n === 1 ? filename : `${stem} (${n})${ext ? `.${ext}` : ''}`; if (!taken.has(candidate.toLowerCase())) return candidate }
 }
-export type Submission = { name: string; email: string; files: { filename: string; bytes: Uint8Array }[] }
+export type Submission = { filing?: Record<string,unknown>; name: string; email: string; files: { filename: string; bytes: Uint8Array }[] }
 // Each file is checked against the request's type and size limits and verified into custody before one commit that
 // also re-checks the request and the folder, so closing the request or losing the folder refuses the upload.
 export async function submit(env: Bindings, secret: string, input: Submission) {
@@ -72,7 +72,7 @@ export async function submit(env: Bindings, secret: string, input: Submission) {
   insist(f.bytes.length <= request.payload.maxBytes, 'file_too_large', 413)
   const value = freeName(taken, filename); taken.add(value.toLowerCase())
   const v = await admit(env, f.bytes, value, by, 'upload')
-  rows.push(fresh<Item>('item', versionPublication(ctx, { space: ctx.space.id, parent: folder.id, type: 'file', name: value, createdBy: request.payload.createdBy, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions: [], current: null }, v)))
+  rows.push(fresh<Item>('item', await versionPublication(env, ctx, { space: ctx.space.id, parent: folder.id, type: 'file', name: value, createdBy: request.payload.createdBy, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions: [], current: null }, v, input.filing ?? {})))
  }
  const who = submitter.name ? `${submitter.name}${submitter.email ? ` (${submitter.email})` : ''}` : submitter.email || 'Someone'
  const note = notice(request.payload.custodian ?? request.payload.createdBy, 'file-request.upload', rows.length === 1 ? rows[0].id : folder.id, who, `${who} uploaded ${rows.map(r => `"${r.payload.name}"`).join(', ')} to "${folder.payload.name}" through your file request "${request.payload.title}".`)

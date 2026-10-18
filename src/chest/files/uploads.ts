@@ -1,3 +1,4 @@
+import { prepareFiling } from './folder-metadata'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { custody, signature, SMALL, streamDigest } from '../blobs'
@@ -12,7 +13,7 @@ import { day, name, type FileVersion, type Item } from './model'
 // the open session and sends only the missing parts. Completion verifies every byte before the file appears.
 export const PART = 8 * 1024 * 1024, MAX = 4 * 1024 ** 3
 type Target = { space: string; parent: string | null; item: string | null }
-export type Upload = Target & { owner: string; name: string; size: number; lastModified: number; checksum: string | null; partSize: number; key: string; multipart: string; state: 'open' | 'complete'; result?: { item: string; version: string }; createdAt: string; expiresAt: string }
+export type Upload = Target & { filing?: Item['filing']; owner: string; name: string; size: number; lastModified: number; checksum: string | null; partSize: number; key: string; multipart: string; state: 'open' | 'complete'; result?: { item: string; version: string }; createdAt: string; expiresAt: string }
 type Part = { upload: string; n: number; etag: string; size: number }
 const count = (u: Upload) => Math.ceil(u.size / u.partSize)
 const expected = (u: Upload, n: number) => n < count(u) ? u.partSize : u.size - (count(u) - 1) * u.partSize
@@ -36,10 +37,15 @@ export async function begin(env: Bindings, s: Session, w: Who, input: any) {
  insist(input.checksum === undefined || (typeof input.checksum === 'string' && /^[0-9a-f]{64}$/.test(input.checksum)), 'invalid_checksum')
  if (!target.item) unique(await siblings(env, target.space, target.parent), value)
  const open = (await where<Upload>(env, 'upload', '$.owner', w.email)).find(r => { const u = r.payload; return u.state === 'open' && Date.parse(u.expiresAt) > Date.now() && u.space === target.space && u.parent === target.parent && u.item === target.item && u.name === value && u.size === size && u.lastModified === lastModified })
- if (open) return view(env, open)
+ const ctx = target.item ? await context(env,w,target.item) : await place(env,w,target.space,target.parent)
+ const existingItem = target.item ? ctx.chain.at(-1)!.payload : {type:'file',createdBy:w.email} as Item
+ const filing = (await prepareFiling(env,ctx,existingItem,input,w.email)).filing
+ if (open) {
+  const updated=next(open,{...open.payload,filing});await commit(env,s,[{row:updated,previous:open}],{fences:ctx.fences});return view(env,updated)
+ }
  const key = id(), staging = `uploads/${key}`, multipart = await env.BLOBS.createMultipartUpload(staging), at = now()
- const row = fresh<Upload>('upload', { ...target, owner: w.email, name: value, size, lastModified, checksum: input.checksum ?? null, partSize: PART, key: staging, multipart: multipart.uploadId, state: 'open', createdAt: at, expiresAt: new Date(Date.now() + 6 * day).toISOString() }, key)
- await commit(env, s, [{ row }], { audits: [{ action: 'upload.begin', object: key, detail: { ...target, size } }] })
+ const row = fresh<Upload>('upload', { ...target, filing, owner: w.email, name: value, size, lastModified, checksum: input.checksum ?? null, partSize: PART, key: staging, multipart: multipart.uploadId, state: 'open', createdAt: at, expiresAt: new Date(Date.now() + 6 * day).toISOString() }, key)
+ await commit(env, s, [{ row }], { fences:ctx.fences, audits: [{ action: 'upload.begin', object: key, detail: { ...target, size } }] })
  return view(env, row)
 }
 export async function status(env: Bindings, w: Who, key: string) { return view(env, await mine(env, w, key)) }
@@ -72,7 +78,7 @@ export async function complete(env: Bindings, s: Session, w: Who, key: string) {
   await custody(env, u.key, checksum, size, kind.mediaType)
   version = { id: id(), filename: u.name, checksum, size, ...kind, text: '', parser: 'chest:signature-only:1', at: now(), actor: s.operator.email, arrival: 'upload', name: '' }
  }
- const input = { checksum: u.checksum ?? undefined, size: u.size }
+ const input = { ...(u.filing ? { schema:u.filing.schema, fields:u.filing.fields, owner:u.filing.owner } : {}), checksum: u.checksum ?? undefined, size: u.size }
  if (u.item) await addVersion(env, s, w, u.item, small ?? null, { ...input, filename: u.name }, 'upload', { version, ops: closing })
  else await createItem(env, s, w, { ...input, space: target.space, parent: target.parent, name: u.name, type: 'file' }, 'upload', small, { version, ops: closing })
  await env.BLOBS.delete(u.key)

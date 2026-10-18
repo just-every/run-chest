@@ -10,7 +10,9 @@ export type Space = { name: string; kind: 'team'|'personal'; owner: string; form
 export type Arrival = 'email'|'upload'|'sync client'|'restore'|'copy'|'conflict copy'|'browser edit'|'created'
 export type FileVersion = { id: string; filename: string; checksum: string; size: number; mediaType: string; preview: string; text: string; parser: string; at: string; actor: string; arrival: Arrival; name: string; restoredFrom?: string; device?: string; template?: { id: string; name: string; version: string; sourceVersion?: string }; review?: { reviewer: string; state: 'submitted'|'approved'|'changes'; actor?: string; at?: string; message?: string } }
 export type Trash = { by: string; at: string; role: Role }
-export type Item = { space: string; parent: string|null; type: 'folder'|'file'; name: string; createdBy: string; createdAt: string; updatedAt: string; restricted: boolean; noDownload: boolean; grants: Grant[]; trash: Trash|null; versions: FileVersion[]; current: string|null; governance?: { reviewer: string }; approved?: string|null }
+export type FolderGovernance = { reviewer: string; schema?: string }
+export type ItemFiling = { schema: string; fields: Record<string, unknown>; owner: string }
+export type Item = { space: string; parent: string|null; type: 'folder'|'file'; name: string; createdBy: string; createdAt: string; updatedAt: string; restricted: boolean; noDownload: boolean; grants: Grant[]; trash: Trash|null; versions: FileVersion[]; current: string|null; governance?: FolderGovernance; filing?: ItemFiling; approved?: string|null }
 export type Link = { item: string; tokenHash: string; audience: 'organisation'|'restricted'; expires?: string|null; role: Role; discoverable: boolean; createdBy: string; at: string }
 // A link for anyone (SHARE-001): no account; optional password (PBKDF2 hash only), expiry and download limit. Revoking
 // keeps the record so the link answers a plain page and the audit keeps its history.

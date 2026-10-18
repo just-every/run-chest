@@ -75,7 +75,7 @@
     job.state = 'starting'; job.problem.textContent = ''; draw(job)
     for (let attempt = 0; ; attempt++) {
       try {
-        const u = await api('POST', '/uploads', { ...job.target, name: job.file.name, size: job.file.size, lastModified: job.file.lastModified })
+        const u = await api('POST', '/uploads', { ...job.target, ...Object.fromEntries([...job.row.closest('[data-upload]').querySelectorAll('input[name],select[name]')].filter(el=>el.type!=='radio'||el.checked).map(el=>[el.name,el.value])), name: job.file.name, size: job.file.size, lastModified: job.file.lastModified })
         job.id = u.id; job.received = u.received; job.state = 'uploading'; draw(job); resumed(job)
         const have = new Set(u.parts), count = Math.ceil(job.file.size / u.partSize)
         for (let n = 1; n <= count; n++) {

@@ -25,5 +25,29 @@ try {
  const moved=await h.api(`/items/${file.id}/versions`,owner,{base64:b64('Moved pending revision')});assert.equal(moved.payload.current,b);assert.equal(moved.payload.versions.at(-1).review.state,'submitted');
  await h.api(`/items/${file.id}/versions/${moved.payload.versions.at(-1).id}/review`,reviewer,{action:'approve'},403);
  const ordinary=await h.api('/items',owner,{space:personal,name:'Delivery notes.txt',base64:b64('Ordinary files need no review')});assert.equal(ordinary.payload.versions[0].review,undefined);
+ // The Library's managed types also govern ordinary-folder arrivals. Editing a definition diagnoses retained
+ // values, but must not rewrite those values or permit a replacement against stale definitions.
+ const schema=await h.api('/schemas',owner,{name:'Supplier contract',fields:[{name:'Amount',type:'number',required:true},{name:'Signed',type:'boolean',required:true}]});
+ const typed=await h.api('/items',owner,{space:space.id,type:'folder',name:'Typed contracts'});
+ await h.api(`/items/${typed.id}/governance`,owner,{reviewer:'reviewer@example.test',schema:schema.id});
+ const input={parent:typed.id,name:'Contract.txt',base64:b64('Signed supplier contract'),owner:h.vars.OWNER_EMAIL};
+ await h.api('/items',owner,{...input,fields:{Amount:'wrong',Signed:false}},400);
+ await h.api('/items',owner,{...input,fields:{Amount:100}},400);
+ const record=await h.api('/items',owner,{...input,fields:{Amount:100,Signed:false}}),original=record.payload.versions[0].id;
+ assert.deepEqual(record.payload.filing.fields,{Amount:100,Signed:false});
+ await h.api(`/items/${record.id}/versions/${original}/review`,reviewer,{action:'approve'});
+ await h.api(`/schemas/${schema.id}`,owner,{name:'Supplier contract',fields:[{name:'Amount',type:'text',required:true},{name:'Signed',type:'boolean',required:true},{name:'Reference',type:'text',required:true}]});
+ const diagnosed=await h.api(`/items/${record.id}`,reviewer);
+ assert.deepEqual(diagnosed.metadata.filing.fields,{Amount:100,Signed:false},'schema changes never rewrite authoritative fields');
+ assert.deepEqual(diagnosed.metadata.issues.map(i=>i.field).sort(),['Amount','Reference']);
+ await h.api(`/items/${record.id}`,outsider,undefined,403);
+ await h.api(`/items/${record.id}/filing`,reviewer,{fields:{Amount:'100',Signed:false,Reference:'PO-10'}},403);
+ await h.api(`/items/${record.id}/versions`,owner,{base64:b64('Replacement with obsolete filing')},400);
+ await h.api(`/items/${record.id}/versions/${original}/restore`,owner,{},400);
+ const unchanged=await h.api(`/items/${record.id}`,owner);assert.equal(unchanged.versions.length,1);assert.equal(unchanged.item.approved,original);
+ await h.api(`/items/${record.id}/filing`,owner,{fields:{Amount:'100',Signed:false,Reference:'PO-10'}});
+ const replacement=await h.api(`/items/${record.id}/versions`,owner,{base64:b64('Replacement with valid filing')});
+ assert.equal(replacement.payload.current,original);assert.equal(replacement.payload.versions.at(-1).review.state,'submitted');
+ assert.deepEqual(replacement.payload.filing.fields,{Amount:'100',Signed:false,Reference:'PO-10'});
  console.log('SPACE-001 exact-version folder review, inheritance, restore and current ACL passed');
 } finally { await h.close() }

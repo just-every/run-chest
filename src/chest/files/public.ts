@@ -1,4 +1,6 @@
 import { runtimeBindings, type Bindings } from '../../auth.server'
+import { metadataView } from './folder-metadata'
+import { fixedTypeFields } from '../ui-fields'
 import { linkedVersion } from './link-versions'
 import { esc } from '../ui-shared'
 import { isOffice } from '../office/service'
@@ -76,7 +78,8 @@ async function download(env: Bindings, request: Request, secret: string, key: st
 }
 async function ask(env: Bindings, secret: string) {
  const found = await resolveRequest(env, secret); if (!found) return missingRequest(); if (!found.ctx) return closedRequest()
- return requestPage(`/r/${secret}`, { ...found.request.payload, asker: await asker(env, found.request.payload.createdBy) })
+ const metadata=await metadataView(env,found.ctx)
+ return requestPage(`/r/${secret}`, { ...found.request.payload, asker: await asker(env, found.request.payload.createdBy) },'',200,metadata.schema?fixedTypeFields(metadata.schema):'')
 }
 async function asker(env: Bindings, email: string) { return personName((await maybe<Person>(env, 'person', email))?.payload.name, email) }
 const plain: Record<string, (r: { types: string[]; maxBytes: number }) => string> = {
@@ -97,7 +100,7 @@ async function upload(env: Bindings, request: Request, secret: string) {
  const form = await request.formData(), files: { filename: string; bytes: Uint8Array }[] = []
  for (const f of form.getAll('files')) if (typeof f !== 'string' && f.size) files.push({ filename: f.name, bytes: new Uint8Array(await f.arrayBuffer()) })
  const text = (k: string) => { const v = form.get(k); return typeof v === 'string' ? v : '' }
- try { return receiptPage(action, await submit(env, secret, { name: text('name'), email: text('email'), files })) }
+ try { return receiptPage(action, await submit(env, secret, { name: text('name'), email: text('email'), files, filing:Object.fromEntries([...form.entries()].filter(([k,v])=>(k==='schema'||k.startsWith('typed:')) && typeof v==='string')) })) }
  catch (e) {
   if (e instanceof ChestError && (e.code === 'request_closed' || e.code === 'request_not_found')) return closedRequest()
   if (e instanceof ChestError && plain[e.code]) return view(plain[e.code](r), e.status === 400 ? 422 : e.status)
