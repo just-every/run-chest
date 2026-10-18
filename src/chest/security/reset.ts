@@ -1,13 +1,14 @@
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { operatorMail } from '../../mail.server.mjs'
+import { requireAdmin } from '../administration/roles'
 import { owner } from '../access'
 import { insist,id,now } from '../model'
 import { commit,fresh } from '../files/repo'
 import { notice,deliver } from '../files/notify'
 const digest=async(value:string)=>Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))).toString('base64url')
 export async function resetFactor(env:Bindings,s:Session,input:any){
- owner(s);insist(input.verified===true||input.verified==='true','identity_verification_required');const target=await env.DB.prepare("SELECT id,email FROM oa_operators WHERE email=? AND status='active'").bind(String(input.email).toLowerCase()).first<{id:string;email:string}>();insist(target,'person_not_found',404)
+ await requireAdmin(env,s,'help-desk',String(input.email??'').toLowerCase());insist(input.verified===true||input.verified==='true','identity_verification_required');const target=await env.DB.prepare("SELECT id,email FROM oa_operators WHERE email=? AND status='active'").bind(String(input.email).toLowerCase()).first<{id:string;email:string}>();insist(target,'person_not_found',404)
  const token=Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url'),until=Date.now()+86400000
  await commit(env,s,[],{audits:[{action:'security.mfa.reset.request',object:target.email,detail:{identityVerified:true}}],statements:[{sql:'DELETE FROM chest_mfa_resets WHERE operator_id=?',params:[target.id]},{sql:'INSERT INTO chest_mfa_resets VALUES(?,?,?,NULL)',params:[await digest(token),target.id,until]}]})
  const sender=operatorMail(env);insist(sender&&env.MAIL_FROM,'mail_not_configured',503);const url=`${env.AUTH_ORIGIN}/security?reset=${token}`

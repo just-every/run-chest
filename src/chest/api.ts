@@ -1,3 +1,5 @@
+import { administrationExecute } from './administration/service'
+import { requireAdmin } from './administration/roles'
 import { saveMfaPolicy } from './security/policy'
 import { resetFactor } from './security/reset'
 import { collectionExecute } from './collection'
@@ -45,10 +47,11 @@ async function dispatch(env:Bindings,request:Request,s:Session,method:string,pat
  if(path==='/security/policy'&&method==='POST')return saveMfaPolicy(env,s,input)
  if(path==='/security/reset'&&method==='POST')return resetFactor(env,s,input)
  const parts=path.split('/').filter(Boolean),url=new URL(request.url)
+ const administration=await administrationExecute(env,request,s,method,parts,input,url);if(administration!==undefined)return administration
  if(parts[0]==='collection')return collectionExecute(env,request,s,method,parts,input,url)
- if(path==='/organisation/sso') {owner(s);return method==='POST'?saveSso(env,s,input):ssoView(env)}
+ if(path==='/organisation/sso') {await requireAdmin(env,s,'service-settings');return method==='POST'?saveSso(env,s,input):ssoView(env)}
  if(path==='/organisation/policy'&&method==='POST')return localPolicy(env,s,input)
- if(path==='/organisation/scim/tokens') {owner(s);return method==='POST'?issueScimToken(env,request,s,input):scimView(env)}
+ if(path==='/organisation/scim/tokens') {await requireAdmin(env,s,'service-settings');return method==='POST'?issueScimToken(env,request,s,input):scimView(env)}
  if(path==='/organisation/scim/revoke'&&method==='POST')return revokeScimToken(env,request,s,input.id)
  if(method==='GET'&&path==='/library')return overview(env,s,url)
  if(path==='/people'&&method==='POST')return input.action==='offboard'?offboard(env,request,s,input):peopleAction(env,request,s,input)

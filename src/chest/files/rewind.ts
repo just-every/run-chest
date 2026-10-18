@@ -14,18 +14,19 @@ import { versionPublication } from './governance'
 // Every applied rewind leaves a receipt with each item's state just before it, so the rewind can be undone.
 type Change = { id: string; name: string; kinds: string[]; version?: string; versionAt?: string; renameTo?: string; moveTo?: { space: string; parent: string | null }; trash?: boolean }
 type Event = { action: string; detail: any; at: string }
+const canRecover=(s:Session)=>isAdmin(s)||(s as Session&{administrationRecovery?:boolean}).administrationRecovery===true
 const point = (value: unknown) => { insist(typeof value === 'string' && Number.isFinite(Date.parse(value)), 'invalid_point'); const at = new Date(value).toISOString(); insist(Date.parse(at) <= Date.now(), 'future_point'); return at }
 async function scope(env: Bindings, s: Session, w: Who, input: any, at: string): Promise<{ space: Row<Space>; items: Row<Item>[]; label: string; role: Role }> {
  if (typeof input.space === 'string') {
   const space = await get<Space>(env, 'space', input.space), role = start(space.payload, w).role
-  insist(isAdmin(s) || role === 'manager' || role === 'owner', role ? 'rewind_refused' : 'not_found', role ? 403 : 404)
+  insist(canRecover(s) || role === 'manager' || role === 'owner', role ? 'rewind_refused' : 'not_found', role ? 403 : 404)
   return { space, items: await spaceItems(env, space.id), label: `space:${space.id}`, role: role ?? 'manager' }
  }
  insist(typeof input.folder === 'string', 'invalid_scope')
  const { space, chain: nodes } = await chain(env, input.folder), links = await list<Link>(env, 'link'); let state = start(space.payload, w)
  for (const node of nodes) state = descend(state, node, w, links)
  const folder = nodes.at(-1)!, r = level(state); insist(folder.payload.type === 'folder', 'not_a_folder')
- if (!isAdmin(s) && r < 3) throw new ChestError(r ? 'rewind_refused' : 'not_found', r ? 403 : 404)
+ if (!canRecover(s) && r < 3) throw new ChestError(r ? 'rewind_refused' : 'not_found', r ? 403 : 404)
  const rows = new Map((await spaceItems(env, space.id)).map(x => [x.id, x])), tree = new Map<string, Row<Item>>([[folder.id, folder]])
  const walk = (p: string) => { for (const x of rows.values()) if (x.payload.parent === p && !tree.has(x.id)) { tree.set(x.id, x); walk(x.id) } }; walk(folder.id)
  // Items that were inside the folder at that moment and have been moved out since come back with it, when the person
@@ -37,18 +38,18 @@ async function scope(env: Bindings, s: Session, w: Who, input: any, at: string):
   for (const [key, from] of first) {
    if (tree.has(key) || !from || !tree.has(from.parent)) continue
    const item = await maybe<Item>(env, 'item', key); if (!item) continue
-   const ctx = await context(env, w, key); if (!isAdmin(s) && !allowed(ctx, 'manage')) continue
+   const ctx = await context(env, w, key); if (!canRecover(s) && !allowed(ctx, 'manage')) continue
    tree.set(key, item); if (item.payload.space !== space.id) for (const x of await spaceItems(env, item.payload.space)) rows.set(x.id, x)
    walk(key); added = true
   }
  }
  // Below manager, a person rewinds only the files they created.
  const items = [...tree.values()]
- return { space, items: isAdmin(s) || r >= 5 ? items : items.filter(x => x.payload.createdBy === s.operator.email), label: `folder:${folder.id}`, role: state.role ?? 'manager' }
+ return { space, items: canRecover(s) || r >= 5 ? items : items.filter(x => x.payload.createdBy === s.operator.email), label: `folder:${folder.id}`, role: state.role ?? 'manager' }
 }
 export async function plan(env: Bindings, s: Session, w: Who, input: any) {
  const at = point(input.at), { space, items, label, role } = await scope(env, s, w, input, at), ids = new Set(items.map(i => i.id)), changes: Change[] = []
- const history = (await env.DB.prepare("SELECT object_id, action, detail, at FROM chest_audit WHERE action IN ('item.rename','item.move','item.trash','item.restore','share.remove','share.expired','link.remove','space.members') ORDER BY at").all()).results as ({ object_id: string } & Event)[]
+ const history = (await env.DB.prepare("SELECT object_id, action, detail, at FROM chest_audit WHERE action IN ('item.rename','item.move','item.trash','item.restore','share.remove','share.expired','link.remove','link.revoke','file-request.close','space.members') ORDER BY at").all()).results as ({ object_id: string } & Event)[]
  const events = (key: string) => history.filter(e => e.object_id === key).map(e => ({ action: e.action, detail: JSON.parse(e.detail), at: e.at }))
  for (const item of items) {
   const p = item.payload, mine = events(item.id), later = mine.filter(e => e.at > at), change: Change = { id: item.id, name: p.name, kinds: [] }

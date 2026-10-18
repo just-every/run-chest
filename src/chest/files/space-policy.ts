@@ -1,8 +1,10 @@
+import { canAdmin,canAdminGroup,requireAdmin,requireAdminGroup,requireAnyAdmin,principalCanAdmin } from '../administration/roles'
+import { sessionPredicate } from '../store'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get, list } from '../store'
 import { insist, now, text, type Group, type Row } from '../model'
-import { isAdmin, type Who } from './access'
+import { type Who } from './access'
 import { commit, fresh, maybe, next } from './repo'
 import { notice } from './notify'
 import type { Space } from './model'
@@ -25,11 +27,11 @@ export function parseSpaceDefaults(input: any, base: SpaceDefaults): SpaceDefaul
  insist(input.storageLimitBytes === undefined || input.storageLimitBytes === null || Number.isSafeInteger(input.storageLimitBytes) && input.storageLimitBytes >= 0, 'invalid_storage_limit')
  return Object.fromEntries(Object.keys(base).map(k => [k, input[k] === undefined ? base[k as keyof SpaceDefaults] : input[k]])) as SpaceDefaults
 }
-export const serviceAdmin = (s: Session) => insist(isAdmin(s), 'service_settings_admin_required', 403)
-export const adminStatement = (s: Session) => ({ sql: "INSERT INTO chest_assert(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM oa_operators WHERE id=? AND status='active' AND role IN ('owner','admin')) THEN 1 ELSE 0 END", params: [s.operator.id] })
+export const serviceAdmin = (env:Bindings,s:Session,target?:string) => requireAdmin(env,s,'service-settings',target)
+export const adminStatement=(s:Session)=>{const p=sessionPredicate(s);return {sql:`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${p.sql}) THEN 1 ELSE 0 END`,params:p.params}}
 export async function creationPolicy(env: Bindings, s: Session, w: Who, supplied?: Row<SpacePolicy>|null) {
  const row = supplied === undefined ? await maybe<SpacePolicy>(env, 'space-policy', key('organisation')) : supplied, policy = row?.payload ?? initial
- const allowed = isAdmin(s) || policy.creation === 'everyone' || policy.creation === 'groups' && w.groups.some(g => policy.creatorGroups.includes(g.id))
+ const allowed = await canAdmin(env,s,'service-settings',s.operator.email) || policy.creation === 'everyone' || policy.creation === 'groups' && w.groups.some(g => policy.creatorGroups.includes(g.id))
  const rule = policy.creation === 'groups' ? 'space_creation_named_groups_only' : policy.creation === 'admins' ? 'space_creation_admins_only' : 'space_creation_everyone'
  return { allowed, rule, policy, row }
 }
@@ -50,13 +52,16 @@ export async function newSpaceDefaults(env: Bindings, w: Who) {
  return { defaults, organisation: org, fences: [...w.groups, ...reads.filter((r): r is Row<SpacePolicy|SpaceDefaults> => !!r)], statements: scopes.flatMap((scope, i) => reads[i] ? [] : [{ sql: 'INSERT INTO chest_assert(ok) SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM chest_records WHERE id=?) THEN 1 ELSE 0 END', params: [key(scope)] }]) }
 }
 export async function spacePolicyView(env: Bindings, s: Session) {
- serviceAdmin(s)
- const groups = await list<Group>(env, 'group'), org = await maybe<SpacePolicy>(env, 'space-policy', key('organisation'))
- return { policy: org?.payload ?? initial, groups: await Promise.all(groups.map(async g => ({ id: g.id, name: g.payload.name, defaults: (await maybe<SpaceDefaults>(env, 'space-policy', key(`group:${g.id}`)))?.payload ?? null }))), spaces: (await list<Space>(env, 'space')).filter(r => r.payload.kind === 'team').map(r => ({ id: r.id, name: r.payload.name, settings: spaceDefaults(r.payload) })), requests: (await list<SpaceRequest>(env, 'space-request')).map(r => ({ id: r.id, ...r.payload })) }
+ await requireAnyAdmin(env,s,'service-settings')
+ const known=await list<Group>(env,'group'),groups:Row<Group>[]=[];for(const group of known)if(await canAdminGroup(env,s,'service-settings',group.id))groups.push(group)
+ const org = await maybe<SpacePolicy>(env, 'space-policy', key('organisation')), spaces:Row<Space>[]=[],requests:Row<SpaceRequest>[]=[]
+ for(const space of await list<Space>(env,'space'))if(space.payload.kind==='team'&&await canAdmin(env,s,'service-settings',space.payload.owner||space.payload.createdBy))spaces.push(space)
+ for(const request of await list<SpaceRequest>(env,'space-request'))if(await canAdmin(env,s,'service-settings',request.payload.requester))requests.push(request)
+ return { organizationAllowed:await canAdmin(env,s,'service-settings'),policy: org?.payload ?? initial, groups: await Promise.all(groups.map(async g => ({ id: g.id, name: g.payload.name, defaults: (await maybe<SpaceDefaults>(env, 'space-policy', key(`group:${g.id}`)))?.payload ?? null }))), spaces: spaces.map(r => ({ id: r.id, name: s.operator.role==='owner'?r.payload.name:r.id, settings: spaceDefaults(r.payload) })), requests: requests.map(r => ({ id: r.id, ...r.payload })) }
 }
 export async function saveSpacePolicy(env: Bindings, s: Session, input: any) {
- serviceAdmin(s)
  const scope = input.scope ?? 'organisation'; insist(typeof scope === 'string', 'invalid_policy_scope')
+ if(scope.startsWith('group:'))await requireAdminGroup(env,s,'service-settings',scope.slice(6));else await serviceAdmin(env,s)
  let group: Row<Group>|undefined
  if (scope !== 'organisation') { insist(scope.startsWith('group:'), 'invalid_policy_scope'); group = await get<Group>(env, 'group', scope.slice(6)) }
  const old = await maybe<SpacePolicy|SpaceDefaults>(env, 'space-policy', key(scope)), org = await maybe<SpacePolicy>(env, 'space-policy', key('organisation'))
@@ -79,7 +84,7 @@ export async function saveSpacePolicy(env: Bindings, s: Session, input: any) {
 }
 export async function requestSpace(env: Bindings, s: Session, w: Who, input: any) {
  const p = await creationPolicy(env, s, w), name = text(input.name, 'name'), message = typeof input.message === 'string' ? input.message.trim() : ''; insist(message.length <= 2000, 'invalid_message')
- const result = await env.DB.prepare("SELECT email FROM oa_operators WHERE status='active' AND role IN ('owner','admin') ORDER BY email").all<{email:string}>(), admins = result.results.map(r => r.email)
+ const result = await env.DB.prepare("SELECT email FROM oa_operators WHERE status='active' ORDER BY email").all<{email:string}>(), admins:string[]=[];for(const person of result.results)if(await principalCanAdmin(env,person.email,'service-settings',w.email))admins.push(person.email)
  insist(admins.length, 'service_settings_admin_unavailable', 409)
  const row = fresh<SpaceRequest>('space-request', { name, message, requester: w.email, at: now(), rule: p.rule, admins }), notices = admins.map(to => notice(to, 'space.request', null, w.email, `${w.email} requests a team space: ${name}.${message ? ` ${message}` : ''} Review Space creation & defaults from Files. Rule: ${p.rule}.`))
  await commit(env, s, [{ row }, ...notices.map(row => ({ row }))], { fences: [...w.groups, ...(p.row ? [p.row] : [])], audits: [{ action: 'space.request', object: row.id, detail: { name, rule: p.rule, admins } }] })

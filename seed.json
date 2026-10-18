@@ -118,6 +118,12 @@
       "clauses": [
         "ADMIN-004"
       ]
+    },
+    {
+      "id": "delegated-administration",
+      "clauses": [
+        "ADMIN-003"
+      ]
     }
   ],
   "nonGoals": [

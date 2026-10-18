@@ -1,3 +1,4 @@
+import { requireAdmin } from '../administration/roles'
 import type { Bindings } from '../../auth.server'
 import { operatorAuth } from '../../auth.server'
 import { failure } from '../api'
@@ -22,7 +23,7 @@ export async function companyResponse(request:Request,env:Bindings):Promise<Resp
   if(path==='/auth/company/acs')return await samlCallback(env,request)
   insist(path==='/auth/company/start','not_found',404);insist(row,'sso_not_configured',404);insist(!managed(env),'provider_not_available_yet',503)
   insist(request.method==='POST','method_not_allowed',405);insist(request.headers.get('origin')===env.AUTH_ORIGIN&&request.headers.get('sec-fetch-site')!=='cross-site','invalid_origin',403)
-  const form=await boundedForm(request,4096),test=form.get('test')==='true';if(test){const s=await operatorAuth(env).getSession(request);insist(s?.operator.role==='owner','owner_required',403)}
+  const form=await boundedForm(request,4096),test=form.get('test')==='true';if(test){const s=await operatorAuth(env).getSession(request);insist(s,'authentication_required',401);await requireAdmin(env,s,'service-settings')}
   return await (row.config.protocol==='saml'?beginSaml(env,row.config,row.revision,test):beginOidc(env,row.config,row.revision,test))
  }catch(error){const response=failure(error),data=await response.json() as {error:string;message?:string};if(!data.message&&!hasProblemWords(data.error))data.message='Company sign-in did not finish. If you set it up, check the provider settings in People & settings; otherwise ask whoever set it up to check them and your access to the Chest app.';return refusedPage(data,response.status)}
 }

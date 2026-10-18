@@ -1,20 +1,21 @@
+import { canAdmin,requireAdmin } from '../administration/roles'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get } from '../store'
 import { insist } from '../model'
-import { isAdmin, start, type Who } from './access'
+import { start, type Who } from './access'
 import { commit, next } from './repo'
 import type { Space } from './model'
 import { adminStatement, parseSpaceDefaults, serviceAdmin, spaceDefaults } from './space-policy'
 import { storage } from '../quota/storage'
 
 export async function spaceSettingsView(env: Bindings, s: Session, key: string) {
- serviceAdmin(s)
- const space = await get<Space>(env, 'space', key); insist(space.payload.kind === 'team', 'team_space_required')
- return { id: key, name: space.payload.name, settings: spaceDefaults(space.payload), editorSharing: space.payload.settings.editorSharing, ...await storage(env, key) }
+ const space = await get<Space>(env, 'space', key);await serviceAdmin(env,s,space.payload.owner||space.payload.createdBy); insist(space.payload.kind === 'team', 'team_space_required')
+ return { id: key, name: s.operator.role==='owner'?space.payload.name:space.id, settings: spaceDefaults(space.payload), editorSharing: space.payload.settings.editorSharing, ...await storage(env, key) }
 }
 export async function changeSpaceSettings(env: Bindings, s: Session, w: Who, key: string, input: any) {
- const space = await get<Space>(env, 'space', key), admin = isAdmin(s)
+ const space = await get<Space>(env, 'space', key), admin = await canAdmin(env,s,'service-settings',space.payload.owner||space.payload.createdBy)
+ if(admin)await requireAdmin(env,s,'service-settings',space.payload.owner||space.payload.createdBy)
  insist(space.payload.kind === 'team' && (admin || start(space.payload, w).role === 'manager'), 'administer_refused', 403)
  const before = spaceDefaults(space.payload), after = parseSpaceDefaults(input, before)
  const changed = Object.keys(before).filter(k => before[k as keyof typeof before] !== after[k as keyof typeof after])

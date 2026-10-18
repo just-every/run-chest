@@ -1,3 +1,4 @@
+import { canAdmin,canAdminGroup,requireAdmin,requireAdminGroup,isAdministrator } from '../administration/roles'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { list } from '../store'
@@ -57,13 +58,14 @@ export async function permittedLinks(env: Bindings, links: Row<Link>[], itemSpac
  return kept
 }
 export async function linkPolicies(env: Bindings, s: Session) {
- insist(s.operator.role === 'owner' || s.operator.role === 'admin', 'admin_required', 403)
+ insist(await isAdministrator(env,s), 'admin_required', 403)
  const spaces = (await list<Space>(env,'space')).filter(s=>s.payload.kind==='team'), groups = await list<Group>(env,'group'), rows = await list<LinkPolicy>(env,'link-policy')
- const scopes = [{id:'organisation',label:'Whole organization'}, ...spaces.map(s=>({id:`space:${s.id}`,label:`Space · ${s.payload.name}`})), ...groups.map(g=>({id:`group:${g.id}`,label:`Group · ${g.payload.name}`}))]
+ const scopes:{id:string;label:string}[]=[];if(await canAdmin(env,s,'sharing-security'))scopes.push({id:'organisation',label:'Whole organization'});for(const space of spaces)if(await canAdmin(env,s,'sharing-security',space.payload.owner||space.payload.createdBy))scopes.push({id:`space:${space.id}`,label:`Space · ${s.operator.role==='owner'?space.payload.name:space.id}`});for(const g of groups)if(await canAdminGroup(env,s,'sharing-security',g.id))scopes.push({id:`group:${g.id}`,label:`Group · ${g.payload.name}`});insist(scopes.length,'admin_required',403)
  return { scopes, rows: scopes.map(scope=>({ ...scope, rules: rows.find(r=>r.id===key(scope.id))?.payload ?? null })), defaults: rows.find(r=>r.id===key('organisation'))?.payload ?? defaults }
 }
 export async function saveLinkPolicy(env: Bindings, s: Session, input: any) {
  const view = await linkPolicies(env,s), scope = view.scopes.find(v=>v.id===input.scope);insist(scope,'invalid_policy_scope')
+ if(scope.id.startsWith('group:'))await requireAdminGroup(env,s,'sharing-security',scope.id.slice(6));else if(scope.id.startsWith('space:')){const space=await maybe<Space>(env,'space',scope.id.slice(6));insist(space,'not_found',404);await requireAdmin(env,s,'sharing-security',space.payload.owner||space.payload.createdBy)}else await requireAdmin(env,s,'sharing-security')
  const old = await maybe<LinkPolicy>(env,'link-policy',key(scope.id))
  if (input.remove === true && scope.id !== 'organisation') { if(old)await commit(env,s,[{row:old,previous:old,remove:true}],{audits:[{action:'policy.links',object:key(scope.id),detail:{before:old.payload,after:null}}]});return {removed:true} }
  for(const flag of ['allowPublic','allowOrganisation','allowDiscovery'])insist(typeof input[flag]==='boolean','invalid_policy')

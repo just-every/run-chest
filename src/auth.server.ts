@@ -5,6 +5,9 @@ import { operatorMail } from './mail.server.mjs'
 import { createOwnerClaimHandler, OwnerClaimError } from './modules/owner-claim/index.mjs'
 import branding from './branding.json'
 import { companyResponse } from './chest/organisation/routes'
+import { checkInvitationScope } from './chest/administration/invitations'
+import { administrativeAuthResponse } from './chest/administration/legacy-auth'
+import { identityAdminPolicy } from './chest/administration/roles'
 import { securityResponse } from './chest/security/routes'
 import { requireMfa } from './chest/security/session'
 import { namingInviter } from './chest/invitation-mail'
@@ -47,7 +50,7 @@ export const runtimeBindings = (env: Bindings): Bindings => env.RER_DEV_ORIGIN &
 export const authConfig = (env: Bindings): AuthConfig => ({ origin: env.AUTH_ORIGIN, local: env.AUTH_LOCAL === 'true', OWNER_EMAIL: env.OWNER_EMAIL, SESSION_SECRET: env.SESSION_SECRET, SETUP_TOKEN: env.SETUP_TOKEN, MAIL_FROM: env.MAIL_FROM, branding: { productName: branding.name, accentColor: branding.primaryColor, signInPath: '/signin', theme: theme.href } })
 // `inviter` names who sends the invitation this instance mails (src/chest/invitation-mail.ts).
 export function baseOperatorAuth(env: Bindings, inviter?: string) {
- return createOperatorAuth({ db: env.DB, config: authConfig(env), mailSender: inviter ? namingInviter(operatorMail(env), inviter) : operatorMail(env), clientIp: request => request.headers.get('CF-Connecting-IP') ?? '' })
+ return createOperatorAuth({ db: env.DB, config: authConfig(env), mailSender: inviter ? namingInviter(operatorMail(env), inviter) : operatorMail(env), clientIp: request => request.headers.get('CF-Connecting-IP') ?? '',rolePolicy:input=>identityAdminPolicy(env,input),hooks:{afterConfirm:async({session,operator})=>{await checkInvitationScope(env,session,operator)}} })
 }
 
 export function operatorAuth(env:Bindings,inviter?:string){
@@ -58,6 +61,7 @@ export function operatorAuth(env:Bindings,inviter?:string){
 export async function authResponse(request: Request, original: Bindings): Promise<Response | null> {
  const env = runtimeBindings(original), url = new URL(request.url)
  const security=await securityResponse(request,env);if(security)return security
+ const administrativeAuth=await administrativeAuthResponse(env,request);if(administrativeAuth)return administrativeAuth
  // The key exchange answers only a local runtime holding RER_DEV_KEY.
  if (url.pathname === '/__dev/key') {
   const gate = devGate({ key: env.RER_DEV_KEY, origin: env.AUTH_ORIGIN, local: env.AUTH_LOCAL === 'true' })

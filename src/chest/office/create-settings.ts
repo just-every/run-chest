@@ -1,3 +1,4 @@
+import { canAdmin,requireAdmin } from '../administration/roles'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { isAdmin, type Who } from '../files/access'
@@ -14,10 +15,10 @@ export async function effectiveSettings(env: Bindings, w: Who) {
 }
 export async function creationSettings(env: Bindings, s: Session, w: Who) {
  const { settings, effectiveFormat } = await effectiveSettings(env, w)
- return isAdmin(s) ? { ...settings, effectiveFormat, editable: true } : { effectiveFormat, editable: false }
+ return await canAdmin(env,s,'service-settings') ? { ...settings, effectiveFormat, editable: true } : { effectiveFormat, editable: false }
 }
 export async function saveCreationSettings(env: Bindings, s: Session, w: Who, input: any) {
- insist(isAdmin(s), 'service_settings_refused', 403)
+ await requireAdmin(env,s,'service-settings')
  insist(validFormat(input.format) && Array.isArray(input.groups) && input.groups.length <= 100, 'invalid_creation_settings')
  const seen = new Set<string>(), fences = []
  const groups: NewSettings['groups'] = []

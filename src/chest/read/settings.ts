@@ -1,8 +1,9 @@
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
+import { requireAdmin } from '../administration/roles'
 import { owner } from '../access'
 import { insist, now, id } from '../model'
-import { ownerPredicate } from '../store'
+import { sessionPredicate } from '../store'
 import { seal, unseal } from '../seal'
 import { DEFAULTS, ReaderError, transcribe, type Provider, type ReaderConfig } from './provider'
 import { SAMPLE_PNG, SAMPLE_TEXT } from './sample'
@@ -16,7 +17,7 @@ export type ReaderSetting = { provider: Provider; endpoint: string; model: strin
 const saved = async (env: Bindings): Promise<ReaderSetting | null> => { const r: any = await env.DB.prepare('SELECT * FROM chest_reader WHERE id=1').first(); return r ? { provider: r.provider, endpoint: r.endpoint, model: r.model, workspace: r.workspace, keySealed: r.key_sealed, keyHint: r.key_hint, updatedBy: r.updated_by, updatedAt: r.updated_at } : null }
 // One owner-only write and its audit row, refused unless the owner's session is still live.
 async function asOwner(env: Bindings, s: Session, statement: D1PreparedStatement, action: string) {
- const p = ownerPredicate(s)
+ const p = sessionPredicate(s)
  await env.DB.batch([env.DB.prepare(`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${p.sql}) THEN 1 ELSE 0 END`).bind(...p.params), statement, env.DB.prepare('INSERT INTO chest_audit VALUES(?,?,?,?,?,?)').bind(id(), s.operator.email, action, 'reader', '{}', now()), env.DB.prepare('DELETE FROM chest_assert')])
 }
 export const MANAGED_LINE = 'Not available yet on RER Managed hosting: it has no outbound connection for AI providers. PDF text is still read; scans and photos are read on a self-hosted install.'
@@ -37,7 +38,7 @@ export async function readerView(env: Bindings) {
 }
 const optional = (v: unknown, name: string, max: number) => { if (v === undefined || v === null || v === '') return ''; insist(typeof v === 'string' && v.length <= max && !/[\x00-\x1f]/.test(v), `invalid_${name}`); return v.trim() }
 export async function saveReader(env: Bindings, s: Session, input: any) {
- owner(s); insist(!managed(env), 'reader_unavailable_on_managed', 409)
+ await requireAdmin(env,s,'service-settings'); insist(!managed(env), 'reader_unavailable_on_managed', 409)
  const provider = input.provider; insist(provider === 'anthropic' || provider === 'openai', 'invalid_provider')
  const endpoint = optional(input.endpoint, 'endpoint', 300) || DEFAULTS[provider as Provider].endpoint
  insist(/^https:\/\/[^\s/]+\/\S*$/.test(endpoint), 'invalid_endpoint')
@@ -53,12 +54,12 @@ export async function saveReader(env: Bindings, s: Session, input: any) {
  return readerView(env)
 }
 export async function removeReader(env: Bindings, s: Session) {
- owner(s); insist(await saved(env), 'not_found', 404)
+ await requireAdmin(env,s,'service-settings'); insist(await saved(env), 'not_found', 404)
  await asOwner(env, s, env.DB.prepare('DELETE FROM chest_reader WHERE id=1'), 'reader.remove')
  return readerView(env)
 }
 export async function testReader(env: Bindings, s: Session) {
- owner(s); const state = await readerState(env)
+ await requireAdmin(env,s,'service-settings'); const state = await readerState(env)
  if (!('config' in state)) return { ok: false, message: 'unavailable' in state ? state.unavailable : state.missing }
  try {
   const bytes = Uint8Array.from(atob(SAMPLE_PNG), c => c.charCodeAt(0))

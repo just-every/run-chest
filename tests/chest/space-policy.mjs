@@ -7,7 +7,7 @@ try{
  await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Owner'});people.owner=await h.signIn(h.vars.OWNER_EMAIL);
  await h.fetch('/setup',{method:'POST',headers:{cookie:people.owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
  for(const n of ['lead','staff','viewer']){await h.api('/people',people.owner,{action:'invite',email:n+'@example.test',name:n});people[n]=await h.signIn(n+'@example.test',true)}
- assert.equal((await h.raw('/auth/invite',people.owner,{email:'admin@example.test',displayName:'Service admin',role:'admin',returnTo:'/app/files'})).status,202);people.admin=await h.signIn('admin@example.test',true);
+ assert.equal((await h.raw('/auth/invite',people.owner,{email:'admin@example.test',displayName:'Service admin',role:'member',returnTo:'/app/files'})).status,202);people.admin=await h.signIn('admin@example.test',true);await h.api('/administration/roles',people.owner,{email:'admin@example.test',role:'service-settings',scope:'organization'});
  const earlier=await h.api('/spaces',people.lead,{name:'Existing operations'}),before=(await h.api(`/spaces/${earlier.id}`,people.lead)).settings;
  const group=await h.api('/groups',people.owner,{name:'Ops leads',members:['lead@example.test']});
  const original=(await h.api('/space-policy',people.admin)).policy;

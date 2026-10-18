@@ -1,11 +1,12 @@
 import type { Bindings } from '../auth.server'
 import type { Session } from '../modules/operator-auth/index.mjs'
+import { requireAdmin,requireAdminGroup } from './administration/roles'
 import { owner,validPerson,access } from './access'
 import { get,write,changed } from './store'
 import { insist,id,text,date,type Document,type Schema,type Collection,type Group,type Row } from './model'
 import { schemaDefinition,validateFields } from './fields'
 export async function createMetadata(env:Bindings,s:Session,kind:string,input:any) {
- owner(s);let payload:any
+ if(kind==='group')await requireAdmin(env,s,'user-management');else if(kind==='schema')await requireAdmin(env,s,'service-settings');else owner(s);let payload:any
  if(kind==='collection')payload={name:text(input.name,'name'),grants:[]}
  else if(kind==='schema') payload=schemaDefinition(input)
  else if(kind==='group'){input.members??=[];insist(Array.isArray(input.members),'invalid_members');for(const p of input.members)await validPerson(env,p);payload={name:text(input.name,'name'),members:input.members}}
@@ -13,7 +14,7 @@ export async function createMetadata(env:Bindings,s:Session,kind:string,input:an
  return write(env,s,{id:id(),kind,payload,revision:id()},`${kind}.create`)
 }
 export async function updateSchema(env:Bindings,s:Session,key:string,input:any) {
- owner(s);const row=await get<Schema>(env,'schema',key)
+ await requireAdmin(env,s,'service-settings');const row=await get<Schema>(env,'schema',key)
  return write(env,s,changed(row,schemaDefinition(input)),'schema.update',row)
 }
 export async function filing(env:Bindings,input:any,fences:Row[]=[]):Promise<Pick<Document,'title'|'schema'|'fields'|'owner'|'reviewer'|'reference'|'reviewDate'|'expiryDate'>> {
@@ -42,11 +43,11 @@ export async function grants(env:Bindings,s:Session,kind:string,key:string,input
  return write(env,s,changed(row,payload),'access.change',row)
 }
 
-export async function updateGroup(env:Bindings,s:Session,key:string,input:any){owner(s);const row=await get<Group>(env,'group',key);input.members??=row.payload.members;insist(Array.isArray(input.members),'invalid_members');for(const p of input.members)await validPerson(env,p);return write(env,s,changed(row,{name:text(input.name,'name'),members:input.members}),'group.update',row)}
+export async function updateGroup(env:Bindings,s:Session,key:string,input:any){await requireAdminGroup(env,s,'user-management',key);const row=await get<Group>(env,'group',key);input.members??=row.payload.members;insist(Array.isArray(input.members),'invalid_members');for(const p of input.members)await validPerson(env,p);return write(env,s,changed(row,{name:text(input.name,'name'),members:input.members}),'group.update',row)}
 // The Groups card's forms add one member by email or remove one; the collection card's add or remove one grant.
 const principalOf=(value:unknown)=>{const v=typeof value==='string'?value.trim():'';insist(v,'invalid_person');return v.includes('@')?v.toLowerCase():v}
 export async function groupMember(env:Bindings,s:Session,key:string,input:any){
- owner(s);const row=await get<Group>(env,'group',key),email=principalOf(input.email),members=[...row.payload.members]
+ await requireAdminGroup(env,s,'user-management',key);const row=await get<Group>(env,'group',key),email=principalOf(input.email),members=[...row.payload.members]
  if(input.action==='add'){insist(!members.includes(email),'already_member',409);members.push(await validPerson(env,email))}
  else{insist(input.action==='remove','invalid_action');insist(members.includes(email),'not_a_member',404);members.splice(members.indexOf(email),1)}
  return write(env,s,changed(row,{...row.payload,members}),'group.update',row)

@@ -1,3 +1,4 @@
+import { requireAdmin } from '../administration/roles'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { insist, type Group } from '../model'
@@ -12,7 +13,7 @@ export async function privacy(env: Bindings, email: string) {
 }
 export async function savePrivacy(env: Bindings, s: Session, input: any) {
  const organization = input.scope === 'organization', key = organization ? 'audit:policy' : `audit:prefs:${s.operator.email}`, kind = organization ? 'audit-policy' : 'audit-prefs'
- if (organization) insist(s.operator.role === 'owner', 'owner_required', 403)
+ if (organization) await requireAdmin(env,s,'sharing-security')
  const bool = (v: any) => v === true || v === 'true'
  const old = await maybe(env, kind, key)
  const groups = Array.isArray(input.groups) ? input.groups : typeof input.groups === 'string' ? input.groups.split(',').map((v: string) => v.trim()).filter(Boolean) : []

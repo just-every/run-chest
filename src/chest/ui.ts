@@ -1,3 +1,4 @@
+import { administrationPage,administrationInput } from './administration/ui'
 import { mfaAdminCard } from './security/ui'
 import { collectionPage, collectionInput } from './collection'
 import { operatorAuth,runtimeBindings,type Bindings } from '../auth.server'
@@ -20,7 +21,7 @@ import { readerView } from './read/settings'
 import { readerCard,testReceipt } from './read/ui'
 import { filingPage,filingInput } from './filing/ui'
 import { documentReadings } from './read/api'
-import { card,esc } from './ui-shared'
+import { stamp, card,esc } from './ui-shared'
 import { providerOrigin,ssoView } from './organisation/settings'
 import { scimView } from './organisation/scim'
 import { organisationCard,ssoReceipt,tokenReceipt } from './organisation/ui'
@@ -46,11 +47,16 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   const file=fields.get('file');if(file&&typeof file!=='string'&&file.size){input.base64=Buffer.from(await file.arrayBuffer()).toString('base64');input.filename=file.name;input.size=file.size}
   const archiveFile=fields.get('archiveFile');if(archiveFile&&typeof archiveFile!=='string')input.archive=await archiveFile.text()
   if(input.path==='/archive/job')input.path=`/archive/${encodeURIComponent(input.job)}`
+  administrationInput(input)
   if(input.path.startsWith('/collection'))collectionInput(input)
   if(input.path.startsWith('/filing/'))filingInput(input)
   if(filesPath(input.path))filesInput(input)
   if(input.path==='/audit/privacy'&&input.scope==='organization')input.groups=Object.keys(input).filter(k=>k.startsWith('group:')).map(k=>k.slice(6))
   const result=await execute(env,request,s,'POST',input.path,input);kick(env,request)
+  if(result?.signInAgain)return new Response(null,{status:303,headers:{...headers,location:'/signin'}})
+  if(input.path==='/administration/recovery'&&result?.id)return new Response(null,{status:303,headers:{...headers,location:`/app/administration/recovery/${result.id}`}})
+  if(input.path.startsWith('/administration/recovery/')&&result?.id)return new Response(null,{status:303,headers:{...headers,location:`/app/administration/recovery/${result.id}`}})
+  if(input.path==='/administration/people'&&input.action==='sessions')return page(card('Sessions',`<ul class="events">${result.map((r:any)=>`<li>${esc(r.kind)} · ${stamp(new Date(r.createdAt).toISOString())} · ${r.active?'Active':'Ended'}</li>`).join('')}</ul><a class="btn" href="/app/administration">Administration</a>`),me,'/app/administration')
   if(input.path==='/organisation/scim/tokens')return page(tokenReceipt(result),me,'/app/admin')
   if(input.path==='/organisation/sso')return page(ssoReceipt(result),me,'/app/admin')
   const secret=filesReceipt(input,result);if(secret)return page(secret,me,returnTo)
@@ -59,6 +65,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   if(input.path.startsWith('/archive/')||input.action==='sessions')return page(receiptPage(input,result),me,returnTo)
   const location=input.path==='/new-files'&&result?.kind==='item'?`/app/items/${result.id}${/\.(docx|xlsx)$/i.test(result.payload.name)?'?edit=1':''}`:result?.kind==='document'?`/app/documents/${result.id}`:result?.kind==='item'&&input.path==='/items'?`/app/items/${result.id}`:returnTo;return new Response(null,{status:303,headers:{...headers,location:location.startsWith('/app')?location:'/app'}})
  }
+ const administrative=await administrationPage(env,s,url);if(administrative)return page(administrative,me,url.pathname)
  const collecting=await collectionPage(env,request,s,url);if(collecting)return page(collecting,me,url.pathname)
  const filing=await filingPage(env,s,url);if(filing)return page(filing,me,url.pathname)
  const files=await filesPage(env,request,s,url);if(files)return 'redirect' in files?new Response(null,{status:303,headers:{...headers,location:files.redirect}}):page(files.body,me,url.pathname)

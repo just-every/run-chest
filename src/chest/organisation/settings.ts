@@ -1,8 +1,9 @@
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
+import { requireAdmin } from '../administration/roles'
 import { owner } from '../access'
 import { ChestError, id, insist, now, text } from '../model'
-import { ownerPredicate } from '../store'
+import { sessionPredicate } from '../store'
 import { discovery } from './provider-http'
 export type SsoConfig = { protocol: 'oidc'|'saml'; label: string; issuer: string; clientId?: string; clientSecret?: string; authMethod?: string; authorizationOrigin?: string; entryPoint?: string; certificate?: string }
 const encoder = new TextEncoder()
@@ -26,13 +27,13 @@ export async function ssoSettings(env:Bindings) {const row=await storedSso(env);
 export const providerOrigin=(config:SsoConfig)=>config.authorizationOrigin||new URL(config.entryPoint||config.issuer).origin
 export async function ssoView(env:Bindings) {const row=await storedSso(env);if(!row)return {configured:false as const,managed:managed(env)};if(!row.config)return {configured:false as const,managed:managed(env),unreadable:true};const {clientSecret,...config}=row.config;return {configured:true as const,managed:managed(env),...config,hasSecret:!!clientSecret,testedAt:row.tested_at,localDisabled:!!row.local_disabled}}
 export async function saveSso(env:Bindings,s:Session,input:any) {
- owner(s);insist(!managed(env),'provider_not_available_yet',503);const previous=await ssoSettings(env),protocol=input.protocol;insist(protocol==='oidc'||protocol==='saml','invalid_protocol')
+ await requireAdmin(env,s,'service-settings');insist(!managed(env),'provider_not_available_yet',503);const previous=await ssoSettings(env),protocol=input.protocol;insist(protocol==='oidc'||protocol==='saml','invalid_protocol')
  const issuer=providerUrl(env,text(input.issuer,'issuer',2000)),config:SsoConfig={protocol,label:text(input.label,'label',60),issuer}
  // OpenID Connect: the provider's own discovery document is read now, so a wrong address is reported on save. Its
  // issuer (with or without a trailing slash, as the provider writes it) becomes the saved Provider address.
  if(protocol==='oidc'){const metadata=await discovery(env,issuer);config.issuer=metadata.issuer;config.authorizationOrigin=new URL(metadata.authorization_endpoint).origin;config.clientId=text(input.clientId,'client_id',512);config.clientSecret=input.clientSecret?text(input.clientSecret,'client_secret',4096):previous?.config.protocol==='oidc'&&previous.config.issuer===config.issuer&&previous.config.clientId===config.clientId?previous.config.clientSecret:undefined;insist(config.clientSecret,'client_secret_required');config.authMethod=String(input.authMethod||'client_secret_basic');insist(['client_secret_basic','client_secret_post'].includes(config.authMethod!),'invalid_client_authentication')}
  else {config.entryPoint=providerUrl(env,text(input.entryPoint,'sso_url',2000));config.certificate=text(input.certificate,'signing_certificate',20000);insist(config.certificate.includes('BEGIN CERTIFICATE'),'invalid_signing_certificate')}
- const fence=ownerPredicate(s),payload=await seal(env,config),revision=id()
+ const fence=sessionPredicate(s),payload=await seal(env,config),revision=id()
  await env.DB.batch([
   env.DB.prepare(`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${fence.sql}) THEN 1 ELSE 0 END`).bind(...fence.params),
   env.DB.prepare('INSERT INTO chest_sso_config(singleton,payload,revision) VALUES(1,?,?) ON CONFLICT(singleton) DO UPDATE SET payload=excluded.payload,revision=excluded.revision,tested_at=NULL,local_disabled=0').bind(payload,revision),
@@ -44,7 +45,7 @@ export async function saveSso(env:Bindings,s:Session,input:any) {
  ]);return ssoView(env)
 }
 export async function localPolicy(env:Bindings,s:Session,input:any) {
- owner(s);const disabled=input.localDisabled===true||input.localDisabled==='true',fence=ownerPredicate(s),settings=await ssoSettings(env);insist(settings&&(!disabled||settings.tested_at),'test_company_signin_first',409)
+ await requireAdmin(env,s,'service-settings');const disabled=input.localDisabled===true||input.localDisabled==='true',fence=sessionPredicate(s),settings=await ssoSettings(env);insist(settings&&(!disabled||settings.tested_at),'test_company_signin_first',409)
  await env.DB.batch([
   env.DB.prepare(`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${fence.sql}) AND EXISTS(SELECT 1 FROM chest_sso_config WHERE singleton=1 AND (?=0 OR tested_at IS NOT NULL)) THEN 1 ELSE 0 END`).bind(...fence.params,disabled?1:0),
   env.DB.prepare('UPDATE chest_sso_config SET local_disabled=? WHERE singleton=1').bind(disabled?1:0),
