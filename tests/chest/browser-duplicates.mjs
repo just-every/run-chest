@@ -1,0 +1,25 @@
+// AGENT-002: choose a canonical original, preview and approve a link repair, Undo, merge/Undo and decline.
+import assert from 'node:assert/strict';
+import {mkdir} from 'node:fs/promises';
+import {chromium} from '@playwright/test';
+import {harness} from './harness.mjs';
+const h=await harness();let browser;
+const press=(page,button)=>Promise.all([page.waitForNavigation(),button.click()]);
+async function shot(page,width,name){await page.evaluate(()=>document.fonts.ready);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'fits '+width);await page.screenshot({path:`test-results/${width}-duplicates-${name}.png`,fullPage:true})}
+try{
+ await mkdir('test-results',{recursive:true});await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const owner=await h.signIn(h.vars.OWNER_EMAIL);await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
+ browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+ for(const width of [1440,390]){
+  const context=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});await context.addCookies(owner.split('; ').map(s=>{const i=s.indexOf('=');return {name:s.slice(0,i),value:s.slice(i+1),url:h.origin}}));const page=await context.newPage();
+  const space=await h.api('/spaces',owner,{name:`Harbor agreements ${width}`}),paragraph=`Acme Supply service agreement for account ${width}. Payment is due thirty days after the invoice date. This agreement covers delivery schedules, product quality requirements, insurance certificates, account contacts, warranty obligations and the agreed transport charges. The supplier confirms that records remain available for annual review and all changes require written approval from both parties. Signed October 12 2026.`,aName=`Acme terms ${width}.txt`,bName=`Acme signed copy ${width}.txt`,a=await h.api('/items',owner,{space:space.id,name:aName,base64:Buffer.from(paragraph).toString('base64')}),b=await h.api('/items',owner,{space:space.id,name:bName,base64:Buffer.from(paragraph.replace('October 12','October 13')).toString('base64')});
+  await h.api(`/items/${b.id}/prefs`,owner,{shortcut:true});const link=await h.api(`/items/${b.id}/public-links`,owner,{});await h.api(`/items/${b.id}/public-links`,owner,{versionMode:'pinned',version:b.payload.current});
+  await page.goto(h.origin+'/app/filing/duplicates');const proposed=page.locator('section.card').filter({has:page.getByRole('heading',{name:'Proposed reconciliation',exact:true})});const candidate=proposed.locator(':scope > ul > li').filter({has:page.getByRole('link',{name:aName,exact:true})}).filter({has:page.getByRole('link',{name:bName,exact:true})});assert.equal(await candidate.count(),1);
+  await candidate.getByText(`${aName}: versions, sources and approvals`,{exact:true}).click();await candidate.getByText(`${bName}: versions, sources and approvals`,{exact:true}).click();await shot(page,width,'lineage');
+  const canonical=candidate.locator('details').filter({has:page.getByText(`Keep ${aName} as canonical`,{exact:true})});await canonical.locator('summary').click();await press(page,canonical.getByRole('button',{name:'Preview reference changes',exact:true}));const reference=page.locator('section.card').filter({has:page.getByRole('heading',{name:'Reference changes',exact:true})});await shot(page,width,'references');const external=reference.locator('li').filter({has:page.getByRole('button',{name:'Approve link repointing',exact:true})}).last();await external.getByRole('checkbox').check();await press(page,external.getByRole('button',{name:'Approve link repointing',exact:true}));
+  const repaired=await h.raw(new URL(link.url).pathname);assert.equal(repaired.status,200);assert.ok((await repaired.text()).includes(aName));await shot(page,width,'repaired');
+  const history=page.locator('section.card').filter({has:page.getByRole('heading',{name:'Reference history',exact:true})});await press(page,history.getByRole('button',{name:'Undo reference changes',exact:true}).first());assert.equal((await h.raw(new URL(link.url).pathname+`/f/${b.id}`)).status,200);await shot(page,width,'reference-undone');
+  await candidate.getByText(`Keep ${aName} as canonical`,{exact:true}).click();await press(page,canonical.getByRole('button',{name:'Merge keeping originals',exact:true}));await shot(page,width,'merged');const merges=page.locator('section.card').filter({has:page.getByRole('heading',{name:'Merge history',exact:true})});await press(page,merges.getByRole('button',{name:'Undo merge',exact:true}).first());await press(page,candidate.getByRole('button',{name:'Decline merge',exact:true}));await shot(page,width,'declined');
+  await h.api(`/items/${a.id}/trash`,owner,{});await h.api(`/items/${b.id}/trash`,owner,{});await context.close();
+ }
+ console.log('AGENT-002 canonical lineage, reference repair/Undo, merge/Undo and decline at 1440/390 passed');
+}finally{await browser?.close();await h.close()}

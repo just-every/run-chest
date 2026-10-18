@@ -13,7 +13,7 @@ Status, as the contract defines it:
 
 ## Summary
 
-46 claims: **12 done**, **33 partial**, **1 missing**.
+46 claims: **13 done**, **32 partial**, **1 missing**.
 
 ## Claims
 
@@ -47,7 +47,7 @@ Status, as the contract defines it:
 | 26 | "see who changed what" | done | AUDIT-001 (done), VERSION-001 (done) | `src/chest/store.ts`; `src/chest/api.ts`; `src/chest/files/views.ts`; `tests/chest/files.mjs`; `src/chest/files/items.ts`; `src/chest/documents.ts`; `tests/chest/browser-files.mjs`; `src/chest/audit/journal.ts`; `src/chest/audit/history.ts`; `src/chest/audit/privacy.ts`; `src/chest/audit/public.ts`; `src/chest/audit/ui.ts`; `src/chest/store.ts`; `src/chest/files/repo.ts`; `src/chest/files/views.ts`; `src/chest/read/jobs.ts`; `src/chest/files/notify.ts`; `src/mail.server.mjs`; `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs` |
 | 27 | "Approvals stay with the exact version signed off" | done | CHEST-07 (done), CHEST-08 (done) | `src/chest/documents.ts`; `src/chest/reviews.ts`; `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |
 | 28 | "Agents file what arrives from email and apps" | partial | AGENT-001 (partial), CONNECT-006 (partial) | `src/chest/filing/intake.ts`; `src/chest/filing/rules.ts`; `src/chest/filing/agent.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs` |
-| 29 | "merge duplicates" | partial | AGENT-002 (partial) | `src/chest/filing/duplicates.ts`; `src/chest/filing/duplicate-view.ts`; `tests/chest/filing.mjs` |
+| 29 | "merge duplicates" | done | AGENT-002 (done) | `src/chest/filing/duplicates.ts`; `src/chest/filing/duplicate-authority.ts`; `src/chest/filing/duplicate-evidence.ts`; `src/chest/filing/duplicate-proposals.ts`; `src/chest/filing/duplicate-references.ts`; `src/chest/filing/duplicate-repair.ts`; `src/chest/filing/duplicate-view.ts`; `src/chest/filing/ui-duplicates.ts`; `tests/chest/filing.mjs`; `tests/chest/duplicate-reconciliation.mjs`; `tests/chest/browser-duplicates.mjs` |
 | 30 | "flag links shared too widely" (and "Make private") | done | AGENT-005 (done) | `src/chest/filing/link-model.ts`; `src/chest/filing/link-scan.ts`; `src/chest/filing/link-repair-actions.ts`; `src/chest/filing/link-repairs.ts`; `src/chest/filing/ui-link-repairs.ts`; `src/chest/files/exposure.ts`; `src/chest/files/ui-links.ts`; `src/chest/files/notify.ts`; `src/server.ts`; `deploy.json`; `tests/chest/link-repairs.mjs`; `tests/chest/browser-link-repairs.mjs` |
 | 31 | Mascot filing files from email, phone and laptop; "312 files filed this week" | partial | AGENT-001 (partial), CONNECT-006 (partial), MOBILE-001 (partial) | `src/chest/filing/intake.ts`; `src/chest/filing/rules.ts`; `src/chest/filing/agent.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs`; `src/chest/ui-library.ts`; `src/chest/files/ui-item.ts`; `public/chest-upload.js`; `tests/chest/journey.mjs`; `tests/chest/browser-files.mjs` |
 | 32 | "Move from Google Drive, Dropbox or Box with folders, permissions, versions and shared links" | partial | MIGRATE-001 (partial), MIGRATE-002 (partial), MIGRATE-003 (partial), MIGRATE-004 (partial) | `src/chest/archive.ts`; `src/chest/archive-target.ts`; `tests/chest/flows.mjs`; `src/chest/files/ui-movein.ts`; `public/chest-zip.js`; `public/chest-movein.js`; `tests/chest/browser-files.mjs` |

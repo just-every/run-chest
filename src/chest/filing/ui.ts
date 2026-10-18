@@ -10,6 +10,7 @@ import { intakeExecute } from './intake'
 import { intakePage } from './ui-intake'
 import { rulesExecute } from './rules'
 import { duplicatesExecute } from './duplicates'
+import { duplicatesPanel } from './ui-duplicates'
 const back='/app/filing', inline={className:'form form-inline',buttonClass:'btn btn-outline'}
 const head=(title:string,lede:string)=>`<div class="page-head"><h1>${esc(title)}</h1><p class="lede">${esc(lede)}</p></div><div class="lib-tools">${filesLinks()}<p class="lib-links"><a class="link" href="/app/filing">Filing activity</a> · <a class="link" href="/app/filing/intake">Email intake</a> · <a class="link" href="/app/filing/rules">Rules &amp; agent</a> · <a class="link" href="/app/filing/duplicates">Duplicates</a></p></div>`
 const item=(id:string,name:string)=>`<a class="link" href="/app/items/${esc(id)}">${esc(name)}</a>`
@@ -26,7 +27,7 @@ export async function filingPage(env:Bindings,s:Session,url:URL):Promise<string|
  }
  if(url.pathname==='/app/filing/duplicates'){
   const d:any=await duplicatesExecute(env,s,'GET',['filing','duplicates'],{},url)
-  return head('Merge duplicates','Review identical bytes and similar extracted text. Merging keeps both originals, every version and existing links; you can undo it.')+card('Proposed merges',d.proposals.length?`<ul class="events">${d.proposals.map((p:any)=>`<li><strong>${item(p.keep.id,p.keep.name)} + ${item(p.duplicate.id,p.duplicate.name)}</strong><p class="quiet">${esc(p.keep.spaceName??'')} → ${esc(p.duplicate.spaceName??'')}</p><p>${p.reason==='exact_hash'?'Identical file bytes':`Similar content · ${Math.round(p.similarity*100)}% similarity`}</p>${p.canMerge?form('/filing/duplicates/merge',hidden('keep',p.keep.id)+hidden('duplicate',p.duplicate.id),'Merge keeping versions',url.pathname,inline):'<p class="quiet">An owner with manage access to both files can merge these.</p>'}</li>`).join('')}</ul>`:'<p class="quiet">No duplicate proposals in the files you can access.</p>')+card('Merge history',d.merges.length?`<ul class="events">${d.merges.map((m:any)=>`<li>${item(m.keep.id,m.keep.name)} ← ${item(m.duplicate.id,m.duplicate.name)}<p class="quiet">${stamp(m.at)} · ${m.undone?'Undone':'Merged; originals and links retained'}</p>${m.canUndo?form(`/filing/duplicates/${m.id}/undo`,'','Undo merge',url.pathname,inline):''}</li>`).join('')}</ul>`:'<p class="quiet">No merges yet.</p>')
+  return head('Merge duplicates','Review version lineage, source evidence and separate approvals before choosing a canonical file. Original identities and access stay separate.')+duplicatesPanel(d)
  }
  if(url.pathname==='/app/filing/rules'){
   const d:any=await rulesExecute(env,s,'GET',['filing','rules'],{},url), a:any=await rulesExecute(env,s,'GET',['filing','agent'],{},url)
