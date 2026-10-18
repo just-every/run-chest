@@ -33,7 +33,8 @@
     "test:browser": "node tests/chest/browser-files.mjs && node tests/chest/browser-ownership.mjs && node tests/chest/browser-space-policy.mjs && node tests/chest/browser-search.mjs && node tests/chest/browser-scan-fields.mjs && node tests/chest/browser-links.mjs && node tests/chest/browser-new-files.mjs && node tests/chest/browser-governance.mjs && node tests/chest/browser-collection.mjs && node tests/chest/browser-transfers.mjs && node tests/chest/browser-guest-links.mjs && node tests/chest/browser-link-discussions.mjs && node tests/chest/browser-approved-links.mjs && node tests/chest/browser-audit.mjs && node tests/chest/browser-file-requests.mjs && node tests/chest/browser-link-repairs.mjs && node tests/chest/browser-duplicates.mjs && node tests/chest/browser-arrival-rules.mjs && node tests/chest/browser-agent-filing.mjs && node tests/chest/browser-sync-repair.mjs",
     "test:journey": "node tests/chest/journey.mjs",
     "test:site": "node tests/chest/site.mjs",
-    "test:organisation": "node tests/chest/organisation.mjs"
+    "test:organisation": "node tests/chest/organisation.mjs",
+    "test:upgrade": "node tests/chest/upgrade.mjs"
   },
   "dependencies": {
     "@node-saml/node-saml": "5.1.0",

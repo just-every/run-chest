@@ -91,3 +91,5 @@ needs no native client, signing credential or provider developer application.
 ## Additional delivered contract workflows
 
 AGENT-003 is done: `src/chest/sync-repair/service.ts`, `src/chest/sync-repair/ui.ts`, `scripts/sync-companion/run.mjs`, `tests/chest/browser-sync-repair.mjs` and `docs/sync-repair.md` deliver scoped sync diagnosis, authorized queue resume and byte verification with a real file-backed companion. The homepage sync rows remain partial because signed desktop and phone clients are still required.
+
+CHEST-24 is done: `tests/chest/upgrade.mjs` and `tests/chest/upgrade-local.mjs` prove a populated genuine 0.1.0 installation upgrades in place with all earlier application rows and original objects preserved, every Library version downloadable by its original hash, and Files usable at 1440/390. This upgrade clause has no separate homepage claim; broader own-server and native-client claims retain their existing status.

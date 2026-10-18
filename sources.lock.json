@@ -129,7 +129,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "8a2a0e1bf5a5987112b83035ef123288d58ee5db978ad73822f596c4402c4b75",
+      "sha256": "eaff9785322f7973eeed77ea6646ab8134709a9bb1d439d21d8cbccf1c5a27a6",
       "executable": false
     },
     ".gitignore": {
@@ -141,7 +141,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "f9f61db46297341c6686c8161cf5d431addb5f2a4ccdb81d0c170954d518ceb7",
+      "sha256": "cace54d0916af46cba76cb0a20875a99538c2b4d1d019a462e270cad4b3ba00d",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -169,7 +169,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c93dd862889b881a64c4e9efaf325551769a55730b171408d1bdbf48f02d7414",
+      "sha256": "c12e94ac18d8282382550a1cac79867e347c89a2707b21a8623ed8de5434f77e",
       "executable": false
     },
     "DEMO.md": {
@@ -197,7 +197,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "75061fd1de45598f1b0d65541affee5091782bb62da455fea722d098d5fd3d3f",
+      "sha256": "d07702b4344a81ff48d610661520357b302d75e51603da6ead30df804d002df6",
       "executable": false
     },
     "docs/collections.md": {
@@ -377,7 +377,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "348c82ea3f68bb32ceaf1a63b57abad96c0d2988ff9e01f8a71f9af594c903e4",
+      "sha256": "99f5351a5a98b0b5caf9f42926969c74ca1a0b20fa58eaa98b328c95422243fe",
       "executable": false
     },
     "pnpm-lock.yaml": {
@@ -3562,6 +3562,22 @@
     },
     "tests/chest/transfers.mjs": {
       "sha256": "36c49c341f5c2b45d89c1609b1184b463483935ff095558e9b13cc6ac3efc6b8",
+      "executable": false
+    },
+    "tests/chest/upgrade-local.mjs": {
+      "sha256": "42a98d8379f676e715961e69e8bfe0a6f311ed5c51ca72711f4464930c28fec9",
+      "executable": false
+    },
+    "tests/chest/upgrade-runtime-entry.mjs": {
+      "sha256": "21eac3ef087e177e904a94088b233cd3f52c1c67921c2c59478f9014be5bd65d",
+      "executable": false
+    },
+    "tests/chest/upgrade-runtime-loader.mjs": {
+      "sha256": "c7e502b5d25776b415d684c9fe1a749441bdf0b23b2b7a14794fa36c86152cbb",
+      "executable": false
+    },
+    "tests/chest/upgrade.mjs": {
+      "sha256": "62ae76de3899c48130a348adc61e11190cac35d352320113067c654e10ed49c4",
       "executable": false
     },
     "tsconfig.json": {
