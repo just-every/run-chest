@@ -56,7 +56,7 @@ Status, as the contract defines it:
 | 35 | "automatic user setup" (User sync · 42 people) | partial | ADMIN-001 (partial) | `src/chest/organisation/scim.ts`; `src/chest/organisation/scim-resources.ts`; `src/chest/organisation/scim-tokens.ts`; `tests/chest/organisation.mjs`; `docs/organisation.md` |
 | 36 | "team spaces" | partial | SPACE-001 (partial), SPACE-002 (done) | `src/chest/files/spaces.ts`; `src/chest/files/items.ts`; `src/chest/files/uploads.ts`; `src/chest/files/ui-item.ts`; `src/chest/files/ownership.ts`; `src/chest/files/ui-ownership.ts`; `src/chest/files/access-explanation.ts`; `tests/chest/ownership.mjs`; `tests/chest/browser-ownership.mjs`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `src/chest/office/create-service.ts`; `src/chest/office/create-templates.ts`; `src/chest/office/new-ui.ts`; `src/chest/files/governance.ts`; `tests/chest/new-files.mjs`; `tests/chest/governance.mjs`; `tests/chest/browser-new-files.mjs`; `src/chest/files/folder-metadata.ts`; `src/chest/files/ui-folder-metadata.ts`; `tests/chest/browser-governance.mjs`; `src/chest/files/space-policy.ts`; `src/chest/files/space-settings.ts`; `src/chest/files/space-sharing.ts`; `src/chest/files/spaces.ts`; `src/chest/files/access.ts`; `src/chest/files/shares.ts`; `src/chest/files/link-policy.ts`; `src/chest/files/ui-space-policy.ts`; `src/chest/files/ui-pages.ts`; `src/chest/files/ui.ts`; `tests/chest/space-policy.mjs`; `tests/chest/browser-space-policy.mjs` |
 | 37 | "storage limits" (1.2 TB of 5 TB) | partial | QUOTA-001 (partial), ADMIN-002 (partial) | `src/chest/quota/api.ts`; `src/chest/quota/storage.ts`; `src/chest/quota/ui.ts`; `src/chest/files/repo.ts`; `public/chest-upload.js`; `tests/chest/quota.mjs`; `src/chest/api.ts`; `src/chest/store.ts`; `tests/chest/flows.mjs` |
-| 38 | "Run Chest on your own computer or server and keep every file. Export everything, any time." (Your own storage · Your own computer or server · Export any time; terminal: `npx -y @runeditrun/rer dev just-every/run-chest`) | partial | OWN-001 (partial), CHEST-12 (done), RECOVER-002 (partial) | `docs/run.md`; `scripts/installer/local.mjs`; `deploy.json`; `tests/chest/first-run.mjs`; `scripts/check-public-assets.mjs`; `tests/chest/restore.mjs`; `tests/chest/journey.mjs` |
+| 38 | "Run Chest on your own computer or server and keep every file. Export everything, any time." (Your own storage · Your own computer or server · Export any time; terminal: `npx -y @runeditrun/rer dev just-every/run-chest`) | partial | OWN-001 (partial), CHEST-12 (done), RECOVER-002 (done) | `docs/run.md`; `scripts/installer/local.mjs`; `deploy.json`; `tests/chest/first-run.mjs`; `scripts/check-public-assets.mjs`; `tests/chest/restore.mjs`; `tests/chest/journey.mjs` |
 | 39a | "Exact-version approvals: Sign-off sticks to the version that was approved." | done | CHEST-07 (done), CHEST-08 (done) | `src/chest/documents.ts`; `src/chest/reviews.ts`; `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |
 | 39b | "File requests: Anyone can upload to the folder you choose." | done | SHARE-002 (done) | `src/chest/files/file-requests.ts`; `src/chest/files/public.ts`; `src/chest/files/ui-public.ts`; `tests/chest/files.mjs`; `src/chest/files/file-requests.ts`; `src/chest/files/request-model.ts`; `src/chest/files/request-identity.ts`; `src/chest/files/request-uploads.ts`; `src/chest/files/request-submissions.ts`; `src/chest/files/request-public.ts`; `src/chest/files/request-panel.ts`; `src/chest/files/ui-public.ts`; `public/chest-request.js`; `src/chest/quota/storage.ts`; `tests/chest/file-requests.mjs`; `tests/chest/browser-file-requests.mjs`; `tests/chest/request-browser-flow.mjs` |
 | 39c | "Large files: Big uploads resume where they stopped." | partial | TRANSFER-001 (partial) | `src/chest/files/uploads.ts`; `src/chest/blobs.ts`; `public/chest-upload.js`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |
@@ -79,7 +79,7 @@ public-door tests; their status matches the CONTRACT.md Status cell.
 
 | External-sharing, trusted-domain and member/editor policy with recipient confirmation and reversible grant suspension | POLICY-001 | partial | `src/chest/files/sharing-policy.ts`; `src/chest/files/policy-suspensions.ts`; `src/chest/files/link-policy.ts`; `src/chest/files/ui-link-policy.ts`; `tests/chest/link-policy.mjs`; `tests/chest/browser-sharing-policy.mjs` |
 
-| Independent encrypted R2 backup schedules, retention, status and clean-target recovery | RECOVER-002 | partial | `scripts/backup/hosted.mjs`; `scripts/backup/schedule.mjs`; `src/chest/backups/service.ts`; `src/chest/backups/ui.ts`; `tests/chest/backup-archive.mjs`; `tests/chest/browser-backups.mjs` |
+| Independent encrypted R2 backup schedules, retention, status and clean-target recovery | RECOVER-002 | done | `scripts/backup/hosted.mjs`; `scripts/backup/schedule.mjs`; `src/chest/backups/service.ts`; `src/chest/backups/ui.ts`; `tests/chest/backup-archive.mjs`; `tests/chest/browser-backups.mjs` |
 
 SHARE-003 was selected because sending originals and distinguishing delivery from
 human receipt is central to browser file exchange. Signed sync/mobile clients
@@ -112,5 +112,10 @@ RECOVER-002 was selected because keeping an independent recoverable copy of a
 team's original files is core browser-file-system work and needs no signed client
 or provider developer app. The owner can configure a schedule and retention in
 Administration; the separate runner owns encryption and independent storage.
-The clause remains partial until its real-provider recovery and interrupted-
-upgrade drills, including publication-failure behavior, are proven.
+The encrypted independent R2 copy was authenticated, a live original was
+corrupted in the isolated installation, and a clean hosted restore reconciled
+the complete archived graph and all original hashes. Fresh real-mail sign-in
+worked at both widths; old session/device authority and queued notices did not
+revive. A partial upgrade schema was refused before target writes, and recovery
+worked after returning to the prior schema. The genuine v0.1.0 upgrade journey
+preserved its records and originals. RECOVER-002 is done.

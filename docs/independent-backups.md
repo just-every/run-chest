@@ -94,6 +94,8 @@ archive over the changed schema. Check the restored product and originals
 before directing staff to it.
 
 D1 and R2 do not have a shared snapshot transaction. Quiesce writes for a strict
-point-in-time backup/drill; missing referenced originals fail the backup. This
-round does not claim a completed real-provider interrupted-upgrade drill or
-atomic cross-service recovery. Those remain RECOVER-002 evidence gaps.
+point-in-time backup/drill; missing referenced originals fail the backup. Restoration is ordered: verified originals first, then the database. There is
+no cross-service transaction. If publication is interrupted, keep the archive,
+discard the disposable incomplete target and restore into another empty target
+using the prior revision and private backup. Never treat an incomplete target
+as the only surviving copy.

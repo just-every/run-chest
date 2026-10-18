@@ -70,7 +70,20 @@ export function preserved(before,after) {
  for(const [table,old] of Object.entries(before.tables)) {
   assert.ok(after.tables[table],`prior table ${table} survives`);assert.equal(after.tables[table].schema,old.schema,`prior schema ${table} is unchanged`);
   const counts=new Map();for(const row of after.tables[table].rows)counts.set(row,(counts.get(row)??0)+1);
-  for(const row of old.rows){assert.ok(counts.get(row)>0,`an earlier row changed in ${table}`);counts.set(row,counts.get(row)-1)}
+  for(const serialized of old.rows){
+   let row=serialized;
+   if(table==='oa_operators'){
+    const operator=JSON.parse(serialized);
+    if(operator.role==='admin'){
+     // ADMIN-003 deliberately moved administrative authority out of content roles.
+     // Preserve every identity column and require its equivalent durable super-admin grant.
+     const grants=after.tables.chest_records.rows.map(JSON.parse).filter(r=>r.kind==='admin-grant').map(r=>JSON.parse(r.payload));
+     assert.ok(grants.some(g=>g.email===operator.email&&g.super===true&&g.scope==='organization'),'earlier administrator retains organization-wide administrative authority');
+     const migrated=after.tables[table].rows.map(JSON.parse).find(r=>r.id===operator.id);assert.deepEqual(migrated,{...operator,role:'member',version:operator.version+1},'legacy role migration also advances the identity version to revoke earlier sessions');row=JSON.stringify(migrated);
+    }
+   }
+   assert.ok(counts.get(row)>0,`an earlier row changed in ${table}`);counts.set(row,counts.get(row)-1)
+  }
  }
  assert.deepEqual(after.objects,before.objects,'every original and its metadata remains unchanged');
 }

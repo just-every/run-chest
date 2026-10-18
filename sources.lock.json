@@ -169,7 +169,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "69dc17c2506582440318bfbb7a2a12edb715153db28deedb204bf752b5292d08",
+      "sha256": "8cbbdf1ce099ab57bef418a19c4b134a196eb86af8d5325f0de8435d2059eb4d",
       "executable": false
     },
     "DEMO.md": {
@@ -201,7 +201,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "f9ceda4c525da9d3bc1774d3239d41cff008f04b349e4d33788fcdc1d62b6adf",
+      "sha256": "372cdbc615926946d7a0c45b3e7b3289e47a059fbcd880a567111e2afbdd014b",
       "executable": false
     },
     "docs/collections.md": {
@@ -229,7 +229,7 @@
       "executable": false
     },
     "docs/independent-backups.md": {
-      "sha256": "eefa2dc9a66cfa6b670b4d866034168127b67883f3e0235a26a320713734c4ff",
+      "sha256": "8a3238169f9252400434c298f9049fd13d488a2b41ed14c511a494f320c2b2d8",
       "executable": false
     },
     "docs/introduction.md": {
@@ -3717,7 +3717,7 @@
       "executable": false
     },
     "tests/chest/upgrade-local.mjs": {
-      "sha256": "42a98d8379f676e715961e69e8bfe0a6f311ed5c51ca72711f4464930c28fec9",
+      "sha256": "24ee1933c143ff1663d25b451b83576f54870fa510846253f8bd066771f76894",
       "executable": false
     },
     "tests/chest/upgrade-runtime-entry.mjs": {
@@ -3729,7 +3729,7 @@
       "executable": false
     },
     "tests/chest/upgrade.mjs": {
-      "sha256": "62ae76de3899c48130a348adc61e11190cac35d352320113067c654e10ed49c4",
+      "sha256": "d79e89ff9659721037224405bd9cef9d1ca4d202cfd6f53c1031544b18b7253a",
       "executable": false
     },
     "tsconfig.json": {

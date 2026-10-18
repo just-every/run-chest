@@ -21,7 +21,7 @@ try {
  server=await serve(root,port,env,true);console.log('Prior-release application is serving.');
  const key=(await readFile(join(root,'.rer/local/dev-key.env'),'utf8')).trim().split('=')[1];
  const session=async as=>{const response=await fetch(origin+'/auth/dev/enter?as='+as,{headers:{'x-rer-dev-key':key},redirect:'manual'});assert.equal(response.status,303);return response.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ')};
- const owner=await session('owner');await session('member');await session('admin');
+ const owner=await session('owner');await session('member');const legacyAdmin=await session('admin');
  await fetch(origin+'/setup',{method:'POST',headers:{origin,cookie:owner,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes',redirect:'manual'});
  const api=async(path,body)=>{const r=await fetch(origin+'/api/chest'+path,{method:body===undefined?'GET':'POST',headers:{cookie:owner,...body===undefined?{}:{origin,'content-type':'application/json'}},...body===undefined?{}:{body:JSON.stringify(body)}});assert.equal(r.status,200,`upgrade public door ${path}: ${r.status}`);return r.json()};
  const collection=await api('/collections',{name:'Harbor vendor records'}),schema=await api('/schemas',{name:'Vendor agreement',fields:[{name:'reference',type:'text',required:true}]}),documents=[];
@@ -36,7 +36,7 @@ try {
  await command(root,[process.execPath,currentRer,'install'],env);
  server=await serve(root,port,env);await server.stop();server=null;
  const after=await snapshot(root);preserved(before,after);
- server=await serve(root,port,env);const upgradedOwner=await session('owner');
+ server=await serve(root,port,env);assert.equal((await fetch(origin+'/api/chest/administration',{headers:{cookie:legacyAdmin}})).status,401,'the legacy administrator must sign in afresh after authority migration');const upgradedOwner=await session('owner'),upgradedAdmin=await session('admin');const adminResponse=await fetch(origin+'/api/chest/administration',{headers:{cookie:upgradedAdmin}});assert.equal(adminResponse.status,200,'the migrated administrator still opens delegated administration after fresh sign-in');
  // Browser process keeps the real HOME; only installer children use the private installer home.
  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
  await mkdir('test-results',{recursive:true});
