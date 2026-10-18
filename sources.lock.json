@@ -3669,7 +3669,7 @@
       "executable": false
     },
     "tests/chest/backup-archive.mjs": {
-      "sha256": "72f35ad23cd76d5d2473d49037472a6fde28425607aa495f797dd2f1611600ea",
+      "sha256": "8c31240d0954fd95fdafcb00549bab50138e81bb846db1e6cfc18c4a0766e8b1",
       "executable": false
     },
     "tests/chest/browser-agent-filing.mjs": {
