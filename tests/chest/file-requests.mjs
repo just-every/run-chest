@@ -1,0 +1,71 @@
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {harness} from './harness.mjs';
+const h=await harness(),sha=b=>createHash('sha256').update(b).digest('hex');
+const cookies=r=>r.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ');
+async function visit(path){const r=await h.fetch(path);assert.equal(r.status,200,await r.clone().text());return cookies(r)}
+async function json(path,cookie,body,status=200){const r=await h.fetch(path,{method:body===undefined?'GET':'POST',headers:{accept:'application/json',...(body===undefined?{}:{origin:h.origin,'content-type':'application/json'}),cookie},...(body===undefined?{}:{body:JSON.stringify(body)})});assert.equal(r.status,status,await r.clone().text());return r.json()}
+const post=(path,cookie,data)=>h.fetch(path,{method:'POST',headers:{origin:h.origin,cookie,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams(data).toString()});
+try {
+ await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});
+ const owner=await h.signIn(h.vars.OWNER_EMAIL),space=(await h.api('/files',owner)).personal,folder=await h.api('/items',owner,{space,type:'folder',name:'Vendor originals'});
+ await h.api('/items',owner,{parent:folder.id,name:'Private internal notes.txt',base64:Buffer.from('Not available to request visitors.').toString('base64')});
+ const made=await h.api(`/items/${folder.id}/file-requests`,owner,{title:'Vendor delivery',checklist:'Signed agreement\nArtwork',types:'pdf, bin',verification:'email',allowReplacement:true,duplicates:'quarantine',maxMegabytes:40}),path=new URL(made.url).pathname;
+ const sender=await visit(path);
+ assert.match(await(await h.fetch(path,{headers:{cookie:sender}})).text(),/Verify your email/);
+ await json(path+'/uploads',sender,{name:'agreement.pdf',size:20},403);
+ assert.equal((await post(path+'/verify',sender,{email:'vendor@acme.test'})).status,200);
+ const mail=h.mails.at(-1),verify=new URL(mail.text.match(/https?:\/\/[^\s]+/)[0]);
+ const stranger=await visit(path);
+ assert.equal((await post(path+'/confirm',stranger,{token:verify.searchParams.get('token')})).status,403,'challenge belongs to the initiating browser');
+ assert.equal((await post(path+'/confirm',sender,{token:verify.searchParams.get('token')})).status,303);
+ assert.equal((await post(path+'/confirm',sender,{token:verify.searchParams.get('token')})).status,403,'verification is single use');
+ const page=await(await h.fetch(path,{headers:{cookie:sender}})).text();assert.match(page,/Signed agreement/);assert.doesNotMatch(page,/Private internal notes|Vendor originals/);
+ const original=Buffer.alloc(17*1024*1024,65);original.write('%PDF-1.7\nVendor original\n');
+ let upload=await json(path+'/uploads',sender,{name:'Signed agreement.pdf',size:original.length,lastModified:123,checksum:sha(original),checklist:'Signed agreement',email:'forged@other.test'});
+ async function sendPart(base,cookie,u,n,bytes,status=200){const r=await h.fetch(`${base}/uploads/${u.id}?part=${n}`,{method:'POST',headers:{origin:h.origin,accept:'application/json',cookie,'content-type':'application/octet-stream'},body:bytes});assert.equal(r.status,status,await r.clone().text());return r.json()}
+ await sendPart(path,sender,upload,1,original.subarray(0,upload.partSize));
+ assert.match(await(await h.fetch(path,{headers:{cookie:sender}})).text(),/Unfinished uploads/);
+ await h.stop();await h.start();
+ const resumed=await json(path+'/uploads',sender,{name:'Signed agreement.pdf',size:original.length,lastModified:123,checksum:sha(original),checklist:'Signed agreement',email:'forged@other.test'});
+ assert.equal(resumed.id,upload.id);assert.ok(resumed.received>0,'restart resumes persisted parts');assert.deepEqual(resumed.parts,[1]);
+ await json(`${path}/uploads/${upload.id}`,stranger,undefined,403);
+ for(let n=2;n<=Math.ceil(original.length/upload.partSize);n++)await sendPart(path,sender,upload,n,original.subarray((n-1)*upload.partSize,Math.min(n*upload.partSize,original.length)));
+ const receipt=await json(`${path}/uploads/${upload.id}`,sender,{});assert.equal(receipt.status,'accepted');assert.equal(receipt.files[0].checksum,sha(original));assert.equal(receipt.verified,true);
+ assert.equal((await json(`${path}/uploads/${upload.id}`,sender,{})).id,receipt.id,'completion is idempotent');
+ const receiptPath=`${path}/receipt/${receipt.id}`;assert.equal((await h.fetch(receiptPath,{headers:{cookie:stranger}})).status,404);
+ assert.match(await(await h.fetch(receiptPath,{headers:{cookie:sender}})).text(),new RegExp(sha(original)));
+ let files=(await h.api(`/items/${folder.id}`,owner)).children,arrived=files.find(i=>i.name==='Signed agreement.pdf');
+ let detail=await h.api(`/items/${arrived.id}`,owner);assert.equal(detail.versions[0].actor,'vendor@acme.test via file request');
+ const downloaded=await h.fetch(`/api/chest/items/${arrived.id}/bytes/${detail.item.current}?download=true`,{headers:{cookie:owner}});assert.equal(sha(Buffer.from(await downloaded.arrayBuffer())),sha(original));
+ assert.equal((await h.fetch(`/api/chest/items/${arrived.id}`)).status,401,'request identity grants no library access');
+ async function small(base,cookie,filename,bytes,extra={},status=200){let u=await json(base+'/uploads',cookie,{name:filename,size:bytes.length,...extra});await sendPart(base,cookie,u,1,bytes);return json(`${base}/uploads/${u.id}`,cookie,{},status)}
+ await json(path+'/uploads',sender,{name:'../../outside.pdf',size:20,checklist:'Artwork'},400);
+ await json(path+'/uploads',sender,{name:'outside.pdf',size:20,checklist:'Artwork',parent:'elsewhere'},403);
+ await json(path+'/uploads',sender,{name:'outside.exe',size:20,checklist:'Artwork'},415);
+ await json(path+'/uploads',sender,{name:'outside.pdf',size:20},400);
+ await small(path,sender,'false.pdf',Buffer.from('<html>disallowed spoof</html>'),{checklist:'Artwork'},415);
+ const replacement=await small(path,sender,'Updated agreement.pdf',Buffer.from('%PDF-1.7\nCorrected agreement'),{checklist:'Signed agreement',replace:receipt.id});assert.equal(replacement.status,'accepted');
+ detail=await h.api(`/items/${arrived.id}`,owner);assert.equal(detail.versions.length,2);assert.ok(detail.versions.some(v=>v.checksum===sha(original)),'replacement retains the original version');
+ const held=await small(path,sender,'Copy.pdf',Buffer.from('%PDF-1.7\nCorrected agreement'),{checklist:'Artwork'});assert.equal(held.status,'quarantined');assert.ok(held.reasons.includes('duplicate content'));
+ const pending=(await h.api(`/items/${folder.id}`,owner)).fileRequests.find(r=>r.id===made.request.id).submissions.find(s=>s.id===held.id);assert.equal(pending.status,'quarantined');
+ assert.equal((await h.api(`/items/${folder.id}`,owner)).children.length,2,'quarantine never publishes library items');
+ await h.api(`/file-requests/${made.request.id}/submissions/${held.id}`,owner,{decision:'release'});
+ assert.equal((await h.api(`/items/${folder.id}`,owner)).children.length,3);
+ const unsafe=await small(path,sender,'program.bin',Buffer.from('MZ executable payload'),{checklist:'Artwork'});assert.equal(unsafe.status,'quarantined');
+ await h.api(`/file-requests/${made.request.id}/submissions/${unsafe.id}`,owner,{decision:'release'},403);
+ await h.api(`/file-requests/${made.request.id}/submissions/${unsafe.id}`,owner,{decision:'reject'});
+ const open=await json(path+'/uploads',sender,{name:'Unfinished.pdf',size:20,checklist:'Artwork'});
+ await h.api(`/file-requests/${made.request.id}/close`,owner,{});
+ await sendPart(path,sender,open,1,Buffer.alloc(20),410);
+ assert.equal((await h.fetch(path,{headers:{cookie:sender}})).status,410);
+ assert.equal((await h.fetch(receiptPath,{headers:{cookie:sender}})).status,200,'receipt remains available after closing');
+ const late=await h.api(`/items/${folder.id}/file-requests`,owner,{title:'Late delivery',late:'quarantine'}),latePath=new URL(late.url).pathname,lateSender=await visit(latePath);
+ await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.deadline',?) WHERE id=?",new Date(Date.now()-1000).toISOString(),late.request.id);
+ const lateReceipt=await small(latePath,lateSender,'late.pdf',Buffer.from('%PDF-1.7\nLate original'));assert.equal(lateReceipt.status,'quarantined');assert.ok(lateReceipt.reasons.includes('late submission'));
+ const refused=await h.api(`/items/${folder.id}/file-requests`,owner,{title:'No late files'}),refusedPath=new URL(refused.url).pathname,refusedSender=await visit(refusedPath);
+ await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.deadline',?) WHERE id=?",new Date(Date.now()-1000).toISOString(),refused.request.id);
+ await json(refusedPath+'/uploads',refusedSender,{name:'late.pdf',size:20},410);
+ await h.api(`/items/${arrived.id}/trash`,owner,{});const erased=await h.api(`/items/${arrived.id}/erase`,owner,{});assert.ok(erased.payload.originals.removed.includes(sha(original)),'a receipt retains its checksum without retaining an erased original');
+ console.log('SHARE-002 verified upload-only request: restart/resume, checksum custody, own receipt/replacement, isolation, quarantine review, duplicate/late policies, closure passed');
+} finally {await h.close()}

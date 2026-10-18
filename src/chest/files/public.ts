@@ -1,20 +1,17 @@
 import { runtimeBindings, type Bindings } from '../../auth.server'
-import { metadataView } from './folder-metadata'
-import { fixedTypeFields } from '../ui-fields'
 import { linkedVersion } from './link-versions'
 import { esc } from '../ui-shared'
 import { isOffice } from '../office/service'
 import { serve, digest } from '../blobs'
 import { officePreview } from '../office/codec'
 import { officeDocument } from '../office/service'
-import { ChestError, insist, type Person, type Version } from '../model'
-import { personName } from '../names'
+import { ChestError, insist, type Version } from '../model'
 import { failure } from '../api'
-import { commit, maybe, next } from './repo'
+import { commit, next } from './repo'
 import { passwordMatches, unlockCookie, unlocked } from './capability'
 import { fileThrough, reachable, resolveLink, type Resolved } from './public-links'
-import { resolveRequest, submit } from './file-requests'
-import { closedRequest, linkPage, megabytes, missingRequest, passwordPage, publicPage, receiptPage, refusedLink, requestPage } from './ui-public'
+import { requestResponse } from './request-public'
+import { linkPage, passwordPage, publicPage, refusedLink } from './ui-public'
 // The doors for people without an account: /l/<token> (a link for anyone) and /r/<token> (a file request). Every
 // request resolves the token again; posts must come from this origin.
 import { guestEmail, guestVerification, verifyPage, confirmGuest } from './guest-links'
@@ -36,7 +33,7 @@ export async function publicResponse(request: Request, original: Bindings): Prom
   if (door === 'l' && !sub) return await (request.method === 'POST' ? unlock(env, request, secret) : open(env, request, secret))
   if (door === 'l' && sub === 'p' && key && request.method === 'GET') return await preview(env, request, secret, key)
   if (door === 'l' && sub === 'f' && key && request.method === 'GET') return await download(env, request, secret, key)
-  if (door === 'r' && !sub) return request.method === 'POST' ? upload(env, request, secret) : ask(env, secret)
+  if (door === 'r') return await requestResponse(env, request, secret, sub, key)
   return refusedLink('not_found')
  } catch (e) { const r = failure(e), body = await r.json() as { error: string }; return publicPage('Not accepted', `<p>Chest did not accept that request.</p><p class="mono">${body.error}</p>`, r.status) }
 }
@@ -88,35 +85,4 @@ async function download(env: Bindings, request: Request, secret: string, key: st
   catch (e) { if (!String((e as Error)?.message).includes('CHECK constraint failed')) throw e }
  }
  throw new ChestError('busy_try_again', 503)
-}
-async function ask(env: Bindings, secret: string) {
- const found = await resolveRequest(env, secret); if (!found) return missingRequest(); if (!found.ctx) return closedRequest()
- const metadata=await metadataView(env,found.ctx)
- return requestPage(`/r/${secret}`, { ...found.request.payload, asker: await asker(env, found.request.payload.createdBy) },'',200,metadata.schema?fixedTypeFields(metadata.schema):'')
-}
-async function asker(env: Bindings, email: string) { return personName((await maybe<Person>(env, 'person', email))?.payload.name, email) }
-const plain: Record<string, (r: { types: string[]; maxBytes: number }) => string> = {
- storage_limit_exceeded: () => 'This space has reached its storage limit. Ask the person who sent this request to contact the owner before uploading again.',
- type_not_allowed: r => `That type of file is not accepted here. Accepted: ${r.types.join(', ')}.`,
- file_too_large: r => `A file is larger than this request accepts (${megabytes(r.maxBytes)} each).`,
- file_size: () => 'Files must have content and be at most 8 MB each.',
- text_file_too_large: () => 'Plain-text files must be at most 500 kB.',
- files_required: () => 'Choose between one and ten files.',
- invalid_email: () => 'Enter a valid email address, or leave it empty.',
- invalid_filename: () => 'A file name is not accepted. Rename the file and try again.',
- invalid_name: () => 'Enter a shorter name, or leave it empty.',
-}
-async function upload(env: Bindings, request: Request, secret: string) {
- const found = await resolveRequest(env, secret); if (!found) return missingRequest(); if (!found.ctx) return closedRequest()
- const action = `/r/${secret}`, r = found.request.payload, view = async (error: string, status: number) => requestPage(action, { ...r, asker: await asker(env, r.createdBy) }, error, status)
- if (Number(request.headers.get('content-length') || 0) > 90_000_000) return view(plain.files_required(r), 413)
- const form = await request.formData(), files: { filename: string; bytes: Uint8Array }[] = []
- for (const f of form.getAll('files')) if (typeof f !== 'string' && f.size) files.push({ filename: f.name, bytes: new Uint8Array(await f.arrayBuffer()) })
- const text = (k: string) => { const v = form.get(k); return typeof v === 'string' ? v : '' }
- try { return receiptPage(action, await submit(env, secret, { name: text('name'), email: text('email'), files, filing:Object.fromEntries([...form.entries()].filter(([k,v])=>(k==='schema'||k.startsWith('typed:')) && typeof v==='string')) })) }
- catch (e) {
-  if (e instanceof ChestError && (e.code === 'request_closed' || e.code === 'request_not_found')) return closedRequest()
-  if (e instanceof ChestError && plain[e.code]) return view(plain[e.code](r), e.status === 400 ? 422 : e.status)
-  throw e
- }
 }

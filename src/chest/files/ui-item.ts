@@ -1,3 +1,4 @@
+import { requestFields, requestRows } from './request-panel'
 import { fileActivity } from '../audit/ui'
 import { esc, field, area, select, form, hidden, details, card, icon, stamp } from '../ui-shared'
 import { zones } from './zone'
@@ -84,8 +85,8 @@ function publicLinks(d: any, returnTo: string) {
 }
 // A folder's file requests: anyone with the request link uploads here and sees nothing else.
 function fileRequests(d: any, returnTo: string) {
- const rows = d.fileRequests.filter((r: any) => r.open).map((r: any) => `<li><span class="mono">${esc(r.title)} · ${r.uploads} received${r.deadline ? ` · until ${esc(r.deadline.slice(0, 10))}` : ''}</span>${form(`/file-requests/${r.id}/close`, '', 'Close request', returnTo, inline)}</li>`).join('')
- return card('File request', `<p class="quiet">Ask anyone, with no account, to upload into this folder. They cannot see what is already here.</p>${form(`/items/${d.id}/file-requests`, field('Title (optional)', 'title', '', 'text', false) + area('Message (optional)', 'message', '', false) + field('Accepted types (optional, e.g. pdf, jpg)', 'types', '', 'text', false) + field('Largest file in MB (optional, up to 8)', 'maxMegabytes', '', 'number', false) + field('Deadline (optional)', 'deadline', '', 'date', false) + zoneField, 'Create file request', returnTo, { buttonClass: 'btn btn-outline btn-block' })}${rows ? `<ul class="events">${rows}</ul>` : ''}`, 'side-card')
+ const rows=requestRows(d.fileRequests,returnTo)
+ return card('File request', `<p class="quiet">Ask anyone to send files into this folder. They cannot see its contents. Large files resume in parts; active content stays in quarantine.</p>${form(`/items/${d.id}/file-requests`,requestFields(),'Create file request',returnTo,{buttonClass:'btn btn-outline btn-block'})}${rows?`<ul class="events">${rows}</ul>`:''}`,'side-card')
 }
 export function itemPage(d: any, extra: { people: any[]; groups: any[]; destinations: { id: string; label: string }[] }) {
  const returnTo = `/app/items/${d.id}`, parentHref = d.path.length ? `/app/items/${d.path.at(-1).id}` : d.space.member ? `/app/spaces/${d.space.id}` : '/app/shared'

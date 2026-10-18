@@ -11,6 +11,7 @@ import { setGovernance, reviewVersion } from './governance'
 import { createFile } from '../office/create-service'
 import { listTemplates, publishTemplate, unpublishTemplate } from '../office/create-templates'
 import { creationSettings, saveCreationSettings } from '../office/create-settings'
+import { reviewRequestSubmission } from './request-submissions'
 import { requestLists } from './request-lists'
 import { addVersion, bytes, copy, createItem, itemSettings, move, nameVersion, rename, restoreVersion } from './items'
 import { erase, restore, trash, trashView } from './trash'
@@ -100,6 +101,7 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
  }
  if (get && head === 'links' && !key) return linksView(env, s, w)
  if (post && head === 'public-links' && key && sub === 'revoke') return revokePublicLink(env, s, w, key)
+ if (post && head === 'file-requests' && key && sub === 'submissions' && version) return reviewRequestSubmission(env,s,w,key,version,input)
  if (post && head === 'file-requests' && key && sub === 'close') return closeFileRequest(env, s, w, key)
  if (post && head === 'links' && key === 'open') return openLink(env, s, String(input.token ?? ''))
  if (post && head === 'links' && key) return changeLink(env, s, w, key, input)

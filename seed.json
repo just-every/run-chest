@@ -58,6 +58,12 @@
       "clauses": [
         "AUDIT-001"
       ]
+    },
+    {
+      "id": "upload-only-file-requests",
+      "clauses": [
+        "SHARE-002"
+      ]
     }
   ],
   "nonGoals": [

@@ -57,7 +57,7 @@ export async function erase(env: Bindings, s: Session, w: Who, key: string) {
  await commit(env, s, [...ops, { row: receipt }], { fences, changes: [...ids].map(item => ({ item, space: space.id, kind: 'erase' })), audits: [{ action: 'item.erase', object: key, detail: { outcome: 'erased', receipt: receipt.id, items: ids.size } }], statements: [...ids].map(object => ({ sql: `UPDATE chest_audit SET detail='{"erased":true}' WHERE object_id=? AND action<>'item.erase'`, params: [object] })) })
  const removed: string[] = [], shared: string[] = []
  for (const sum of checksums) {
-  const used = await env.DB.prepare("SELECT 1 FROM chest_records WHERE kind<>'erasure' AND instr(payload,?)>0 LIMIT 1").bind(sum).first()
+  const used = await env.DB.prepare("SELECT 1 FROM chest_records WHERE kind NOT IN ('erasure','request-upload') AND (kind<>'request-submission' OR json_extract(payload,'$.status') IN ('quarantined','rejected')) AND instr(payload,?)>0 LIMIT 1").bind(sum).first()
   if (used) shared.push(sum); else { await env.BLOBS.delete(`sha256/${sum}`); await eraseReading(env, sum); removed.push(sum) }
  }
  const done = next(receipt, { ...receipt.payload, originals: { pending: [], removed, shared }, state: 'complete' })

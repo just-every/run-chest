@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import {mkdtemp,writeFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createHash} from 'node:crypto';
+export async function requestBrowserFlow({browser,origin,cookie,api,width,verifyEmail,screenshotRoot='test-results'}) {
+ const ownerContext=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width,height:1000}}),visitorContext=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width,height:1000}}),directory=await mkdtemp(join(tmpdir(),'chest-request-browser-'));
+ try{
+  await ownerContext.addCookies(cookie.split('; ').map(c=>{const i=c.indexOf('=');return{name:c.slice(0,i),value:c.slice(i+1),url:origin}}));const owner=await ownerContext.newPage(),visitor=await visitorContext.newPage();visitor.on('response',async r=>{if(r.status()>=400&&r.url().includes('/uploads'))console.log('Upload refused',r.status(),await r.text().catch(()=>''))});
+  const personal=(await api('/files')).personal,folder=await api('/items',{space:personal,type:'folder',name:`Acme Supply onboarding ${width} ${Date.now()}`});
+  const fit=async(page,name)=>{if(name==='create'||name==='reviewed')await page.locator('section').filter({has:page.getByRole('heading',{name:'File request',exact:true})}).screenshot({path:`${screenshotRoot}/${width}-requests-${name}-panel.png`});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name} fits ${width}`);await page.screenshot({path:`${screenshotRoot}/${width}-requests-${name}.png`,fullPage:true})};
+  await owner.goto(origin+`/app/items/${folder.id}`);await owner.getByLabel('Title (optional)',{exact:true}).fill('Acme supplier documents');await owner.getByLabel('Requested files (one checklist item per line, optional)').fill('Signed agreement\nArtwork');await owner.getByLabel('Largest file in MB (optional, up to 4294)').fill('40');await owner.getByLabel('Allow own submission replacement').selectOption('true');await owner.getByLabel('Duplicate content').selectOption('quarantine');
+  if(verifyEmail)await owner.getByLabel('Submitter verification').selectOption('email');await fit(owner,'create');
+  await owner.getByRole('button',{name:'Create file request',exact:true}).click();await owner.getByRole('heading',{name:'File request created',exact:true}).waitFor();const url=(await owner.locator('pre.receipt').innerText()).trim();
+  assert.ok(url?.includes('/r/'),'the created request has a copyable link');
+  await visitor.goto(url);if(verifyEmail){await fit(visitor,'verification');await verifyEmail(visitor,url);}
+  await visitor.getByLabel('Your name (optional)',{exact:true}).fill('Taylor Reed');await visitor.getByLabel('This upload supplies').selectOption('Signed agreement');
+  const bytes=Buffer.alloc(17*1024*1024,32);bytes.write('%PDF-1.7\nAcme Supply signed vendor agreement\n');const file=join(directory,'Signed agreement.pdf');await writeFile(file,bytes);await visitor.getByLabel('Files',{exact:true}).setInputFiles(file);
+  let held;const waiting=new Promise(r=>{held=r});let paused;
+  await visitor.route('**/uploads/*?part=2',async route=>{paused=route;held();});
+  await visitor.getByRole('button',{name:'Upload',exact:true}).click();let stageTimer;try{await Promise.race([waiting,new Promise((_,reject)=>{stageTimer=setTimeout(()=>reject(Error('Second upload part not reached')),45000)})])}finally{clearTimeout(stageTimer)};await fit(visitor,'progress');await visitor.getByRole('button',{name:'Pause upload',exact:true}).click();await paused.abort().catch(()=>{});await visitor.unroute('**/uploads/*?part=2');
+  await visitor.reload();await visitor.getByRole('heading',{name:'Unfinished uploads',exact:true}).waitFor();await fit(visitor,'resume');
+  await visitor.getByLabel('This upload supplies').selectOption('Signed agreement');await visitor.getByLabel('Files',{exact:true}).setInputFiles(file);
+  const resumed=visitor.waitForResponse(r=>r.url()===url+'/uploads'&&r.request().method()==='POST');await visitor.getByRole('button',{name:'Upload',exact:true}).click();assert.ok((await (await resumed).json()).received>0,'browser resumed from retained parts');
+  await visitor.waitForURL('**/receipt/*');await visitor.getByRole('heading',{name:'Files received',exact:true}).waitFor();assert.ok((await visitor.locator('body').innerText()).includes(createHash('sha256').update(bytes).digest('hex')));await fit(visitor,'received');
+  const receipt=new URL(visitor.url()).pathname.split('/').at(-1);await visitor.getByRole('link',{name:'Replace this submission or send more files'}).click();await visitor.getByLabel('This upload supplies').selectOption('Signed agreement');await visitor.getByLabel('Submission').selectOption(receipt);await visitor.getByLabel('Files',{exact:true}).setInputFiles({name:'Corrected agreement.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.7\nCorrected delivery address')});await visitor.getByRole('button',{name:'Upload',exact:true}).click();await visitor.waitForURL('**/receipt/*');await fit(visitor,'replacement');
+  await visitor.getByRole('link',{name:'Replace this submission or send more files'}).click();await visitor.getByLabel('This upload supplies').selectOption('Artwork');await visitor.getByLabel('Files',{exact:true}).setInputFiles({name:'Duplicate artwork.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.7\nCorrected delivery address')});await visitor.getByRole('button',{name:'Upload',exact:true}).click();await visitor.waitForURL('**/receipt/*');await visitor.getByRole('heading',{name:'Files held for review',exact:true}).waitFor();await fit(visitor,'quarantined');
+  await owner.goto(origin+`/app/items/${folder.id}`);await owner.getByRole('button',{name:'Release into folder',exact:true}).click();await owner.getByText('accepted',{exact:false}).first().waitFor();await fit(owner,'reviewed');
+  const item=(await api(`/items/${folder.id}`)).children.find(r=>r.name==='Signed agreement.pdf');assert.equal((await api(`/items/${item.id}`)).versions.length,2);
+  await owner.getByRole('button',{name:'Close request',exact:true}).click();await visitor.goto(url);await visitor.getByRole('heading',{name:'File request closed',exact:true}).waitFor();await fit(visitor,'closed');
+  console.log(`SHARE-002 browser at ${width} passed`);
+  return {folder:folder.id};
+ }catch(error){for(const [name,context] of [['owner',ownerContext],['visitor',visitorContext]])for(const p of context.pages()){console.log('Request screen failed',name,(await p.locator('[data-request-progress]').allTextContents()));await p.screenshot({path:`${screenshotRoot}/${width}-requests-failed-${name}.png`,fullPage:true}).catch(()=>{})}throw error}finally{await ownerContext.close();await visitorContext.close();await rm(directory,{recursive:true,force:true})}
+}
