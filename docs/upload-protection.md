@@ -1,0 +1,11 @@
+# Review a suspect upload
+
+In Files, open **Upload protection**. A replacement whose content becomes much more random, loses a PDF/Office/image signature, or uses a recognized ransom-note filename is held before it can replace the current original. The source browser session or device pauses. New uploads from that source are held too, up to 500 distinct originals per incident; further attempts require review. Other sessions and devices continue independently.
+
+The page records the account, device where present, first detection, affected items, reasons, immutable held-byte SHA-256 and each decision. A user sees their incidents; administrators need current sharing/security scope for that user. Administrators receive an alert without gaining file access. The uploader and scoped administrators receive an in-app notice and an email through the installation's configured provider, with the provider outcome recorded.
+
+**Keep originals** retains the pre-incident current versions and the suspect bytes in quarantine. **Release held replacements** requires current edit access, creates attributed immutable versions and follows folder review requirements. An intervening version is retained as current and the candidate stays quarantined as a conflict. New-file candidates remain quarantined for a deliberate new upload. **Resume this upload source** becomes available after all held changes are decided. A release alone never resumes the device.
+
+Held bytes have no preview or download route. Original downloads by the affected source in the affected folders are paused. A server restart preserves the incident, originals and decisions. The protection predicate is checked atomically with ordinary version publication, so an overlapping pause cannot silently publish a replacement.
+
+This is the delivered server/browser portion of SECURITY-003. It does not provide native pre-upload detection, mass rename/burst detection, a client tray, complete quarantine history in ordinary version lists, or the 500-file signed-client incident exercise. Large resumable originals are sampled without loading their full body for detection; releasing an original above the ordinary in-memory admission limit is not yet supported. The full clause remains partial.

@@ -119,3 +119,7 @@ worked at both widths; old session/device authority and queued notices did not
 revive. A partial upgrade schema was refused before target writes, and recovery
 worked after returning to the prior schema. The genuine v0.1.0 upgrade journey
 preserved its records and originals. RECOVER-002 is done.
+
+## Additional browser contract delivery
+
+`SECURITY-003` is **partial**: browser/API suspect-upload quarantine, source pause, scoped notifications, keep/release/resume and stale-version protection are implemented in `src/chest/upload-protection/` and exercised by `tests/chest/browser-upload-protection.mjs`. See `docs/upload-protection.md` and the exact remaining scope in CONTRACT.md. This supporting clause does not make any additional homepage claim done.

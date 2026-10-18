@@ -8,6 +8,8 @@
   const problems = {
     name_taken: 'A file with this name is already here. Rename one of them and try again.',
     file_too_large: 'This file is larger than 4 GB, the most Chest takes in one file today.',
+    suspect_upload_held: 'This upload source was paused. Suspect bytes were held before publication. Open Upload protection from Files to review and resume.',
+    incident_downloads_paused: 'Downloads in this affected folder are paused. Open Upload protection from Files.',
     storage_limit_exceeded: 'This space has reached its storage limit. Ask the owner to raise the limit or permanently erase retained files.',
     invalid_size: 'Empty files cannot be uploaded.',
     invalid_name: 'This name cannot be used for a file.',

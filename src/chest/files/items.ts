@@ -1,3 +1,4 @@
+import { protect, guardDownload } from '../upload-protection/guard'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get, recordAccess } from '../store'
@@ -30,6 +31,7 @@ export async function createItem(env: Bindings, s: Session, w: Who, input: any, 
  const p = await place(env, w, input.space, input.parent), parent = folderOf(p), value = name(input.name), at = now()
  unique(await siblings(env, p.space.id, parent), value)
  const type = input.type === 'folder' ? 'folder' : 'file', versions: FileVersion[] = []
+ if (type === 'file') await protect(env,s,{space:p.space.id,parent,name:value},bytes ?? (more.version ? null : fromBase64(input.base64)),more.version)
  if (type === 'file') versions.push(more.version ?? await admit(env, bytes ?? fromBase64(input.base64), value, s.operator.email, arrival, input, input.device ? { device: input.device } : {}))
  const payload: Item = { space: p.space.id, parent, type, name: value, createdBy: s.operator.email, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions: [], current: null }
  const row = fresh<Item>('item', versions[0] ? await versionPublication(env, p, payload, versions[0], input) : payload)
@@ -39,6 +41,7 @@ export async function createItem(env: Bindings, s: Session, w: Who, input: any, 
 }
 export async function addVersion(env: Bindings, s: Session, w: Who, key: string, bytes: Uint8Array | null, input: any, arrival: Arrival = 'upload', more: Admitted = {}) {
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'contribute'); insist(item.payload.type === 'file', 'not_a_file')
+ await protect(env,s,{item,space:item.payload.space,parent:item.payload.parent,name:typeof input.filename==='string'?input.filename:item.payload.name},bytes,more.version)
  const v = more.version ?? await admit(env, bytes!, typeof input.filename === 'string' ? name(input.filename, 'filename') : item.payload.name, s.operator.email, arrival, input, input.device ? { device: input.device } : {})
  const row = next(item, await versionPublication(env, ctx, item.payload, v, input))
  await commit(env, s, [{ row, previous: item }, ...more.ops?.(row) ?? []], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'version' }], audits: [{ action: 'version.upload', object: key, detail: { version: v.id, arrival } }] })
@@ -112,6 +115,7 @@ export async function children(env: Bindings, w: Who, ctx: Ctx, parent: string |
 // preview is limited to extracted text. Access is checked again after reading, before the bytes leave.
 export async function bytes(env: Bindings, s: Session, w: Who, key: string, versionId: string, download: boolean, range?: string | null, action?: string) {
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'view')
+ await guardDownload(env,s,item)
  const v = item.payload.versions.find(v => v.id === versionId); insist(v, 'version_not_found', 404)
  if (download || (!allowed(ctx, 'download') && v.preview !== 'text')) demand(ctx, 'download')
  const response = range ? await ranged(env, v, range) : await serve(env, v as unknown as Version, download)

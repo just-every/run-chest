@@ -1,0 +1,2 @@
+export type HeldChange = { id: string; item: string | null; space: string; parent: string | null; name: string; source: string | null; checksum: string; size: number; at: string; reasons: string[]; state: 'held' | 'released' | 'kept' | 'conflict'; outcome?: string; version?: string }
+export type Incident = { actor: string; source: string; device: string | null; detectedAt: string; paused: boolean; changes: HeldChange[]; resumedAt?: string; resumedBy?: string }
