@@ -52,3 +52,7 @@ Chest owns the reversible arrival-rule planner and executor in `src/chest/filing
 its bounded Office-to-text and ZIP transforms, and the exercising HTTP and browser journeys.
 The command package is pinned to `@runeditrun/rer` 0.2.56; copied Base modules retain
 their separately recorded revisions.
+
+The arrival agent uses explicit inbox/destination grants and the installation reader provider.
+`src/chest/filing/agent-*.ts` owns classification plans, standing execution and current-access
+notices; classification never grants permissions or assigns ownership.

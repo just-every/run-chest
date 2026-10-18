@@ -70,10 +70,15 @@
       "clauses": [
         "RULE-001"
       ]
+    },
+    {
+      "id": "scoped-arrival-agent",
+      "clauses": [
+        "AGENT-001"
+      ]
     }
   ],
   "nonGoals": [
-    "AI jobs (phase two)",
     "Office editing and universal previews",
     "Signed desktop and phone sync clients",
     "Statutory retention and automatic destruction"

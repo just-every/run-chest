@@ -53,7 +53,7 @@ async function arrival(env: Bindings, s: Session, _w: Who, supplied: Row<Item>, 
  const key = `filing-arrival:${item.id}:${item.payload.current}`, known = await maybe<FilingMove>(env, 'filing_move', key)
  if (known) return { item, move: known }
  const rules = (await where<ArrivalRule>(env, 'filing_rule', '$.space', item.payload.space)).filter(r => r.payload.enabled && ruleMatches(r.payload, item.payload, sender)).sort((a, b) => a.payload.createdAt.localeCompare(b.payload.createdAt) || a.id.localeCompare(b.id))
- const rule = rules[0]; if (!rule) return { item, move: null }
+ const rule = rules[0]; if (!rule) { const {automaticArrival}=await import('./agent-arrivals');await automaticArrival(env,item);return {item:await get<Item>(env,'item',item.id),move:null} }
  const evidence = `Version ${item.payload.current}; ${Object.entries(rule.payload.match).map(([k, v]) => `${k}: ${v}`).join('; ')}`
  try {
   const actor = await liveActor(env, rule.payload.createdBy), w = await whoFor(env, rule.payload.createdBy), space = await spaceManager(env, w, item.payload.space)

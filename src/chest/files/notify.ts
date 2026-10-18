@@ -14,6 +14,7 @@ export const MAIL_MANAGED_LINE = 'Not available yet on RER Managed hosting: emai
 function compose(env: Bindings, n: Notice, from: string) {
  const base = env.AUTH_ORIGIN, open = n.item ? `${base}/app/items/${n.item}` : `${base}/app/files`
  if (n.type.startsWith('ownership')) return { subject: n.type === 'ownership.request' ? `${from} offered you ownership` : 'Ownership request updated', text: `${n.message}\n\nOpen the ownership request: ${base}/app/ownership/${n.request}` }
+ if(n.type==='filing')return {subject:'Chest filed a file',text:`${n.message}\n\nReview the evidence and Undo in Chest: ${base}/app/filing`}
  if (n.type === 'link.repair') return { subject: 'Chest link repair', text: `${n.message}\n\nReview the record and request owner-approved Undo: ${base}/app/links` }
  if (n.type === 'share') return { subject: `${from} shared a file with you`, text: `${n.message}\n\nOpen it in Chest: ${open}\nFind everything shared with you: ${base}/app/shared` }
  if (n.type === 'request') return { subject: `${from} asked for access`, text: `${n.message}\n\nApprove or decline: ${base}/app/requests/${n.request}` }

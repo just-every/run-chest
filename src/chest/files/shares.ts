@@ -130,7 +130,14 @@ export async function decide(env: Bindings, s: Session, w: Who, id: string, inpu
  return { id, status: decided.payload.status, grantedRole: granted?.role ?? null }
 }
 export async function pending(env: Bindings, w: Who, item?: string) { return (await list<AccessRequest>(env, 'request')).filter(r => r.payload.status === 'pending' && r.payload.approvers.includes(w.email) && (!item || r.payload.item === item)) }
-export async function notices(env: Bindings, w: Who) { return (await list<Notice>(env, 'notice')).filter(n => n.payload.to === w.email).sort((a, b) => b.payload.at.localeCompare(a.payload.at)).slice(0, 200) }
+export async function notices(env: Bindings, w: Who) {
+ const rows=[]
+ for(const row of (await list<Notice>(env,'notice')).filter(n=>n.payload.to===w.email)){
+  if(row.payload.type!=='filing'){rows.push(row);continue}
+  try{const ctx=await context(env,w,row.payload.item!);demand(ctx,'view');const move=await maybe<any>(env,'filing_move',row.payload.undo??'');rows.push({...row,canUndo:allowed(ctx,'manage')&&move?.payload.status==='filed'&&ctx.chain.at(-1)!.revision===move.payload.movedRevision})}catch{}
+ }
+ return rows.sort((a,b)=>b.payload.at.localeCompare(a.payload.at)).slice(0,200)
+}
 export async function markRead(env: Bindings, s: Session, w: Who) {
  const unread = (await notices(env, w)).filter(n => !n.payload.read)
  if (unread.length) await commit(env, s, unread.map(n => ({ row: next(n, { ...n.payload, read: true }), previous: n })))

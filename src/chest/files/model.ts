@@ -19,7 +19,7 @@ export type Link = { item: string; tokenHash: string; audience: 'organisation'|'
 export type PublicLink = { audience?: 'public'|'guests'|'domain'; guests?: string[]; domain?: string; versionMode?: 'current'|'pinned'|'approved'; version?: string; download?: boolean; custodian?: string; item: string; tokenHash: string; password: { salt: string; hash: string; iterations: number } | null; expires: string | null; limit: number | null; downloads: number; createdBy: string; at: string; revokedAt?: string; revokedBy?: string }
 // An upload-only file request (SHARE-002): anyone with the link adds files to one folder and sees nothing else.
 export type FileRequest = { custodian?: string; folder: string; title: string; message: string; types: string[]; maxBytes: number; deadline: string | null; tokenHash: string; createdBy: string; at: string; uploads: number; closedAt?: string; closedBy?: string }
-export type Notice = { to: string; type: string; item: string|null; request?: string; from: string; message: string; at: string; read: boolean; email: string }
+export type Notice = { to: string; type: string; item: string|null; request?: string; undo?: string; from: string; message: string; at: string; read: boolean; email: string }
 export type AccessRequest = { item: string; requester: string; role: Role; message: string; at: string; expiresAt: string; status: 'pending'|'approved'|'declined'|'expired'; approvers: string[]; decidedBy?: string; decidedAt?: string; grantedRole?: Role }
 export type Prefs = { starred: string[]; shortcuts: string[] }
 export type Expiry = { item: string; principal: string; expires: string; by: string; noticeAt?: string; expiredAt?: string }

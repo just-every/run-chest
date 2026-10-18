@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { harness } from './harness.mjs'
 import { docx } from './office-fixtures.mjs'
 let aiCalls=0
-const h=await harness({edge:async request=>{if(request.url!=='https://api.openai.com/v1/chat/completions')return;const body=await request.json();assert.equal(request.headers.get('authorization'),'Bearer test-only-filing-key');const input=JSON.parse(body.messages[1].content);aiCalls++;return Response.json({choices:[{message:{content:JSON.stringify({destination:input.destinations[0].id,explanation:'Supplier record belongs with vendor tax.',quote:'Acme',confidence:0.94,uncertainty:''})}}]})}}),b64=s=>Buffer.from(s).toString('base64')
+const h=await harness({edge:async request=>{if(request.url!=='https://api.openai.com/v1/chat/completions')return;const body=await request.json();assert.equal(request.headers.get('authorization'),'Bearer test-only-filing-key');const input=JSON.parse(body.messages[1].content);aiCalls++;return Response.json({choices:[{message:{content:JSON.stringify({destination:input.destinations[0].id,explanation:'Supplier record belongs with vendor tax.',quote:'Acme',confidence:0.94,uncertainty:'',taxonomy:['Vendors','Tax'],responsible:'',proposedName:'',tags:[]})}}]})}}),b64=s=>Buffer.from(s).toString('base64')
 try{
  await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Owner'})
  const owner=await h.signIn(h.vars.OWNER_EMAIL)

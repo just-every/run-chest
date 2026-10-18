@@ -9,7 +9,7 @@ import { folderOf, place, siblings, unique } from '../files/items'
 import { live, rank, type Item, type Space } from '../files/model'
 import { commit, fresh, next, type Op } from '../files/repo'
 
-export type FilingMove = { space: string; item: string; version: string | null; name: string; source: string | null; destination: string | null; destinationPath: string; explanation: string; evidence: string; by: string; at: string; status: 'filed' | 'blocked' | 'undone'; reason?: string; movedRevision?: string; rule?: string; ruleRevision?: string; undoneAt?: string; undoFences?: { id: string; kind: string; revision: string }[]; undoPublicLinkCount?: number; undoLinkCount?: number }
+export type FilingMove = { space: string; item: string; version: string | null; name: string; source: string | null; destination: string | null; destinationPath: string; explanation: string; evidence: string; by: string; at: string; status: 'filed' | 'blocked' | 'undone'; reason?: string; movedRevision?: string; rule?: string; ruleRevision?: string; undoneAt?: string; undoFences?: { id: string; kind: string; revision: string }[]; undoPublicLinkCount?: number; undoLinkCount?: number; originalName?: string; originalTags?: string[] }
 export async function spaceManager(env: Bindings, w: Who, key: string) {
  const space = await get<Space>(env, 'space', key)
  insist(start(space.payload, w).manager, 'space_manager_required', 403)
@@ -51,7 +51,7 @@ export function preserveAudience(source: Ctx, destination: Ctx, item: Row<Item>)
  for(const [principal,rights]of after)for(let level=1;level<rights.length;level++)insist(rights[level]<=(before.get(principal)?.[level]??0),'filing_would_broaden_access',409)
  insist(!source.state.noDownload || destination.state.noDownload || item.payload.noDownload, 'filing_would_allow_download', 409)
 }
-export async function moveFile(env: Bindings, s: Session, w: Who, item: Row<Item>, destination: string | null, detail: Omit<FilingMove, 'space'|'item'|'version'|'name'|'source'|'destination'|'destinationPath'|'at'|'status'|'movedRevision'>, key: string, extra: { fences?: Row[]; ops?: Op[]; statements?: { sql: string; params: unknown[] }[] } = {}) {
+export async function moveFile(env: Bindings, s: Session, w: Who, item: Row<Item>, destination: string | null, detail: Omit<FilingMove, 'space'|'item'|'version'|'name'|'source'|'destination'|'destinationPath'|'at'|'status'|'movedRevision'>, key: string, extra: { fences?: Row[]; ops?: Op[]; statements?: { sql: string; params: unknown[] }[];rename?:string;tags?:string[] } = {}) {
  const ctx = await context(env, w, item.id); demand(ctx, 'manage')
  const current = ctx.chain.at(-1)!; insist(current.revision === item.revision, 'filing_stale', 409)
  insist(item.payload.type === 'file' && !item.payload.trash, 'not_a_file')
@@ -62,14 +62,18 @@ export async function moveFile(env: Bindings, s: Session, w: Who, item: Row<Item
  const publicAudience=await preservePublicAudience(env,ctx,dest,item)
  unique(await siblings(env, item.payload.space, destination), item.payload.name, item.id)
  const governed = await prepareFiling(env,dest,{...item.payload,governance:effectiveGovernance(ctx,item.payload)})
- const at = now(), row = next(item, { ...governed, parent: destination, updatedAt: at })
+ const afterName=extra.rename||item.payload.name
+ unique(await siblings(env,item.payload.space,destination),afterName,item.id)
+ const at = now(), row = next(item, { ...governed, name:afterName, tags:[...new Set([...(item.payload.tags??[]),...(extra.tags??[])])], parent: destination, updatedAt: at })
  const destinationPath = [dest.space.payload.name, ...dest.chain.map(r => r.payload.name)].join(' / ')
  const links = [...new Map([...ctx.links, ...dest.links].map(r => [r.id, r])).values()]
  const undoFences = [...new Map([...ctx.fences, ...dest.fences, ...links, ...publicAudience.links].filter(r => r.id !== item.id).map(r => [r.id, { id: r.id, kind: r.kind, revision: r.revision }])).values()]
- const move = fresh<FilingMove>('filing_move', { ...detail, space: item.payload.space, item: item.id, version: item.payload.current, name: item.payload.name, source: item.payload.parent, destination, destinationPath, at, status: 'filed', movedRevision: row.revision, undoFences, undoLinkCount: ctx.links.length, undoPublicLinkCount: publicAudience.count }, key)
- const collision = assertSQL("NOT EXISTS(SELECT 1 FROM chest_records WHERE kind='item' AND id<>? AND json_extract(payload,'$.space')=? AND json_extract(payload,'$.parent') IS ? AND json_extract(payload,'$.trash') IS NULL AND lower(json_extract(payload,'$.name'))=lower(?))", [item.id, item.payload.space, destination, item.payload.name])
+ const move = fresh<FilingMove>('filing_move', { ...detail, space: item.payload.space, item: item.id, version: item.payload.current, name: row.payload.name, originalName:item.payload.name,originalTags:item.payload.tags??[],source: item.payload.parent, destination, destinationPath, at, status: 'filed', movedRevision: row.revision, undoFences, undoLinkCount: ctx.links.length, undoPublicLinkCount: publicAudience.count }, key)
+ const collision = assertSQL("NOT EXISTS(SELECT 1 FROM chest_records WHERE kind='item' AND id<>? AND json_extract(payload,'$.space')=? AND json_extract(payload,'$.parent') IS ? AND json_extract(payload,'$.trash') IS NULL AND lower(json_extract(payload,'$.name'))=lower(?))", [item.id, item.payload.space, destination, row.payload.name])
  const linkSet = assertSQL("(SELECT count(*) FROM chest_records WHERE kind='link')=?", [ctx.links.length])
- await commit(env, s, [{ row, previous: item }, { row: move }, ...(extra.ops ?? [])], { fences: [...ctx.fences, ...dest.fences, ...links, ...publicAudience.links, ...(extra.fences ?? [])], statements: [collision, linkSet, assertSQL("(SELECT count(*) FROM chest_records WHERE kind='public-link')=?",[publicAudience.count]), ...(extra.statements ?? [])], changes: [{ item: item.id, space: item.payload.space, kind: 'move' }], audits: [{ action: 'filing.move', object: item.id, detail: { move: move.id, destination, explanation: detail.explanation, version: item.payload.current, by: detail.by } }] })
+ const {filingNotices,deliverFiling}=await import('./agent-notify'),notifications=await filingNotices(env,s,row,move,destinationPath)
+ await commit(env, s, [{ row, previous: item }, { row: move },...notifications.rows.map(row=>({row})), ...(extra.ops ?? [])], { fences: [...ctx.fences, ...dest.fences, ...links, ...publicAudience.links,...notifications.fences, ...(extra.fences ?? [])], statements: [collision, linkSet, assertSQL("(SELECT count(*) FROM chest_records WHERE kind='public-link')=?",[publicAudience.count]), ...(extra.statements ?? [])], changes: [{ item: item.id, space: item.payload.space, kind: 'move' }], audits: [{ action: 'filing.move', object: item.id, detail: { move: move.id, destination, explanation: detail.explanation, version: item.payload.current, by: detail.by } }] })
+ await deliverFiling(env,s,notifications.rows)
  return { item: row, move }
 }
 export async function undoMove(env: Bindings, s: Session, w: Who, key: string) {
@@ -86,9 +90,9 @@ export async function undoMove(env: Bindings, s: Session, w: Who, key: string) {
   const current = await get(env, previous.kind, previous.id)
   insist(current.revision === previous.revision, 'filing_undo_permissions_changed', 409); fences.push(current)
  }
- unique(await siblings(env, item.payload.space, move.payload.source), item.payload.name, item.id)
- const row = next(item, { ...item.payload, parent: move.payload.source, updatedAt: now() }), undone = next(move, { ...move.payload, status: 'undone' as const, undoneAt: now() })
- const collision = assertSQL("NOT EXISTS(SELECT 1 FROM chest_records WHERE kind='item' AND id<>? AND json_extract(payload,'$.space')=? AND json_extract(payload,'$.parent') IS ? AND json_extract(payload,'$.trash') IS NULL AND lower(json_extract(payload,'$.name'))=lower(?))", [item.id, item.payload.space, move.payload.source, item.payload.name])
+ unique(await siblings(env, item.payload.space, move.payload.source), move.payload.originalName??item.payload.name, item.id)
+ const row = next(item, { ...item.payload, name:move.payload.originalName??item.payload.name,tags:move.payload.originalTags??item.payload.tags, parent: move.payload.source, updatedAt: now() }), undone = next(move, { ...move.payload, status: 'undone' as const, undoneAt: now() })
+ const collision = assertSQL("NOT EXISTS(SELECT 1 FROM chest_records WHERE kind='item' AND id<>? AND json_extract(payload,'$.space')=? AND json_extract(payload,'$.parent') IS ? AND json_extract(payload,'$.trash') IS NULL AND lower(json_extract(payload,'$.name'))=lower(?))", [item.id, item.payload.space, move.payload.source, row.payload.name])
  const linkSet = assertSQL("(SELECT count(*) FROM chest_records WHERE kind='link')=?", [move.payload.undoLinkCount ?? 0])
  await commit(env, s, [{ row, previous: item }, { row: undone, previous: move }], { fences: [...ctx.fences, ...dest.fences, ...fences], statements: [collision, linkSet, assertSQL("(SELECT count(*) FROM chest_records WHERE kind='public-link')=?",[move.payload.undoPublicLinkCount ?? 0])], changes: [{ item: item.id, space: item.payload.space, kind: 'move' }], audits: [{ action: 'filing.undo', object: item.id, detail: { move: key } }] })
  return { item: row, move: undone }
