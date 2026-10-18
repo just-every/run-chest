@@ -3505,7 +3505,7 @@
       "executable": false
     },
     "tests/chest/harness.mjs": {
-      "sha256": "49a43fab8a6bca5a9518862d9f938152c9dd1632ad3d3380ce7b5b0eec112879",
+      "sha256": "36661301ac447e61b7c40463b6a9f13089d4646e7d7b43d0be1a7f5b925c20bd",
       "executable": false
     },
     "tests/chest/journey.mjs": {
