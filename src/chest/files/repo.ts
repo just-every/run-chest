@@ -1,3 +1,4 @@
+import { erasurePublication } from '../erasure/publication'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { decode, sessionPredicate, snapshot } from '../store'
@@ -12,7 +13,7 @@ export type Change = { item: string; space: string; kind: string }
 export type Audit = { action: string; object: string; detail?: Record<string, unknown> }
 // A cloned session scopes a receipt to one mutation. The receipt and the mutation share the same
 // SQL transaction; an uncertain response can therefore be resolved by reading the receipt.
-type Attachment = { ops: (mutation: Op[]) => Op[]; fences?: Row[]; audits?: Audit[] }
+type Attachment = { accept?: (ops:Op[]) => boolean; ops: (mutation: Op[]) => Op[]; fences?: Row[]; audits?: Audit[] }
 const attachments = new WeakMap<Session, Attachment>()
 export function withCommitAttachment(session: Session, attachment: Attachment): Session {
  const scoped = { ...session }; attachments.set(scoped, attachment); return scoped
@@ -23,7 +24,7 @@ export const spaceItems = (env: Bindings, space: string) => where<Item>(env, 'it
 // Without a session (a public link or file request) `by` names the audit actor.
 export async function commit(env: Bindings, actor: Session | null, ops: Op[], { fences = [], changes = [], audits = [], statements = [], by = 'chest:system' }: { fences?: Row[]; changes?: Change[]; audits?: Audit[]; statements?: { sql: string; params: unknown[] }[]; by?: string } = {}) {
  const attachment = actor && attachments.get(actor)
- if (attachment) {
+ if (attachment && (!attachment.accept || attachment.accept(ops))) {
   attachments.delete(actor)
   ops = [...ops, ...attachment.ops(ops)]; fences = [...fences, ...attachment.fences ?? []]; audits = [...audits, ...attachment.audits ?? []]
  }
@@ -35,6 +36,7 @@ export async function commit(env: Bindings, actor: Session | null, ops: Op[], { 
  const quotas = storageGuards(ops)
  try { await env.DB.batch([
   ...predicates.map(p => statement(`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${p.sql}) THEN 1 ELSE 0 END`, p.params)),
+  ...ops.filter(o=>!o.remove).flatMap(o=>erasurePublication(o.row,o.previous)).map(p=>statement(p.sql,p.params)),
   ...quotas.map(p => statement(p.sql, p.params)),
   ...ops.map(o => o.remove ? statement('DELETE FROM chest_records WHERE id=?', [o.row.id]) : o.previous ? statement('UPDATE chest_records SET payload=?,revision=? WHERE id=?', [JSON.stringify(o.row.payload), o.row.revision, o.row.id]) : statement('INSERT INTO chest_records(payload,revision,id,kind) VALUES(?,?,?,?)', [JSON.stringify(o.row.payload), o.row.revision, o.row.id, o.row.kind])),
   ...changes.map(c => statement('INSERT INTO chest_changes(item,space,kind,at) VALUES(?,?,?,?)', [c.item, c.space, c.kind, at])),

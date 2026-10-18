@@ -317,7 +317,7 @@ Current evidence: —.
 
 Current evidence: `src/chest/audit/journal.ts`; `src/chest/audit/history.ts`; `src/chest/audit/privacy.ts`; `src/chest/audit/public.ts`; `src/chest/audit/ui.ts`; `src/chest/store.ts`; `src/chest/files/repo.ts`; `src/chest/files/views.ts`; `src/chest/read/jobs.ts`; `src/chest/files/notify.ts`; `src/mail.server.mjs`; `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs`.
 
-**ERASE-001 — Deliberate erasure separate from trash (partial).** Through an owner erasure workflow remove a populated file and a staff identity, inspect each storage/index/import/backup target and audit anonymization, restart and attempt search/download and restore of an older archive with the later erasure journal. Refuse resurrection; show an unreachable backup or held object as pending rather than complete.
+**ERASE-001 — Deliberate erasure separate from trash (done).** Through an owner erasure workflow remove a populated file and a staff identity, inspect each storage/index/import/backup target and audit anonymization, restart and attempt search/download and restore of an older archive with the later erasure journal. Refuse resurrection; show an unreachable backup or held object as pending rather than complete.
 
 Current evidence: `src/chest/files/trash.ts`; `tests/chest/files.mjs`. Remaining: Manager/owner erasure of trashed files and trees with a receipt, unshared original bytes removed and minimized audit details exists; identity erasure, backups, holds and governed records do not.
 

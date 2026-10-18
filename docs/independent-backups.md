@@ -72,7 +72,7 @@ backup account and encryption key. Download the archive from the independent
 bucket to a private path and run:
 
 ```sh
-rer run backup-archive restore --environment recovery --env-file /private/recovery.env --input /private/archive.chestenc
+rer run backup-archive restore --environment recovery --env-file /private/recovery.env --input /private/archive.chestenc --erasure-journal /private/later-journal.json
 ```
 
 Restore authenticates the entire archive, checks the migration ledger and all
@@ -85,6 +85,68 @@ compare record/version counts and downloaded SHA-256 values, inspect comments
 and mappings, and confirm old sessions, device keys and shared links fail.
 Record the drill outcome in your operating records. An archive check is not a
 full recovery drill.
+
+An old offline archive cannot reveal later erasures. Export the latest private
+JSON journal from the source owner's `/api/chest/erasure/journal` before recovery.
+Restore compares its `source` with the identity inside the archived database and
+requires every supplied entry to exist unchanged in that archive's product
+journal. A later erasure refuses the entire archive before any target writes;
+partial filtering of retained import custody is not claimed. A post-erasure backup
+can be restored with that journal. Early independent backups omitted their source
+state and cannot pass a source-journal check: recover from a newer backup where
+possible. A supplied journal with the wrong or missing source is always refused.
+
+Without a journal, restore refuses unless the owner explicitly substitutes
+`--acknowledge-offline-erasures`, accepting that unknown later erasures may return.
+Journal freshness and provenance are the source owner's responsibility. `verify`
+without a journal checks integrity only; it does not establish erasure safety.
+The historical `hosted-restore` command takes the same two options. For local
+`.rer` / `.chest` recovery use `node scripts/erasure/restore.mjs` as documented in
+[ARCHIVE.md](../ARCHIVE.md).
+
+Register known independent copies under **Administration → Permanent erasure**
+before erasing. A registry entry identifies a location and retention terms; it
+does not authorize the live Worker to access an independent filesystem. Erasure
+receipts keep those targets pending until their removal is reported. Historical
+backup-run keys and unknown/offline copies may require separate follow-up.
+
+For owner-selected local copies, create a private registry file using the exact
+registered IDs and location strings. `held: true` records a known preservation or
+provider retention restriction and prevents deletion:
+
+```json
+{"format":"chest-erasure-backups-1","backups":[{"id":"registered-backup-id","name":"Recovery drive","locator":"/private/old-backup.rer","retention":"Owner controlled"},{"id":"retained-copy-id","name":"Retained copy","locator":"/private/held-backup.rer","retention":"Preservation hold","held":true}]}
+```
+
+Then select only the copies to delete and a new private receipt path:
+
+```sh
+node scripts/erasure/backups.mjs --registry /private/copies.json --backup registered-backup-id --backup retained-copy-id --erasure ERASURE_RECEIPT_ID --receipt /private/backup-deletion.json --yes
+```
+
+The CLI accepts absolute paths to private, owner-held, regular single-link
+`.rer`, `.chest` and `.chestenc` archives. The archive itself cannot be a symlink;
+parent directory aliases are resolved before checking the selected file. It authenticates each
+selected archive before unlinking it, records its original SHA-256 and checks
+that the registered path is absent. Encrypted copies require `CHEST_BACKUP_KEY`
+in the environment. Pending outcomes are durably written before deletion begins.
+Unavailable, unsafe or unverifiable copies remain pending; held copies remain
+held. Exit 0 means all selected locations were verified removed; exit 2 means at
+least one remains pending or held. A crash can leave a pending result even if the
+file was removed: inspect it rather than inferring completion from absence.
+
+The saved receipt contains `targets` with `backup`, `store`, `status`, `detail`,
+`verified`, `locatorSha256` and (for a deleted copy) `sha256`. The source owner may
+report each target to `POST /api/chest/erasure/ERASURE_RECEIPT_ID/backup-result`
+through an authenticated same-origin request. Chest records the submitting owner
+and verifies the registered locator hash. This is an explicit owner attestation
+of local deletion; the Worker cannot independently inspect that filesystem. Do
+not relabel it as independently confirmed provider removal.
+
+Deletion removes the selected filesystem entry. It cannot recall other copies,
+filesystem snapshots, offline drives or provider-retained objects, and does not
+claim secure overwriting of physical media. Those stores keep their own pending
+or held outcomes until the responsible owner/provider confirms their disposition.
 
 Before upgrading, stop writes and make a verified private backup. Keep the old
 Chest revision, its configuration and key privately. Upgrade a copy first. If

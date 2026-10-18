@@ -8,7 +8,7 @@ export const literal = value => value === null ? 'NULL' : typeof value === 'bigi
 const portableAuth = new Set(['oa_operators', 'oa_invitation_cancellations', 'oa_auth_audit']);
 export const excludedTable = name =>
   name.startsWith('oa_') && !portableAuth.has(name) || name.startsWith('oc_') ||
-  name.startsWith('rer_dependency_') || name.startsWith('rer_portability_') && !['rer_portability_journal', 'rer_portability_epochs'].includes(name) ||
+  name.startsWith('rer_dependency_') || name.startsWith('rer_portability_') && !['rer_portability_state', 'rer_portability_journal', 'rer_portability_epochs'].includes(name) ||
   name.startsWith('ik_door_') && !['ik_door_namespaces'].includes(name) ||
   /^(chest_(mfa_(?!policy)|sso_|saml_|scim_tokens$|scim_resources$|device_credentials$|reader$)|rer_mail_)/.test(name);
 const ephemeralKind = /^(device|guest-challenge|guest-session|request-visitor|request-challenge|transfer-session|office-presence|editor-session|reader-config|backup-configuration|upload-part|request-upload-part)$/;
@@ -59,6 +59,7 @@ function sanitizeDatabase(db) {
   for (const t of triggers) db.exec(`DROP TRIGGER ${ident(t.name)}`);
   for (const {name} of tables(db)) {
     if (excludedTable(name)) { db.exec(`DELETE FROM ${ident(name)}`); continue; }
+    if (name === 'rer_portability_state') db.exec('UPDATE rer_portability_state SET import_job=NULL,applying=0');
     for (const row of rows(db, name)) {
       if (name === 'chest_records') {
         const value = sanitizeRecord(row.kind, JSON.parse(row.payload));
@@ -96,6 +97,7 @@ export function inspectDatabase(file) {
     const schema = tables(db);
     for (const {name} of schema) {
       if (excludedTable(name) && db.prepare(`SELECT 1 FROM ${ident(name)} LIMIT 1`).get()) throw new Error('Archive contains installation authority.');
+      if (name === 'rer_portability_state' && db.prepare('SELECT 1 FROM rer_portability_state WHERE import_job IS NOT NULL OR applying<>0 LIMIT 1').get()) throw new Error('Archive contains an active transfer.');
       if (!excludedTable(name)) for (const row of rows(db, name)) {
         if (name === 'chest_records') {
           const payload = JSON.parse(row.payload), sanitized = sanitizeRecord(row.kind, payload);

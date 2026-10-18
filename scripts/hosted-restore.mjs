@@ -8,10 +8,23 @@ import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { args, credentials, names, databaseId, query, wrangler, fail } from './hosted/account.mjs';
 import { r2 } from './hosted/r2.mjs';
+import { DatabaseSync } from 'node:sqlite';
+import { mkdtemp, chmod, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { restoreConsent, ErasureFenceError } from './erasure/journal.mjs';
+import { checkOpenDatabaseJournal } from './erasure/database.mjs';
 
-const usage = 'Usage: rer run hosted-restore --environment NAME --input DIR [--env-file FILE]\nDeploy the environment first (rer deploy --environment NAME --env-file FILE), then restore into it before anyone adds files.';
-const opts = args(process.argv.slice(2), usage);
+const usage = 'Usage: rer run hosted-restore --environment NAME --input DIR [--env-file FILE] [--erasure-journal FILE | --acknowledge-offline-erasures]\nDeploy the environment first (rer deploy --environment NAME --env-file FILE), then restore into it before anyone adds files. Offline archives cannot reveal later erasures; supply the latest source journal or explicitly acknowledge that risk.';
+const argv = process.argv.slice(2), restoreOptions = {}, ordinaryArgs = [];
+for (let i=0;i<argv.length;i++) {
+  if (argv[i] === '--acknowledge-offline-erasures') restoreOptions.acknowledgeOfflineErasures = true;
+  else if (argv[i] === '--erasure-journal') { if (!argv[i+1] || argv[i+1].startsWith('--')) fail(usage); restoreOptions.erasureJournal = argv[++i]; }
+  else ordinaryArgs.push(argv[i]);
+}
+const opts = args(ordinaryArgs, usage);
 if (!opts.input) fail(usage);
+let journal;
+try { journal = await restoreConsent(restoreOptions); } catch (error) { fail(error instanceof ErasureFenceError ? error.message : 'Cannot check erasure consent. Nothing was restored.'); }
 const creds = credentials(opts.envFile), n = names(opts.environment);
 const sha = file => new Promise((resolve, reject) => { const h = createHash('sha256'); createReadStream(file).on('data', d => h.update(d)).on('end', () => resolve(h.digest('hex'))).on('error', reject); });
 let manifest;
@@ -20,7 +33,8 @@ if (manifest.format !== 'chest-hosted-backup-1') fail(`${opts.input} is not a Ch
 
 console.log('Checking the backup');
 const sql = join(opts.input, 'database.sql');
-if (await sha(sql) !== manifest.databaseSha256) fail('database.sql does not match the backup manifest. Nothing was restored.');
+const databaseBytes = readFileSync(sql), dump = databaseBytes.toString('utf8');
+if (createHash('sha256').update(databaseBytes).digest('hex') !== manifest.databaseSha256) fail('database.sql does not match the backup manifest. Nothing was restored.');
 const files = readdirSync(join(opts.input, 'objects'));
 if (files.length !== manifest.objects) fail(`The backup lists ${manifest.objects} file(s) but holds ${files.length}. Nothing was restored.`);
 for (const f of files) if (await sha(join(opts.input, 'objects', f)) !== f) fail(`objects/${f} is damaged. Nothing was restored.`);
@@ -30,6 +44,24 @@ const migrations = (await query(creds, id, 'SELECT name FROM d1_migrations ORDER
 if (JSON.stringify(migrations) !== JSON.stringify(manifest.migrations)) fail(`${n.worker} runs a different Chest version than the backup (database migrations differ). Deploy the same Chest version the backup came from, then restore. Nothing was restored.`);
 const held = (await query(creds, id, 'SELECT COUNT(*) AS n FROM chest_records'))[0].n;
 if (held) fail(`${n.worker} already holds ${held} file or record entries. Restore only into a freshly deployed environment. Nothing was restored.`);
+if (journal) {
+  // Historical hosted backups contain INSERTs without schema. Parse those
+  // INSERTs with SQLite against the matching target schema in private scratch;
+  // never infer the source identity from an environment name or filename.
+  const directory = await mkdtemp(join(tmpdir(), 'chest-hosted-erasure-')); await chmod(directory,0o700);
+  let failure;
+  try {
+    const schema = await query(creds,id,"SELECT sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'");
+    const db = new DatabaseSync(join(directory,'source.sqlite'));
+    try {
+      db.exec('PRAGMA foreign_keys=OFF;');
+      for (const table of schema) db.exec(table.sql);
+      db.exec(dump); checkOpenDatabaseJournal(db,journal);
+    } finally { db.close(); }
+  } catch (error) { failure = error instanceof ErasureFenceError ? error.message : 'Cannot verify the archived source database against the erasure journal. Nothing was restored.'; }
+  finally { await rm(directory,{recursive:true,force:true}); }
+  if (failure) fail(failure);
+}
 
 console.log(`Putting ${files.length} original file(s) back into ${n.bucket}`);
 const bucket = await r2(creds, n.bucket);
@@ -40,7 +72,7 @@ process.stdout.write('\n');
 // Every table is emptied, then filled from the backup, in one file; the migration ledger is kept unless the backup
 // carries it (the versions match, so either way it is the same). The database's triggers guard live changes (the last
 // owner, import custody), so they are set aside for the replacement and recreated from their own SQL in the same file.
-const dump = readFileSync(sql, 'utf8'), has = table => dump.includes(`INSERT INTO "${table}"`) || dump.includes(`INSERT INTO ${table} `);
+const has = table => dump.includes(`INSERT INTO "${table}"`) || dump.includes(`INSERT INTO ${table} `);
 // SQLite checks ON DELETE RESTRICT at once even with deferred keys, so a table is emptied before the tables it references.
 const schema = (await query(creds, id, "SELECT name, sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'")).filter(t => t.name !== 'd1_migrations' || has(t.name));
 const refs = new Map(schema.map(t => [t.name, new Set([...t.sql.matchAll(/REFERENCES\s+["`]?([A-Za-z0-9_]+)/gi)].map(m => m[1]).filter(r => r !== t.name))]));

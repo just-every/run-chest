@@ -49,18 +49,6 @@ export async function erase(env: Bindings, s: Session, w: Who, key: string) {
  const { space, item, state, fences } = await standing(env, w, key)
  if (!(space.payload.kind === 'team' ? state.role === 'manager' : state.role === 'owner')) throw new ChestError(level(state) >= 1 ? 'erase_refused' : 'not_found', level(state) >= 1 ? 403 : 404)
  const rows = await spaceItems(env, space.id), tree: Row<Item>[] = [item], walk = (p: string) => { for (const r of rows) if (r.payload.parent === p) { tree.push(r); walk(r.id) } }; walk(key)
- const ids = new Set(tree.map(r => r.id)), links = (await list<Link>(env, 'link')).filter(l => ids.has(l.payload.item)), expiries = (await list<Expiry>(env, 'expiry')).filter(x => ids.has(x.payload.item)), notes = (await list<{ item: string }>(env, 'comment')).filter(c => ids.has(c.payload.item))
- const checksums = [...new Set(tree.flatMap(r => r.payload.versions.map(v => v.checksum)))]
- const receipt = fresh('erasure', { scope: 'files', space: space.id, items: [...ids], versions: tree.reduce((n, r) => n + r.payload.versions.length, 0), bytes: tree.reduce((n, r) => n + r.payload.versions.reduce((a, v) => a + v.size, 0), 0), by: s.operator.email, at: now(), originals: { pending: checksums, removed: [] as string[], shared: [] as string[] }, state: 'records_erased' })
- const ops: Op[] = [...tree, ...links, ...expiries, ...notes].map(row => ({ row, previous: row, remove: true }))
- // The minimized audit keeps who did what and when; names and other details of erased items are dropped.
- await commit(env, s, [...ops, { row: receipt }], { fences, changes: [...ids].map(item => ({ item, space: space.id, kind: 'erase' })), audits: [{ action: 'item.erase', object: key, detail: { outcome: 'erased', receipt: receipt.id, items: ids.size } }], statements: [...ids].map(object => ({ sql: `UPDATE chest_audit SET detail='{"erased":true}' WHERE object_id=? AND action<>'item.erase'`, params: [object] })) })
- const removed: string[] = [], shared: string[] = []
- for (const sum of checksums) {
-  const used = await env.DB.prepare("SELECT 1 FROM chest_records WHERE kind NOT IN ('erasure','request-upload') AND (kind<>'request-submission' OR json_extract(payload,'$.status') IN ('quarantined','rejected')) AND instr(payload,?)>0 LIMIT 1").bind(sum).first()
-  if (used) shared.push(sum); else { await env.BLOBS.delete(`sha256/${sum}`); await eraseReading(env, sum); removed.push(sum) }
- }
- const done = next(receipt, { ...receipt.payload, originals: { pending: [], removed, shared }, state: 'complete' })
- await commit(env, s, [{ row: done, previous: receipt }], { audits: [{ action: 'erasure.complete', object: receipt.id, detail: { removed: removed.length, shared: shared.length } }] })
- return done
+ const { requestErasure }=await import('../erasure/service')
+ return requestErasure(env,s,{item:key},tree)
 }

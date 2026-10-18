@@ -36,7 +36,7 @@ export async function operation(env: Bindings, s: Session, method: string, path:
  const parts = path.split('/').filter(Boolean), key = parts[1] ?? parts[0]
  const row = await env.DB.prepare('SELECT kind,payload FROM chest_records WHERE id=?').bind(key).first<{ kind: string; payload: string }>()
  const payload = row ? JSON.parse(row.payload) : null
- const version = parts[2] === 'bytes' ? parts[3] : payload?.current ?? payload?.versions?.at(-1)?.id ?? null
+ const version = parts[2] === 'bytes' ? parts[3] : payload?.current ?? (Array.isArray(payload?.versions)?payload.versions.at(-1)?.id:null) ?? null
  return attempt(env, s.operator.email, `${method.toLowerCase()}.${parts[0]}.${parts[2] ?? (parts[1] ? 'open' : 'create')}`, key, { authority: `${s.kind}:${s.operator.role}`, version }, run)
 }
 // Old unfinished work is explicitly uncertain. It stays uncertain after restart and is never changed to success by time.

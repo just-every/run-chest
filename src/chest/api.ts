@@ -1,3 +1,4 @@
+import { erasureExecute } from './erasure/service'
 import { administrationExecute } from './administration/service'
 import { requireAdmin } from './administration/roles'
 import { saveMfaPolicy } from './security/policy'
@@ -49,6 +50,7 @@ async function dispatch(env:Bindings,request:Request,s:Session,method:string,pat
  if(path==='/security/policy'&&method==='POST')return saveMfaPolicy(env,s,input)
  if(path==='/security/reset'&&method==='POST')return resetFactor(env,s,input)
  const parts=path.split('/').filter(Boolean),url=new URL(request.url)
+ const erasure=await erasureExecute(env,s,method,parts,input);if(erasure!==undefined)return erasure
  const administration=await administrationExecute(env,request,s,method,parts,input,url);if(administration!==undefined)return administration
  if(parts[0]==='collection')return collectionExecute(env,request,s,method,parts,input,url)
  if(path==='/organisation/sso') {await requireAdmin(env,s,'service-settings');return method==='POST'?saveSso(env,s,input):ssoView(env)}

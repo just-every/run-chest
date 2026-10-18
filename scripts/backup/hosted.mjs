@@ -8,6 +8,8 @@ import { r2 } from '../hosted/r2.mjs';
 import { archiveKey, sha256 } from './crypto.mjs';
 import { sealArchive, openArchive } from './archive.mjs';
 import { sanitizeExport, inspectDatabase, reconcileOriginals, sameSchema, restorePlan, ident } from './database.mjs';
+import { restoreConsent } from '../erasure/journal.mjs';
+import { checkDatabaseJournal } from '../erasure/database.mjs';
 
 const prefixFor = environment => `chest-independent/${environment}/`;
 const archivePattern = /^\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-\d{3}Z-[a-f0-9-]{36}\.chestenc$/;
@@ -104,8 +106,9 @@ function archiveObject(config, key) {
   if (typeof key !== 'string' || !key.startsWith(prefix) || !archivePattern.test(key.slice(prefix.length))) throw new Error('Choose a backup key listed for this environment.');
   return key;
 }
-export async function recoverBackup(config, edge, { key, input, apply = false } = {}) {
+export async function recoverBackup(config, edge, { key, input, apply = false, erasureJournal, acknowledgeOfflineErasures = false } = {}) {
   if (!!key === !!input) throw new Error('Choose one archive key or private input file.');
+  const journal = apply ? await restoreConsent({ erasureJournal, acknowledgeOfflineErasures }) : erasureJournal ? await restoreConsent({ erasureJournal }) : null;
   return scratch(async directory => {
     const archive = input ? resolve(input) : join(directory,'download.chestenc');
     if (key) await edge.archives.download(archiveObject(config,key),archive);
@@ -113,6 +116,7 @@ export async function recoverBackup(config, edge, { key, input, apply = false } 
     const manifest = await openArchive({ input:archive, directory:extracted, key:config.key });
     if (manifest.authorityPolicy !== 'installation-authority-excluded-v2') throw new Error('Unsupported archive authority policy.');
     const database = inspectDatabase(join(extracted,'database.sqlite')); reconcileOriginals(database,manifest.entries);
+    checkDatabaseJournal(join(extracted,'database.sqlite'), journal);
     if (JSON.stringify(database.migrations) !== JSON.stringify(manifest.migrations)) throw new Error('Archive migration ledger differs from manifest.');
     if (!apply) return { verified:true, at:manifest.at, objects:manifest.entries.length-1, migrations:database.migrations };
     const schema = await edge.query("SELECT name,sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'");

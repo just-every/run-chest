@@ -1,3 +1,4 @@
+import { erasurePublication } from './erasure/publication'
 import type { Bindings } from '../auth.server'
 import type { Session } from '../modules/operator-auth/index.mjs'
 import { id, now, insist, type Row } from './model'
@@ -16,7 +17,7 @@ export async function write(env: Bindings, session: Session, row: Row, action: s
  const guards=predicates.map(p=>statement(`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${p.sql}) THEN 1 ELSE 0 END`,p.params))
  const sql=previous?'UPDATE chest_records SET payload=?,revision=? WHERE id=?':'INSERT INTO chest_records(payload,revision,id,kind) VALUES(?,?,?,?)'
  const params=previous?[JSON.stringify(row.payload),row.revision,row.id]:[JSON.stringify(row.payload),row.revision,row.id,row.kind]
- await env.DB.batch([...guards,statement(sql,params),statement('INSERT INTO chest_audit VALUES(?,?,?,?,?,?)',[id(),await redact(session.operator.email),action,row.id,await redact(JSON.stringify(facts({revision:row.revision,version:(row.payload as any).current ?? (row.payload as any).versions?.at(-1)?.id ?? null},`${session.kind}:${session.operator.role}`))),now()]),statement('DELETE FROM chest_assert')])
+ await env.DB.batch([...guards,...erasurePublication(row,previous).map(p=>statement(p.sql,p.params)),statement(sql,params),statement('INSERT INTO chest_audit VALUES(?,?,?,?,?,?)',[id(),await redact(session.operator.email),action,row.id,await redact(JSON.stringify(facts({revision:row.revision,version:(row.payload as any).current ?? (row.payload as any).versions?.at(-1)?.id ?? null},`${session.kind}:${session.operator.role}`))),now()]),statement('DELETE FROM chest_assert')])
  return row
 }
 export function changed<T>(row:Row<T>,payload:T):Row<T>{return {...row,payload,revision:id()}}

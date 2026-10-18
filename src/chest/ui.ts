@@ -1,3 +1,5 @@
+import { erasurePage } from './erasure/ui'
+import { erasureView } from './erasure/service'
 import { SharingConfirmation } from './files/sharing-policy'
 import { hidden,form } from './ui-shared'
 import { administrationPage,administrationInput } from './administration/ui'
@@ -71,6 +73,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   if(input.path.startsWith('/archive/')||input.action==='sessions')return page(receiptPage(input,result),me,returnTo)
   const location=input.path==='/new-files'&&result?.kind==='item'?`/app/items/${result.id}${/\.(docx|xlsx)$/i.test(result.payload.name)?'?edit=1':''}`:result?.kind==='document'?`/app/documents/${result.id}`:result?.kind==='item'&&input.path==='/items'?`/app/items/${result.id}`:returnTo;return new Response(null,{status:303,headers:{...headers,location:location.startsWith('/app')?location:'/app'}})
  }
+ if(url.pathname==='/app/erasure'){return page(erasurePage(await erasureView(env,s)),me,url.pathname)}
  const administrative=await administrationPage(env,s,url);if(administrative)return page(administrative,me,url.pathname)
  const collecting=await collectionPage(env,request,s,url);if(collecting)return page(collecting,me,url.pathname)
  const filing=await filingPage(env,s,url);if(filing)return page(filing,me,url.pathname)

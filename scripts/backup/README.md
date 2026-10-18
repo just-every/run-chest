@@ -6,7 +6,7 @@ Run with the checkout's Node (22.20+; built-in `node:sqlite`) and installed Wran
 node scripts/backup/cli.mjs backup --environment production --env-file /private/chest-backup.env --retention-days 30
 node scripts/backup/cli.mjs list --environment production --env-file /private/chest-backup.env
 node scripts/backup/cli.mjs verify --environment production --env-file /private/chest-backup.env --key chest-independent/production/KEY.chestenc
-node scripts/backup/cli.mjs restore --environment recovery --env-file /private/recovery.env --input /private/archive.chestenc
+node scripts/backup/cli.mjs restore --environment recovery --env-file /private/recovery.env --input /private/archive.chestenc --erasure-journal /private/later-journal.json
 ```
 
 The private env file needs live `CLOUDFLARE_ACCOUNT_ID` and
@@ -35,13 +35,17 @@ modules do not provision resources or deploy Workers.
 - `listBackups(config, edge)`: newest-first `{key,size,at}` for the environment.
 - `pruneBackups(config, edge, {retentionDays,now?})`: deletes expired backups from
   this environment's exact archive namespace, always retaining the newest one.
-- `recoverBackup(config, edge, {key? ,input?,apply?})`: authenticates every frame,
+- `recoverBackup(config, edge, {key? ,input?,apply?,erasureJournal?,acknowledgeOfflineErasures?})`: authenticates every frame,
   validates manifest paths, lengths, hashes, SQLite integrity, sanitization,
   migration ledger and every referenced original. Default verifies only.
   `apply:true` additionally requires the same schema/migrations and empty product
   tables and R2 bucket before writing originals, verifies their readback, then
   publishes data with target-owned triggers. `input` permits restoring into a
   differently named clean environment. A listed `key` is scoped to its environment.
+  Restore requires a source JSON journal path or explicit offline-erasure
+  acknowledgment. A journal with a mismatched/missing archived source or later
+  entries absent from archived `erasure-journal` records refuses the entire
+  restore before target writes. `verify` without a journal checks integrity only.
 
 The product schedule and status view in `src/chest/backups` integrate with
 `scripts/backup/schedule.mjs`. Scheduling keeps secrets in the host's private
@@ -72,6 +76,10 @@ disabled, outstanding requests/leases are cleared, and pending/running backup
 execution records become interrupted history. Providers, MFA and devices must
 be enrolled anew in the recovery deployment, whose env secrets remain its
 own. Bootstrap/dependency IDs are newly minted during restore.
+Source identity and erasure epoch remain in sanitized `rer_portability_state`;
+its active import job and applying flag are cleared. Older archives which omitted
+that row cannot establish a supplied source journal match. Product erasure
+journal records and native portability fences are retained.
 
 The public CLI supports R2; there is no S3 adapter. The owner console and
 independent schedule runner record outcomes, and the live application sends

@@ -24,6 +24,7 @@ try {
     db.close();
   }
   const db=new DatabaseSync(source), at='2026-10-19T00:00:00.000Z';
+  db.prepare('INSERT INTO rer_portability_state(id,source_identity,epoch,import_job,applying) VALUES(1,?,0,?,1)').run('independent-source','active-transfer-does-not-travel');
   db.prepare('INSERT INTO oa_operators(id,email,display_name,role,status,version,created_at) VALUES(?,?,?,?,?,?,?)').run('owner','owner@example.test','Owner','owner','active',1,1);
   db.prepare('INSERT INTO oa_bootstrap VALUES(1,?,1)').run('old-bootstrap-authority');
   db.prepare("INSERT INTO oa_tokens VALUES('old-token','OLD_MAGIC_HASH','magic','owner',1,NULL,NULL,'/',1,9999999999999,NULL,NULL)").run();
@@ -114,17 +115,24 @@ else process.exit(1);
   const corrupt=join(temp,'corrupt.chestenc'),changed=Buffer.from(encrypted);changed[Math.floor(changed.length/2)]^=1;await writeFile(corrupt,changed);
   const before=await readFile(target),originalTarget=bucketPath('recovery-account','chest-recovery-blobs');
   for(const variant of [changed,encrypted.subarray(0,encrypted.length-20),Buffer.concat([encrypted,Buffer.from('appended')])]) {
-    await writeFile(corrupt,variant);await cli(['restore','--environment','recovery','--input',corrupt],{account:'recovery-account',refuse:true});
+    await writeFile(corrupt,variant);await cli(['restore','--environment','recovery','--input',corrupt,'--acknowledge-offline-erasures'],{account:'recovery-account',refuse:true});
     assert.deepEqual(await readFile(target),before);assert.deepEqual(await readdir(originalTarget),[]);
   }
   // Even an authenticated archive is refused if its semantic graph refers to
   // missing original bytes. Authentication alone does not establish completeness.
   const missing=join(temp,'missing.chestenc'),{entries,...metadata}=manifest;
   await sealArchive({directory:extracted,output:missing,key:archiveKey(key),metadata,paths:['database.sqlite']});
-  await cli(['restore','--environment','recovery','--input',missing],{account:'recovery-account',refuse:true});
+  await cli(['restore','--environment','recovery','--input',missing,'--acknowledge-offline-erasures'],{account:'recovery-account',refuse:true});
   assert.deepEqual(await readFile(target),before);assert.deepEqual(await readdir(originalTarget),[]);
-  assert.equal((await cli(['restore','--environment','recovery','--input',stored],{account:'recovery-account'})).restored,true);
+  const laterJournal=join(temp,'later-source-journal.json');
+  for(const source of ['independent-source','unrelated-source']) {
+    await writeFile(laterJournal,JSON.stringify({format:'chest-erasure-journal-1',source,entries:[{id:'later-erasure',at,items:['item'],documents:[],identities:[],checksums:[hash]}]}),{mode:0o600});
+    await cli(['restore','--environment','recovery','--input',stored,'--erasure-journal',laterJournal],{account:'recovery-account',refuse:true});
+    assert.deepEqual(await readFile(target),before);assert.deepEqual(await readdir(originalTarget),[]);
+  }
+  assert.equal((await cli(['restore','--environment','recovery','--input',stored,'--acknowledge-offline-erasures'],{account:'recovery-account'})).restored,true);
   const restored=new DatabaseSync(target);
+  assert.deepEqual({...restored.prepare('SELECT source_identity,import_job,applying FROM rer_portability_state WHERE id=1').get()},{source_identity:'independent-source',import_job:null,applying:0});
   for(const [id,kind,payload] of records.filter(r=>['item','space','comment','mapping','future'].includes(r[0])))assert.deepEqual(JSON.parse(restored.prepare('SELECT payload FROM chest_records WHERE id=?').get(id).payload),payload);
   assert.equal(restored.prepare('SELECT COUNT(*) AS n FROM oa_sessions').get().n,0);
   assert.equal(restored.prepare('SELECT COUNT(*) AS n FROM chest_device_credentials').get().n,0);
@@ -134,7 +142,7 @@ else process.exit(1);
   assert.equal(record('schedule').enabled,false);assert.equal(record('schedule').requestedAt,null);assert.equal(record('backup-execution').state,'interrupted');assert.ok(record('backup-execution').notifiedAt);assert.equal(record('filing-authority').enabled,false);assert.equal(record('link-authority').automatic,false);assert.ok(record('expired-job').expiredAt);assert.equal(record('unfinished').state,'interrupted');
   assert.notEqual(restored.prepare('SELECT claim_id FROM oa_bootstrap').get().claim_id,'old-bootstrap-authority');restored.close();
   assert.deepEqual(await readFile(join(originalTarget,'sha256',hash)),bytes);
-  const after=await readFile(target);await cli(['restore','--environment','recovery','--input',stored],{account:'recovery-account',refuse:true});assert.deepEqual(await readFile(target),after);
+  const after=await readFile(target);await cli(['restore','--environment','recovery','--input',stored,'--acknowledge-offline-erasures'],{account:'recovery-account',refuse:true});assert.deepEqual(await readFile(target),after);
   // Retention touches only the exact archive namespace and preserves newest.
   const oldKey=receipt.key.replace(/\/\d{4}-\d\d-\d\dT/,'/2000-01-01T');await copyFile(stored,join(bucketPath('owner-account','owner-backups'),oldKey));
   assert.equal((await cli(['prune','--environment','production','--retention-days','1'])).length,1);assert.equal((await stat(stored)).size,receipt.bytes);
