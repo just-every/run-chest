@@ -9,7 +9,7 @@ const row = (title: string, href: string, facts: string, actions = '', extra = '
 // A link for anyone in words, its dates on the viewer's clock: "Expires 30 Nov 2026, 10:00 GMT+10 · 3 of 10 downloads".
 export function linkFacts(l: any) {
  const when = l.state === 'revoked' ? `Revoked ${stamp(l.revokedAt)}` : l.state === 'expired' ? `Expired ${stamp(l.expires)}` : l.expires ? `Expires ${stamp(l.expires)}` : 'No expiry'
- return [when, l.limit === null ? `${l.downloads} download${l.downloads === 1 ? '' : 's'}` : `${l.downloads} of ${l.limit} downloads`, ...(l.password ? ['password'] : []), ...(l.unavailable?['item removed']:[]), ...(l.policyBlocked?['blocked by link policy']:[]), ...(l.versionMode==='pinned'?['pinned version']:[]), ...(l.download===false?['preview only']:[])].join(' · ')
+ return [when, l.limit === null ? `${l.downloads} download${l.downloads === 1 ? '' : 's'}` : `${l.downloads} of ${l.limit} downloads`, ...(l.password ? ['password'] : []), ...(l.unavailable?['item removed']:[]), ...(l.policyBlocked?['blocked by link policy']:[]), ...(l.versionMode==='pinned'?['pinned version']:l.versionMode==='approved'?['approved versions only']:[]), ...(l.download===false?['preview only']:[])].join(' · ')
 }
 const list = (rows: string[], none: string) => rows.length ? `<ul class="rows rows-wide">${rows.join('')}</ul>` : `<p class="quiet">${esc(none)}</p>`
 export function linksPage(d: any) {

@@ -54,6 +54,7 @@ export function linkSummary(l: PublicLink) {
  parts.push(l.limit === null ? `${l.downloads} download${l.downloads === 1 ? '' : 's'}` : `${l.downloads} of ${l.limit} downloads`)
  if (l.password) parts.push('password')
  if(l.versionMode === 'pinned')parts.push('pinned version')
+ if(l.versionMode === 'approved')parts.push('approved versions only')
  if(l.download === false)parts.push('preview only')
  return parts.join(' · ')
 }

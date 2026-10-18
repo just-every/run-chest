@@ -65,7 +65,7 @@ try{
 
  await check('SHARE-001 rejects unsupported and foreign version choices',async()=>{
   await link(file.id,{versionMode:'pinned',version:a},'viewer',403);
-  await link(file.id,{versionMode:'approved'},'editor',400);
+  assert.equal((await link(file.id,{versionMode:'approved'},'editor',400)).error,'approved_versions_unavailable');
   await link(file.id,{versionMode:'unknown'},'editor',400);
   await link(file.id,{versionMode:'pinned'},'editor',400);
   await link(file.id,{versionMode:'current',version:a},'editor',400);
@@ -76,6 +76,42 @@ try{
   const listed=(await h.api(`/items/${file.id}`,people.editor)).publicLinks;
   assert.deepEqual(listed.map(l=>l.id).sort(),[pinned.link.id,current.link.id,legacy.link.id].sort());
   assert.equal(listed.find(l=>l.id===pinned.link.id).version,a);
+ });
+
+ await check('SHARE-001 approved-only links follow exact approvals and hide pending replacements',async()=>{
+  const governed=await h.api('/items',people.editor,{space:space.id,type:'folder',name:'Approved deliveries'});
+  await h.api(`/items/${governed.id}/governance`,people.owner,{reviewer:'editor@example.test'});
+  const record=await h.api('/items',people.editor,{parent:governed.id,type:'file',name:'approved-terms.docx',base64:b64(original)});
+  const approvedA=record.payload.versions.at(-1).id;
+  assert.equal((await link(record.id,{versionMode:'approved'},'editor',400)).error,'approved_version_unavailable');
+  await link(governed.id,{versionMode:'approved'},'editor',400);
+  await h.api(`/items/${record.id}/versions/${approvedA}/review`,people.editor,{action:'approve'});
+  await link(record.id,{versionMode:'approved',version:approvedA},'editor',400);
+  const approved=await link(record.id,{versionMode:'approved'}),path=base(approved);
+  const exact=await link(record.id,{versionMode:'pinned',version:approvedA});
+  assert.equal(approved.link.versionMode,'approved');
+  assert.equal(approved.link.version,undefined);
+  const pending=await h.api(`/items/${record.id}/versions`,people.editor,{base64:b64(replacement)});
+  const pendingB=pending.payload.versions.at(-1).id;
+  await text(path);
+  await download(`${path}/f/${record.id}`,original);
+  await download(`${path}/f/${record.id}?version=${pendingB}`,original);
+  const before=await text(`${path}/p/${record.id}?version=${pendingB}`);
+  assert.ok(before.includes('Payment within thirty days.')&&!before.includes('Payment within sixty days after delivery.'));
+  // Approving B must not reveal a later C that is still awaiting its own decision.
+  const newerParts=unzipSync(original);
+  newerParts['word/document.xml']=strToU8(strFromU8(newerParts['word/document.xml']).replace('Payment within thirty days.','Payment within ninety days after delivery.'));
+  const pendingC=await h.api(`/items/${record.id}/versions`,people.editor,{base64:b64(zipSync(newerParts))});
+  const c=pendingC.payload.versions.at(-1).id;
+  await h.api(`/items/${record.id}/versions/${pendingB}/review`,people.editor,{action:'approve'});
+  await download(`${path}/f/${record.id}?version=${c}`,replacement);
+  const after=await text(`${path}/p/${record.id}?version=${c}`);
+  assert.ok(after.includes('Payment within sixty days after delivery.')&&!after.includes('Payment within ninety days after delivery.'));
+  await h.api(`/items/${record.id}/versions/${c}/review`,people.editor,{action:'changes',message:'Keep the approved delivery terms.'});
+  await download(`${path}/f/${record.id}`,replacement);
+  await download(`${base(exact)}/f/${record.id}`,original);
+  await h.api(`/public-links/${approved.link.id}/revoke`,people.editor,{});
+  await closed(path,record.id,410);
  });
 
  await check('SHARE-001 version choice preserves current public-link authorization',async()=>{
