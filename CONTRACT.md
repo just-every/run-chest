@@ -818,7 +818,7 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 3 | "shares your team's files" | SHARE-004, SHARE-001, CHEST-10 | partial |
 | 4 | "reads every scan" | SEARCH-001 | partial |
 | 5 | "quietly files what arrives" | AGENT-001, RULE-001, CONNECT-006 | partial |
-| 6 | "100% free, open source" | OPEN-001 | partial |
+| 6 | "100% free, open source" | OPEN-001 | done |
 | 7 | "alternative to Google Drive, Dropbox and Box" | SPACE-001, SYNC-001, SHARE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 | partial |
 | 8 | Collage: contract co-edited by Dana and Luis | EDIT-001 | partial |
 | 9 | Collage: receipt "Uploading 62%" | TRANSFER-001, MOBILE-001 | partial |
@@ -858,7 +858,7 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 39e | "Previews: Documents, video and design files open in the browser." | PREVIEW-001 | partial |
 | 39f | "Activity log: Every view, share and change, recorded." | AUDIT-001, CHEST-13 | done |
 | 40 | "Open source file storage for your whole team." | OPEN-001, SPACE-001 | partial |
-| 41 | "Free and open source, MIT licensed." | OPEN-001 | partial |
+| 41 | "Free and open source, MIT licensed." | OPEN-001 | done |
 
 ## Status
 
@@ -873,8 +873,8 @@ Ownership, new-file creation, folder version review, link version and link-polic
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 23 | 1 | 0 | 24 |
-| Target and push further | 18 | 32 | 22 | 72 |
-| All | 41 | 33 | 22 | 96 |
+| Target and push further | 19 | 31 | 22 | 72 |
+| All | 42 | 32 | 22 | 96 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -946,7 +946,7 @@ Ownership, new-file creation, folder version review, link version and link-polic
 | `OPS-001` | Responsive accessible and observable operation | target | partial | `src/chest/ui-shell.ts`; `src/chest/ui.ts`; `tests/chest/browser-flow.mjs`; `tests/chest/journey.mjs` | Responsive journeys exist, and a hosted install is documented (`docs/hosting.md`) with mail chosen by deploy settings (`scripts/installer/deploy.mjs`) and a real hosted backup and restore (`scripts/hosted-backup.mjs`, `scripts/hosted-restore.mjs`); native/admin expansion and accessibility conformance are unproven. |
 | `SCALE-001` | Stated operating scale and responsiveness | target | missing |  | No delivered product workflow. |
 | `OPS-002` | Availability target, durability of originals and incident status | target | partial | `src/server.ts`; `src/chest/blobs.ts`; `tests/chest/journey.mjs`; `tests/chest/flows.mjs` | A health endpoint and admission checksums exist; external probes, availability measurement, second copies, scrubs and incident notices do not. |
-| `OPEN-001` | Free MIT-licensed source with no seat or feature charges | target | partial | `LICENSE` | The MIT license is at the repository root and nothing in `src/chest` meters seats or features, but no test checks the license and third-party license list in a release or the absence of seat and feature gates at the SCALE-001 user count. |
+| `OPEN-001` | Free MIT-licensed source with no seat or feature charges | target | done | `LICENSE`; `THIRD-PARTY-LICENSES.md`; `scripts/third-party-licenses.mjs`; `tests/chest/open-source.mjs`; `docs/open-source.md` | The real source-release tar contains the MIT license and a generated inventory of every production dependency in the archived lock, including transitive/peer/optional versions with exact distribution integrity and license declarations. The named OPEN-001 journey scans source and exported application code for charge gates, invites 150 staff through the public API, and has the last person upload, share through the browser form, search, download and connect a device without a seat or feature refusal. Existing delivered-feature journeys remain ungated. Under the planning default sent to ct, the unfinished provider-cost view stays ADMIN-002; native client delivery stays in its own clauses. |
 | `OWN-001` | Owner-run installation on a computer, a server or the owner's cloud account | target | partial | `docs/run.md`; `docs/hosting.md`; `scripts/installer/local.mjs`; `scripts/installer/deploy.mjs`; `scripts/hosted-backup.mjs`; `scripts/hosted-restore.mjs`; `deploy.json`; `tests/chest/first-run.mjs` | A fresh-clone `rer dev` on the owner's computer is tested, and deployment to the owner's Cloudflare account is documented (`docs/hosting.md`) with mail chosen by deploy settings (`scripts/installer/deploy.mjs`) and a hosted backup and restore (`rer run hosted-backup` / `hosted-restore`: `scripts/hosted-backup.mjs`, `scripts/hosted-restore.mjs`) that run with rer's own Node after the install.sh install; the restore clears company sign-in sealed by the old deployment so everyone signs in by email (`scripts/hosted-restore.mjs`, `tests/chest/organisation.mjs`); a documented install on the owner's own server, serving staff over HTTPS with the owner's mail and storage, and a tested move between targets do not exist. |
 | `MIGRATE-001` | Reconciled migration and controlled cutover | target | partial | `src/chest/archive.ts`; `src/chest/archive-target.ts`; `tests/chest/flows.mjs` | Reviewed bounded synthetic archive import exists; vendor discovery, complete histories, migrated open review work and delta/cutover do not. |
 | `MIGRATE-002` | Google Drive and Shared Drives migration | target | partial | `src/chest/files/ui-movein.ts`; `public/chest-zip.js`; `public/chest-movein.js`; `tests/chest/browser-files.mjs` | Move in imports Google Takeout Drive zips (several parts, zip64, CRC-checked) into any space or folder with their folder tree through the resumable upload, and a rerun skips what arrived; a direct Drive connection, Shared Drives, permissions, shared links, comments, versions, delta passes and per-file reconciliation do not. |
