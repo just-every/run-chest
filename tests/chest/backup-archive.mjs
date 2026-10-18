@@ -47,6 +47,10 @@ try {
     ['future','new-product-record',{id:'future',comments:['comment'],versions:['v1'],rules:{keep:true}}],
     ['schedule','backup-settings',{enabled:true,everyHours:24,retentionDays:30,bucket:'owner-backups',requestedAt:at,lastClaim:at}],
     ['backup-execution','backup-run',{state:'running',at}],
+    ['filing-authority','filing_scope',{source:'folder',enabled:true}],
+    ['link-authority','link-scope',{item:'item',automatic:true}],
+    ['expired-job','expiry',{item:'item',expires:at}],
+    ['unfinished','upload',{state:'open',multipart:'OLD_MULTIPART_AUTHORITY',key:'old-staging'}],
   ];
   for(const [id,kind,payload] of records) db.prepare('INSERT INTO chest_records VALUES(?,?,?,?)').run(id,kind,JSON.stringify(payload),'revision-'+id);
   db.close();
@@ -104,7 +108,7 @@ else process.exit(1);
   const manifest=await openArchive({input:stored,directory:extracted,key:archiveKey(key)});
   inspectDatabase(join(extracted,'database.sqlite'));
   const sanitized=await readFile(join(extracted,'database.sqlite'));
-  for(const secret of ['OLD_MAGIC_HASH','OLD_SESSION_HASH','OLD_DEVICE_HASH','OLD_READER_SECRET','OLD_SSO_SECRET','OLD_PRIVATE_KEY','OLD_LINK_HASH','OLD_PASSWORD_HASH','OLD_REQUEST_HASH','OLD_TICKET_HASH','OLD_JOB_TOKEN'])assert.ok(!sanitized.includes(Buffer.from(secret)),'Authority bytes are absent, including free pages');
+  for(const secret of ['OLD_MAGIC_HASH','OLD_SESSION_HASH','OLD_DEVICE_HASH','OLD_READER_SECRET','OLD_SSO_SECRET','OLD_PRIVATE_KEY','OLD_LINK_HASH','OLD_PASSWORD_HASH','OLD_REQUEST_HASH','OLD_TICKET_HASH','OLD_JOB_TOKEN','OLD_MULTIPART_AUTHORITY'])assert.ok(!sanitized.includes(Buffer.from(secret)),'Authority bytes are absent, including free pages');
   assert.equal((await cli(['list','--environment','production'])).length,1);
   assert.equal((await cli(['verify','--environment','production','--key',receipt.key])).verified,true);
   const corrupt=join(temp,'corrupt.chestenc'),changed=Buffer.from(encrypted);changed[Math.floor(changed.length/2)]^=1;await writeFile(corrupt,changed);
@@ -127,7 +131,7 @@ else process.exit(1);
   assert.equal(restored.prepare("SELECT COUNT(*) AS n FROM chest_records WHERE kind IN ('device','transfer-session')").get().n,0);
   const record=id=>JSON.parse(restored.prepare('SELECT payload FROM chest_records WHERE id=?').get(id).payload);
   assert.equal(record('link').tokenHash,'');assert.ok(record('link').revokedAt);assert.equal(record('job').state,'cancelled');assert.equal(record('notice').email,'suppressed:restored_archive');assert.equal(record('checklist').sendReminders,false);
-  assert.equal(record('schedule').enabled,false);assert.equal(record('schedule').requestedAt,null);assert.equal(record('backup-execution').state,'interrupted');
+  assert.equal(record('schedule').enabled,false);assert.equal(record('schedule').requestedAt,null);assert.equal(record('backup-execution').state,'interrupted');assert.ok(record('backup-execution').notifiedAt);assert.equal(record('filing-authority').enabled,false);assert.equal(record('link-authority').automatic,false);assert.ok(record('expired-job').expiredAt);assert.equal(record('unfinished').state,'interrupted');
   assert.notEqual(restored.prepare('SELECT claim_id FROM oa_bootstrap').get().claim_id,'old-bootstrap-authority');restored.close();
   assert.deepEqual(await readFile(join(originalTarget,'sha256',hash)),bytes);
   const after=await readFile(target);await cli(['restore','--environment','recovery','--input',stored],{account:'recovery-account',refuse:true});assert.deepEqual(await readFile(target),after);

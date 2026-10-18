@@ -11,7 +11,7 @@ export const excludedTable = name =>
   name.startsWith('rer_dependency_') || name.startsWith('rer_portability_') && !['rer_portability_journal', 'rer_portability_epochs'].includes(name) ||
   name.startsWith('ik_door_') && !['ik_door_namespaces'].includes(name) ||
   /^(chest_(mfa_(?!policy)|sso_|saml_|scim_tokens$|scim_resources$|device_credentials$|reader$)|rer_mail_)/.test(name);
-const ephemeralKind = /^(device|guest-challenge|guest-session|request-visitor|request-challenge|transfer-session|office-presence|editor-session|reader-config|backup-configuration)$/;
+const ephemeralKind = /^(device|guest-challenge|guest-session|request-visitor|request-challenge|transfer-session|office-presence|editor-session|reader-config|backup-configuration|upload-part|request-upload-part)$/;
 const authorityKey = /^(?:token(?:_?hash)?|password|secret|client_?secret|api_?key|key_?sealed|private_?key|access_?token|refresh_?token|authorization|cookie|session(?:_?id)?|session_?fingerprint|credential(?:s)?|binding_?hash|signing_?key)$/i;
 const jobKind = /(?:send|mail|notification|dispatch|delivery)-job$/;
 const inertAt = '1970-01-01T00:00:00.000Z';
@@ -32,7 +32,11 @@ export function sanitizeRecord(kind, payload) {
   if (kind === 'file-request') { value.tokenHash = ''; value.closedAt ??= inertAt; }
   if (kind === 'collection-checklist') value.sendReminders = false;
   if (kind === 'backup-settings') { value.enabled = false; value.requestedAt = null; value.lastClaim = null; }
-  if (kind === 'backup-run' && ['pending','running'].includes(value.state)) value.state = 'interrupted';
+  if (kind === 'backup-run') { if (['pending','running'].includes(value.state)) value.state = 'interrupted'; value.notifiedAt ??= inertAt; }
+  if (['filing_scope','intake'].includes(kind)) value.enabled = false;
+  if (kind === 'link-scope') value.automatic = false;
+  if (kind === 'expiry') { value.noticeAt ??= inertAt; value.expiredAt ??= inertAt; }
+  if (['upload','request-upload'].includes(kind)) { if(value.state==='open')value.state='interrupted'; delete value.multipart; delete value.key; value.expiresAt=inertAt; value.expires=inertAt; }
   if (kind === 'notice' && value.email === 'queued') value.email = 'suppressed:restored_archive';
   if (kind === 'collection-reminder' && value.status === 'queued') value.status = 'suppressed:restored_archive';
   if (jobKind.test(kind)) { value.state = 'cancelled'; value.status = 'cancelled'; value.replay = false; value.restoredInert = true; }

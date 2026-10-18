@@ -609,7 +609,7 @@
       "executable": false
     },
     "scripts/backup/database.mjs": {
-      "sha256": "2634984ba9c82bd051187f91a797062ba103f9bf271a6130935fc5594f1dee59",
+      "sha256": "ccd9ce95cb3fb91ed41aed1d9998c9348a3ad1ceee127f111790a089099976c2",
       "executable": false
     },
     "scripts/backup/hosted.mjs": {
@@ -617,7 +617,7 @@
       "executable": false
     },
     "scripts/backup/README.md": {
-      "sha256": "cd21fd3fd70923e1f4141e4e9d212eec38dbbf35e83ae49f5c9acb497375a6ab",
+      "sha256": "1913a2d397485c4fb1a6742b9ce5319d3c4a7daad671db63d4d99534ab7117ba",
       "executable": false
     },
     "scripts/backup/schedule.mjs": {
@@ -3465,7 +3465,7 @@
       "executable": false
     },
     "tests/chest/backup-archive.mjs": {
-      "sha256": "0907d9321a139f49a79b8f6c13dbdde67fd61dd9911d2a21362ac9d19c83ece4",
+      "sha256": "7e5280b234bc16eceabd9f2f8badbfc5347ee86c38be1128c5dc31c20f622515",
       "executable": false
     },
     "tests/chest/browser-agent-filing.mjs": {

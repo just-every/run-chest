@@ -43,7 +43,8 @@ modules do not provision resources or deploy Workers.
   publishes data with target-owned triggers. `input` permits restoring into a
   differently named clean environment. A listed `key` is scoped to its environment.
 
-Scheduling/admin integration should keep secrets in the host's private
+The product schedule and status view in `src/chest/backups` integrate with
+`scripts/backup/schedule.mjs`. Scheduling keeps secrets in the host's private
 environment. Persist the returned nonsecret receipt as last success; catch a
 failure as a failed run and alert through the currently authorized mail route.
 Call the modules in a single serialized host job, outside the live Worker and its
@@ -72,9 +73,10 @@ execution records become interrupted history. Providers, MFA and devices must
 be enrolled anew in the recovery deployment, whose env secrets remain its
 own. Bootstrap/dependency IDs are newly minted during restore.
 
-Limits requiring integration/evidence: there is no scheduler/admin view or alert
-sender here, no upgrade/rollback automation, no real-provider recovery drill, and
-no S3 adapter. Retention is deletion-based, with no provider object lock. Separate
+The public CLI supports R2; there is no S3 adapter. The owner console and
+independent schedule runner record outcomes, and the live application sends
+failure notices. Full recovery and upgrade drill evidence is tracked in
+CONTRACT.md rather than inferred from an archive verification. Retention is deletion-based, with no provider object lock. Separate
 credentials/bucket do not prove the Cloudflare token's actual scope; enforce and
 audit scopes in owner infrastructure. R2 and D1 have no shared snapshot transaction:
 quiesce writes for a strict point-in-time drill. Missing referenced bytes fail the
