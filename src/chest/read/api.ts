@@ -1,3 +1,4 @@
+import { decideItemField } from './item-fields'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { roles } from '../access'
@@ -29,16 +30,17 @@ export async function readingExecute(env: Bindings, s: Session, method: string, 
   if (post && sub === 'test') return testReader(env, s)
   if (post && sub === 'remove') return removeReader(env, s)
  }
- if (head === 'items' && key && (sub === 'reading' || sub === 'pages')) {
+ if (head === 'items' && key && ['reading','pages','fields'].includes(sub)) {
   const w = await who(env, s), ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'view')
   if (get_ && sub === 'reading') {
    if (url.searchParams.get('work') === '1') await advance(env)
    const v = item.payload.versions.find(v => v.id === (version || item.payload.current)); insist(v, 'version_not_found', 404)
-   return { item: key, version: v.id, reading: summary((await extraction(env, v.checksum))?.payload ?? null, v.mediaType, false) }
+   return { item: key, version: v.id, reading: summary((await extraction(env, v.checksum))?.payload ?? null, v.mediaType, false), versions: await itemReadings(env,key,item.payload,false) }
   }
   if (post && sub === 'reading') {
-   demand(ctx, 'contribute'); const v = item.payload.versions.find(v => v.id === item.payload.current); insist(v, 'version_not_found', 404); await requeue(env, v.checksum); kick(env); return { item: key, state: 'queued' }
+   demand(ctx, 'contribute'); const v = item.payload.versions.find(v => v.id === (version || item.payload.versions.at(-1)?.id)); insist(v, 'version_not_found', 404); await requestReading(env,key,v.id,v.checksum); await requeue(env, v.checksum); kick(env); return { item: key, state: 'queued' }
   }
+  if (post && sub === 'fields' && version) return decideItemField(env,s,w,key,version,input)
   if (get_ && sub === 'pages') {
    const v = item.payload.versions.find(v => v.id === version); insist(v, 'version_not_found', 404)
    if (!allowed(ctx, 'download')) demand(ctx, 'download')
@@ -70,6 +72,12 @@ export async function readingExecute(env: Bindings, s: Session, method: string, 
 export async function documentReadings(env: Bindings, id: string, doc: Document, withText = true) {
  return Promise.all(doc.versions.map(async (v, i) => {
   const reading = (await maybe<Reading>(env, 'reading', readingId(id, v.id)))?.payload ?? null, newest = i === doc.versions.length - 1 && !doc.trash && READABLE.includes(v.mediaType)
-  return { version: v.id, reading: summary((await extraction(env, v.checksum))?.payload ?? null, v.mediaType, withText), fields: reading ? { state: reading.state, problem: reading.problem, model: reading.model, proposals: reading.proposals } : newest ? { state: 'waiting', problem: null, model: null, proposals: [] } : null }
+  return { version: v.id, reading: summary((await extraction(env, v.checksum))?.payload ?? null, v.mediaType, withText), fields: reading ? { state: reading.state, problem: reading.problem, model: reading.model, proposals: reading.proposals, unchanged:reading.unchanged ?? 0 } : newest ? { state: 'waiting', problem: null, model: null, proposals: [] } : null }
  }))
+}
+
+// Item readings retain the same version-bound shape as Library records.
+export async function itemReadings(env: Bindings, id: string, item: import('../files/model').Item, withText = true) {
+ if (!item.filing?.schema) return []
+ return documentReadings(env,id,{...item,schema:item.filing.schema} as unknown as Document,withText)
 }

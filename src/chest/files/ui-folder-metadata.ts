@@ -14,5 +14,5 @@ export function folderMetadataPanel(d: any, people: any[], returnTo: string) {
 // Place in any upload or create form targeting a typed folder; ordinary folders need no fields.
 export function folderFilingInputs(metadata: any, people: any[], actor: string) {
  if (!metadata?.schema) return ''
- return typedFields([metadata.schema], { schema: metadata.schema.id }) + select('Responsible owner', 'owner', people.filter(p => p.payload.status !== 'inactive').map(p => ({ id: p.id, label: `${p.payload.name} · ${p.id}` })), actor)
+ return (metadata.scanIntake ? '<p class="quiet">Scan intake is on: PDFs and photos can arrive with required values empty. Open the uploaded file to confirm its readings before approval.</p>' : '') + typedFields([metadata.schema], { schema: metadata.schema.id }) + select('Responsible owner', 'owner', people.filter(p => p.payload.status !== 'inactive').map(p => ({ id: p.id, label: `${p.payload.name} · ${p.id}` })), actor)
 }

@@ -3,7 +3,7 @@ import { fileActivity } from '../audit/ui'
 import { esc, field, area, select, form, hidden, details, card, icon, stamp } from '../ui-shared'
 import { zones } from './zone'
 import { eventWords } from '../ui-words'
-import { textInside } from '../read/ui'
+import { readFields, textInside } from '../read/ui'
 import { officePanel } from '../office/ui'
 import { linkForm } from './ui-link-form'
 import { ownershipForm } from './ui-ownership'
@@ -95,8 +95,8 @@ export function itemPage(d: any, extra: { people: any[]; groups: any[]; destinat
  const main = d.item.type === 'folder'
   ? (d.can.contribute ? addHere({ parent: d.id }, returnTo, d.uploads, rewindForm({ folder: d.id }, returnTo), d.creation, folderFilingInputs(d.metadata, extra.people, d.me)) : '') + listing(d.children.map((c: any) => ({ ...c, space: d.space })), 'This folder is empty.') + restores(d.rewinds, returnTo)
   : `<div class="doc-actions">${current && d.can.download ? `<a class="btn" href="/api/chest/items/${d.id}/bytes/${current.id}?download=true">Download</a>` : ''}${d.can.contribute ? details('Upload a new version', form(`/items/${d.id}/versions`, field('Replacement file', 'file', '', 'file'), 'Upload new version', returnTo), 'btn btn-outline').replace('<details class="disclosure">', '<details class="disclosure" data-upload-fallback>') : ''}</div>${d.can.contribute ? uploader({ item: d.id }, d.uploads, returnTo) : ''}
-   ${officePanel(d)}${textInside(d.reading, { poll: `/api/chest/items/${d.id}/reading`, page: n => `/api/chest/items/${d.id}/pages/${d.item.current}/${n}`, retry: d.can.contribute ? `/items/${d.id}/reading` : undefined, returnTo, owner: d.ownerRole })}
-   <h2 class="section-title">Version history</h2><div class="versions">${d.versions.map((v: any) => version(v, d, returnTo)).join('')}</div>
+   ${officePanel(d)}${textInside(d.reading, { poll: `/api/chest/items/${d.id}/reading`, page: n => `/api/chest/items/${d.id}/pages/${d.item.current}/${n}`, retry: d.can.contribute ? `/items/${d.id}/reading` : undefined, returnTo, owner: d.ownerRole, showPhoto: !(d.fieldReadings ?? []).some((r: any) => r.version === d.item.current && r.fields?.state === 'done' && r.fields.proposals.some((p: any) => p.box)) })}
+   ${(d.fieldReadings ?? []).slice().reverse().map((r: any) => readFields({id:d.id,fields:d.metadata?.filing?.fields ?? {}},{id:r.version,label:`Version ${d.versions.findIndex((v: any) => v.id === r.version)+1}`},r.reading,r.fields,Object.fromEntries((d.metadata?.schema?.payload.fields ?? []).map((f: any) => [f.name,f.type])),d.can.contribute && r.version === d.versions.at(-1)?.id,d.ownerRole,returnTo,'items')).join('')}<h2 class="section-title">Version history</h2><div class="versions">${d.versions.map((v: any) => version(v, d, returnTo)).join('')}</div>
    ${fileActivity(d.activity,d.id,d.versions)}
    <h2 class="section-title">Comments</h2>${d.comments.length ? `<ol class="events">${d.comments.map((c: any) => `<li><span class="mono">${esc(c.author)} · <span class="nowrap">${stamp(c.at)}</span></span><p>${esc(c.message)}</p></li>`).join('')}</ol>` : '<p class="quiet">No comments yet.</p>'}${d.can.comment ? form(`/items/${d.id}/comments`, area('Comment', 'message', ''), 'Post comment', returnTo, { buttonClass: 'btn btn-outline' }) : ''}`
  const manage = d.can.manage ? details('Move', form(`/items/${d.id}/move`, select('Destination', 'destination', extra.destinations.filter(x => x.id !== `folder:${d.id}`)), 'Move here', returnTo), 'btn btn-outline') + form(`/items/${d.id}/trash`, '', 'Move to trash', parentHref, { className: 'form form-inline', buttonClass: 'btn btn-outline' }) : ''

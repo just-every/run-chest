@@ -1,3 +1,4 @@
+import type { Item } from '../files/model'
 import { attempt } from '../audit/journal'
 import { waitUntil } from 'cloudflare:workers'
 import type { Bindings } from '../../auth.server'
@@ -22,7 +23,7 @@ export type ExtractState = 'queued' | 'reading' | 'done' | 'partial' | 'failed' 
 export type Extraction = { mediaType: string; size: number; state: ExtractState; format?: string; pages: Page[]; text: string; truncatedAt: number | null; model: string | null; problem: string | null; lease: string | null; usage: { input: number; output: number }; createdAt: string; updatedAt: string }
 export type ReadingState = 'waiting' | 'reading' | 'done' | 'failed' | 'not_scan' | 'no_fields' | 'needs_key' | 'unavailable'
 export type Decision = { status: 'accepted' | 'corrected' | 'rejected'; value: unknown; by: string; at: string }
-export type Reading = { document: string; version: string; checksum: string; state: ReadingState; proposals: (Proposal & { decision?: Decision })[]; model: string | null; problem: string | null; lease: string | null; attempts: number; usage: { input: number; output: number }; createdAt: string; updatedAt: string }
+export type Reading = { schema?: string; schemaRevision?: string; unchanged?: number; document: string; version: string; checksum: string; state: ReadingState; proposals: (Proposal & { decision?: Decision })[]; model: string | null; problem: string | null; lease: string | null; attempts: number; usage: { input: number; output: number }; createdAt: string; updatedAt: string }
 // Per file: at most this many scanned pages are read, and this much text is kept (any cut is shown with its offset).
 export const MAX_SCAN_PAGES = 60, MAX_TEXT = 900_000, MAX_FIELD_PAGES = 5, MAX_BYTES = 50_000_000
 const LEASE = 45_000, ATTEMPTS = 3, SEP = '\f'
@@ -43,7 +44,7 @@ async function save<T extends { updatedAt: string }>(env: Bindings, row: Row<T>,
 async function discover(env: Bindings) {
  const at = now(), types = READABLE.map(() => '?').join(',')
  const versions = (await env.DB.prepare(`SELECT DISTINCT json_extract(v.value,'$.checksum') AS checksum, json_extract(v.value,'$.mediaType') AS mediaType, json_extract(v.value,'$.size') AS size FROM chest_records r, json_each(r.payload,'$.versions') v WHERE r.kind IN ('item','document') AND json_extract(v.value,'$.mediaType') IN (${types}) AND NOT EXISTS (SELECT 1 FROM chest_records e WHERE e.id='extract:'||json_extract(v.value,'$.checksum')) LIMIT 25`).bind(...READABLE).all()).results as { checksum: string; mediaType: string; size: number }[]
- const latest = (await env.DB.prepare(`SELECT r.id AS document, json_extract(r.payload,'$.versions[#-1].id') AS version, json_extract(r.payload,'$.versions[#-1].checksum') AS checksum FROM chest_records r WHERE r.kind='document' AND json_extract(r.payload,'$.trash')=0 AND json_extract(r.payload,'$.versions[#-1].mediaType') IN (${types}) AND NOT EXISTS (SELECT 1 FROM chest_records x WHERE x.id='reading:'||r.id||':'||json_extract(r.payload,'$.versions[#-1].id')) LIMIT 25`).bind(...READABLE).all()).results as { document: string; version: string; checksum: string }[]
+ const latest = (await env.DB.prepare(`SELECT r.id AS document, json_extract(r.payload,'$.versions[#-1].id') AS version, json_extract(r.payload,'$.versions[#-1].checksum') AS checksum FROM chest_records r WHERE ((r.kind='document' AND json_extract(r.payload,'$.trash')=0) OR (r.kind='item' AND json_extract(r.payload,'$.trash') IS NULL AND json_extract(r.payload,'$.filing.schema') IS NOT NULL)) AND json_extract(r.payload,'$.versions[#-1].mediaType') IN (${types}) AND NOT EXISTS (SELECT 1 FROM chest_records x WHERE x.id='reading:'||r.id||':'||json_extract(r.payload,'$.versions[#-1].id')) LIMIT 25`).bind(...READABLE).all()).results as { document: string; version: string; checksum: string }[]
  const insert = (key: string, kind: string, payload: unknown) => env.DB.prepare('INSERT INTO chest_records(id,kind,payload,revision) VALUES(?,?,?,?) ON CONFLICT(id) DO NOTHING').bind(key, kind, JSON.stringify(payload), crypto.randomUUID())
  const statements = [
   ...versions.map(v => insert(extractId(v.checksum), 'extract', { mediaType: v.mediaType, size: v.size, state: 'queued', pages: [], text: '', truncatedAt: null, model: null, problem: null, lease: null, usage: { input: 0, output: 0 }, createdAt: at, updatedAt: at } satisfies Extraction)),
@@ -119,9 +120,9 @@ async function readPage(env: Bindings, row: Row<Extraction>, config: ReaderConfi
  return save(env, row, { ...x, pages, text, truncatedAt, model: config.model, state: finished(pages), lease: null })
 }
 async function readDocument(env: Bindings, row: Row<Reading>, config: ReaderConfig | null, blocked: { state: 'needs_key' | 'unavailable'; line: string } | null) {
- const r = row.payload, doc = await maybe<Document>(env, 'document', r.document), extraction = await maybe<Extraction>(env, 'extract', extractId(r.checksum))
- if (!doc || !extraction) return save(env, row, { ...r, state: 'failed', lease: null, problem: 'The record or its reading is no longer here.' })
- const schema = await maybe<Schema>(env, 'schema', doc.payload.schema), wanted = schema?.payload.fields ?? []
+ const r = row.payload, doc = await maybe<Document>(env, 'document', r.document), item = doc ? null : await maybe<Item>(env, 'item', r.document), extraction = await maybe<Extraction>(env, 'extract', extractId(r.checksum))
+ if ((!doc && !item) || !extraction) return save(env, row, { ...r, state: 'failed', lease: null, problem: 'The record or its reading is no longer here.' })
+ const schemaId = doc?.payload.schema ?? item?.payload.filing?.schema, schema = schemaId ? await maybe<Schema>(env, 'schema', schemaId) : null, wanted = schema?.payload.fields ?? []
  if (!wanted.length) return save(env, row, { ...r, state: 'no_fields', lease: null })
  const scanned = extraction.payload.pages.filter(p => p.source !== 'text' && p.state === 'done' && p.image).slice(0, MAX_FIELD_PAGES)
  if (!scanned.length) {
@@ -133,7 +134,11 @@ async function readDocument(env: Bindings, row: Row<Reading>, config: ReaderConf
  for (const p of scanned) { const copy = await env.BLOBS.get(copyKey(r.checksum, p.n)); if (copy) pages.push({ n: p.n, image: { mediaType: p.image!.mediaType as PageImage['mediaType'], bytes: new Uint8Array(await copy.arrayBuffer()), width: p.image!.width, height: p.image!.height } }) }
  try {
   const { proposals, usage } = await attempt(env,'chest:reader','provider.fields',r.document,{authority:'installation reader',provider:config.provider,model:config.model,version:r.version},()=>readFields(config, pages, wanted, schema!.payload.name))
-  return save(env, row, { ...r, state: 'done', proposals, model: config.model, usage: added(r.usage, usage), lease: null, problem: null })
+  const previousRows = (await env.DB.prepare("SELECT payload FROM chest_records WHERE kind='reading' AND json_extract(payload,'$.document')=? AND json_extract(payload,'$.state')='done' ORDER BY json_extract(payload,'$.createdAt') DESC").bind(r.document).all()).results as {payload:string}[]
+  const versions = doc?.payload.versions ?? item!.payload.versions, retained = new Set(versions.slice(0,versions.findIndex(v => v.id === r.version)).map(v => v.id))
+  const earlier = previousRows.map(x => JSON.parse(x.payload) as Reading).filter(x => retained.has(x.version) && x.schema === schema!.id)
+  const changed = proposals.filter((p: Proposal) => !earlier.some(r => r.proposals.some(old => old.field === p.field && old.decision && old.found === p.found && JSON.stringify(old.value) === JSON.stringify(p.value))))
+  return save(env, row, { ...r, schema:schema!.id, schemaRevision:schema!.revision, unchanged:proposals.length-changed.length, state: 'done', proposals:changed, model: config.model, usage: added(r.usage, usage), lease: null, problem: null })
  } catch (e) {
   const message = e instanceof ReaderError ? e.message : 'The AI model gave no usable reading.'
   return save(env, row, { ...r, ...(r.attempts >= ATTEMPTS ? { state: 'failed' } : {}), lease: null, problem: message })

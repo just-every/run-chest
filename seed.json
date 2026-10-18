@@ -88,6 +88,12 @@
       "clauses": [
         "SEARCH-001"
       ]
+    },
+    {
+      "id": "typed-scan-proposals",
+      "clauses": [
+        "SEARCH-002"
+      ]
     }
   ],
   "nonGoals": [

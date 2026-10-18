@@ -15,14 +15,14 @@ export function effectiveGovernance(ctx: Ctx, item: Item): FolderGovernance | un
 
 // Called before every original publication, including restore, copy, editor saves and anonymous arrivals.
 // Definitions and accountable people join the same SQL snapshot fences as current access.
-export async function prepareFiling(env: Bindings, ctx: Ctx, item: Item, input: any = {}, actor = item.createdBy): Promise<Item> {
+export async function prepareFiling(env: Bindings, ctx: Ctx, item: Item, input: any = {}, actor = item.createdBy, allowMissingScanValues = false): Promise<Item> {
  const policy = effectiveGovernance(ctx, item), schemaId = policy?.schema ?? item.filing?.schema
  if (!schemaId || item.type !== 'file') return item
  const schema = await get<Schema>(env, 'schema', schemaId); ctx.fences.push(schema)
  insist(input.schema === undefined || input.schema === schemaId, 'folder_type_required')
  const formFields = Object.keys(input).some(k => k.startsWith(`typed:${schemaId}:`))
  const fields = input.fields !== undefined ? input.fields : formFields ? typedValues(schema, input) : item.filing?.schema === schemaId ? item.filing.fields : {}
- validateFields(schema.payload, fields)
+ validateFields(allowMissingScanValues ? { ...schema.payload, fields: schema.payload.fields.map(f => ({ ...f, required: false })) } : schema.payload, fields)
  const email = input.owner ?? item.filing?.owner ?? actor
  insist(typeof email === 'string', 'invalid_person')
  const person = await get<Person>(env, 'person', email.toLowerCase()); insist(person.payload.status !== 'inactive', 'inactive_person'); ctx.fences.push(person)
@@ -45,5 +45,5 @@ export async function metadataView(env: Bindings, ctx: Ctx) {
  const item = ctx.chain.at(-1)!.payload, policy = effectiveGovernance(ctx, item), schemaId = policy?.schema ?? item.filing?.schema
  const schema = schemaId ? await get<Schema>(env, 'schema', schemaId) : null
  const fields = item.filing?.fields ?? {}
- return { schema, filing: item.filing ?? null, issues: schema && item.type === 'file' ? fieldIssues(schema.payload, fields) : [], types: item.type === 'folder' && allowed(ctx, 'administer') ? await list<Schema>(env, 'schema') : [] }
+ return { scanIntake: policy?.scanIntake ?? false, schema, filing: item.filing ?? null, issues: schema && item.type === 'file' ? fieldIssues(schema.payload, fields) : [], types: item.type === 'folder' && allowed(ctx, 'administer') ? await list<Schema>(env, 'schema') : [] }
 }
