@@ -58,6 +58,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   let result:any
   try{result=await execute(env,request,s,'POST',input.path,input)}catch(error){if(!(error instanceof SharingConfirmation))throw error;const values=[...fields].filter(([k,v])=>typeof v==='string'&&!['path','returnTo','confirmExternal'].includes(k)).map(([k,v])=>hidden(k,String(v))).join('');return page(card('Confirm external sharing',`<p>Your sharing policy requires confirmation before giving access outside the organization.</p><p>Recipients: <strong>${error.recipients.map(esc).join(', ')}</strong></p>${form(input.path,values+hidden('confirmExternal','true'),'Confirm external sharing',returnTo)}<a class="link" href="${esc(returnTo)}">Cancel</a>`),me,returnTo)}
   kick(env,request)
+  if(input.path.startsWith('/bulk')&&result?.id)return new Response(null,{status:303,headers:{...headers,location:`/app/bulk/${result.id}`}})
   if(result?.signInAgain)return new Response(null,{status:303,headers:{...headers,location:'/signin'}})
   if(input.path==='/administration/recovery'&&result?.id)return new Response(null,{status:303,headers:{...headers,location:`/app/administration/recovery/${result.id}`}})
   if(input.path.startsWith('/administration/recovery/')&&result?.id)return new Response(null,{status:303,headers:{...headers,location:`/app/administration/recovery/${result.id}`}})

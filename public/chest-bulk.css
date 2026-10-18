@@ -1,0 +1,5 @@
+.bulk-selection { margin: 20px 0; }
+.bulk-selection fieldset { display: grid; gap: 10px; min-width: 0; padding: 16px; border: 1px solid var(--chest-line); border-radius: var(--chest-radius); }
+.bulk-selection label { display: flex; align-items: center; gap: 10px; overflow-wrap: anywhere; }
+.bulk-selection input { flex-shrink: 0; }
+[data-bulk-job] .events li { min-width: 0; overflow-wrap: anywhere; }

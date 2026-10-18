@@ -10,11 +10,23 @@ import { facts } from '../audit/journal'
 export type Op = { row: Row; previous?: Row; remove?: boolean }
 export type Change = { item: string; space: string; kind: string }
 export type Audit = { action: string; object: string; detail?: Record<string, unknown> }
+// A cloned session scopes a receipt to one mutation. The receipt and the mutation share the same
+// SQL transaction; an uncertain response can therefore be resolved by reading the receipt.
+type Attachment = { ops: (mutation: Op[]) => Op[]; fences?: Row[]; audits?: Audit[] }
+const attachments = new WeakMap<Session, Attachment>()
+export function withCommitAttachment(session: Session, attachment: Attachment): Session {
+ const scoped = { ...session }; attachments.set(scoped, attachment); return scoped
+}
 export async function maybe<T = any>(env: Bindings, kind: string, key: string): Promise<Row<T> | null> { const r = await env.DB.prepare('SELECT * FROM chest_records WHERE id=? AND kind=?').bind(key, kind).first(); return r ? decode<T>(r) : null }
 export async function where<T = any>(env: Bindings, kind: string, path: string, value: string): Promise<Row<T>[]> { return (await env.DB.prepare(`SELECT * FROM chest_records WHERE kind=? AND json_extract(payload,?)=? ORDER BY id`).bind(kind, path, value).all()).results.map(decode<T>) }
 export const spaceItems = (env: Bindings, space: string) => where<Item>(env, 'item', '$.space', space)
 // Without a session (a public link or file request) `by` names the audit actor.
 export async function commit(env: Bindings, actor: Session | null, ops: Op[], { fences = [], changes = [], audits = [], statements = [], by = 'chest:system' }: { fences?: Row[]; changes?: Change[]; audits?: Audit[]; statements?: { sql: string; params: unknown[] }[]; by?: string } = {}) {
+ const attachment = actor && attachments.get(actor)
+ if (attachment) {
+  attachments.delete(actor)
+  ops = [...ops, ...attachment.ops(ops)]; fences = [...fences, ...attachment.fences ?? []]; audits = [...audits, ...attachment.audits ?? []]
+ }
  const statement = (sql: string, params: unknown[] = []) => env.DB.prepare(sql).bind(...params)
  const written = new Set(ops.map(o => o.row.id)), predicates = [...(actor ? [sessionPredicate(actor)] : []), ...fences.filter(f => !written.has(f.id)).map(snapshot), ...ops.map(o => o.previous ? snapshot(o.previous) : { sql: 'NOT EXISTS(SELECT 1 FROM chest_records WHERE id=?)', params: [o.row.id] })]
  const redact=await (await import('../audit/privacy')).identityRedactor(env)

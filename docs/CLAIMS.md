@@ -123,3 +123,5 @@ preserved its records and originals. RECOVER-002 is done.
 ## Additional browser contract delivery
 
 `SECURITY-003` is **partial**: browser/API suspect-upload quarantine, source pause, scoped notifications, keep/release/resume and stale-version protection are implemented in `src/chest/upload-protection/` and exercised by `tests/chest/browser-upload-protection.mjs`. See `docs/upload-protection.md` and the exact remaining scope in CONTRACT.md. This supporting clause does not make any additional homepage claim done.
+
+`BULK-001` is **partial**: browser selections across folders/search, durable per-item move/copy/share/trash/restore jobs and streaming ZIP64 archives are implemented in `src/chest/bulk/`, with `tests/chest/bulk.mjs` and `tests/chest/browser-bulk.mjs` exercising them. See `docs/bulk.md` for the native/guest/large-download gaps. Homepage claim statuses remain unchanged.

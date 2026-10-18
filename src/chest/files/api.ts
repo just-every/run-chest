@@ -1,3 +1,4 @@
+import { bulkExecute } from '../bulk/api'
 import { protectionExecute } from '../upload-protection/service'
 import { removeSuspendedGrant } from './policy-suspensions'
 import { transfersExecute } from '../transfers/service'
@@ -42,6 +43,7 @@ import type { AccessRequest } from './model'
 // posts reach the same functions through execute().
 const roots = new Set(['transfers', 'space-policy', 'space-requests', 'link-repairs', 'new-files', 'templates', 'creation-settings', 'link-policy', 'uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search'])
 export async function filesExecute(env: Bindings, request: Request, s: Session, method: string, parts: string[], input: any, url: URL): Promise<unknown> {
+ const bulk=await bulkExecute(env,request,s,method,parts,input,url);if(bulk!==undefined)return bulk
  if(parts[0]==='upload-protection')return protectionExecute(env,s,method,parts,input)
  if(parts[0]==='sync-repair') { if(method==='GET'&&!parts[1])return repairs(env,s);if(method==='POST'&&parts[1]==='resume')return authorizeResume(env,s,input);insist(false,'not_found',404) }
  if(parts[0]==='transfers')return transfersExecute(env,request,s,method,parts,input)
