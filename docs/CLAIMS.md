@@ -87,3 +87,7 @@ AGENT-004 was selected because browser teams need to finish collecting the right
 approved material, rather than treating an upload or an email acknowledgment as
 completion. It uses existing request, approval and staff identity workflows and
 needs no native client, signing credential or provider developer application.
+
+## Additional delivered contract workflows
+
+AGENT-003 is done: `src/chest/sync-repair/service.ts`, `src/chest/sync-repair/ui.ts`, `scripts/sync-companion/run.mjs`, `tests/chest/browser-sync-repair.mjs` and `docs/sync-repair.md` deliver scoped sync diagnosis, authorized queue resume and byte verification with a real file-backed companion. The homepage sync rows remain partial because signed desktop and phone clients are still required.

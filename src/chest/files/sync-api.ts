@@ -4,11 +4,14 @@ import { insist } from '../model'
 import { deviceSession } from './devices'
 import { sweep } from './shares'
 import { changes, create, hydrate, relocate, remove, tree, upload } from './sync'
+import { receiveReport, repairInstructions } from '../sync-repair/service'
 // /api/chest/sync: device-credential routes for sync clients. No cookie or browser origin is involved.
 export async function syncRoute(env: Bindings, request: Request, path: string): Promise<unknown> {
  const s = await deviceSession(env, request), url = new URL(request.url), [, , key, sub] = path.split('/').filter(Boolean), method = request.method
  return attempt(env,s.operator.email,`device.${method.toLowerCase()}.${sub ?? key ?? 'request'}`,key ?? 'sync',{authority:`device:${(s as any).device}`},async()=>{
  await sweep(env)
+ if (path === '/sync/repair' && method === 'GET') return repairInstructions(env,s,url.searchParams.get('folder')!)
+ if (path === '/sync/repair' && method === 'POST') return receiveReport(env,s,await request.json())
  if (method === 'GET' && path === '/sync/tree') return tree(env, s)
  if (method === 'GET' && path === '/sync/changes') return changes(env, s, url)
  if (method === 'POST' && path === '/sync/items') return create(env, s, url, request)

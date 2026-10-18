@@ -1,4 +1,5 @@
 import { transfersExecute, transferView } from '../transfers/service'
+import { repairs } from '../sync-repair/service'
 import { transfersPage, transferPage } from '../transfers/ui'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -36,7 +37,7 @@ import { listTemplates } from '../office/create-templates'
 import { creationSettings } from '../office/create-settings'
 import { templatesPage } from '../office/new-ui'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
-export const filesPath = (path: string) => /^\/(transfers|space-policy|space-requests|new-files|templates|creation-settings|items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
+export const filesPath = (path: string) => /^\/(sync-repair|transfers|space-policy|space-requests|new-files|templates|creation-settings|items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
  if (input.path === '/new-files') { if (input.name === '') delete input.name; if (input.template === '') delete input.template }
  if (input.path === '/templates' && typeof input.templateAudience === 'string') {
@@ -59,6 +60,7 @@ export function filesInput(input: any) {
 }
 // Pages that must show a one-time secret instead of redirecting.
 export function filesReceipt(input: any, result: any) {
+ if (input.path === '/devices') return secretPage('Companion key created',result.token,'This key is shown once. Store it privately and supply it to the companion through CHEST_DEVICE_TOKEN. It authorizes this device with your current file permissions. Revoke it from Sync devices.','/app/devices')
  if (input.path === '/transfers') return secretPage('Delivery package created',result.url,`Copy this link now. Email: ${result.email}. Email acknowledgment is not a recipient receipt.`, '/app/transfers/'+result.id)
  if (input.path === '/space-requests') return `<div class="page-head"><h1>Space request sent</h1></div><p>Your request is recorded and appears in Notices for ${esc(result.notifiedAdmins)} service-settings admin(s).</p><p><a class="link" href="/app/files">Back to Files</a></p>`
  if (/^\/items\/[^/]+\/links$/.test(input.path)) return secretPage('Link created', result.url, 'Copy this link now. Chest keeps only a fingerprint of it and cannot show it again.', input.returnTo || '/app/files')
@@ -101,7 +103,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (parts[1] === 'requests' && parts[2]) return { body: requestPage(await requestView(env, s, w, parts[2])) }
  if (path === '/app/notices') return { body: noticesPage(await notices(env, w)) }
  if (path === '/app/links') return { body: linksPage({ ...await linksView(env, s, w), repairs: await repairView(env,s), policy: ['owner','admin'].includes(s.operator.role) ? await linkPolicies(env,s) : null, policyScope: url.searchParams.get('policyScope') ?? 'organisation' }) }
- if (path === '/app/devices') return { body: devicesPage(await devices(env, s)) }
+ if (path === '/app/devices') return { body: devicesPage(await devices(env, s),await repairs(env,s)) }
  if (path === '/app/move-in') { await personal(env, s); return { body: moveInPage(await destinations(env, w), s.operator.role === 'owner') } }
  throw new ChestError('not_found', 404)
 }

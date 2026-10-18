@@ -1,4 +1,6 @@
 import { searchFilters } from './ui-search'
+import { repairPanel } from '../sync-repair/ui'
+import type { Diagnosis } from '../sync-repair/model'
 import { esc, field, select, form, hidden, card, details, personPicker, stamp } from '../ui-shared'
 import { noticeWords } from '../ui-words'
 import { addHere, listing, restores, rewindForm } from './ui-item'
@@ -58,10 +60,10 @@ export function requestPage(r: any) {
  return head('Access request', `${esc(r.requester)} asked for ${esc(r.role)} access${r.itemName ? ` to <a class="link" href="/app/items/${r.item}">${esc(r.itemName)}</a>` : ''}. Status: ${esc(r.status)}.`) + `<section class="card">${r.message ? `<p>${esc(r.message)}</p>` : ''}${open ? form(`/requests/${r.id}`, hidden('decision', 'approve') + select('Grant role', 'role', roles, r.role), 'Approve', `/app/requests/${r.id}`, inline) + form(`/requests/${r.id}`, hidden('decision', 'decline'), 'Decline', `/app/requests/${r.id}`, inline) : ''}</section>`
 }
 // Sync devices: no desktop or phone sync app ships yet, so the page says so and points to what works today. Keys made
-// for a client before this page changed stay listed until revoked; the page never makes a new one.
-export function devicesPage(rows: any[]) {
+// for a client stay listed until revoked; the command-line companion can enroll separately.
+export function devicesPage(rows: any[], reports: Diagnosis[] = []) {
  const device = (d: any) => `<li class="row-tabbed"><span class="tab tab-plain" aria-hidden="true"></span><div class="row-card person"><div class="person-facts"><strong>${esc(d.name)}</strong><span class="mono">${esc(d.platform)} · ${esc(d.owner)} · last contact ${d.lastSeen ? stamp(d.lastSeen) : 'never'}${d.revokedAt ? ` · revoked ${stamp(d.revokedAt)}` : ''}</span></div>${d.revokedAt ? '' : `<div class="row-actions">${form(`/devices/${d.id}/revoke`, '', 'Revoke device', '/app/devices', inline)}</div>`}</div></li>`
  const meanwhile = `<ul class="plain-list"><li><strong>On a computer:</strong> open a folder in <a class="link" href="/app/files">Files</a> and drag files onto the page, or use Choose files. Big files show their progress and carry on after a dropped connection.</li><li><strong>On a phone:</strong> open this Chest in the phone's browser. Upload offers the camera and your photo library.</li><li><strong>A whole folder or another service:</strong> <a class="link" href="/app/move-in">Move in</a> brings a folder from your computer, or a Google Drive, Dropbox or Box download, with its folders.</li><li><strong>Taking files with you:</strong> download any file from its page. Every earlier version stays in Chest.</li></ul>`
- return head('Sync devices', 'Chest has no desktop or phone sync app yet, so there is nothing to install and no device key to make.') + `<div class="lib-tools">${filesLinks()}</div>${card('Use these meanwhile', meanwhile)}${rows.length ? `<h2 class="section-title">Device keys made earlier</h2><p class="quiet">Revoking a key stops it on its next request.</p><ul class="rows rows-wide">${rows.map(device).join('')}</ul>` : ''}`
+ return head('Sync devices', 'Signed desktop and phone sync apps are not available yet. The command-line companion can check and repair a selected folder.') + `<div class="lib-tools">${filesLinks()}</div>${card('Use these meanwhile', meanwhile)}${repairPanel(reports)}${rows.length ? `<h2 class="section-title">Device keys</h2><p class="quiet">Revoking a key stops it on its next request.</p><ul class="rows rows-wide">${rows.map(device).join('')}</ul>` : ''}`
 }
 export function secretPage(title: string, value: string, note: string, back: string) { return head(title, note) + `<section class="card"><pre class="receipt">${esc(value)}</pre><p class="card-foot"><a class="link" href="${esc(back)}">Return</a></p></section>` }

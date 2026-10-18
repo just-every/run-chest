@@ -105,9 +105,9 @@ async function journey(width){
  await go(p.ana,`/app/items/${plan}`);const was=(await json(p.ana,`/items/${plan}`)).grants.find(g=>g.principal==='eve@example.test').expires;await press(row(p.ana,'eve@example.test · commenter'),'Extend by 7 days');
  assert.equal(Date.parse((await json(p.ana,`/items/${plan}`)).grants.find(g=>g.principal==='eve@example.test').expires)-Date.parse(was),7*day);
  await age(-1000);await go(p.eve,`/app/items/${plan}`);await p.eve.getByRole('heading',{name:'Request access'}).waitFor();assert.equal((await audit('share.expired',plan)).length,1);
- // Sync devices: no sync app ships, so the page says so and hands out no key; a key made through the API for a
+ // Sync devices: no native sync app ships; the scoped command-line companion has a separate key flow. A key for a
  // future client is listed and revoked from the page, and stops working for the sync protocol.
- await go(p.ana,'/app/devices');await p.ana.getByText('Chest has no desktop or phone sync app yet',{exact:false}).waitFor();assert.equal(await p.ana.getByRole('button',{name:'Create device key'}).count(),0);
+ await go(p.ana,'/app/devices');assert.equal(await p.ana.getByRole('button',{name:'Create device key'}).count(),0);
  const token=(await json(p.ana,'/devices',{name:`Ana laptop ${width}`,platform:'macos'})).token,tree2=()=>h.fetch('/api/chest/sync/tree',{headers:{authorization:`Bearer ${token}`}});assert.equal((await tree2()).status,200);
  await go(p.ana,'/app/devices');await fit(p.ana,'devices',width);await press(row(p.ana,`Ana laptop ${width}`),'Revoke device');assert.equal((await tree2()).status,401);
  // RECOVER-001 from the browser: the space manager previews a restore to a date; nothing changes until it is applied,

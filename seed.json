@@ -106,6 +106,12 @@
       "clauses": [
         "AGENT-004"
       ]
+    },
+    {
+      "id": "verified-sync-repair",
+      "clauses": [
+        "AGENT-003"
+      ]
     }
   ],
   "nonGoals": [

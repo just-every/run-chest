@@ -141,7 +141,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "46e18fb4897961408ac51ad763e04617a4fc05dfabbe46bd917e317deafd4ca2",
+      "sha256": "f9f61db46297341c6686c8161cf5d431addb5f2a4ccdb81d0c170954d518ceb7",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -169,7 +169,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "26ceffce2c0d928c8d04aa9fef5c17c05c8ec716f1043954dcaccd826ea66ece",
+      "sha256": "c93dd862889b881a64c4e9efaf325551769a55730b171408d1bdbf48f02d7414",
       "executable": false
     },
     "DEMO.md": {
@@ -197,7 +197,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "3126c924e350ce85d9a43713f1f65844aac38c99efe802c4247b9a8556790827",
+      "sha256": "75061fd1de45598f1b0d65541affee5091782bb62da455fea722d098d5fd3d3f",
       "executable": false
     },
     "docs/collections.md": {
@@ -262,6 +262,10 @@
     },
     "docs/site.json": {
       "sha256": "a935669bb027cf3bc0014f0764d0bc7b26814a3efac09ae972882446ea17e03b",
+      "executable": false
+    },
+    "docs/sync-repair.md": {
+      "sha256": "c31cbfc47284e414ca0b7cb5c2d4f4493b4fdf85ac7b788d4ba9cea19237d368",
       "executable": false
     },
     "docs/trash-and-audit.md": {
@@ -373,11 +377,11 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "f932864ca08c7e72adf5ac60990f233a2fde8b71f8ca510a14bc3fe250e9cc2b",
+      "sha256": "348c82ea3f68bb32ceaf1a63b57abad96c0d2988ff9e01f8a71f9af594c903e4",
       "executable": false
     },
     "pnpm-lock.yaml": {
-      "sha256": "3555de9e6cc617cefb061060b9a41f634e2b3a2bb30d69da5f8f56f886ae7b05",
+      "sha256": "06d7a540f545478f2685c8b70ad0c3f8f8f1033c10ebcd0cf42e06152b182417",
       "executable": false
     },
     "public/brand/apple-touch-icon.png": {
@@ -421,7 +425,7 @@
       "executable": false
     },
     "public/chest-app.css": {
-      "sha256": "7f65f476ddecfdbdd583522872dff5f2ef1796490584182ca5c36173be4c35e8",
+      "sha256": "b2304b93ec1963db056fa18064bb70aaedde397dd33db75dcdfe9e78dbc04399",
       "executable": false
     },
     "public/chest-movein.js": {
@@ -656,12 +660,40 @@
       "sha256": "decbd8619e40c741708b49639d54282bd19edc4581a782b240d96a423ad47f01",
       "executable": false
     },
+    "scripts/sync-companion/api.mjs": {
+      "sha256": "c636c5f712b3d0698bd651cefcf8e347fb9034fcf7be005ce87f7e3abc90e968",
+      "executable": false
+    },
+    "scripts/sync-companion/cli.mjs": {
+      "sha256": "539ae1590690275ba85ef8f3d1f9f05c5c0c03d4b23857836d2b83a4418fbcfb",
+      "executable": false
+    },
+    "scripts/sync-companion/disk.mjs": {
+      "sha256": "5e97983606443ad3b5641ba14edb6829315c7e83b7d24eef7ac262b90ed320e4",
+      "executable": false
+    },
+    "scripts/sync-companion/run.mjs": {
+      "sha256": "ef0213b89b5c7eae496a46e611e46121f31fb17e8c6a346fbd90d5c6f9d217d3",
+      "executable": false
+    },
+    "scripts/sync-companion/state.mjs": {
+      "sha256": "8b8f567b27ccf80358aeb70ffa859928e43b71d8e82fdb55d0e404558ae6b895",
+      "executable": false
+    },
+    "scripts/sync-companion/transfer.mjs": {
+      "sha256": "6a59cb22cb91199ce73e7566cee04e2e8aa39b3fb5c8a8251cad029bd7e83758",
+      "executable": false
+    },
+    "scripts/sync-companion/tree.mjs": {
+      "sha256": "d674c63139c45f0a4dfa7c81972ef4c3678f5aca7fbaa250a6be453649ee21be",
+      "executable": false
+    },
     "SEED-COMMAND-CONTRACT.md": {
       "sha256": "5c62bc3b1ee35d91ce2771929b4a99ab770ea3d0b7328ebe62d1df48da2a7a5c",
       "executable": false
     },
     "seed.json": {
-      "sha256": "e1f1067ff09d8541662d21ec395de7da098578bebf61878a5b4c7617d5deb8ae",
+      "sha256": "12946e59aebc10fc2f897589672a989d630e2fc42fd0627ba63d7fe9ab8774c8",
       "executable": false
     },
     "SOURCE.md": {
@@ -849,7 +881,7 @@
       "executable": false
     },
     "src/chest/files/api.ts": {
-      "sha256": "a5417346dcf3826a5f47e202da441ba48b9e5ab9314208bce216bccade9328aa",
+      "sha256": "8b8549b0b7b1bec8157e1eb1fec625f261d6a1bc294e13e11e8fa54c60c1554d",
       "executable": false
     },
     "src/chest/files/capability.ts": {
@@ -997,7 +1029,7 @@
       "executable": false
     },
     "src/chest/files/sync-api.ts": {
-      "sha256": "9ac5724b354bc4f3fa7b4c5ffeb710623c190c0f2873c2159d6f500718fc9647",
+      "sha256": "b4871c4e86cd7b033d7415c92e6365171169b299ef5428632f8629286d3a1001",
       "executable": false
     },
     "src/chest/files/sync.ts": {
@@ -1041,7 +1073,7 @@
       "executable": false
     },
     "src/chest/files/ui-pages.ts": {
-      "sha256": "1a6bf70485a1f06a625ca8f71b5ebc8ed60b9580eeda26919fc043f1c939c4ba",
+      "sha256": "2e596eec8ddbc6b7e55b674dea3a17e70cceebbe114f6eaf737c3dca512ff5b2",
       "executable": false
     },
     "src/chest/files/ui-public.ts": {
@@ -1057,7 +1089,7 @@
       "executable": false
     },
     "src/chest/files/ui.ts": {
-      "sha256": "7f46f55f5c70225c5b5157540bdc9243ef81fc7fcb6793ae71c0c4f9123fd046",
+      "sha256": "9375aafec703834619d82e66f1b1b2560e02e53a6070e321bfa1f8eff13e61b4",
       "executable": false
     },
     "src/chest/files/uploads.ts": {
@@ -1442,6 +1474,18 @@
     },
     "src/chest/store.ts": {
       "sha256": "e6e5d03346dc4cea8df7b22a08b13a57c7e5274ca53a2339a54a25f117e3e672",
+      "executable": false
+    },
+    "src/chest/sync-repair/model.ts": {
+      "sha256": "39554d6154e9b0a71bab8ba3519b2b07fa27ccfc9584ee1418be5f65d00563e4",
+      "executable": false
+    },
+    "src/chest/sync-repair/service.ts": {
+      "sha256": "fdb53a80600092fdda08cfcec49ee193f06f458c64347e94772df4c8554b2c4a",
+      "executable": false
+    },
+    "src/chest/sync-repair/ui.ts": {
+      "sha256": "15392decbfb8bd18c0c32d7b6764db1d11bfafbcd61f2ee850998314637c0e72",
       "executable": false
     },
     "src/chest/transfers/model.ts": {
@@ -3317,7 +3361,7 @@
       "executable": false
     },
     "tests/chest/browser-files.mjs": {
-      "sha256": "33f116bfa6b4d0cc3a0598cd6ce4d18f5eb2f4142f436a3118f757fd23c93429",
+      "sha256": "a0431f9518fb17258dad84c4c3ffe8a1995c2f54085a2738522439abc1321171",
       "executable": false
     },
     "tests/chest/browser-flow.mjs": {
@@ -3370,6 +3414,10 @@
     },
     "tests/chest/browser-space-policy.mjs": {
       "sha256": "38d6536306b8e83ff14709c3844166da1dd196e27e459b63701c33df178e7070",
+      "executable": false
+    },
+    "tests/chest/browser-sync-repair.mjs": {
+      "sha256": "58cda26a14d679716b22399187f6c04faa2377acdfbe8f2439f5c4da7117aaa8",
       "executable": false
     },
     "tests/chest/browser-transfers.mjs": {

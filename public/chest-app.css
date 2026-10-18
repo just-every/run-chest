@@ -476,3 +476,9 @@ body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: 
 
 /* Collection evidence includes stable version and submission identifiers. */
 .collection-wrap { overflow-wrap: anywhere; }
+
+/* Sync diagnosis retains full checksums without widening a phone viewport. */
+.sync-repair { margin-top: 20px; }
+.sync-repair .hash { overflow-wrap: anywhere; }
+.sync-repair .btn { white-space: normal; max-width: 100%; text-align: center; }
+.sync-repair section + section { padding-top: 20px; border-top: 1px solid var(--chest-line); }
