@@ -34,8 +34,8 @@ try{
  const file=await h.api('/items',people.lead,{space:created.id,type:'file',name:'Instructions.txt',base64:Buffer.from('Crew dispatch instructions').toString('base64')});
  await h.api(`/items/${file.id}/bytes/${file.payload.current}?download=true`,people.viewer,undefined,403);
  await h.api('/items',people.lead,{space:created.id,type:'file',name:'Too large.txt',base64:Buffer.from('x'.repeat(100)).toString('base64')},413);
- await h.api(`/space-policy/${created.id}`,people.admin,{storageLimitBytes:1},409).then(r=>assert.equal(r.error,'space_storage_limit_confirmation_required'));
- await h.api(`/space-policy/${created.id}`,people.admin,{storageLimitBytes:1,confirmOverLimit:true});
+ const lowerPreview=await h.api(`/space-policy/${created.id}`,people.admin,{storageLimitBytes:1},409);assert.equal(lowerPreview.error,'storage_limit_confirmation_required');assert.ok(lowerPreview.overLimit.some(r=>r.id===created.id));
+ await h.api(`/space-policy/${created.id}`,people.admin,{storageLimitBytes:1,confirmOverLimit:true,confirmation:lowerPreview.confirmation});
  // Defaults govern actual sharing doors and live access, rather than only appearing in settings.
  const protectedFolder=await h.api('/items',people.lead,{space:created.id,type:'folder',name:'Crew records'});
  await h.api(`/items/${file.id}/links`,people.lead,{audience:'public'},403);

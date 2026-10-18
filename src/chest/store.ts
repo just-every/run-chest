@@ -14,10 +14,12 @@ export async function write(env: Bindings, session: Session, row: Row, action: s
  const redact=await (await import('./audit/privacy')).identityRedactor(env)
  const predicates=[sessionPredicate(session),...fences.map(snapshot),...(previous?[snapshot(previous)]:[{sql:'NOT EXISTS(SELECT 1 FROM chest_records WHERE id=?)',params:[row.id]}])]
  const statement=(sql:string,params:unknown[]=[])=>env.DB.prepare(sql).bind(...params)
+ const warnings=row.kind==='group'?await (await import('./quota/warnings')).warningPublication(env,[{row,previous}]):null
  const guards=predicates.map(p=>statement(`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${p.sql}) THEN 1 ELSE 0 END`,p.params))
  const sql=previous?'UPDATE chest_records SET payload=?,revision=? WHERE id=?':'INSERT INTO chest_records(payload,revision,id,kind) VALUES(?,?,?,?)'
  const params=previous?[JSON.stringify(row.payload),row.revision,row.id]:[JSON.stringify(row.payload),row.revision,row.id,row.kind]
- await env.DB.batch([...guards,...erasurePublication(row,previous).map(p=>statement(p.sql,p.params)),statement(sql,params),statement('INSERT INTO chest_audit VALUES(?,?,?,?,?,?)',[id(),await redact(session.operator.email),action,row.id,await redact(JSON.stringify(facts({revision:row.revision,version:(row.payload as any).current ?? (row.payload as any).versions?.at(-1)?.id ?? null},`${session.kind}:${session.operator.role}`))),now()]),statement('DELETE FROM chest_assert')])
+ await env.DB.batch([...guards,...erasurePublication(row,previous).map(p=>statement(p.sql,p.params)),statement(sql,params),statement('INSERT INTO chest_audit VALUES(?,?,?,?,?,?)',[id(),await redact(session.operator.email),action,row.id,await redact(JSON.stringify(facts({revision:row.revision,version:(row.payload as any).current ?? (row.payload as any).versions?.at(-1)?.id ?? null},`${session.kind}:${session.operator.role}`))),now()]),...(warnings?.statements??[]).map(p=>statement(p.sql,p.params)),statement('DELETE FROM chest_assert')])
+ await warnings?.deliver()
  return row
 }
 export function changed<T>(row:Row<T>,payload:T):Row<T>{return {...row,payload,revision:id()}}

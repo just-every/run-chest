@@ -110,7 +110,8 @@ try{
  assert.equal((await newFile(people.contributor,repeated)).id,same[0].id);
  await newFile(people.contributor,{...repeated,name:'Different request'},409);
  const beforeQuota=(await h.api(`/items/${folder.id}`,people.manager)).children.length;
- await h.api(`/spaces/${space.id}/quota`,people.owner,{storageLimitBytes:0});
+ const quotaPreview=await h.api(`/spaces/${space.id}/quota`,people.owner,{storageLimitBytes:0},409);assert.equal(quotaPreview.error,'storage_limit_confirmation_required');
+ await h.api(`/spaces/${space.id}/quota`,people.owner,{storageLimitBytes:0,confirmOverLimit:true,confirmation:quotaPreview.confirmation});
  const refusal=await newFile(people.contributor,{...root,kind:'document',key:'over-quota'},413);assert.equal(refusal.error,'storage_limit_exceeded');
  assert.equal((await h.api(`/items/${folder.id}`,people.manager)).children.length,beforeQuota);
  const audit=await h.api('/audit',people.owner);for(const action of ['file.create','template.publish','template.unpublish'])assert.ok(audit.some(a=>a.action===action));

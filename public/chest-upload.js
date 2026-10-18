@@ -24,14 +24,14 @@
   // Checking every byte reads the whole file through twice on the server, one request with no progress of its own.
   // Measured locally at 17 to 22 MB a second (1 GB took about 60 s), so the estimate uses the slower figure.
   const CHECK_RATE = 16 * 1048576
-  class Refused extends Error { constructor(code) { super(code); this.code = code } }
+  class Refused extends Error { constructor(code, detail) { super(code); this.code = code; this.detail = detail } }
   async function api(method, path, body) {
     let response
     try { response = await fetch('/api/chest' + path, { method, headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined, credentials: 'same-origin' }) }
     catch { throw new Error('offline') }
     const data = await response.json().catch(() => ({}))
     if (response.status >= 500) throw new Error('server')
-    if (!response.ok) throw new Refused(data.error || `http_${response.status}`)
+    if (!response.ok) throw new Refused(data.error || `http_${response.status}`, data)
     return data
   }
   // One part with upload progress; resolves when Chest has recorded it.
@@ -94,7 +94,7 @@
         job.state = 'done'; draw(job); return
       } catch (e) {
         if (job.state === 'paused' || job.state === 'cancelled') return
-        if (e instanceof Refused) { job.state = 'failed'; job.problem.textContent = problems[e.code] || `Chest refused this file (${e.code}).`; draw(job); return }
+        if (e instanceof Refused) { job.state = 'failed'; job.problem.textContent = e.code === 'storage_limit_exceeded' && e.detail ? `${e.detail.scope === 'user' ? 'Personal area' : 'Space'} storage limit: ${e.detail.usedBytes} bytes used of ${e.detail.limitBytes} bytes. Ask a service settings admin to raise the limit or permanently erase retained files.` : problems[e.code] || `Chest refused this file (${e.code}).`; draw(job); return }
         job.state = 'retrying'; draw(job)
         await Promise.race([wait(Math.min(30000, 1000 * 2 ** attempt)), new Promise(r => addEventListener('online', r, { once: true }))])
         if (job.state !== 'retrying') return

@@ -22,7 +22,7 @@ import { effectiveLinkPolicy } from './link-policy'
 import { accessExplanation } from './access-explanation'
 import { ownershipForItem } from './ownership'
 import { metadataView } from './folder-metadata'
-import { storage } from '../quota/storage'
+import { storageView } from '../quota/storage'
 import { history } from '../audit/history'
 // Read models for the files pages and API: what a person may see, with the actions their current role allows.
 const can = (ctx: { space: any; state: any }) => Object.fromEntries((['download', 'comment', 'contribute', 'manage', 'share', 'administer'] as const).map(a => [a, allowed(ctx, a)]))
@@ -43,7 +43,7 @@ export async function spaceView(env: Bindings, w: Who, key: string) {
  const space = await get<Space>(env, 'space', key), state = start(space.payload, w); insist(state.role, 'not_found', 404)
  const ctx: Ctx = { space, chain: [], state, links: [], fences: [] }
  const manager = state.role === 'manager' || state.role === 'owner'
- return { id: space.id, name: label(space.payload, w), kind: space.payload.kind, role: state.role, can: can(ctx), settings: { ...space.payload.settings, ...spaceDefaults(space.payload) }, storage: { id: space.id, limitBytes: space.payload.storageLimitBytes ?? null, ...await storage(env, space.id) }, members: space.payload.kind === 'team' ? space.payload.members : [], children: (await children(env, w, ctx, null)).map(brief), uploads: await unfinished(env, w, { space: space.id, parent: null }), rewinds: manager ? await rewinds(env, `space:${space.id}`) : [] }
+ return { id: space.id, name: label(space.payload, w), kind: space.payload.kind, role: state.role, can: can(ctx), settings: { ...space.payload.settings, ...spaceDefaults(space.payload) }, storage: await storageView(env,space), members: space.payload.kind === 'team' ? space.payload.members : [], children: (await children(env, w, ctx, null)).map(brief), uploads: await unfinished(env, w, { space: space.id, parent: null }), rewinds: manager ? await rewinds(env, `space:${space.id}`) : [] }
 }
 export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'view')
@@ -53,7 +53,7 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
  const lineage=await mergeView(env,s,w,item)
  await recordAccess(env, s, item, 'item.read')
  return {
-  fieldReadings: await itemReadings(env,key,item.payload), metadata: await metadataView(env, ctx), linkCreation: (await effectiveLinkPolicy(env,w,ctx.space.id)).rules, id: key, item: { ...item.payload, versions: undefined, grants: undefined, trash: undefined }, revision: item.revision, ownership: await ownershipForItem(env, s, w, key), accessExplanation: accessExplanation(ctx, w), role: ctx.state.role, can: can(ctx), space: { id: ctx.space.id, name: label(ctx.space.payload, w), kind: ctx.space.payload.kind, member: !!start(ctx.space.payload, w).role }, path,
+  storage: await storageView(env,ctx.space), fieldReadings: await itemReadings(env,key,item.payload), metadata: await metadataView(env, ctx), linkCreation: (await effectiveLinkPolicy(env,w,ctx.space.id)).rules, id: key, item: { ...item.payload, versions: undefined, grants: undefined, trash: undefined }, revision: item.revision, ownership: await ownershipForItem(env, s, w, key), accessExplanation: accessExplanation(ctx, w), role: ctx.state.role, can: can(ctx), space: { id: ctx.space.id, name: label(ctx.space.payload, w), kind: ctx.space.payload.kind, member: !!start(ctx.space.payload, w).role }, path,
   versions: lineage.versions.map(v => ({ ...v, text: undefined, textLength: v.text.length })), mergedInto:lineage.mergedInto, merges:lineage.merges,
   reading: currentVersion ? summary((await extraction(env, currentVersion.checksum))?.payload ?? null, currentVersion.mediaType) : null,
   children: item.payload.type === 'folder' ? (await children(env, w, ctx, key)).map(brief) : [],

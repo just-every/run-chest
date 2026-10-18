@@ -4,7 +4,7 @@ import { removeSuspendedGrant } from './policy-suspensions'
 import { transfersExecute } from '../transfers/service'
 import { repairs, authorizeResume } from '../sync-repair/service'
 import { linkRepairsExecute } from '../filing/link-repairs'
-import {setQuota,quotaView} from '../quota/api'
+import {setQuota,quotaView,quotaPolicyView,saveQuotaPolicy} from '../quota/api'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { fromBase64 } from '../blobs'
@@ -41,7 +41,7 @@ import { begin, cancel, complete, receive, status, unfinished } from './uploads'
 import type { AccessRequest } from './model'
 // /api/chest routes for everyday files. Every route reads the person's current groups and links first; the UI's form
 // posts reach the same functions through execute().
-const roots = new Set(['transfers', 'space-policy', 'space-requests', 'link-repairs', 'new-files', 'templates', 'creation-settings', 'link-policy', 'uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search'])
+const roots = new Set(['quota-policy', 'transfers', 'space-policy', 'space-requests', 'link-repairs', 'new-files', 'templates', 'creation-settings', 'link-policy', 'uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search'])
 export async function filesExecute(env: Bindings, request: Request, s: Session, method: string, parts: string[], input: any, url: URL): Promise<unknown> {
  const bulk=await bulkExecute(env,request,s,method,parts,input,url);if(bulk!==undefined)return bulk
  if(parts[0]==='upload-protection')return protectionExecute(env,s,method,parts,input)
@@ -50,6 +50,7 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
  if (!roots.has(parts[0])) return undefined
  if(parts[0]==='link-repairs')return linkRepairsExecute(env,s,method,parts,input)
  const w = await who(env, s), [head, key, sub, version, verb] = parts, get = method === 'GET', post = method === 'POST'
+ if(head==='quota-policy'&&!key&&(get||post))return get?quotaPolicyView(env,s):saveQuotaPolicy(env,s,input)
  if (head === 'space-policy' && !key && (get || post)) return get ? spacePolicyView(env, s) : saveSpacePolicy(env, s, input)
  if (head === 'space-policy' && key && !sub && (get || post)) { if (get) return spaceSettingsView(env, s, key); await spaceSettingsView(env, s, key); return settings(env, s, w, key, input) }
  if (head === 'space-requests' && post && !key) return requestSpace(env, s, w, input)

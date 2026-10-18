@@ -1,5 +1,6 @@
 import { erasurePage } from './erasure/ui'
 import { erasureView } from './erasure/service'
+import { QuotaConfirmation } from './quota/errors'
 import { SharingConfirmation } from './files/sharing-policy'
 import { hidden,form } from './ui-shared'
 import { administrationPage,administrationInput } from './administration/ui'
@@ -58,7 +59,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   if(filesPath(input.path))filesInput(input)
   if(input.path==='/audit/privacy'&&input.scope==='organization')input.groups=Object.keys(input).filter(k=>k.startsWith('group:')).map(k=>k.slice(6))
   let result:any
-  try{result=await execute(env,request,s,'POST',input.path,input)}catch(error){if(!(error instanceof SharingConfirmation))throw error;const values=[...fields].filter(([k,v])=>typeof v==='string'&&!['path','returnTo','confirmExternal'].includes(k)).map(([k,v])=>hidden(k,String(v))).join('');return page(card('Confirm external sharing',`<p>Your sharing policy requires confirmation before giving access outside the organization.</p><p>Recipients: <strong>${error.recipients.map(esc).join(', ')}</strong></p>${form(input.path,values+hidden('confirmExternal','true'),'Confirm external sharing',returnTo)}<a class="link" href="${esc(returnTo)}">Cancel</a>`),me,returnTo)}
+  try{result=await execute(env,request,s,'POST',input.path,input)}catch(error){if(error instanceof QuotaConfirmation){const values=[...fields].filter(([k,v])=>typeof v==='string'&&!['path','returnTo','confirmOverLimit','confirmation'].includes(k)).map(([k,v])=>hidden(k,String(v))).join('');return page(card('Confirm storage limit',`<p>These areas are already above the proposed limit. Existing originals stay retained; growth will be refused.</p><ul class="events">${error.overLimit.map(r=>`<li>${esc(r.owner||r.name)} · ${r.scope==='user'?'Personal area':'Space'} · ${r.usedBytes} bytes used of ${r.limitBytes} bytes · ${esc(r.rule)}</li>`).join('')}</ul>${form(input.path,values+hidden('confirmOverLimit','true')+hidden('confirmation',error.confirmation),'Confirm storage limit',returnTo)}<a class="link" href="${esc(returnTo)}">Cancel</a>`),me,returnTo)}if(!(error instanceof SharingConfirmation))throw error;const values=[...fields].filter(([k,v])=>typeof v==='string'&&!['path','returnTo','confirmExternal'].includes(k)).map(([k,v])=>hidden(k,String(v))).join('');return page(card('Confirm external sharing',`<p>Your sharing policy requires confirmation before giving access outside the organization.</p><p>Recipients: <strong>${error.recipients.map(esc).join(', ')}</strong></p>${form(input.path,values+hidden('confirmExternal','true'),'Confirm external sharing',returnTo)}<a class="link" href="${esc(returnTo)}">Cancel</a>`),me,returnTo)}
   kick(env,request)
   if(input.path.startsWith('/bulk')&&result?.id)return new Response(null,{status:303,headers:{...headers,location:`/app/bulk/${result.id}`}})
   if(result?.signInAgain)return new Response(null,{status:303,headers:{...headers,location:'/signin'}})

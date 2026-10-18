@@ -8,6 +8,7 @@ import { commit, next } from './repo'
 import type { Space } from './model'
 import { adminStatement, parseSpaceDefaults, serviceAdmin, spaceDefaults } from './space-policy'
 import { storage } from '../quota/storage'
+import { confirmSpaceLimit } from '../quota/api'
 
 export async function spaceSettingsView(env: Bindings, s: Session, key: string) {
  const space = await get<Space>(env, 'space', key);await serviceAdmin(env,s,space.payload.owner||space.payload.createdBy); insist(space.payload.kind === 'team', 'team_space_required')
@@ -23,12 +24,10 @@ export async function changeSpaceSettings(env: Bindings, s: Session, w: Who, key
  insist(admin || after.managerOverride === before.managerOverride, 'space_manager_override_admin_only', 403)
  insist(admin || before.managerOverride || changed.length === 0, 'space_manager_override_disabled', 403)
  insist(input.editorSharing === undefined || typeof input.editorSharing === 'boolean', 'invalid_settings')
- if (changed.includes('storageLimitBytes') && after.storageLimitBytes !== null) {
-  const usage = await storage(env, key)
-  insist(usage.usedBytes <= after.storageLimitBytes || input.confirmOverLimit === true, 'space_storage_limit_confirmation_required', 409)
- }
+ if(changed.includes('storageLimitBytes'))insist(admin,'admin_required',403)
  const { storageLimitBytes, ...settings } = after
- const payload: Space = { ...space.payload, storageLimitBytes, settings: { ...space.payload.settings, ...settings, editorSharing: input.editorSharing ?? space.payload.settings.editorSharing } }
- await commit(env, s, [{ row: next(space, payload), previous: space }], { fences: w.groups, statements: admin ? [adminStatement(s)] : [], changes: [{ item: key, space: key, kind: 'access' }], audits: [{ action: 'space.settings', object: key, detail: { before: { ...before, editorSharing: space.payload.settings.editorSharing }, after: { ...after, editorSharing: payload.settings.editorSharing } } }] })
+ const payload: Space = { ...space.payload, storageLimitBytes, ...(changed.includes('storageLimitBytes')?{storageLimitOverride:true}:{}), settings: { ...space.payload.settings, ...settings, editorSharing: input.editorSharing ?? space.payload.settings.editorSharing } }
+ const preconditions=changed.includes('storageLimitBytes')?await confirmSpaceLimit(env,s,space,next(space,payload),input):[]
+ await commit(env, s, [{ row: next(space, payload), previous: space }], { preconditions, fences: w.groups, statements: admin ? [adminStatement(s)] : [], changes: [{ item: key, space: key, kind: 'access' }], audits: [{ action: 'space.settings', object: key, detail: { before: { ...before, editorSharing: space.payload.settings.editorSharing }, after: { ...after, editorSharing: payload.settings.editorSharing } } }] })
  return get<Space>(env, 'space', key)
 }

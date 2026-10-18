@@ -22,7 +22,7 @@ import { repairView } from '../filing/link-repairs'
 import { linksPage } from './ui-links'
 import { linksView } from './exposure'
 import type { Space } from './model'
-import { quotas, quotaView } from '../quota/api'
+import { quotas, quotaView, quotaPolicyView } from '../quota/api'
 import { quotaPage, quotasPage } from '../quota/ui'
 import { readOffice } from '../office/service'
 import { moveInPage } from './ui-movein'
@@ -40,7 +40,7 @@ import { listTemplates } from '../office/create-templates'
 import { creationSettings } from '../office/create-settings'
 import { templatesPage } from '../office/new-ui'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
-export const filesPath = (path: string) => /^\/(bulk|upload-protection|sync-repair|transfers|space-policy|space-requests|new-files|templates|creation-settings|items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
+export const filesPath = (path: string) => /^\/(quota-policy|bulk|upload-protection|sync-repair|transfers|space-policy|space-requests|new-files|templates|creation-settings|items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
  if(input.path.startsWith('/bulk'))bulkInput(input)
  if(input.path==='/link-policy' && input.domainRestriction==='false')input.trustedDomains=null
@@ -51,6 +51,7 @@ export function filesInput(input: any) {
  }
  if (input.path === '/space-policy' && input.scope === 'organisation') input.creatorGroups = Object.keys(input).filter(k => k.startsWith('creatorGroup:') && input[k] === 'true').map(k => k.slice(13))
  if (input.path === '/creation-settings') input.groups = Object.entries(input).filter(([key, value]) => key.startsWith('format:') && value).map(([key, format]) => ({ group: key.slice(7), format }))
+ if (typeof input.limitBytes === 'string') input.limitBytes = input.limitBytes.trim() === '' ? null : Number(input.limitBytes)
  if (typeof input.storageLimitBytes === 'string') input.storageLimitBytes = input.storageLimitBytes.trim() === '' ? null : Number(input.storageLimitBytes)
  for (const key of ['confirmExternal', 'allowExternal', 'allowNonMembers', 'allowEditors', 'warnExternal', 'scanIntake', 'externalAccess', 'nonMemberAccess', 'contentManagerFolderSharing', 'managerOverride', 'confirmOverLimit', 'noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove', 'retainEditor', 'allowPublic', 'allowOrganisation', 'allowDiscovery', 'download']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
  if (input.path === '/items' && input.type === 'file' && !input.name) input.name = input.filename
@@ -89,7 +90,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (parts[0] === 's' && parts[1]) return { redirect: `/app/items/${(await openLink(env, s, parts[1])).item}` }
  if (parts[0] !== 'app' || !['upload-protection', 'transfers', 'templates', 'files', 'ownership', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in'].includes(parts[1])) return null
  if (path === '/app/upload-protection') return {body:protectionPage(await incidents(env,s))}
- if (path === '/app/storage') return { body: quotasPage(await quotas(env, s)) }
+ if (path === '/app/storage') return { body: quotasPage(await quotaPolicyView(env, s)) }
  if (parts[1] === 'spaces' && parts[2] && parts[3] === 'quota') return { body: quotaPage(await quotaView(env, s, parts[2])) }
  const w = await who(env, s), people = (await list<Person>(env, 'person')).filter(p => p.payload.status !== 'inactive'), groups = await list<Group>(env, 'group')
  if(parts[1]==='transfers')return {body:parts[2]?transferPage(await transferView(env,s,w,parts[2])):transfersPage(await transfersExecute(env,request,s,'GET',['transfers'],{}) as any[])}

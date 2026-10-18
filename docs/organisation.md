@@ -79,11 +79,13 @@ Users and groups support creation, reads, replacement, PATCH and deletion. User 
 
 ## Space storage
 
-Under **Space storage → Manage space storage**, open a space or personal area and enter a limit in bytes. Leave it blank for unlimited storage; zero permits no new retained bytes. Only the installation owner sets a limit.
+Under **Space storage → Manage space storage**, service-settings admins set the organization personal-area and team-space defaults, group user limits and individual user or space overrides in bytes. A limited group beats the personal default; the largest limited group wins when a person belongs to several. A user override beats both. The console shows each area's effective limit and its rule. A blank user or space override explicitly permits unlimited storage; a blank group rule removes that group's limit. Zero permits no new retained bytes. Delegated admins see only areas and groups in their administrative scope, without gaining access to file contents.
 
-Usage counts actual retained original bytes, including earlier versions and trash. Identical originals count once per space; the total counts them once across spaces and the library. Lowering a limit preserves existing content and prevents growth. Uploads, multipart completion, copies, moves and public file requests all check the limit in the same database transaction as admission, so concurrent uploads cannot both consume the last capacity. A refused multipart completion can finish after the limit is raised.
+Spaces inherit the current organization space default unless they have an override. SPACE-002 may give a new space a different starting limit. Current files, all retained versions and trash count; shared files count in their owning area. Identical originals count once per area; total storage counts them once across spaces and the library. Bytes are freed only by permanent erasure of the last retained reference.
 
-Organisation defaults, group-based limit precedence and delegated service-settings administrators remain future work. Storage costs, egress costs and other provider charges are not estimated here.
+Before saving a new or lower limit, Chest lists every affected area already above it, with usage and the proposed limit. Confirm that list before saving; a stale confirmation cannot authorize a changed list. Existing originals remain intact. Uploads, multipart completion, copies, moves and public file requests check live effective limits in the same database transaction as admission, so concurrent uploads cannot both consume the last capacity. A refused multipart completion can finish after the limit is raised, or after retained bytes are erased.
+
+At 90% of a limit, the personal-area owner or space managers receive an in-app notice and email through the configured mail provider. Each crossing sends once; going below 90% rearms it. Local email remains suppressed. File and folder pages show the scope, exact usage, limit and effective rule. API refusals return `storage_limit_exceeded`, `scope`, `space`, `limitBytes` and `usedBytes`; every limit change records before/after values in the audit. Storage and other provider costs remain ADMIN-002 work. Native tray and mobile queue presentation belong to SYNC-003/MOBILE-001.
 
 ## Reproducing the core integration test
 
