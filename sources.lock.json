@@ -3553,7 +3553,7 @@
       "executable": false
     },
     "tests/chest/harness.mjs": {
-      "sha256": "36661301ac447e61b7c40463b6a9f13089d4646e7d7b43d0be1a7f5b925c20bd",
+      "sha256": "c779781b8c8b371a6be0b93377a8ed11c0f73fbd059dca326802f5e65b377648",
       "executable": false
     },
     "tests/chest/journey.mjs": {

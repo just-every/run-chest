@@ -26,10 +26,11 @@ export async function harness({edge,bindings={},hostname='127.0.0.1'}={}){
  // The numbered migrations, in order, once; a restart keeps the persisted data.
  async function migrate(){const db=await worker.getD1Database('DB'),folder='migrations/core';for(const file of (await readdir(folder)).filter(f=>f.endsWith('.sql')).sort())for(const statement of splitSql(await readFile(join(folder,file),'utf8')))await db.prepare(statement).run();migrated=true}
  async function start(){
-  const config=()=>({...convertV4MiniflareOptions({host:hostname,port:0,https:true,...options,bindings:vars,outboundService,unsafeTriggerHandlers:true}),resourcePersistencePath:directory});
+  const initial=port===0,requestedPort=port,config=()=>({...convertV4MiniflareOptions({host:hostname,port:requestedPort,https:true,...options,bindings:vars,outboundService,unsafeTriggerHandlers:true}),resourcePersistencePath:directory});
   worker=new Miniflare(config());const ready=await worker.ready;
   // Let Workerd bind port zero itself. Selecting then releasing an ephemeral port races its loopback sockets.
-  port=Number(ready.port);origin=`https://${hostname}:${port}`;vars.AUTH_ORIGIN=origin;await worker.setOptions(config());
+  if(initial){port=Number(ready.port);origin=`https://${hostname}:${port}`;vars.AUTH_ORIGIN=origin;await worker.setOptions(config())}
+  // A restart keeps the public origin so existing browser pages, links and device addresses remain valid.
   if(!migrated)await migrate()
  }
  async function stop(){if(!worker)return;await worker.dispose();worker=null}
