@@ -29,6 +29,7 @@ try {
   db.prepare('INSERT INTO oa_bootstrap VALUES(1,?,1)').run('old-bootstrap-authority');
   db.prepare("INSERT INTO oa_tokens VALUES('old-token','OLD_MAGIC_HASH','magic','owner',1,NULL,NULL,'/',1,9999999999999,NULL,NULL)").run();
   db.prepare("INSERT INTO oa_sessions VALUES('old-session','OLD_SESSION_HASH','owner',1,'native','old-token',1,9999999999999,NULL)").run();
+  db.prepare("INSERT INTO chest_integration_secrets VALUES('old-oauth-token','OLD_OAUTH_AUTHORITY')").run();
   db.prepare("INSERT INTO chest_device_credentials VALUES('OLD_DEVICE_HASH','device','owner@example.test',?,NULL,NULL)").run(at);
   db.prepare("INSERT INTO chest_reader VALUES(1,'openai','https://example.test','model','workspace','OLD_READER_SECRET','hint','owner@example.test',?)").run(at);
   db.prepare("INSERT INTO chest_sso_config VALUES(1,?, 'revision',NULL,0)").run(JSON.stringify({clientSecret:'OLD_SSO_SECRET'}));

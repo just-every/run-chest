@@ -1,0 +1,2 @@
+[data-chest-picker] [hidden] { display: none !important; }
+[data-chest-picker] .events { display: grid; gap: 12px; }

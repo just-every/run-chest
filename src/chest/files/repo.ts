@@ -1,3 +1,4 @@
+import { integrationEventOps, integrationEventStatements } from '../integrations/events'
 import { erasurePublication } from '../erasure/publication'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -28,6 +29,8 @@ export async function commit(env: Bindings, actor: Session | null, ops: Op[], { 
   attachments.delete(actor)
   ops = [...ops, ...attachment.ops(ops)]; fences = [...fences, ...attachment.fences ?? []]; audits = [...audits, ...attachment.audits ?? []]
  }
+ const events=integrationEventOps(ops,changes,audits)
+ ops=[...ops,...events];statements=[...statements,...integrationEventStatements(events)]
  const statement = (sql: string, params: unknown[] = []) => env.DB.prepare(sql).bind(...params)
  const written = new Set(ops.map(o => o.row.id)), predicates = [...(actor ? [sessionPredicate(actor)] : []), ...fences.filter(f => !written.has(f.id)).map(snapshot), ...ops.map(o => o.previous ? snapshot(o.previous) : { sql: 'NOT EXISTS(SELECT 1 FROM chest_records WHERE id=?)', params: [o.row.id] })]
  const redact=await (await import('../audit/privacy')).identityRedactor(env)

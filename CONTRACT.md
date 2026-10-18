@@ -873,8 +873,8 @@ Ownership, new-file creation, folder version review, link version and link-polic
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 23 | 1 | 0 | 24 |
-| Target and push further | 16 | 34 | 22 | 72 |
-| All | 39 | 35 | 22 | 96 |
+| Target and push further | 17 | 33 | 22 | 72 |
+| All | 40 | 34 | 22 | 96 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -961,7 +961,7 @@ Ownership, new-file creation, folder version review, link version and link-polic
 | `CONNECT-004` | Docusign execution and return custody | target | missing |  | No delivered product workflow. |
 | `CONNECT-005` | Zoom meeting file exchange | target | missing |  | No delivered product workflow. |
 | `CONNECT-006` | Email and app intake | target | partial | `src/chest/filing/intake.ts`; `src/chest/filing/ui.ts`; `src/chest/filing/ui-intake.ts`; `tests/chest/filing.mjs` | Cloudflare Email Routing intake addresses per space deliver attachments into a chosen folder with message/sender/date provenance, replay protection and revocation by pausing intake or losing manager access. The setup page says what it needs (Chest on Cloudflare Workers and a domain on Cloudflare with Email Routing, or a subdomain when the domain already gets mail), gives the Cloudflare steps screen by screen, and points people without such a domain to file requests. The built Worker email-event flow is exercised locally. Hosted native delivery through Cloudflare Email Routing and the real-model filing notice were exercised with the installation’s verified SendGrid sender. Missing: Gmail/Outlook and app connectors, source policy scopes and durable queue reconciliation. |
-| `CONNECT-007` | Public API, webhooks and scoped agents | target | partial | `src/chest/api.ts`; `src/chest/files/sync-api.ts`; `src/chest/files/devices.ts`; `tests/chest/files.mjs` | The sync device protocol is a documented credentialed API for clients; OAuth apps, MCP, webhooks and app control do not. |
+| `CONNECT-007` | Public API, webhooks and scoped agents | target | done | `src/chest/integrations/`; `public/chest-picker.js`; `migrations/core/0023_integrations.sql`; `tests/chest/integrations.mjs`; `tests/chest/browser-integrations.mjs`; `tests/chest/integration-client.mjs`; `docs/integrations.md` | OAuth/PKCE grants bound current users, resources, actions and budgets across documented paginated file/folder/version/search/share/request APIs and MCP. Idempotent mutations commit durable receipts atomically. The embedded picker returns stable IDs and authenticated links under live access. Installation-local secrets and publication proofs exclude imported authority/events. Signed webhook outcomes retain failure/uncertainty and explicit same-event replay. Organization/group app allowlists, read-only limits, blocks and scoped administration revoke live grants and audit policy changes. HTTP and real third-party HTTPS consumer browser journeys exercise consent, picker, refusal, revocation and webhook replay at 1440/390. |
 | `CONNECT-008` | Gmail and Outlook compose and save add-ins | target | missing |  | No delivered product workflow. |
 | `CONNECT-009` | Zapier and Make automation apps | target | missing |  | No delivered product workflow. |
 | `CONNECT-010` | Google Meet, Calendar, Chat and Forms file companion | target | missing |  | No delivered product workflow. |

@@ -1,3 +1,5 @@
+import { integrationsResponse } from './chest/integrations/http'
+import { sweepIntegrations } from './chest/integrations/webhooks'
 import { sweepBackups } from './chest/backups/service'
 import { collectionSweep } from './chest/collection'
 import { withDemo } from './modules/demo/index.mjs'
@@ -32,7 +34,7 @@ function documentResponse(response: Response): Response {
 }
 
 export default withDemo({
-  async scheduled(_controller, original) { await Promise.all([sweepBackups(runtimeBindings(original)),collectionSweep(runtimeBindings(original)),sweepLinkRepairs(runtimeBindings(original)),sweepAgents(runtimeBindings(original))]) },
+  async scheduled(_controller, original) { await Promise.all([sweepIntegrations(runtimeBindings(original)),sweepBackups(runtimeBindings(original)),collectionSweep(runtimeBindings(original)),sweepLinkRepairs(runtimeBindings(original)),sweepAgents(runtimeBindings(original))]) },
   async email(message, env) { await receiveIntake(runtimeBindings(env), message) },
   async fetch(request, original, execution) {
     const asset = await staticAssetResponse(request, original)
@@ -47,8 +49,8 @@ export default withDemo({
     if (provisioning) return provisioning
     const auth = await authResponse(request, env)
     if (auth) return documentResponse(auth)
-    const product = await apiResponse(request, env) ?? await uiResponse(request, env)
-    if (product) return documentResponse(product)
+    const product = await integrationsResponse(request, env) ?? await apiResponse(request, env) ?? await uiResponse(request, env)
+    if (product) { execution.waitUntil(sweepIntegrations(env)); return documentResponse(product) }
     return documentResponse(await dispatch(request, () => api.fetch(request, env, execution), () => start.fetch(request)))
   },
 } satisfies ExportedHandler<Bindings>, { seed: seedDemo })

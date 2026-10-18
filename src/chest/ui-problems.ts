@@ -1,5 +1,11 @@
 // What a refused action says, in plain words. The code stays on the page in small print for anyone reporting it.
 const words: Record<string, string> = {
+ app_policy_authorization_disabled: 'Your organization or group policy does not allow app authorization. Ask an administrator with sharing and security scope.',
+ app_policy_app_blocked: 'Your organization or group policy blocks this app. It cannot receive access to your files.',
+ app_policy_allowlist_only: 'Your organization or group permits only allowlisted apps. This app is not on the list.',
+ app_policy_read_only: 'Your organization or group permits this app to read files only. It cannot authorize upload or sharing actions.',
+ oauth_grant_revoked: 'This app’s access was revoked. Authorize it again only if your current app policy allows it.',
+
  space_creation_named_groups_only: 'Only members of the administrator’s named creator groups may create team spaces. Request a space from Files.',
  space_creation_admins_only: 'Only service-settings admins may create team spaces. Request a space from Files.',
  space_manager_override_disabled: 'Your administrator has locked this space’s defaulted settings. Ask a service-settings admin to change them.',
