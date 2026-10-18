@@ -52,7 +52,7 @@ while (tables.length < schema.length) {
 // Company sign-in is sealed with the deployment's own SESSION_SECRET, which a fresh deployment does not share, and
 // its in-flight sign-ins are useless there: those rows are cleared, so everyone signs in by email and the owner enters
 // the provider again. SCIM tokens, links and people are hashed without that secret and keep working.
-const deploymentBound = ['chest_sso_config', 'chest_sso_transactions', 'chest_saml_requests'].filter(t => tables.includes(t));
+const deploymentBound = ['chest_mfa_factors', 'chest_mfa_challenges', 'chest_mfa_verified', 'chest_mfa_recovery', 'chest_mfa_limits', 'chest_mfa_resets', 'chest_sso_config', 'chest_sso_transactions', 'chest_saml_requests'].filter(t => tables.includes(t));
 const plan = join(opts.input, `restore-${Date.now()}.sql`);
 const triggers = await query(creds, id, "SELECT name, sql FROM sqlite_master WHERE type='trigger' AND sql IS NOT NULL");
 writeFileSync(plan, ['PRAGMA defer_foreign_keys = TRUE;', ...triggers.map(t => `DROP TRIGGER "${t.name}";`), ...tables.map(t => `DELETE FROM "${t}";`), dump, ...deploymentBound.map(t => `DELETE FROM "${t}";`), ...triggers.map(t => `${t.sql};`)].join('\n') + '\n', { mode: 0o600 });

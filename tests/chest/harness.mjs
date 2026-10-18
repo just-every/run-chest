@@ -11,9 +11,9 @@ const {Miniflare,convertV4MiniflareOptions}=createRequire(require.resolve('wrang
 // The built Worker runs as deployed (production mail, https origin). Its network
 // edges are the mail provider, where the test receives each message, and, when a
 // test passes `edge`, that test's fake of a paid provider (an AI model).
-export async function harness({edge,bindings={}}={}){
+export async function harness({edge,bindings={},hostname='127.0.0.1'}={}){
  const socket=createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r));
- const origin=`https://127.0.0.1:${port}`,directory=await mkdtemp(join(tmpdir(),'chest-http-')),secret=()=>randomBytes(32).toString('base64url'),mails=[];
+ const origin=`https://${hostname}:${port}`,directory=await mkdtemp(join(tmpdir(),'chest-http-')),secret=()=>randomBytes(32).toString('base64url'),mails=[];
  const vars={AUTH_LOCAL:'false',AUTH_ORIGIN:origin,OWNER_EMAIL:'owner@example.test',SESSION_SECRET:secret(),SETUP_TOKEN:secret(),MAIL_PROVIDER:'resend',MAIL_API_KEY:'test-only-mail-provider-key',MAIL_FROM:'Chest <auth@example.test>',...bindings};
  const {compatibilityDate,compatibilityFlags,assets,d1Databases,r2Buckets}=workerOptions('dist/server/wrangler.json').workerOptions,root=join(process.cwd(),'dist/server');
  const modules=['index.js',...(await readdir(join(root,'assets'))).map(f=>`assets/${f}`)].map(f=>({type:f.endsWith('.wasm')?'CompiledWasm':'ESModule',path:join(root,f)}));
@@ -26,7 +26,7 @@ export async function harness({edge,bindings={}}={}){
  let worker,migrated=false;
  // The numbered migrations, in order, once; a restart keeps the persisted data.
  async function migrate(){const db=await worker.getD1Database('DB'),folder='migrations/core';for(const file of (await readdir(folder)).filter(f=>f.endsWith('.sql')).sort())for(const statement of splitSql(await readFile(join(folder,file),'utf8')))await db.prepare(statement).run();migrated=true}
- async function start(){worker=new Miniflare({...convertV4MiniflareOptions({host:'127.0.0.1',port,https:true,...options,bindings:vars,outboundService,unsafeTriggerHandlers:true}),resourcePersistencePath:directory});await worker.ready;if(!migrated)await migrate()}
+ async function start(){worker=new Miniflare({...convertV4MiniflareOptions({host:hostname,port,https:true,...options,bindings:vars,outboundService,unsafeTriggerHandlers:true}),resourcePersistencePath:directory});await worker.ready;if(!migrated)await migrate()}
  async function stop(){if(!worker)return;await worker.dispose();worker=null}
  // Miniflare's fetch has its own undici: send a form as its encoded multipart bytes.
  async function fetch(path,init={}){

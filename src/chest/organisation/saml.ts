@@ -31,7 +31,8 @@ export async function samlCallback(env:Bindings,request:Request) {
  const confirmation=confirmations[0].SubjectConfirmationData?.[0]?.$
  insist(confirmation?.Recipient===`${env.AUTH_ORIGIN}/auth/company/acs`&&confirmation.InResponseTo===profile.inResponseTo&&Number.isFinite(Date.parse(confirmation.NotOnOrAfter)),'saml_recipient_mismatch',403)
  const email=profile.email||profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];insist(typeof email==='string','saml_email_attribute_required',403)
- return finish(env,request,tx,{issuer:row.config.issuer,subject:profile.nameID,email,emailVerified:true})
+ const contexts=assertion?.AuthnStatement?.flatMap((a:any)=>a.AuthnContext?.flatMap((c:any)=>c.AuthnContextClassRef??[])??[])??[],mfa=contexts.some((c:any)=>['https://refeds.org/profile/mfa','http://schemas.microsoft.com/claims/multipleauthn'].includes(typeof c==='string'?c:c._))
+ return finish(env,request,tx,{mfa,issuer:row.config.issuer,subject:profile.nameID,email,emailVerified:true})
 }
 export async function samlMetadata(env:Bindings) {
  const row=await ssoSettings(env);insist(row?.config.protocol==='saml','saml_not_configured',404)

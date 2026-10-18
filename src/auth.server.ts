@@ -5,6 +5,8 @@ import { operatorMail } from './mail.server.mjs'
 import { createOwnerClaimHandler, OwnerClaimError } from './modules/owner-claim/index.mjs'
 import branding from './branding.json'
 import { companyResponse } from './chest/organisation/routes'
+import { securityResponse } from './chest/security/routes'
+import { requireMfa } from './chest/security/session'
 import { namingInviter } from './chest/invitation-mail'
 
 // The edition's declared theme (public/rer-theme.css), as Base frames link it.
@@ -44,12 +46,18 @@ export interface Bindings {
 export const runtimeBindings = (env: Bindings): Bindings => env.RER_DEV_ORIGIN && env.AUTH_LOCAL === 'true' ? { ...env, AUTH_ORIGIN: env.RER_DEV_ORIGIN } : env
 export const authConfig = (env: Bindings): AuthConfig => ({ origin: env.AUTH_ORIGIN, local: env.AUTH_LOCAL === 'true', OWNER_EMAIL: env.OWNER_EMAIL, SESSION_SECRET: env.SESSION_SECRET, SETUP_TOKEN: env.SETUP_TOKEN, MAIL_FROM: env.MAIL_FROM, branding: { productName: branding.name, accentColor: branding.primaryColor, signInPath: '/signin', theme: theme.href } })
 // `inviter` names who sends the invitation this instance mails (src/chest/invitation-mail.ts).
-export function operatorAuth(env: Bindings, inviter?: string) {
+export function baseOperatorAuth(env: Bindings, inviter?: string) {
  return createOperatorAuth({ db: env.DB, config: authConfig(env), mailSender: inviter ? namingInviter(operatorMail(env), inviter) : operatorMail(env), clientIp: request => request.headers.get('CF-Connecting-IP') ?? '' })
+}
+
+export function operatorAuth(env:Bindings,inviter?:string){
+ const auth=baseOperatorAuth(env,inviter)
+ return {...auth,async getSession(request:Request){const s=await auth.getSession(request);if(s)await requireMfa(env,s);return s}}
 }
 
 export async function authResponse(request: Request, original: Bindings): Promise<Response | null> {
  const env = runtimeBindings(original), url = new URL(request.url)
+ const security=await securityResponse(request,env);if(security)return security
  // The key exchange answers only a local runtime holding RER_DEV_KEY.
  if (url.pathname === '/__dev/key') {
   const gate = devGate({ key: env.RER_DEV_KEY, origin: env.AUTH_ORIGIN, local: env.AUTH_LOCAL === 'true' })

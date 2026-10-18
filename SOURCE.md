@@ -7,7 +7,7 @@ edition-authoring source. `base-copies.json` records verbatim copies;
 provenance. The hydration README is adapted for package-mode commands, with its
 original path mapped in `edition.json`; it makes no claim of byte equality.
 
-The published `@runeditrun/rer` 0.2.57 is pinned exactly in `package.json` and
+The published `@runeditrun/rer` 0.2.59 is pinned exactly in `package.json` and
 `pnpm-lock.yaml`. It owns command execution and archive format v2, whose integrity
 digest binds the manifest, including source identity, erasure epoch and journal.
 Version 1 archives require the acknowledged, backup-only recovery procedure in
@@ -50,9 +50,11 @@ recorded in `base-copies.json`; applied migrations remain unchanged.
 
 Chest owns the reversible arrival-rule planner and executor in `src/chest/filing/batch-*.ts`,
 its bounded Office-to-text and ZIP transforms, and the exercising HTTP and browser journeys.
-The command package is pinned to `@runeditrun/rer` 0.2.57; copied Base modules retain
+The command package is pinned to `@runeditrun/rer` 0.2.59; copied Base modules retain
 their separately recorded revisions.
 
 The arrival agent uses explicit inbox/destination grants and the installation reader provider.
 `src/chest/filing/agent-*.ts` owns classification plans, standing execution and current-access
 notices; classification never grants permissions or assigns ownership.
+
+Chest owns two-step sign-in under `src/chest/security`; it uses SimpleWebAuthn Server (MIT) for WebAuthn verification. TOTP secrets and public credential records are sealed to this installation. Portable archives exclude factor secrets, recovery codes, challenges, resets and proof sessions; sign-in policy remains, so a restored installation requires fresh enrollment. Hosted restore clears the deployment-bound factors without transferring their authority.

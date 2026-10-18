@@ -112,6 +112,12 @@
       "clauses": [
         "AGENT-003"
       ]
+    },
+    {
+      "id": "native-two-step-sign-in",
+      "clauses": [
+        "ADMIN-004"
+      ]
     }
   ],
   "nonGoals": [

@@ -1,3 +1,4 @@
+import { requireMfa, stampMfa } from '../security/session'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get, list } from '../store'
@@ -16,6 +17,7 @@ export async function enrol(env: Bindings, s: Session, input: any) {
  const platform = text(input.platform, 'platform', 40); insist(['macos', 'windows', 'ios', 'android', 'linux', 'other'].includes(platform), 'invalid_platform')
  const token = secret(), at = now(), row = fresh<Device>('device', { owner: s.operator.email, name: text(input.name, 'name', 120), platform, createdAt: at, revokedAt: null, revokedBy: null })
  await commit(env, s, [{ row }], { audits: [{ action: 'device.enrol', object: row.id, detail: { platform } }], statements: [{ sql: 'INSERT INTO chest_device_credentials(token_hash,device,email,created_at) VALUES(?,?,?,?)', params: [await digest(new TextEncoder().encode(token)), row.id, s.operator.email, at] }] })
+ const proof=await env.DB.prepare('SELECT method FROM chest_mfa_verified WHERE session_id=?').bind(s.id).first<{method:string}>();await stampMfa(env,{...s,id:`device:${row.id}`},proof?.method??'none')
  return { device: { id: row.id, ...row.payload }, token }
 }
 export async function devices(env: Bindings, s: Session) {
@@ -31,8 +33,9 @@ export async function revoke(env: Bindings, s: Session, key: string) {
 export async function deviceSession(env: Bindings, request: Request): Promise<Session> {
  const m = /^Bearer (chest_dev_[A-Za-z0-9_-]{43})$/.exec(request.headers.get('authorization') ?? ''); if (!m) throw new ChestError('authentication_required', 401)
  const hash = await digest(new TextEncoder().encode(m[1]))
- const r: any = await env.DB.prepare("SELECT c.device, o.id, o.email, o.display_name, o.role, o.version, o.created_at FROM chest_device_credentials c JOIN oa_operators o ON o.email=c.email WHERE c.token_hash=? AND c.revoked_at IS NULL AND o.status='active'").bind(hash).first()
+ const r: any = await env.DB.prepare("SELECT c.device, c.created_at AS device_created, o.id, o.email, o.display_name, o.role, o.version, o.created_at FROM chest_device_credentials c JOIN oa_operators o ON o.email=c.email WHERE c.token_hash=? AND c.revoked_at IS NULL AND o.status='active'").bind(hash).first()
  if (!r) throw new ChestError('authentication_required', 401)
  await env.DB.prepare('UPDATE chest_device_credentials SET last_seen=? WHERE token_hash=?').bind(now(), hash).run()
- return { id: `device:${r.device}`, kind: 'device', operatorId: r.id, operator: { id: r.id, email: r.email, displayName: r.display_name, role: r.role, status: 'active', version: r.version, createdAt: r.created_at }, createdAt: 0, expiresAt: 0, predicate: { sql: credential, params: [hash] }, device: r.device } as unknown as Session
+ const session={ id: `device:${r.device}`, kind: 'device', operatorId: r.id, operator: { id: r.id, email: r.email, displayName: r.display_name, role: r.role, status: 'active', version: r.version, createdAt: r.created_at }, createdAt: Date.parse(r.device_created), expiresAt: 0, predicate: { sql: credential, params: [hash] }, device: r.device } as unknown as Session
+ await requireMfa(env,session);return session
 }

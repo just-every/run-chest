@@ -1,3 +1,5 @@
+import { mfaPolicy } from '../security/policy'
+import { stampMfa } from '../security/session'
 import { createLocalJWKSet, jwtVerify } from 'jose'
 import type { Bindings } from '../../auth.server'
 import { operatorAuth } from '../../auth.server'
@@ -20,7 +22,9 @@ export async function consume(env:Bindings,request:Request,state:string) {
 }
 export async function finish(env:Bindings,request:Request,tx:any,principal:any) {
  const current=await ssoSettings(env);insist(current&&current.revision===tx.revision,'sso_configuration_changed',409)
+ const policy=await mfaPolicy(env);insist(!policy.requireIdpMfa||principal.mfa===true,'identity_provider_mfa_required',403)
  const completed=await operatorAuth(env).admission.admit(request,{...principal,provider:'organisation',providerGeneration:tx.generation},{returnTo:tx.test?'/app/sso-tested':'/app/files'})
+ if(principal.mfa===true)await stampMfa(env,{...completed.session,operator:completed.operator} as any,'idp')
  await env.DB.prepare('UPDATE chest_sso_config SET tested_at=? WHERE singleton=1 AND revision=?').bind(new Date().toISOString(),tx.revision).run()
  const headers=new Headers({'cache-control':'no-store',location:completed.returnTo});headers.append('set-cookie',correlationCookie(env,'',0));headers.append('set-cookie',completed.cookie);return new Response(null,{status:303,headers})
 }
@@ -43,5 +47,5 @@ export async function oidcCallback(env:Bindings,request:Request) {
  insist(constantEqual(payload.nonce,tx.nonce)&&typeof payload.sub==='string'&&typeof payload.email==='string'&&payload.email_verified===true,'provider_identity_not_verified',403)
  insist(payload.azp===undefined?!(Array.isArray(payload.aud)&&payload.aud.length>1):payload.azp===config.clientId,'provider_audience_mismatch',403)
  if(payload.at_hash){insist(typeof tokens.access_token==='string','invalid_access_token');const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(tokens.access_token)));insist(constantEqual(payload.at_hash,Buffer.from(digest.slice(0,16)).toString('base64url')),'invalid_access_token')}
- return finish(env,request,tx,{issuer:config.issuer,subject:payload.sub,email:payload.email,emailVerified:true,...(payload.email_verified_at!==undefined?{emailVerifiedAt:Number(payload.email_verified_at)*1000}:{}),sid:payload.sid})
+ return finish(env,request,tx,{issuer:config.issuer,subject:payload.sub,email:payload.email,emailVerified:true,...(payload.email_verified_at!==undefined?{emailVerifiedAt:Number(payload.email_verified_at)*1000}:{}),sid:payload.sid,mfa:Array.isArray(payload.amr)&&payload.amr.includes('mfa')})
 }
