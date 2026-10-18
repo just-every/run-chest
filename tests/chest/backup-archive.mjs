@@ -33,7 +33,7 @@ try {
   db.prepare("INSERT INTO chest_sso_config VALUES(1,?, 'revision',NULL,0)").run(JSON.stringify({clientSecret:'OLD_SSO_SECRET'}));
   db.prepare("INSERT INTO rer_dependency_keys VALUES('provider','OLD_PRIVATE_KEY')").run();
   const records=[
-    ['item','item',{space:'space',parent:null,type:'file',name:'Retained.txt',versions:[{id:'v1',checksum:hash,size:bytes.length}],current:'v1',grants:[],trash:null}],
+    ['item','item',{space:'space',parent:null,type:'file',name:'Retained.txt',versions:[{id:'v1',checksum:hash,size:bytes.length,text:'{"token":"contract reference in the original"}'}],current:'v1',filing:{schema:'case-type',owner:'owner@example.test',fields:{token:'customer reference',secret:'case description'}},grants:[],trash:null}],
     ['space','space',{name:'Independent',kind:'team',owner:'owner@example.test',members:[],settings:{noDownload:false}}],
     ['comment','comment',{item:'item',version:'v1',message:'Keep the complete graph',at}],
     ['mapping','migration-source-map',{sourceId:'remote:42',targetId:'item',revision:'v1'}],

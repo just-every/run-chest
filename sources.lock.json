@@ -609,7 +609,7 @@
       "executable": false
     },
     "scripts/backup/database.mjs": {
-      "sha256": "ccd9ce95cb3fb91ed41aed1d9998c9348a3ad1ceee127f111790a089099976c2",
+      "sha256": "f5de6609c24b42c671f8e14fd1841a5895ee3c10fe055ea9447814698ebe81f3",
       "executable": false
     },
     "scripts/backup/hosted.mjs": {
@@ -3465,7 +3465,7 @@
       "executable": false
     },
     "tests/chest/backup-archive.mjs": {
-      "sha256": "e770b83caa6d2b3f0cb84ba01b0dd72b04969f69f567b379057235ce0d42289b",
+      "sha256": "be7ae2fc3a0bea7b8cdf48faf5d172d70a4bbd21e6f9f736efcb231d523420c2",
       "executable": false
     },
     "tests/chest/browser-agent-filing.mjs": {

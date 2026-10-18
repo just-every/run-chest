@@ -16,18 +16,23 @@ const authorityKey = /^(?:token(?:_?hash)?|password|secret|client_?secret|api_?k
 const jobKind = /(?:send|mail|notification|dispatch|delivery)-job$/;
 const inertAt = '1970-01-01T00:00:00.000Z';
 
-function cleanValue(value) {
-  if (Array.isArray(value)) return value.map(cleanValue);
-  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).filter(([k]) => !authorityKey.test(k)).map(([k,v]) => [k, cleanValue(v)]));
+function cleanValue(value, encoded = true) {
+  if (Array.isArray(value)) return value.map(v => cleanValue(v, encoded));
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).filter(([k]) => !authorityKey.test(k)).map(([k,v]) => [k, cleanValue(v, encoded)]));
   // Import execution snapshots sometimes encode JSON inside JSON columns.
-  if (typeof value === 'string' && /^[\s]*[\[{]/.test(value)) {
+  if (encoded && typeof value === 'string' && /^[\s]*[\[{]/.test(value)) {
     try { const parsed=JSON.parse(value), clean=cleanValue(parsed); return isDeepStrictEqual(parsed,clean) ? value : JSON.stringify(clean); } catch {}
   }
   return value;
 }
 export function sanitizeRecord(kind, payload) {
   if (ephemeralKind.test(kind)) return null;
-  const value = cleanValue(payload);
+  const value = cleanValue(payload, !['item','document','extraction'].includes(kind));
+  // Typed fields and extracted document text are business content, even when a
+  // customer names a field token/secret. Credentials live in excluded authority
+  // stores or execution records, never in these typed value maps.
+  if (kind === 'document' && payload.fields) value.fields = structuredClone(payload.fields);
+  if (kind === 'item' && payload.filing?.fields) value.filing.fields = structuredClone(payload.filing.fields);
   if (['link', 'public-link'].includes(kind)) { value.tokenHash = ''; value.password = null; value.revokedAt ??= inertAt; value.expires = inertAt; }
   if (kind === 'file-request') { value.tokenHash = ''; value.closedAt ??= inertAt; }
   if (kind === 'collection-checklist') value.sendReminders = false;
