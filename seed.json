@@ -64,6 +64,12 @@
       "clauses": [
         "SHARE-002"
       ]
+    },
+    {
+      "id": "reversible-arrival-rules",
+      "clauses": [
+        "RULE-001"
+      ]
     }
   ],
   "nonGoals": [

@@ -1,3 +1,4 @@
+import { effectiveGovernance, prepareFiling } from '../files/folder-metadata'
 import { preservePublicAudience } from './public-audience'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -60,7 +61,8 @@ export async function moveFile(env: Bindings, s: Session, w: Who, item: Row<Item
  preserveAudience(ctx, dest, item)
  const publicAudience=await preservePublicAudience(env,ctx,dest,item)
  unique(await siblings(env, item.payload.space, destination), item.payload.name, item.id)
- const at = now(), row = next(item, { ...item.payload, parent: destination, updatedAt: at })
+ const governed = await prepareFiling(env,dest,{...item.payload,governance:effectiveGovernance(ctx,item.payload)})
+ const at = now(), row = next(item, { ...governed, parent: destination, updatedAt: at })
  const destinationPath = [dest.space.payload.name, ...dest.chain.map(r => r.payload.name)].join(' / ')
  const links = [...new Map([...ctx.links, ...dest.links].map(r => [r.id, r])).values()]
  const undoFences = [...new Map([...ctx.fences, ...dest.fences, ...links, ...publicAudience.links].filter(r => r.id !== item.id).map(r => [r.id, { id: r.id, kind: r.kind, revision: r.revision }])).values()]

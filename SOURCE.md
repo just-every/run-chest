@@ -47,3 +47,8 @@ The demo, operator-auth, owner-claim, mail, dependencies and import-kit modules
 are refreshed together from `rer-v0.2.47` (9a4ba9eb975b4f3b5a5f95c682eea7d80b4d0fbb),
 including import-kit’s shared d1-transport dependency. Their exact copies are
 recorded in `base-copies.json`; applied migrations remain unchanged.
+
+Chest owns the reversible arrival-rule planner and executor in `src/chest/filing/batch-*.ts`,
+its bounded Office-to-text and ZIP transforms, and the exercising HTTP and browser journeys.
+The command package is pinned to `@runeditrun/rer` 0.2.56; copied Base modules retain
+their separately recorded revisions.

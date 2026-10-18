@@ -76,7 +76,7 @@ export async function search(env: Bindings, w: Who, url: URL) {
  for (const e of entries) {
   if(hidden.has(e.row.id))continue
   if (!e.state.role || e.state.trash || (space && e.space.id !== space)) continue
-  const v = e.row.payload.versions.find(v => v.id === e.row.payload.current), text = v?.text.toLowerCase() ?? '', inName = e.row.payload.name.toLowerCase().includes(q), at = q ? text.indexOf(q) : -1, inside = v ? read.get(v.checksum) : undefined
+  const v = e.row.payload.versions.find(v => v.id === e.row.payload.current), text = v?.text.toLowerCase() ?? '', inName = [e.row.payload.name,...(e.row.payload.tags??[])].join(' ').toLowerCase().includes(q), at = q ? text.indexOf(q) : -1, inside = v ? read.get(v.checksum) : undefined
   if (q && !inName && at < 0 && inside === undefined && !JSON.stringify(e.row.payload.filing?.fields ?? {}).toLowerCase().includes(q)) continue
   result.push({ ...brief(e), space: { id: e.space.id, name: label(e.space.payload, w) }, snippet: at >= 0 ? v!.text.slice(Math.max(0, at - 60), at + q.length + 60) : inside ?? '' })
  }
