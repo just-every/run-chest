@@ -6,6 +6,7 @@ import { context, demand, type Who } from '../files/access'
 import { admit } from '../files/items'
 import { commit, next } from '../files/repo'
 import { officeEdit, officePreview } from './codec'
+import { versionPublication } from '../files/governance'
 
 export const isOffice = (name: string) => /\.(docx|xlsx|pptx)$/i.test(name)
 async function original(env: Bindings, version: { size: number; checksum: string }) {
@@ -49,7 +50,7 @@ export async function saveOffice(env: Bindings, s: Session, w: Who, key: string,
  insist(Object.keys(changed).length, 'office_no_changes', 409)
  const bytes = await officeEdit(currentBytes, changed), rendered = await officePreview(bytes); insist(rendered, 'office_format_unsupported', 415)
  const v = await admit(env, bytes, current.filename, s.operator.email, 'browser edit', {}, { text: rendered.text, parser: 'chest:office:1' })
- const row = next(item, { ...item.payload, versions: [...item.payload.versions, v], current: v.id, updatedAt: v.at })
+ const row = next(item, versionPublication(ctx, item.payload, v))
  try {
   await commit(env, s, [{ row, previous: item }], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'version' }], audits: [{ action: 'version.edit', object: key, detail: { version: v.id, base: base.id, previous: current.id } }] })
  } catch (error) {

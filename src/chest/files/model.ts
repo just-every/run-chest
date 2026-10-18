@@ -7,10 +7,10 @@ export const spaceRoles: Role[] = ['viewer','commenter','contributor','content_m
 export const shareRoles: Role[] = ['viewer','commenter','editor']
 export type Grant = { principal: string; role: Role; by: string; at: string; expires?: string; message?: string }
 export type Space = { name: string; kind: 'team'|'personal'; owner: string; formerOwner?: string; members: Grant[]; settings: { noDownload: boolean; editorSharing: boolean }; storageLimitBytes?: number | null; createdBy: string; createdAt: string }
-export type Arrival = 'email'|'upload'|'sync client'|'restore'|'copy'|'conflict copy'|'browser edit'
-export type FileVersion = { id: string; filename: string; checksum: string; size: number; mediaType: string; preview: string; text: string; parser: string; at: string; actor: string; arrival: Arrival; name: string; restoredFrom?: string; device?: string }
+export type Arrival = 'email'|'upload'|'sync client'|'restore'|'copy'|'conflict copy'|'browser edit'|'created'
+export type FileVersion = { id: string; filename: string; checksum: string; size: number; mediaType: string; preview: string; text: string; parser: string; at: string; actor: string; arrival: Arrival; name: string; restoredFrom?: string; device?: string; template?: { id: string; name: string; version: string; sourceVersion?: string }; review?: { reviewer: string; state: 'submitted'|'approved'|'changes'; actor?: string; at?: string; message?: string } }
 export type Trash = { by: string; at: string; role: Role }
-export type Item = { space: string; parent: string|null; type: 'folder'|'file'; name: string; createdBy: string; createdAt: string; updatedAt: string; restricted: boolean; noDownload: boolean; grants: Grant[]; trash: Trash|null; versions: FileVersion[]; current: string|null }
+export type Item = { space: string; parent: string|null; type: 'folder'|'file'; name: string; createdBy: string; createdAt: string; updatedAt: string; restricted: boolean; noDownload: boolean; grants: Grant[]; trash: Trash|null; versions: FileVersion[]; current: string|null; governance?: { reviewer: string }; approved?: string|null }
 export type Link = { item: string; tokenHash: string; audience: 'organisation'|'restricted'; expires?: string|null; role: Role; discoverable: boolean; createdBy: string; at: string }
 // A link for anyone (SHARE-001): no account; optional password (PBKDF2 hash only), expiry and download limit. Revoking
 // keeps the record so the link answers a plain page and the audit keeps its history.

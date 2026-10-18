@@ -10,6 +10,7 @@ import { admit, siblings } from './items'
 import { linkDate } from './public-links'
 import { deliver, notice } from './notify'
 import { name, type FileRequest, type Item } from './model'
+import { versionPublication } from './governance'
 // File requests (SHARE-002): someone who may share a folder asks anyone, with no account, to upload into it. The
 // uploader sees only the request's title and message, never the folder's contents or name; each file lands as a new
 // item in that folder, attributed to the submitter, and the person who asked gets a notice and an email.
@@ -71,7 +72,7 @@ export async function submit(env: Bindings, secret: string, input: Submission) {
   insist(f.bytes.length <= request.payload.maxBytes, 'file_too_large', 413)
   const value = freeName(taken, filename); taken.add(value.toLowerCase())
   const v = await admit(env, f.bytes, value, by, 'upload')
-  rows.push(fresh<Item>('item', { space: ctx.space.id, parent: folder.id, type: 'file', name: value, createdBy: request.payload.createdBy, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions: [v], current: v.id }))
+  rows.push(fresh<Item>('item', versionPublication(ctx, { space: ctx.space.id, parent: folder.id, type: 'file', name: value, createdBy: request.payload.createdBy, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions: [], current: null }, v)))
  }
  const who = submitter.name ? `${submitter.name}${submitter.email ? ` (${submitter.email})` : ''}` : submitter.email || 'Someone'
  const note = notice(request.payload.custodian ?? request.payload.createdBy, 'file-request.upload', rows.length === 1 ? rows[0].id : folder.id, who, `${who} uploaded ${rows.map(r => `"${r.payload.name}"`).join(', ')} to "${folder.payload.name}" through your file request "${request.payload.title}".`)

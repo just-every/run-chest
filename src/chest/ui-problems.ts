@@ -1,5 +1,6 @@
 // What a refused action says, in plain words. The code stays on the page in small print for anyone reporting it.
 const words: Record<string, string> = {
+ invalid_password: 'Use a link password between 8 and 200 characters, or leave it empty for no password.',
  ownership_personal_only: 'Only an item in your personal area can be offered. Team-space items belong to the team.',
  ownership_changed: 'This request or the item changed. Reload to see its current state.',
  ownership_already_pending: 'An ownership request is already waiting. Cancel it before sending a new one.',

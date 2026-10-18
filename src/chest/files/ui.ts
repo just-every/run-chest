@@ -25,9 +25,19 @@ import { ownershipView, ownershipInbox } from './ownership'
 import { ownershipPage, ownershipInboxPage } from './ui-ownership'
 import { personal } from './spaces'
 import { readerState } from '../read/settings'
+import { isAdmin } from './access'
+import { listTemplates } from '../office/create-templates'
+import { creationSettings } from '../office/create-settings'
+import { templatesPage } from '../office/new-ui'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
-export const filesPath = (path: string) => /^\/(items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
+export const filesPath = (path: string) => /^\/(new-files|templates|creation-settings|items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
+ if (input.path === '/new-files') { if (input.name === '') delete input.name; if (input.template === '') delete input.template }
+ if (input.path === '/templates' && typeof input.templateAudience === 'string') {
+  const [type, ...rest] = input.templateAudience.split(':'), value = rest.join(':')
+  input.audience = type === 'group' ? { type: 'groups', groups: [value] } : type === 'space' ? { type: 'space', space: value } : { type: 'organisation' }
+ }
+ if (input.path === '/creation-settings') input.groups = Object.entries(input).filter(([key, value]) => key.startsWith('format:') && value).map(([key, format]) => ({ group: key.slice(7), format }))
  if (typeof input.storageLimitBytes === 'string') input.storageLimitBytes = input.storageLimitBytes.trim() === '' ? null : Number(input.storageLimitBytes)
  for (const key of ['noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove', 'retainEditor', 'allowPublic', 'allowOrganisation', 'allowDiscovery', 'download']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
  if (input.path === '/items' && input.type === 'file' && !input.name) input.name = input.filename
@@ -61,18 +71,19 @@ async function destinations(env: Bindings, w: Awaited<ReturnType<typeof who>>) {
 export async function filesPage(env: Bindings, request: Request, s: Session, url: URL): Promise<{ body: string } | { redirect: string } | null> {
  const path = url.pathname, parts = path.split('/').filter(Boolean)
  if (parts[0] === 's' && parts[1]) return { redirect: `/app/items/${(await openLink(env, s, parts[1])).item}` }
- if (parts[0] !== 'app' || !['files', 'ownership', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in'].includes(parts[1])) return null
+ if (parts[0] !== 'app' || !['templates', 'files', 'ownership', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in'].includes(parts[1])) return null
  if (path === '/app/storage') return { body: quotasPage(await quotas(env, s)) }
  if (parts[1] === 'spaces' && parts[2] && parts[3] === 'quota') return { body: quotaPage(await quotaView(env, s, parts[2])) }
  const w = await who(env, s), people = (await list<Person>(env, 'person')).filter(p => p.payload.status !== 'inactive'), groups = await list<Group>(env, 'group')
+ if (path === '/app/templates') return { body: templatesPage(await listTemplates(env, s, w), await creationSettings(env, s, w), groups, isAdmin(s)) }
  if (path === '/app/ownership') return { body: ownershipInboxPage(await ownershipInbox(env, s, w)) }
  if (parts[1] === 'ownership' && parts[2]) return { body: ownershipPage(await ownershipView(env, s, w, parts[2])) }
  if (path === '/app/files') return { body: homePage(await home(env, s, w)) }
  if (path === '/app/files/search') { const reader = await readerState(env); return { body: searchPage(url.searchParams.get('q') || '', await search(env, w, url), 'config' in reader ? null : 'unavailable' in reader ? reader.unavailable : reader.missing) } }
  if (path === '/app/files/trash') return { body: trashPage(await trashView(env, s, w)) }
- if (parts[1] === 'spaces' && parts[2]) return { body: spacePage({ ...await spaceView(env, w, parts[2]), quotaOwner: s.operator.role === 'owner' }, people, groups) }
+ if (parts[1] === 'spaces' && parts[2]) { const d = await spaceView(env, w, parts[2]); return { body: spacePage({ ...d, creation: d.can.contribute ? await listTemplates(env, s, w, { space: d.id }) : null, quotaOwner: s.operator.role === 'owner' }, people, groups) } }
  if (parts[1] === 'items' && parts[2]) {
-  try { const officeEdit = url.searchParams.get('edit') === '1' ? await readOffice(env, w, parts[2], undefined, true) : null; return { body: itemPage({ ...await itemView(env, s, w, parts[2]), officeEdit, me: s.operator.email, ownerRole: s.operator.role === 'owner' }, { people, groups, destinations: await destinations(env, w) }) } }
+  try { const officeEdit = url.searchParams.get('edit') === '1' ? await readOffice(env, w, parts[2], undefined, true) : null, d = await itemView(env, s, w, parts[2]); return { body: itemPage({ ...d, creation: d.item.type === 'folder' && d.can.contribute ? await listTemplates(env, s, w, { parent: parts[2] }) : null, officeEdit, me: s.operator.email, ownerRole: s.operator.role === 'owner' }, { people, groups, destinations: await destinations(env, w) }) } }
   catch (e) { if (e instanceof ChestError && e.code === 'access_required') return { body: requestAccessPage(parts[2]) }; throw e }
  }
  if (path === '/app/shared') return { body: sharedPage(await sharedWithMe(env, w, url.searchParams), url.searchParams) }

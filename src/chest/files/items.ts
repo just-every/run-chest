@@ -3,9 +3,10 @@ import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get, recordAccess } from '../store'
 import { fromBase64, inspect, retain, serve } from '../blobs'
 import { ChestError, id, insist, now, type Row, type Version } from '../model'
-import { commit, fresh, next, spaceItems, type Op } from './repo'
+import { commit, fresh, next, spaceItems, type Op, type Audit } from './repo'
 import { allowed, context, demand, descend, start, type Ctx, type Who } from './access'
 import { name, type Arrival, type FileVersion, type Item, type Space } from './model'
+import { versionPublication } from './governance'
 // Ordinary files need no type, reviewer or approval. Every replacement, restore and copy is a new immutable version
 // whose bytes were verified before custody; the stable item ID, its grants and links never change.
 export async function place(env: Bindings, w: Who, spaceKey: unknown, parent: unknown): Promise<Ctx> {
@@ -23,21 +24,22 @@ export async function admit(env: Bindings, bytes: Uint8Array, filename: string, 
  return { id: v.id, filename: v.filename, checksum: v.checksum, size: v.size, mediaType: v.mediaType, preview: v.preview, text: v.text, parser: v.parser, at: v.at, actor, arrival, name: '', ...extra }
 }
 // A resumable upload passes the version it already admitted, and the operations that close its session in the same batch.
-export type Admitted = { sender?: string; version?: FileVersion; ops?: (row: Row<Item>) => Op[] }
+export type Admitted = { sender?: string; version?: FileVersion; ops?: (row: Row<Item>) => Op[]; fences?: Row[]; audits?: Audit[] }
 export async function createItem(env: Bindings, s: Session, w: Who, input: any, arrival: Arrival = 'upload', bytes?: Uint8Array, more: Admitted = {}) {
  const p = await place(env, w, input.space, input.parent), parent = folderOf(p), value = name(input.name), at = now()
  unique(await siblings(env, p.space.id, parent), value)
  const type = input.type === 'folder' ? 'folder' : 'file', versions: FileVersion[] = []
  if (type === 'file') versions.push(more.version ?? await admit(env, bytes ?? fromBase64(input.base64), value, s.operator.email, arrival, input, input.device ? { device: input.device } : {}))
- const row = fresh<Item>('item', { space: p.space.id, parent, type, name: value, createdBy: s.operator.email, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions, current: versions[0]?.id ?? null })
- await commit(env, s, [{ row }, ...more.ops?.(row) ?? []], { fences: p.fences, changes: [{ item: row.id, space: p.space.id, kind: 'create' }], audits: [{ action: type === 'folder' ? 'folder.create' : 'file.upload', object: row.id, detail: { space: p.space.id, parent, version: row.payload.current, arrival } }] })
+ const payload: Item = { space: p.space.id, parent, type, name: value, createdBy: s.operator.email, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions: [], current: null }
+ const row = fresh<Item>('item', versions[0] ? versionPublication(p, payload, versions[0]) : payload)
+ await commit(env, s, [{ row }, ...more.ops?.(row) ?? []], { fences: [...p.fences,...more.fences ?? []], changes: [{ item: row.id, space: p.space.id, kind: 'create' }], audits: [{ action: type === 'folder' ? 'folder.create' : arrival === 'created' ? 'file.create' : 'file.upload', object: row.id, detail: { space: p.space.id, parent, version: row.payload.current, arrival } },...more.audits ?? []] })
  if(type === 'file'){const {runArrival}=await import('../filing/rules');return (await runArrival(env,s,w,row,more.sender)).item}
  return row
 }
 export async function addVersion(env: Bindings, s: Session, w: Who, key: string, bytes: Uint8Array | null, input: any, arrival: Arrival = 'upload', more: Admitted = {}) {
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'contribute'); insist(item.payload.type === 'file', 'not_a_file')
  const v = more.version ?? await admit(env, bytes!, typeof input.filename === 'string' ? name(input.filename, 'filename') : item.payload.name, s.operator.email, arrival, input, input.device ? { device: input.device } : {})
- const row = next(item, { ...item.payload, versions: [...item.payload.versions, v], current: v.id, updatedAt: v.at })
+ const row = next(item, versionPublication(ctx, item.payload, v))
  await commit(env, s, [{ row, previous: item }, ...more.ops?.(row) ?? []], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'version' }], audits: [{ action: 'version.upload', object: key, detail: { version: v.id, arrival } }] })
  return row
 }
@@ -55,7 +57,7 @@ export async function restoreVersion(env: Bindings, s: Session, w: Who, key: str
  const source = item.payload.versions.find(v => v.id === versionId); insist(source, 'version_not_found', 404)
  insist(await env.BLOBS.head(`sha256/${source.checksum}`), 'blob_missing', 503)
  const v: FileVersion = { ...source, id: id(), at: now(), actor: s.operator.email, arrival: 'restore', name: '', restoredFrom: source.id }; delete v.device
- const row = next(item, { ...item.payload, versions: [...item.payload.versions, v], current: v.id, updatedAt: v.at })
+ const row = next(item, versionPublication(ctx, item.payload, v))
  await commit(env, s, [{ row, previous: item }], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'version' }], audits: [{ action: 'version.restore', object: key, detail: { source: source.id, version: v.id } }] })
  return row
 }
@@ -86,7 +88,8 @@ export async function copy(env: Bindings, s: Session, w: Who, key: string, input
  const value = typeof input.name === 'string' ? name(input.name) : item.payload.name; unique(await siblings(env, dest.space.id, parent), value)
  const ids = new Map<string, string>([[key, id() as string]]), ops: Op[] = []
  const clone = (r: Row<Item>, newParent: string | null, newName: string) => { const v = r.payload.versions.find(v => v.id === r.payload.current), versions = v ? [{ ...v, id: id(), at, actor: s.operator.email, arrival: 'copy' as Arrival, name: '', restoredFrom: undefined, device: undefined }] : []
-  ops.push({ row: fresh<Item>('item', { space: dest.space.id, parent: newParent, type: r.payload.type, name: newName, createdBy: s.operator.email, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions, current: versions[0]?.id ?? null }, ids.get(r.id)!) }) }
+  const payload: Item = { space: dest.space.id, parent: newParent, type: r.payload.type, name: newName, createdBy: s.operator.email, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions: [], current: null }
+  ops.push({ row: fresh<Item>('item', versions[0] ? versionPublication(dest, payload, versions[0]) : payload, ids.get(r.id)!) }) }
  clone(item, parent, value)
  for (const r of (await subtree(env, item)).filter(r => !r.payload.trash)) { if (!ids.has(r.payload.parent!)) continue; ids.set(r.id, id()); clone(r, ids.get(r.payload.parent!)!, r.payload.name) }
  await commit(env, s, ops, { fences: [...ctx.fences, ...dest.fences], changes: ops.map(o => ({ item: o.row.id, space: dest.space.id, kind: 'create' })), audits: [{ action: 'item.copy', object: ids.get(key)!, detail: { source: key, items: ops.length } }] })

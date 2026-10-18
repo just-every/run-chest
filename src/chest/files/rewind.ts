@@ -6,6 +6,7 @@ import { ChestError, id, insist, now, type Row } from '../model'
 import { commit, fresh, maybe, next, spaceItems, type Op } from './repo'
 import { allowed, chain, context, descend, isAdmin, level, start, type Who } from './access'
 import type { FileVersion, Item, Link, Role, Space, Trash } from './model'
+import { versionPublication } from './governance'
 // Point-in-time rewind (RECOVER-001). A preview lists what returning a space, a folder tree or a personal area to a
 // recorded moment would change: earlier versions, names, places and trash state, and items added since, which go to
 // trash. Applying a reviewed preview writes each change as a new attributed state; later versions and items stay
@@ -75,7 +76,7 @@ async function carried(env: Bindings, key: string, from: string, to: string): Pr
  walk(key); return ops
 }
 const freeName = async (env: Bindings, p: Item, key: string, wanted: string) => (await spaceItems(env, p.space)).some(r => r.id !== key && r.payload.parent === p.parent && !r.payload.trash && r.payload.name.toLowerCase() === wanted.toLowerCase()) ? `${wanted} (restored)` : wanted
-const restored = (p: Item, source: string, actor: string, at: string) => { const from = p.versions.find(v => v.id === source)!, v: FileVersion = { ...from, id: id(), at, actor, arrival: 'restore', name: '', restoredFrom: from.id }; delete v.device; p.versions.push(v); p.current = v.id }
+const restored = (ctx: Awaited<ReturnType<typeof context>>, p: Item, source: string, actor: string, at: string) => { const from = p.versions.find(v => v.id === source)!, v: FileVersion = { ...from, id: id(), at, actor, arrival: 'restore', name: '', restoredFrom: from.id }; delete v.device; Object.assign(p, versionPublication(ctx, p, v)) }
 export async function apply(env: Bindings, s: Session, w: Who, input: any) {
  const preview = await plan(env, s, w, input); insist(input.fingerprint === preview.fingerprint, 'rewind_plan_changed', 409)
  const chosen = Array.isArray(input.items) ? new Set(input.items.map(String)) : null, done: string[] = [], receipt: Receipt = { scope: preview.scope, at: preview.at, by: s.operator.email, appliedAt: now(), items: [], undone: null }
@@ -84,7 +85,7 @@ export async function apply(env: Bindings, s: Session, w: Who, input: any) {
  for (const c of preview.changes) if (!chosen || chosen.has(c.id)) ordered.push([await depth(c.id), c])
  for (const [, c] of ordered.sort((a, b) => a[0] - b[0])) {
   const item = await get<Item>(env, 'item', c.id), p = structuredClone(item.payload), at = now()
-  if (c.version) restored(p, c.version, s.operator.email, at)
+  if (c.version) restored(await context(env, w, c.id), p, c.version, s.operator.email, at)
   if (c.renameTo) p.name = await freeName(env, p, c.id, c.renameTo)
   if (c.moveTo && (c.moveTo.parent === null || await maybe<Item>(env, 'item', c.moveTo.parent))) { p.space = c.moveTo.space; p.parent = c.moveTo.parent }
   if (c.trash !== undefined) p.trash = c.trash ? { by: s.operator.email, at, role: preview.role } : null
@@ -107,7 +108,7 @@ export async function undo(env: Bindings, s: Session, w: Who, key: string) {
  for (const entry of [...r.items].reverse()) {
   const item = await maybe<Item>(env, 'item', entry.id); if (!item || item.revision !== entry.revision) { skipped.push(entry.id); continue }
   const p = structuredClone(item.payload), b = entry.before, at = now()
-  if (b.current && b.current !== p.current) restored(p, b.current, s.operator.email, at)
+  if (b.current && b.current !== p.current) restored(await context(env, w, entry.id), p, b.current, s.operator.email, at)
   if (b.space !== p.space || b.parent !== p.parent) { p.space = b.space; p.parent = b.parent }
   if (b.name !== p.name) p.name = await freeName(env, p, entry.id, b.name)
   p.trash = b.trash; p.updatedAt = at

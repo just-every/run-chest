@@ -27,7 +27,7 @@ const label = (space: Space, w: Who) => space.kind === 'personal' ? (space.owner
 const brief = (e: { row: any; state: any }) => { const v = e.row.payload.versions.find((v: any) => v.id === e.row.payload.current); return { id: e.row.id, name: e.row.payload.name, type: e.row.payload.type, role: e.state.role, updatedAt: e.row.payload.updatedAt, size: v?.size ?? null, mediaType: v?.mediaType ?? null } }
 async function prefsOf(env: Bindings, w: Who) { return (await maybe<Prefs>(env, 'prefs', `prefs:${w.email}`))?.payload ?? { starred: [], shortcuts: [] } }
 export async function recent(env: Bindings, w: Who, all: Map<string, Entry>) {
- const rows = (await env.DB.prepare("SELECT action, object_id, detail FROM chest_audit WHERE actor=? AND action IN ('item.read','link.open') ORDER BY at DESC LIMIT 300").bind(w.email).all()).results as any[], seen = new Set<string>(), result: any[] = []
+ const rows = (await env.DB.prepare("SELECT action, object_id, detail FROM chest_audit WHERE actor=? AND action IN ('item.read','link.open','file.create') ORDER BY at DESC LIMIT 300").bind(w.email).all()).results as any[], seen = new Set<string>(), result: any[] = []
  for (const r of rows) { const key = r.action === 'link.open' ? JSON.parse(r.detail).item : r.object_id, e = all.get(key); if (!e || seen.has(key) || !e.state.role || e.state.trash) continue; seen.add(key); result.push(brief(e)); if (result.length === 20) break }
  return result
 }
