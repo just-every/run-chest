@@ -3649,7 +3649,7 @@
       "executable": false
     },
     "tests/chest/browser-governance.mjs": {
-      "sha256": "03f3efb8ef8fe561d16bd053f9bedd9b0671967857819f5b4b4e4e05b1c0e230",
+      "sha256": "52e00d7bed63425763ec4c2cc57496aac02e5ca01edd8391f78f544f0431e8ab",
       "executable": false
     },
     "tests/chest/browser-guest-links.mjs": {
@@ -3769,7 +3769,7 @@
       "executable": false
     },
     "tests/chest/journey.mjs": {
-      "sha256": "3cdd5bae592b3364cf53c1459875134c606993354e3360d62c5b11070dca5d6e",
+      "sha256": "1a98d691e6af57fa9c407aefff281994ba5aa83204cd6c58980ccc0afc61ac8c",
       "executable": false
     },
     "tests/chest/link-discussions.mjs": {
@@ -3789,7 +3789,7 @@
       "executable": false
     },
     "tests/chest/local.mjs": {
-      "sha256": "01bc9cf77b53e8cda8ff56d7c26e58177326cd114c7ab0d7a7abf05154f9543a",
+      "sha256": "c7836ef685516ac2b4e76fddaef6cc0c1a09f3c3c622ebdecbe7baff68b73859",
       "executable": false
     },
     "tests/chest/memo.docx": {
