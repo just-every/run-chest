@@ -82,6 +82,12 @@
       "clauses": [
         "SPACE-002"
       ]
+    },
+    {
+      "id": "permission-safe-search",
+      "clauses": [
+        "SEARCH-001"
+      ]
     }
   ],
   "nonGoals": [

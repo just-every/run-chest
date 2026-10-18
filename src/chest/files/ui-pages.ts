@@ -1,3 +1,4 @@
+import { searchFilters } from './ui-search'
 import { esc, field, select, form, hidden, card, details, personPicker, stamp } from '../ui-shared'
 import { noticeWords } from '../ui-words'
 import { addHere, listing, restores, rewindForm } from './ui-item'
@@ -34,7 +35,7 @@ export function spacePage(d: any, people: any[], groups: any[]) {
  return head(d.name, d.kind === 'team' ? `Team space · your role: ${esc(String(d.role).replace('_', ' '))}` : 'Your personal area. Share any file or folder from its page.') + `<div class="lib-tools">${search()}${filesLinks()}</div><div class="with-side doc"><div class="doc-main">${d.can.contribute ? addHere({ space: d.id }, returnTo, d.uploads, d.can.administer || d.kind === 'personal' ? rewindForm({ space: d.id }, returnTo) : '', d.creation) : ''}${listing(d.children.map((c: any) => ({ ...c, space: { name: d.name } })), 'Nothing here yet.')}${restores(d.rewinds, returnTo)}</div><div class="doc-side">${members}${settings}${storagePanel(d.storage, d.quotaOwner)}</div></div>`
 }
 // Words in scans and photos are searchable only once they are read; without a working AI key the page says why.
-export function searchPage(q: string, r: any, scansUnread: string | null = null) { return head('Search files', `${r.count} accessible result(s).`) + `<div class="lib-tools">${search(q)}${filesLinks()}</div>${scansUnread ? `<p class="quiet">Words in scanned images and photos are not searchable yet. ${esc(scansUnread)}</p>` : ''}${listing(r.results, 'No accessible file matches.')}` }
+export function searchPage(q: string, r: any, scansUnread: string | null = null) { return head('Search files', `${r.count} accessible result(s).`) + `<div class="lib-tools">${searchFilters(r)}${filesLinks()}</div>${scansUnread ? `<p class="quiet">Words in scanned images and photos are not searchable yet. ${esc(scansUnread)}</p>` : ''}${listing(r.results, 'No accessible file matches.')}` }
 export function sharedPage(rows: any[], q: URLSearchParams) {
  const filter = `<form class="form form-inline" method="get" action="/app/shared">${field('Shared by (email)', 'sharer', q.get('sharer') || '', 'text', false)}${field('From', 'from', q.get('from') || '', 'date', false)}${field('To', 'to', q.get('to') || '', 'date', false)}<button class="btn btn-outline">Filter</button></form>`
  return head('Shared with me', 'Files and folders colleagues shared with you, newest first.') + `<div class="lib-tools">${filter}${filesLinks()}</div>${listing(rows.map(r => ({ ...r, space: { name: `Shared by ${r.sharer}` }, sharedAt: r.at, until: r.expires })), 'Nothing has been shared with you.')}`

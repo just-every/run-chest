@@ -460,3 +460,16 @@ body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: 
 [data-request-upload] select{display:block;box-sizing:border-box;width:100%;min-width:0;min-height:44px;margin-bottom:20px;padding:10px 12px;border:1px solid var(--chest-line);border-radius:var(--chest-radius-input);background:var(--chest-surface);color:var(--chest-ink);font:400 15px/1.4 var(--chest-font-sans)}
 [data-request-upload] progress{display:block;width:100%;margin:12px 0}
 [data-request-upload] [hidden]{display:none!important}
+
+/* Search uses the same form controls as the file pages; type choices remain visible as chips. */
+.search-filters{width:100%;max-width:76rem}
+.search-types{display:flex;flex-wrap:wrap;gap:.5rem;border:0;padding:0;margin:0;min-width:0}
+.search-types legend{font-weight:600;margin-bottom:.5rem}
+.search-chip{display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--line,#ddd);border-radius:2rem;padding:.4rem .7rem;font-size:.875rem;white-space:nowrap}
+.search-chip:has(input:checked){background:var(--paper,#f5f1e9);border-color:currentColor}
+.search-chip input{width:auto;min-height:0;margin:0}
+.search-filter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}
+.search-filter-grid label,.search-filter-grid select,.search-filter-grid input{min-width:0;max-width:100%}
+@media(max-width:760px){.search-filter-grid{grid-template-columns:minmax(0,1fr)}.search-chip{font-size:.8rem}.search-filters{padding:0}}
+
+.rec-rel.search-match{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}

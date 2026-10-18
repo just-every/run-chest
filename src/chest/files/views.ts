@@ -15,7 +15,7 @@ import { requestsOn } from './file-requests'
 import { personal, visibleSpaces } from './spaces'
 import { creationPolicy, spaceDefaults } from './space-policy'
 import type { Prefs, Space } from './model'
-import { extraction, textHits } from '../read/jobs'
+import { extraction } from '../read/jobs'
 import { mergeView,hiddenMerged } from '../filing/duplicate-view'
 import { summary } from '../read/api'
 import { effectiveLinkPolicy } from './link-policy'
@@ -69,17 +69,4 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
   rewinds: item.payload.type === 'folder' && allowed(ctx, 'contribute') ? await rewinds(env, `folder:${key}`) : [],
  }
 }
-// Names, the current version's text (a UTF-8 file's own text, or text read from a PDF, scan or photo) and folders;
-// hits, counts and snippets follow current access exactly.
-export async function search(env: Bindings, w: Who, url: URL) {
- const q = (url.searchParams.get('q') || '').trim().toLowerCase(), space = url.searchParams.get('space') || '', result: any[] = [], read = await textHits(env, q)
- const entries=[...(await everything(env,w)).values()], hidden=await hiddenMerged(env,w,entries)
- for (const e of entries) {
-  if(hidden.has(e.row.id))continue
-  if (!e.state.role || e.state.trash || (space && e.space.id !== space)) continue
-  const v = e.row.payload.versions.find(v => v.id === e.row.payload.current), text = v?.text.toLowerCase() ?? '', inName = [e.row.payload.name,...(e.row.payload.tags??[])].join(' ').toLowerCase().includes(q), at = q ? text.indexOf(q) : -1, inside = v ? read.get(v.checksum) : undefined
-  if (q && !inName && at < 0 && inside === undefined && !JSON.stringify(e.row.payload.filing?.fields ?? {}).toLowerCase().includes(q)) continue
-  result.push({ ...brief(e), space: { id: e.space.id, name: label(e.space.payload, w) }, snippet: at >= 0 ? v!.text.slice(Math.max(0, at - 60), at + q.length + 60) : inside ?? '' })
- }
- return { q, count: result.length, results: result.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 200) }
-}
+export { search } from './search'
