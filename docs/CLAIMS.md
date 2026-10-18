@@ -13,7 +13,7 @@ Status, as the contract defines it:
 
 ## Summary
 
-46 claims: **11 done**, **34 partial**, **1 missing**.
+46 claims: **12 done**, **33 partial**, **1 missing**.
 
 ## Claims
 
@@ -48,7 +48,7 @@ Status, as the contract defines it:
 | 27 | "Approvals stay with the exact version signed off" | done | CHEST-07 (done), CHEST-08 (done) | `src/chest/documents.ts`; `src/chest/reviews.ts`; `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |
 | 28 | "Agents file what arrives from email and apps" | partial | AGENT-001 (partial), CONNECT-006 (partial) | `src/chest/filing/intake.ts`; `src/chest/filing/rules.ts`; `src/chest/filing/agent.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs` |
 | 29 | "merge duplicates" | partial | AGENT-002 (partial) | `src/chest/filing/duplicates.ts`; `src/chest/filing/duplicate-view.ts`; `tests/chest/filing.mjs` |
-| 30 | "flag links shared too widely" (and "Make private") | partial | AGENT-005 (partial) | `src/chest/files/exposure.ts`; `src/chest/files/ui-links.ts`; `tests/chest/files.mjs` |
+| 30 | "flag links shared too widely" (and "Make private") | done | AGENT-005 (done) | `src/chest/filing/link-model.ts`; `src/chest/filing/link-scan.ts`; `src/chest/filing/link-repair-actions.ts`; `src/chest/filing/link-repairs.ts`; `src/chest/filing/ui-link-repairs.ts`; `src/chest/files/exposure.ts`; `src/chest/files/ui-links.ts`; `src/chest/files/notify.ts`; `src/server.ts`; `deploy.json`; `tests/chest/link-repairs.mjs`; `tests/chest/browser-link-repairs.mjs` |
 | 31 | Mascot filing files from email, phone and laptop; "312 files filed this week" | partial | AGENT-001 (partial), CONNECT-006 (partial), MOBILE-001 (partial) | `src/chest/filing/intake.ts`; `src/chest/filing/rules.ts`; `src/chest/filing/agent.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs`; `src/chest/ui-library.ts`; `src/chest/files/ui-item.ts`; `public/chest-upload.js`; `tests/chest/journey.mjs`; `tests/chest/browser-files.mjs` |
 | 32 | "Move from Google Drive, Dropbox or Box with folders, permissions, versions and shared links" | partial | MIGRATE-001 (partial), MIGRATE-002 (partial), MIGRATE-003 (partial), MIGRATE-004 (partial) | `src/chest/archive.ts`; `src/chest/archive-target.ts`; `tests/chest/flows.mjs`; `src/chest/files/ui-movein.ts`; `public/chest-zip.js`; `public/chest-movein.js`; `tests/chest/browser-files.mjs` |
 | 33 | "Old links forward to the new ones" (and "Shared links redirected · 214") (correction sent to br: vendor URLs cannot forward) | missing | MIGRATE-007 (missing) | — |

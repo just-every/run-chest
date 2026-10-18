@@ -47,5 +47,8 @@
   "container": {
     "engine": "workerd"
   },
-  "deployGuide": "https://run-chest.com/docs/hosting"
+  "deployGuide": "https://run-chest.com/docs/hosting",
+  "crons": [
+    "*/15 * * * *"
+  ]
 }

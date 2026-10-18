@@ -1,0 +1,53 @@
+// AGENT-005: explicit scope, real ACL/lifecycle and outcome evidence, approved repairs, reversible restriction.
+import assert from 'node:assert/strict';
+import {harness} from './harness.mjs';
+const h=await harness(),b64=s=>Buffer.from(s).toString('base64');
+try{
+ await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});
+ const owner=await h.signIn(h.vars.OWNER_EMAIL);await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
+ for(const email of ['jordan@example.test','sam@example.test'])await h.api('/people',owner,{action:'invite',email,name:email.split('@')[0]});
+ await h.signIn('sam@example.test',true);
+ const jordan=await h.signIn('jordan@example.test',true),space=await h.api('/spaces',owner,{name:'Harbor Freight operations'}),folder=await h.api('/items',owner,{space:space.id,type:'folder',name:'Contracts'});
+ const file=await h.api('/items',owner,{parent:folder.id,type:'file',name:'Supplier terms.txt',base64:b64('Harbor delivery terms approved by operations.')});
+ await h.api(`/items/${folder.id}/shares`,owner,{principal:'jordan@example.test',role:'editor'});await h.api(`/items/${folder.id}/shares`,owner,{principal:'sam@example.test',role:'viewer'});
+ const pub=await h.api(`/items/${folder.id}/public-links`,owner,{});await h.raw(new URL(pub.url).pathname);
+ await h.api('/link-repairs/scope',owner,{item:folder.id,intended:'jordan@example.test;sam@example.test'});
+ const findings=await h.api('/link-repairs/scan',owner,{item:folder.id});assert.equal(findings.length,1);assert.ok(findings[0].reasons.some(r=>r.includes('intended collaborators')));assert.ok(findings[0].outcomes.succeeded>0);
+ await h.api('/link-repairs/scan',jordan,{item:file.id},404);await h.api('/link-repairs/apply',jordan,{item:folder.id,link:pub.link.id,revision:findings[0].revision,action:'renew',expires:'2099-11-30'},403);
+ await h.api('/link-repairs/apply',owner,{item:folder.id,link:pub.link.id,revision:findings[0].revision,action:'expand',guests:['outsider@example.test']},403);
+ const denied=await h.api('/link-repairs/apply',owner,{item:folder.id,link:pub.link.id,revision:findings[0].revision,action:'decline'});assert.equal(denied.action,'decline');assert.equal((await h.raw(new URL(pub.url).pathname)).status,200);
+ const revoked=await h.api('/link-repairs/apply',owner,{item:folder.id,link:pub.link.id,revision:findings[0].revision,action:'revoke'});assert.equal((await h.raw(new URL(pub.url).pathname)).status,410);await h.api(`/items/${file.id}`,jordan);
+ assert.ok(h.mails.some(m=>m.subject==='Chest link repair'&&m.text.includes('link revoked')));
+ await h.api(`/link-repairs/${revoked.id}/undo`,jordan,{},403);await h.api(`/link-repairs/${revoked.id}/undo`,owner,{});assert.equal((await h.raw(new URL(pub.url).pathname)).status,200);
+ const stale=await h.api('/link-repairs/scan',owner,{item:folder.id});await h.api(`/public-links/${pub.link.id}/revoke`,owner,{});await h.api('/link-repairs/apply',owner,{item:folder.id,link:pub.link.id,revision:stale[0].revision,action:'revoke'},404);
+ const expired=await h.api(`/items/${file.id}/public-links`,owner,{expires:'2099-11-30'});await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.expires','2000-01-01T00:00:00Z') WHERE id=?",expired.link.id);
+ await h.api('/link-repairs/scope',owner,{item:file.id,intended:'jordan@example.test'});const ef=(await h.api('/link-repairs/scan',owner,{item:file.id})).find(f=>f.id===expired.link.id);assert.ok(ef.repairs.includes('renew'));
+ await h.api('/link-repairs/apply',owner,{item:file.id,link:ef.id,revision:ef.revision,action:'renew',expires:'2099-11-30'});assert.equal((await h.raw(new URL(expired.url).pathname)).status,200);
+ const guests=await h.api(`/items/${file.id}/links`,owner,{audience:'guests',guests:['jordan@example.test','sam@example.test']});await h.api('/people',owner,{action:'deactivate',email:'sam@example.test'});
+ const gf=(await h.api('/link-repairs/scan',owner,{item:file.id})).find(f=>f.id===guests.link.id);assert.ok(gf.reasons.some(r=>r.includes('Departed collaborators')));
+ await h.api('/link-repairs/apply',owner,{item:file.id,link:gf.id,revision:gf.revision,action:'restrict-guests'});assert.deepEqual((await h.api(`/items/${file.id}`,owner)).publicLinks.find(l=>l.id===gf.id).guests,['jordan@example.test']);
+ const locked=await h.api('/items',owner,{space:space.id,type:'file',name:'Unrelated payroll.txt',base64:b64('Private payroll cannot enter a restricted scan.')});
+ await h.api('/link-repairs/scope',jordan,{item:locked.id},403);
+ const auto=await h.api(`/items/${folder.id}/public-links`,owner,{});await h.api('/link-repairs/scope',owner,{item:folder.id,automatic:true});
+ for(let i=0;i<30;i++){await h.raw('/api/chest/files',owner);if((await h.raw(new URL(auto.url).pathname)).status===410)break;await new Promise(r=>setTimeout(r,50))}
+ assert.equal((await h.raw(new URL(auto.url).pathname)).status,410,'preauthorized restrictive action runs on subsequent traffic');
+ assert.equal((await h.api(`/items/${folder.id}`,owner)).grants.length,2,'named grants survive');
+ assert.ok((await h.api('/link-repairs',owner)).history.some(r=>r.automatic));
+ await h.api('/link-repairs/scope',owner,{item:folder.id,automatic:false});
+ const orphan=await h.api(`/items/${file.id}/public-links`,jordan,{});await h.api('/people',owner,{action:'deactivate',email:'jordan@example.test'});
+ const of=(await h.api('/link-repairs/scan',owner,{item:file.id})).find(f=>f.id===orphan.link.id);assert.ok(of.reasons.some(r=>r.includes('custodian')));assert.equal((await h.raw(new URL(orphan.url).pathname)).status,404);
+ await h.api('/link-repairs/apply',owner,{item:file.id,link:of.id,revision:of.revision,action:'adopt'});assert.equal((await h.raw(new URL(orphan.url).pathname)).status,200);
+ await h.api('/people',owner,{action:'reactivate',email:'jordan@example.test'});const jordanAgain=await h.signIn('jordan@example.test');
+ const counts=await h.api('/link-repairs',jordanAgain);assert.equal(counts.scopes.some(s=>s.item===locked.id),false);
+ const governed=await h.api('/items',owner,{space:space.id,type:'folder',name:'Signed agreements'});await h.api(`/items/${governed.id}/governance`,owner,{reviewer:h.vars.OWNER_EMAIL});
+ const approved=await h.api('/items',owner,{parent:governed.id,name:'Reviewed terms.txt',base64:b64('Approved payment terms before the pending replacement.')}),av=approved.payload.current;
+ await h.api(`/items/${approved.id}/versions/${av}/review`,owner,{action:'approve'});const approvedLink=await h.api(`/items/${approved.id}/public-links`,owner,{versionMode:'approved'});
+ await h.api(`/items/${approved.id}/versions`,owner,{base64:b64('Pending changes must not become the linked approved replacement.')});await h.api('/link-repairs/scope',owner,{item:approved.id});
+ const af=(await h.api('/link-repairs/scan',owner,{item:approved.id})).find(f=>f.id===approvedLink.link.id);assert.equal(af.version,av);
+ await h.api('/link-repairs/apply',owner,{item:approved.id,link:af.id,revision:af.revision,action:'pin-approved'});const pinned=(await h.api(`/items/${approved.id}`,owner)).publicLinks.find(l=>l.id===af.id);assert.equal(pinned.version,av);assert.equal(pinned.versionMode,'pinned');
+ await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.approved',NULL) WHERE id=?",approved.id);const unavailable=await h.api(`/items/${approved.id}/public-links`,owner,{versionMode:'current'});
+ await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.versionMode','approved') WHERE id=?",unavailable.link.id);
+ const missing=(await h.api('/link-repairs/scan',owner,{item:approved.id})).find(f=>f.id===unavailable.link.id);assert.equal(missing.version,null);assert.equal((await h.raw(new URL(unavailable.url).pathname)).status,404);
+ const broad=await h.api(`/items/${folder.id}/public-links`,owner,{});await h.api(`/items/${folder.id}/make-private`,owner,{});assert.equal((await h.raw(new URL(broad.url).pathname)).status,410);assert.equal((await h.api(`/items/${folder.id}`,owner)).grants.length,2);await h.api(`/items/${folder.id}`,jordanAgain);
+ console.log('AGENT-005 scoped scan → explicit repair/decline → revocation/owner Undo → automatic restriction and notices passed');
+}finally{await h.close()}

@@ -12,6 +12,7 @@ import { openLink } from './links'
 import { filesExecute } from './api'
 import { itemPage, requestAccessPage, rewindDonePage, rewindPage, rewindUndonePage } from './ui-item'
 import { devicesPage, homePage, noticesPage, requestPage, requestsPage, searchPage, secretPage, sharedPage, spacePage, trashPage } from './ui-pages'
+import { repairView } from '../filing/link-repairs'
 import { linksPage } from './ui-links'
 import { linksView } from './exposure'
 import type { Space } from './model'
@@ -90,7 +91,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (path === '/app/requests') return { body: requestsPage(await filesExecute(env, request, s, 'GET', ['requests'], {}, url)) }
  if (parts[1] === 'requests' && parts[2]) return { body: requestPage(await requestView(env, s, w, parts[2])) }
  if (path === '/app/notices') return { body: noticesPage(await notices(env, w)) }
- if (path === '/app/links') return { body: linksPage({ ...await linksView(env, s, w), policy: ['owner','admin'].includes(s.operator.role) ? await linkPolicies(env,s) : null, policyScope: url.searchParams.get('policyScope') ?? 'organisation' }) }
+ if (path === '/app/links') return { body: linksPage({ ...await linksView(env, s, w), repairs: await repairView(env,s), policy: ['owner','admin'].includes(s.operator.role) ? await linkPolicies(env,s) : null, policyScope: url.searchParams.get('policyScope') ?? 'organisation' }) }
  if (path === '/app/devices') return { body: devicesPage(await devices(env, s)) }
  if (path === '/app/move-in') { await personal(env, s); return { body: moveInPage(await destinations(env, w), s.operator.role === 'owner') } }
  throw new ChestError('not_found', 404)

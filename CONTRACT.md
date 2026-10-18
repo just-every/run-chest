@@ -842,7 +842,7 @@ Every capability claim on the approved homepage (`src/site/landing/copy.ts`, che
 | 27 | "Approvals stay with the exact version signed off" | CHEST-07, CHEST-08 | done |
 | 28 | "Agents file what arrives from email and apps" | AGENT-001, CONNECT-006 | partial |
 | 29 | "merge duplicates" | AGENT-002 | partial |
-| 30 | "flag links shared too widely" (and "Make private") | AGENT-005 | partial |
+| 30 | "flag links shared too widely" (and "Make private") | AGENT-005 | done |
 | 31 | Mascot filing files from email, phone and laptop; "312 files filed this week" | AGENT-001, CONNECT-006, MOBILE-001 | partial |
 | 32 | "Move from Google Drive, Dropbox or Box with folders, permissions, versions and shared links" | MIGRATE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 | partial |
 | 33 | "Old links forward to the new ones" (and "Shared links redirected · 214") (correction sent to br: vendor URLs cannot forward) | MIGRATE-007 | missing |
@@ -873,8 +873,8 @@ Ownership, new-file creation, folder version review, link version and link-polic
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 22 | 2 | 0 | 24 |
-| Target and push further | 4 | 39 | 29 | 72 |
-| All | 26 | 41 | 29 | 96 |
+| Target and push further | 5 | 38 | 29 | 72 |
+| All | 27 | 40 | 29 | 96 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -971,6 +971,6 @@ Ownership, new-file creation, folder version review, link version and link-polic
 | `AGENT-002` | Reconcile duplicates and superseded versions | push-further | partial | `src/chest/filing/duplicates.ts`; `src/chest/filing/ui.ts`; `tests/chest/filing.mjs` | Exact hashes and complete extracted text propose identical/near-identical ordinary files. Owner-approved consolidation retains all originals, separate ACLs and versions, existing links and reversible membership. Combined history and alias hiding require current access to both files; Undo preserves intervening edits. Local merge/version/link/Undo and hosted merge/Undo pass. Missing: source-ID correlation, supersession and approval reconciliation, internal reference repair and external link repointing. |
 | `AGENT-003` | Repair permitted synchronization and verify bytes | push-further | missing |  | No delivered product workflow. |
 | `AGENT-004` | Finish collection and prove the right version arrived | push-further | missing |  | No delivered product workflow. |
-| `AGENT-005` | Continuously repair broken and over-shared links | push-further | partial | `src/chest/files/exposure.ts`; `src/chest/files/ui-links.ts`; `tests/chest/files.mjs` | The Links view flags public, long-lived and past-limit links and discoverable or long-lived organization links, naming each link and why, and Make private removes every broad link in one click while keeping named grants; the agent that scans ACLs, guests and outcomes, proposes repairs and runs preauthorized revocations does not. |
+| `AGENT-005` | Continuously repair broken and over-shared links | push-further | done | `src/chest/filing/link-model.ts`; `src/chest/filing/link-scan.ts`; `src/chest/filing/link-repair-actions.ts`; `src/chest/filing/link-repairs.ts`; `src/chest/filing/ui-link-repairs.ts`; `src/chest/files/exposure.ts`; `src/chest/files/ui-links.ts`; `src/chest/files/notify.ts`; `src/server.ts`; `deploy.json`; `tests/chest/link-repairs.mjs`; `tests/chest/browser-link-repairs.mjs` | Explicit file/folder scan grants check current ACL and custodian access, departed collaborator evidence, intended audiences, live policies, exact versions and recorded link outcomes without reading unrelated file contents. Owners approve expiry, custodian, approved-version and guest-subset repairs; restrictive revocation is available to sharers. Standing grants run every 15 minutes on hosted Chest and on traffic, rechecking live authority; every action is reversible through stale-safe owner-approved Undo and sends an in-app/email notice. Make private keeps named grants. HTTP and browser flows exercise scoped refusal, decline, repair, revocation, retained named access and Undo at 1440 and 390; hosted sign-in and repair mail use the installation provider. |
 | `AGENT-006` | Build and validate a trustworthy move-in | push-further | partial | `src/chest/archive.ts`; `tests/chest/flows.mjs` | Manual hash/gap reconciliation and reversible staging exist; agent/provider mappings and collaborator validation do not. |
 | `AGENT-007` | Evidence-grounded questions and custom jobs | push-further | missing |  | No delivered product workflow. |

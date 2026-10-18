@@ -13,6 +13,7 @@ import { lobbyResponse } from './base/lobby'
 import { setupStateResponse } from './base/setup-state'
 import { identity } from './identity'
 import { authResponse, runtimeBindings, type Bindings } from './auth.server'
+import { sweepLinkRepairs } from './chest/filing/link-repairs'
 import { receiveIntake } from './chest/filing/intake'
 import { seedDemo } from './demo'
 
@@ -28,11 +29,13 @@ function documentResponse(response: Response): Response {
 }
 
 export default withDemo({
+  async scheduled(_controller, original) { await sweepLinkRepairs(runtimeBindings(original)) },
   async email(message, env) { await receiveIntake(runtimeBindings(env), message) },
   async fetch(request, original, execution) {
     const asset = await staticAssetResponse(request, original)
     if (asset) return documentResponse(asset)
     const env = runtimeBindings(original)
+    if(new URL(request.url).pathname.startsWith('/app') || new URL(request.url).pathname.startsWith('/api/chest'))execution.waitUntil(sweepLinkRepairs(env))
     const publicPage = await setupStateResponse(request, env) ?? await lobbyResponse(request, env, identity)
     if (publicPage) return documentResponse(publicPage)
     const shared = await publicAttempt(env, request, ()=>publicResponse(request, env))
