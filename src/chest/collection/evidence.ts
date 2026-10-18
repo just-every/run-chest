@@ -1,6 +1,9 @@
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { ChestError, insist, now, type Row } from '../model'
+import { facts } from '../audit/journal'
+import { identityRedactor } from '../audit/privacy'
+import { id } from '../model'
 import { get, list } from '../store'
 import { allowed, context, demand, whoFor } from '../files/access'
 import { commit, maybe, next, where } from '../files/repo'
@@ -58,6 +61,15 @@ export async function inspect(env:Bindings,row:Row<Checklist>) {
 // Durable invalidation prevents a revoked confirmation from silently coming back after restoration.
 export async function refresh(env:Bindings,row:Row<Checklist>,s:Session|null=null) {
  const result=await inspect(env,row),invalid=result.confirmations.filter(c=>!c.payload.invalidatedAt&&(!result.evidence.some(e=>e.requirement.id===c.payload.requirement)||result.evidence.some(e=>e.requirement.id===c.payload.requirement&&(e.reasons.length>0||!e.recipients.some(r=>r.email===c.payload.recipient&&r.access&&r.permission===c.payload.permission)))))
- if(invalid.length)await commit(env,s,invalid.map(c=>({previous:c,row:next(c,{...c.payload,invalidatedAt:now(),reason:'Required evidence, approval or recipient permission changed'})})),{fences:result.fences,audits:[{action:'collection.reopened',object:row.id,detail:{confirmations:invalid.map(c=>c.id)}}]})
+ if(invalid.length){
+  const at=now(),redact=await identityRedactor(env),actor=await redact(s?.operator.email??'chest:collection'),statements=[]
+  for(const confirmation of invalid){
+   // Sweeps and a person's GET can observe the same revoked confirmation. Invalidation is monotonic: the
+   // conditional update and its audit claim the row once, rather than racing two revision-snapshot writes.
+   statements.push({sql:"UPDATE chest_records SET payload=json_set(payload,'$.invalidatedAt',?,'$.reason',?),revision=? WHERE id=? AND kind='collection-confirmation' AND revision=? AND json_extract(payload,'$.invalidatedAt') IS NULL",params:[at,'Required evidence, approval or recipient permission changed',id(),confirmation.id,confirmation.revision]})
+   statements.push({sql:'INSERT INTO chest_audit SELECT ?,?,?,?,?,? WHERE changes()>0',params:[id(),actor,'collection.reopened',row.id,await redact(JSON.stringify(facts({confirmations:[confirmation.id]},s?`${s.kind}:${s.operator.role}`:'chest:collection'))),at]})
+  }
+  await commit(env,s,[],{fences:result.fences,statements})
+ }
  return invalid.length?inspect(env,row):result
 }
