@@ -455,9 +455,9 @@ Current evidence: `src/chest/filing/duplicates.ts`; `src/chest/filing/duplicate-
 
 Current evidence: —.
 
-**AGENT-004 — Finish collection and prove the right version arrived (missing).** Request two vendor records, receive a stale file and then the correct approved replacement, confirm it as the intended recipient and inspect reminders stopping. Later revoke access or supersede the version; show the reopened issue and a proposed new delivery, without broadening recipients or auto-approving evidence.
+**AGENT-004 — Finish collection and prove the right version arrived (done).** Request two vendor records, receive a stale file and then the correct approved replacement, confirm it as the intended recipient and inspect reminders stopping. Later revoke access or supersede the version; show the reopened issue and a proposed new delivery, without broadening recipients or auto-approving evidence.
 
-Current evidence: —.
+Current evidence: `src/chest/collection/model.ts`; `src/chest/collection/api.ts`; `src/chest/collection/evidence.ts`; `src/chest/collection/reminders.ts`; `src/chest/collection/ui.ts`; `src/server.ts`; `tests/chest/collection.mjs`; `tests/chest/browser-collection.mjs`; `docs/collections.md`.
 
 **AGENT-005 — Continuously repair broken and over-shared links (done).** Create an expired link, departed guest, overshared subfolder and inaccessible approved replacement; run a scan as a restricted agent. Approve one repair and one restrictive revoke, deny an expansion and confirm destination access and the intended version while unrelated files stay unread. Flag a public link on a folder that two named staff use: the owner's one Make private click removes the public link, the two staff keep access, and a signed-out browser is refused on the next request.
 
@@ -474,4 +474,4 @@ Current evidence: —.
 
 The target includes sync/streaming clients and computer-folder backup, native mobile apps, external links, item sharing with access requests, guest collaborators under an organization sharing policy, organization links, expiring grants, version restore by editors, space-creation control, storage limits, Office desktop presence, built-in eSignature, migration link rewriting, an availability target with durability scrubs, new files from blank or templates, the Google Meet, Calendar, Chat and Forms companion, file requests, broad previews/OCR/search with type, people, date and location filters, co-authoring in the shipped Collabora Online editor without a Microsoft or Google license, with its review loop of @mentions, assigned comments and tracked suggestions, personal notification settings, third-party app control, automation and AI; their incomplete status never removes them from the job. Office, third-party signature (Docusign), CRM, chat, meeting, regulated archive and creative authoring engines are integrated under the named clauses with explicit licensing/data control. No source check alone proves legal sufficiency, certification, hosted delivery, human receipt or vendor migration fidelity. An unreachable device, missing source revision, unconfirmed provider outcome or incomplete erasure must remain visibly unresolved.
 
-Status total: **96 clauses — 32 done / 37 partial / 27 missing.**
+Status total: **96 clauses — 33 done / 37 partial / 26 missing.**

@@ -473,3 +473,6 @@ body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: 
 @media(max-width:760px){.search-filter-grid{grid-template-columns:minmax(0,1fr)}.search-chip{font-size:.8rem}.search-filters{padding:0}}
 
 .rec-rel.search-match{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+
+/* Collection evidence includes stable version and submission identifiers. */
+.collection-wrap { overflow-wrap: anywhere; }

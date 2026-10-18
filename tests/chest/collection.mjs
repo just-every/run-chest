@@ -1,0 +1,56 @@
+import assert from 'node:assert/strict';
+import {harness} from './harness.mjs';
+const h=await harness();
+const cookieOf=r=>r.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ');
+try {
+ await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});
+ const owner=await h.signIn(h.vars.OWNER_EMAIL),recipientEmail='recipient@example.test',otherEmail='other@example.test';
+ for(const email of [recipientEmail,otherEmail])await h.api('/people',owner,{action:'invite',email,name:email===recipientEmail?'Dana Recipient':'Other colleague'});
+ const recipient=await h.signIn(recipientEmail,true),other=await h.signIn(otherEmail,true),space=await h.api('/spaces',owner,{name:'Vendor collection'});
+ const members=[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:recipientEmail,role:'viewer'},{principal:otherEmail,role:'viewer'}];
+ await h.api(`/spaces/${space.id}/members`,owner,{members});
+ const folder=await h.api('/items',owner,{space:space.id,type:'folder',name:'Vendor records'});
+ await h.api(`/items/${folder.id}/governance`,owner,{reviewer:h.vars.OWNER_EMAIL});
+ const request=await h.api(`/items/${folder.id}/file-requests`,owner,{title:'Acme vendor records',checklist:['Signed agreement','Tax record'],allowReplacement:true}),path=new URL(request.url).pathname;
+ const visitor=cookieOf(await h.fetch(path));
+ async function upload(checklist,name,content,replace='') {
+  const form=new FormData();form.set('name','Vendor');form.set('email','vendor@example.test');form.set('checklist',checklist);if(replace)form.set('replace',replace);form.set('files',new File([content],name,{type:'text/plain'}));
+  const r=await h.fetch(path,{method:'POST',headers:{cookie:visitor,origin:h.origin},body:form});assert.equal(r.status,200,await r.clone().text());
+  return (await h.api(`/items/${folder.id}`,owner)).fileRequests.find(r=>r.id===request.request.id).submissions.find(r=>r.checklist===checklist&&r.status==='accepted');
+ }
+ const agreement=await upload('Signed agreement','Agreement.txt','Signed agreement, stale date'),tax=await upload('Tax record','Tax.txt','Current tax record');
+ const children=(await h.api(`/items/${folder.id}`,owner)).children,agreementItem=children.find(c=>c.name==='Agreement.txt'),taxItem=children.find(c=>c.name==='Tax.txt');
+ const agreementVersion=(await h.api(`/items/${agreementItem.id}`,owner)).item.current,taxVersion=(await h.api(`/items/${taxItem.id}`,owner)).item.current;
+ const requirements=[{label:'Signed agreement',request:request.request.id,checklist:'Signed agreement',item:agreementItem.id,version:agreementVersion,submission:agreement.id},{label:'Tax record',request:request.request.id,checklist:'Tax record',item:taxItem.id,version:taxVersion,submission:tax.id}];
+ await h.api('/collection',recipient,{title:'Forbidden',folder:folder.id,recipients:[recipientEmail],requirements},403);
+ let collection=await h.api('/collection',owner,{title:'Acme records',folder:folder.id,recipients:[recipientEmail],requirements,cadenceHours:24,sendReminders:true});
+ const endpoint=`/collection/${collection.id}`,get=()=>h.api(endpoint,owner),confirm=(e,who=recipient,extra={})=>h.api(endpoint+'/confirm',who,{requirement:e.requirement.id,item:e.requirement.item,version:e.requirement.version,confirm:true,...extra});
+ assert.equal(collection.state,'open');assert.ok(collection.evidence.every(e=>e.state==='mismatch'),'upload acceptance is not review approval');
+ const refused=await h.api(endpoint+'/confirm',recipient,{requirement:collection.requirements[0].id,item:agreementItem.id,version:agreementVersion,confirm:true},409);assert.equal(refused.error,'collection_exact_approved_version_required');
+ await h.api(`/items/${agreementItem.id}/versions/${agreementVersion}/review`,owner,{action:'changes',message:'Send the currently signed agreement.'});
+ await h.api(`/items/${taxItem.id}/versions/${taxVersion}/review`,owner,{action:'approve'});
+ const reminderMail=()=>h.mails.filter(m=>m.text.includes('/app/collection?checklist='));
+ await h.api(endpoint+'/remind',owner,{});const sent=reminderMail().length;assert.equal(sent,1);assert.deepEqual(reminderMail()[0].to,[recipientEmail]);
+ await h.api(endpoint+'/remind',owner,{});assert.equal(reminderMail().length,sent,'approved cadence prevents repeated reminder mail');
+ const corrected=await upload('Signed agreement','Correct agreement.txt','Current signed agreement',agreement.id);
+ collection=await get();const correctVersion=collection.evidence[0].candidates.find(c=>c.submission===corrected.id).version;assert.equal(collection.evidence[0].state,'mismatch','replacement supersedes old evidence');
+ requirements[0]={...requirements[0],version:correctVersion,submission:corrected.id};
+ collection=await h.api(endpoint+'/requirements',owner,{requirements});assert.equal(collection.evidence[0].state,'mismatch','binding does not approve a replacement');
+ await h.api(`/items/${agreementItem.id}/versions/${correctVersion}/review`,owner,{action:'approve'});
+ collection=await get();assert.ok(collection.evidence.every(e=>e.state==='awaiting_confirmation'));
+ await h.fetch(`/api/chest/items/${agreementItem.id}/bytes/${correctVersion}?download=true`,{headers:{cookie:recipient}});
+ assert.equal((await get()).state,'open','authenticated byte download alone does not prove human confirmation');
+ await h.api(endpoint+'/confirm',other,{requirement:collection.requirements[0].id,item:agreementItem.id,version:correctVersion,confirm:true},404);
+ await h.api(endpoint+'/confirm',recipient,{requirement:collection.requirements[0].id,item:agreementItem.id,version:correctVersion,recipient:otherEmail},400);
+ const wrongOrigin=await h.fetch('/api/chest'+endpoint+'/confirm',{method:'POST',headers:{cookie:recipient,origin:'https://other.example', 'content-type':'application/json'},body:JSON.stringify({})});assert.equal(wrongOrigin.status,403);
+ for(const e of collection.evidence)await confirm(e);
+ collection=await get();assert.equal(collection.state,'accepted');await h.api(endpoint+'/remind',owner,{});assert.equal(reminderMail().length,sent,'acceptance stops reminders');
+ await h.api(`/spaces/${space.id}/members`,owner,{members:members.filter(m=>m.principal!==recipientEmail)});
+ collection=await get();assert.equal(collection.state,'open');assert.ok(collection.evidence.every(e=>e.confirmations.some(c=>c.payload.invalidatedAt)),'revocation permanently invalidates confirmations');
+ await h.api(endpoint+'/remind',owner,{});assert.equal(reminderMail().length,sent,'revocation never causes expanded delivery');await h.api(endpoint,recipient,undefined,403);
+ await h.api(`/spaces/${space.id}/members`,owner,{members});collection=await get();assert.equal(collection.state,'open','restored permissions require a fresh human confirmation');
+ for(const e of collection.evidence)await confirm(e);assert.equal((await get()).state,'accepted');
+ await h.api(`/items/${taxItem.id}/versions`,owner,{base64:Buffer.from('Later replacement tax record').toString('base64')});
+ collection=await get();assert.equal(collection.state,'open');assert.match(collection.evidence[1].reasons.join(' '),/superseded/);
+ console.log('AGENT-004 exact request/version/approval, intended authenticated recipient, reminder cadence/stop, revoke and replacement reopening passed');
+} finally {await h.close()}

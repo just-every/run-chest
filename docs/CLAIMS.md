@@ -75,9 +75,15 @@ public-door tests; their status matches the CONTRACT.md Status cell.
 | Capability | Clause | Status | Code |
 | --- | --- | --- | --- |
 | Version-pinned delivery packages, resumable original downloads and distinct receipt events | SHARE-003 | done | `src/chest/transfers/service.ts`; `src/chest/transfers/public.ts`; `src/chest/transfers/ui.ts`; `tests/chest/transfers.mjs`; `tests/chest/browser-transfers.mjs` |
+| Match requested records to exact approvals and intended-recipient confirmations, with scoped reminders and reopening | AGENT-004 | done | `src/chest/collection/api.ts`; `src/chest/collection/evidence.ts`; `src/chest/collection/reminders.ts`; `src/chest/collection/ui.ts`; `tests/chest/collection.mjs`; `tests/chest/browser-collection.mjs` |
 
 SHARE-003 was selected because sending originals and distinguishing delivery from
 human receipt is central to browser file exchange. Signed sync/mobile clients
 (SYNC-001/002, MOBILE-001, and dependent SPACE-001/SHARE-001 sentences) and direct
 provider migrations/connectors were skipped: the former need the owner's signing
 credentials, and the latter need provider developer applications or test tenants.
+
+AGENT-004 was selected because browser teams need to finish collecting the right
+approved material, rather than treating an upload or an email acknowledgment as
+completion. It uses existing request, approval and staff identity workflows and
+needs no native client, signing credential or provider developer application.

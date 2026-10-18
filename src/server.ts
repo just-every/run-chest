@@ -1,3 +1,4 @@
+import { collectionSweep } from './chest/collection'
 import { withDemo } from './modules/demo/index.mjs'
 import start from '@tanstack/react-start/server-entry'
 import { Hono } from 'hono'
@@ -30,13 +31,13 @@ function documentResponse(response: Response): Response {
 }
 
 export default withDemo({
-  async scheduled(_controller, original) { await Promise.all([sweepLinkRepairs(runtimeBindings(original)),sweepAgents(runtimeBindings(original))]) },
+  async scheduled(_controller, original) { await Promise.all([collectionSweep(runtimeBindings(original)),sweepLinkRepairs(runtimeBindings(original)),sweepAgents(runtimeBindings(original))]) },
   async email(message, env) { await receiveIntake(runtimeBindings(env), message) },
   async fetch(request, original, execution) {
     const asset = await staticAssetResponse(request, original)
     if (asset) return documentResponse(asset)
     const env = runtimeBindings(original)
-    if(new URL(request.url).pathname.startsWith('/app') || new URL(request.url).pathname.startsWith('/api/chest'))execution.waitUntil(Promise.all([sweepLinkRepairs(env),sweepAgents(env)]))
+    if(new URL(request.url).pathname.startsWith('/app') || new URL(request.url).pathname.startsWith('/api/chest'))execution.waitUntil(Promise.all([collectionSweep(env),sweepLinkRepairs(env),sweepAgents(env)]))
     const publicPage = await setupStateResponse(request, env) ?? await lobbyResponse(request, env, identity)
     if (publicPage) return documentResponse(publicPage)
     const shared = await publicAttempt(env, request, ()=>publicResponse(request, env))

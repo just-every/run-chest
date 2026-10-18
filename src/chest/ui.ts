@@ -1,3 +1,4 @@
+import { collectionPage, collectionInput } from './collection'
 import { operatorAuth,runtimeBindings,type Bindings } from '../auth.server'
 import { authenticated,overview,execute,headers,failure } from './api'
 import { syncPeople } from './identity'
@@ -43,6 +44,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   const file=fields.get('file');if(file&&typeof file!=='string'&&file.size){input.base64=Buffer.from(await file.arrayBuffer()).toString('base64');input.filename=file.name;input.size=file.size}
   const archiveFile=fields.get('archiveFile');if(archiveFile&&typeof archiveFile!=='string')input.archive=await archiveFile.text()
   if(input.path==='/archive/job')input.path=`/archive/${encodeURIComponent(input.job)}`
+  if(input.path.startsWith('/collection'))collectionInput(input)
   if(input.path.startsWith('/filing/'))filingInput(input)
   if(filesPath(input.path))filesInput(input)
   if(input.path==='/audit/privacy'&&input.scope==='organization')input.groups=Object.keys(input).filter(k=>k.startsWith('group:')).map(k=>k.slice(6))
@@ -55,6 +57,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   if(input.path.startsWith('/archive/')||input.action==='sessions')return page(receiptPage(input,result),me,returnTo)
   const location=input.path==='/new-files'&&result?.kind==='item'?`/app/items/${result.id}${/\.(docx|xlsx)$/i.test(result.payload.name)?'?edit=1':''}`:result?.kind==='document'?`/app/documents/${result.id}`:result?.kind==='item'&&input.path==='/items'?`/app/items/${result.id}`:returnTo;return new Response(null,{status:303,headers:{...headers,location:location.startsWith('/app')?location:'/app'}})
  }
+ const collecting=await collectionPage(env,request,s,url);if(collecting)return page(collecting,me,url.pathname)
  const filing=await filingPage(env,s,url);if(filing)return page(filing,me,url.pathname)
  const files=await filesPage(env,request,s,url);if(files)return 'redirect' in files?new Response(null,{status:303,headers:{...headers,location:files.redirect}}):page(files.body,me,url.pathname)
  const data=await overview(env,s,url);let body=''

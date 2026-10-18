@@ -1,3 +1,4 @@
+import { collectionExecute } from './collection'
 import { operatorAuth,runtimeBindings,type Bindings } from '../auth.server'
 import type { Session } from '../modules/operator-auth/index.mjs'
 import { ChestError,insist,type Document,type Person,type Schema } from './model'
@@ -40,6 +41,7 @@ export async function execute(env:Bindings,request:Request,s:Session,method:stri
 }
 async function dispatch(env:Bindings,request:Request,s:Session,method:string,path:string,input:any):Promise<any>{
  const parts=path.split('/').filter(Boolean),url=new URL(request.url)
+ if(parts[0]==='collection')return collectionExecute(env,request,s,method,parts,input,url)
  if(path==='/organisation/sso') {owner(s);return method==='POST'?saveSso(env,s,input):ssoView(env)}
  if(path==='/organisation/policy'&&method==='POST')return localPolicy(env,s,input)
  if(path==='/organisation/scim/tokens') {owner(s);return method==='POST'?issueScimToken(env,request,s,input):scimView(env)}
