@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {mkdir} from 'node:fs/promises';
+import {chromium} from '@playwright/test';
+import {harness} from './harness.mjs';
+const h=await harness(),b64=v=>Buffer.from(v).toString('base64');let browser;
+const shot=async(page,width,name)=>{await page.evaluate(()=>document.fonts.ready);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:`test-results/${width}-link-discussion-${name}.png`,fullPage:true})};
+try{
+ await mkdir('test-results',{recursive:true});await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const owner=await h.signIn(h.vars.OWNER_EMAIL);await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});const space=(await h.api('/files',owner)).personal;
+ browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+ for(const width of [1440,390]){
+  const context=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});await context.addCookies(owner.split('; ').map(c=>{const i=c.indexOf('=');return {name:c.slice(0,i),value:c.slice(i+1),url:h.origin}}));const page=await context.newPage(),visitor=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true}),guest=await visitor.newPage();
+  const folder=await h.api('/items',owner,{space,type:'folder',name:`Harbor Freight signed package ${width}`}),file=await h.api('/items',owner,{parent:folder.id,name:'Delivery terms.txt',base64:b64('Payment within thirty days of delivery.')});
+  await page.goto(h.origin+'/app/items/'+folder.id);assert.equal(await page.getByRole('button',{name:'Create link',exact:true}).count(),1,(await page.locator('body').innerText()).slice(0,2500));const form=page.locator('form').filter({has:page.getByRole('button',{name:'Create link',exact:true})});await form.getByLabel('Audience').selectOption('public');await form.getByLabel('Link role').selectOption('commenter');await form.getByLabel('Version for links for anyone').selectOption('pinned');await shot(page,width,'create-snapshot');await Promise.all([page.waitForNavigation(),form.getByRole('button',{name:'Create link',exact:true}).click()]);const link=(await page.locator('pre.receipt').innerText()).trim(),path=new URL(link).pathname;
+  await h.api(`/items/${file.id}/versions`,owner,{filename:'Delivery terms.txt',base64:b64('Payment within sixty days of delivery.')});await h.api('/items',owner,{parent:folder.id,name:'Later addition.txt',base64:b64('Not part of the signed package.')});
+  await guest.goto(h.origin+path);assert.equal(await guest.getByText('Later addition.txt',{exact:true}).count(),0);await guest.getByRole('link',{name:'Preview',exact:true}).click();assert.match(await guest.locator('pre.receipt').innerText(),/thirty days/);await shot(guest,width,'pinned-original');await guest.goto(h.origin+path);await guest.getByLabel('Comment on this folder').fill('Received the signed package. Please keep the original payment terms.');await Promise.all([guest.waitForNavigation(),guest.getByRole('button',{name:'Post comment',exact:true}).click()]);assert.equal(await guest.getByText('Received the signed package. Please keep the original payment terms.',{exact:true}).count(),1);await shot(guest,width,'commented');
+  await page.goto(h.origin+'/app/items/'+folder.id);assert.ok((await h.api(`/items/${folder.id}`,owner)).comments.some(c=>c.message.includes('signed package')));await shot(page,width,'owner-discussion');await page.goto(h.origin+'/app/links');await shot(page,width,'link-list');
+  await h.api(`/public-links/${(await h.api(`/items/${folder.id}`,owner)).publicLinks.find(l=>l.snapshot).id}/revoke`,owner,{});assert.equal((await guest.goto(h.origin+path)).status(),410);await shot(guest,width,'revoked');await context.close();await visitor.close();
+ }
+ console.log('SHARE-001 folder snapshot creation, original preview, shared comment, owner visibility and revocation at 1440 and 390 passed');
+}finally{await browser?.close();await h.close()}

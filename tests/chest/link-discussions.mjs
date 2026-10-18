@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import {harness} from './harness.mjs';
+const h=await harness(),b64=v=>Buffer.from(v).toString('base64');
+const post=(path,data,cookie)=>h.fetch(path,{method:'POST',headers:{origin:h.origin,'content-type':'application/x-www-form-urlencoded',...(cookie?{cookie}:{})},body:new URLSearchParams(data).toString()});
+try{
+ await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const owner=await h.signIn(h.vars.OWNER_EMAIL),space=(await h.api('/files',owner)).personal;
+ const folder=await h.api('/items',owner,{space,type:'folder',name:'Acme signed delivery'}),file=await h.api('/items',owner,{parent:folder.id,name:'Terms.txt',base64:b64('Net thirty days.')}),sub=await h.api('/items',owner,{parent:folder.id,type:'folder',name:'Legal'}),hidden=await h.api('/items',owner,{parent:sub.id,name:'Forecast.txt',base64:b64('Confidential forecast')});
+ await h.api(`/items/${sub.id}/settings`,owner,{restricted:true});
+ const snapshot=await h.api(`/items/${folder.id}/links`,owner,{audience:'public',role:'commenter',versionMode:'pinned'}),base=new URL(snapshot.url).pathname;
+ await h.api(`/items/${file.id}/versions`,owner,{filename:'Terms.txt',base64:b64('Net sixty days.')});
+ await h.api(`/items/${file.id}/rename`,owner,{name:'Terms revised.txt'});
+ const late=await h.api('/items',owner,{parent:folder.id,name:'Added later.txt',base64:b64('Not in original delivery')});
+ const page=await(await h.fetch(base)).text();assert.match(page,/Terms.txt/);assert.doesNotMatch(page,/Terms revised|Added later|Forecast/);
+ assert.equal(await(await h.fetch(`${base}/f/${file.id}`)).text(),'Net thirty days.');
+ for(const id of [hidden.id,late.id])assert.equal((await h.fetch(`${base}/f/${id}`)).status,404);
+ assert.equal((await post(`${base}/comments/${folder.id}`,{version:'',message:'The signed delivery arrived.'})).status,303);
+ assert.match(await(await h.fetch(base)).text(),/The signed delivery arrived/);
+ assert.ok(h.mails.some(m=>m.subject.includes('commented') && m.text.includes('signed delivery arrived')));
+ const viewer=await h.api(`/items/${file.id}/links`,owner,{audience:'public'});assert.equal((await post(`${new URL(viewer.url).pathname}/comments/${file.id}`,{version:file.payload.current,message:'Not allowed'})).status,403);
+ const other=await h.api(`/items/${folder.id}/links`,owner,{audience:'public',role:'commenter'});assert.doesNotMatch(await(await h.fetch(new URL(other.url).pathname)).text(),/signed delivery arrived/);
+ await h.api(`/items/${folder.id}/comments`,owner,{message:'Private internal budget discussion'});assert.doesNotMatch(await(await h.fetch(base)).text(),/Private internal budget/);
+ const pinned=await h.api(`/items/${file.id}/links`,owner,{audience:'public',role:'commenter',versionMode:'pinned',version:file.payload.current}),path=new URL(pinned.url).pathname;
+ assert.equal((await post(`${path}/comments/${file.id}`,{version:file.payload.current,message:'The first version is accepted.'})).status,303);
+ const current=await h.api(`/items/${file.id}/links`,owner,{audience:'public',role:'commenter'}),cp=new URL(current.url).pathname;
+ assert.equal((await post(`${cp}/comments/${file.id}`,{version:file.payload.current,message:'Stale current version'})).status,409);
+ await h.api(`/items/${file.id}/settings`,owner,{restricted:true});assert.equal((await h.fetch(`${base}/f/${file.id}`)).status,404);
+ await h.api(`/public-links/${snapshot.link.id}/revoke`,owner,{});assert.equal((await post(`${base}/comments/${folder.id}`,{version:'',message:'Revoked'})).status,410);
+ const guest=await h.api(`/items/${file.id}/links`,owner,{audience:'guests',guests:['vendor@acme.test'],role:'commenter',password:'delivery-secret'}),gp=new URL(guest.url).pathname;
+ await post(gp+'/verify',{email:'vendor@acme.test'});const verification=new URL(h.mails.at(-1).text.match(/https?:\/\/[^\s]+/)[0]);const confirm=await post(gp+'/confirm',{token:verification.searchParams.get('token')}),cookie=confirm.headers.getSetCookie()[0].split(';')[0];
+ assert.equal((await post(`${gp}/comments/${file.id}`,{version:(await h.api(`/items/${file.id}`,owner)).item.current,message:'Password needed'},cookie)).status,401);
+ const unlocked=await post(gp,{password:'delivery-secret'},cookie),both=cookie+'; '+unlocked.headers.getSetCookie()[0].split(';')[0],version=(await h.api(`/items/${file.id}`,owner)).item.current;
+ assert.equal((await post(`${gp}/comments/${file.id}`,{version,message:'Verified supplier approval'},both)).status,303);
+ const detail=await h.api(`/items/${file.id}`,owner);assert.ok(detail.comments.some(c=>c.author==='vendor@acme.test'&&c.message==='Verified supplier approval'));
+ console.log('SHARE-001 pinned folder membership, retained bytes, live restrictions and scoped version-bound external comments passed');
+}finally{await h.close()}

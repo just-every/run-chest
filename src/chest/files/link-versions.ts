@@ -1,7 +1,7 @@
 import { insist } from '../model'
 import type { FileVersion, Item } from './model'
 
-export type LinkVersionChoice = { versionMode: 'current'|'approved'; version?: never } | { versionMode: 'pinned'; version: string }
+export type LinkVersionChoice = { versionMode: 'current'|'approved'; version?: never } | { versionMode: 'pinned'; version?: string }
 export type LinkVersionInput = { versionMode?: unknown; version?: unknown }
 const hasVersion = (input: LinkVersionInput) => input.version !== undefined && input.version !== null && input.version !== ''
 
@@ -22,8 +22,7 @@ export function normalizeLinkVersion(item: Item, input: LinkVersionInput): LinkV
   if (item.type === 'file') insist(item.versions.some(v => v.id === item.current), 'version_not_found', 404)
   return { versionMode: 'current' }
  }
- // Folder snapshots require their own reachable-child manifest; a file version ID never selects a folder tree.
- insist(item.type === 'file', 'pinned_version_requires_file')
+ if(item.type==='folder'){insist(!hasVersion(input),'folder_snapshot_has_no_version');return {versionMode:'pinned'}}
  insist(typeof input.version === 'string' && input.version.length > 0, 'version_required')
  insist(item.versions.some(v => v.id === input.version), 'version_not_found', 404)
  return { versionMode: 'pinned', version: input.version }
