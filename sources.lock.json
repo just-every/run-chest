@@ -229,7 +229,7 @@
       "executable": false
     },
     "docs/independent-backups.md": {
-      "sha256": "8a3238169f9252400434c298f9049fd13d488a2b41ed14c511a494f320c2b2d8",
+      "sha256": "1f26f9f31432e31b21d2d8185550456c7ec34c1a2b0b0654d0b4671097553f3e",
       "executable": false
     },
     "docs/introduction.md": {
@@ -613,7 +613,7 @@
       "executable": false
     },
     "scripts/backup/hosted.mjs": {
-      "sha256": "2b865bbfc5ce8e5b77a01910d8c1942c83432395ebc38a4be88ccc652c77a195",
+      "sha256": "9530f078c09f1b65556896f19afd09b03385b0e6f7bbf1dda525b44669468f61",
       "executable": false
     },
     "scripts/backup/README.md": {
@@ -681,7 +681,7 @@
       "executable": false
     },
     "scripts/hosted/r2.mjs": {
-      "sha256": "7548368a0a7b995ef399f12832a5835cf1385a140da8d42ec919e74af1218c6e",
+      "sha256": "026798e01bebd4eb280bc97d07b914515c627928f2064cb4877fd55785b6db2f",
       "executable": false
     },
     "scripts/install.mjs": {
@@ -3465,7 +3465,7 @@
       "executable": false
     },
     "tests/chest/backup-archive.mjs": {
-      "sha256": "7e5280b234bc16eceabd9f2f8badbfc5347ee86c38be1128c5dc31c20f622515",
+      "sha256": "e770b83caa6d2b3f0cb84ba01b0dd72b04969f69f567b379057235ce0d42289b",
       "executable": false
     },
     "tests/chest/browser-agent-filing.mjs": {

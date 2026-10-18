@@ -39,6 +39,7 @@ export async function r2(creds, bucket) {
         token = /<NextContinuationToken>([^<]*)/.exec(xml)[1];
       }
     },
+    async delete(key) { await send('DELETE', key); },
     async download(key, file) { await pipeline(Readable.fromWeb((await send('GET', key)).body), createWriteStream(file, { mode: 0o600 })); },
     async upload(key, file, contentType = 'application/octet-stream') {
       const size = statSync(file).size, fd = openSync(file, 'r'), read = (at, n) => { const b = Buffer.alloc(n); readSync(fd, b, 0, n, at); return b; };

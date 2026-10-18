@@ -77,6 +77,7 @@ globalThis.fetch=async(input,init={})=>{
   if(process.env.CHEST_BACKUP_TEST_FAIL==='yes'&&method==='PUT')throw Error('Independent provider refused write');
   const account=url.hostname.split('.')[0],parts=url.pathname.slice(1).split('/').map(decodeURIComponent),bucket=join(home,'edge',account,parts.shift()),key=parts.join('/'),file=join(bucket,key);
   if(method==='GET'&&url.searchParams.has('list-type')){const prefix=url.searchParams.get('prefix')??'',all=await files(bucket);return new Response('<ListBucketResult><IsTruncated>false</IsTruncated>'+ (await Promise.all(all.map(async p=>({key:relative(bucket,p),size:(await stat(p)).size})))).filter(o=>o.key.startsWith(prefix)).map(o=>'<Contents><Key>'+o.key+'</Key><Size>'+o.size+'</Size></Contents>').join('')+'</ListBucketResult>');}
+  if(method==='DELETE'){await rm(file,{force:true});return new Response(null,{status:204});}
   if(method==='GET')return new Response(await readFile(file));
   if(method==='PUT'){await mkdir(dirname(file),{recursive:true});await writeFile(file,init.body);return new Response('',{headers:{etag:'test-etag'}});}
  }
@@ -90,7 +91,6 @@ import {join} from 'node:path';
 const args=process.argv.slice(2),home=process.env.CHEST_BACKUP_TEST_HOME,file=join(home,process.env.CLOUDFLARE_ACCOUNT_ID==='recovery-account'?'target.sqlite':'source.sqlite');
 if(args.includes('export')){const result=spawnSync('/usr/bin/sqlite3',[file,'.dump'],{maxBuffer:32*1024*1024});if(result.status!==0)process.exit(1);await writeFile(args[args.indexOf('--output')+1],result.stdout);}
 else if(args.includes('execute')){const db=new DatabaseSync(file);try{db.exec(await readFile(args[args.indexOf('--file')+1],'utf8'));}finally{db.close();}}
-else if(args.includes('delete')){const object=args[args.indexOf('delete')+1];await rm(join(home,'edge',process.env.CLOUDFLARE_ACCOUNT_ID,object));}
 else process.exit(1);
 `); await chmod(join(bin,'npx'),0o700);
   const env={...process.env,PATH:bin+':'+process.env.PATH,CHEST_BACKUP_TEST_HOME:temp,CLOUDFLARE_ACCOUNT_ID:'live-account',CLOUDFLARE_API_TOKEN:'fake-live-edge',CHEST_BACKUP_ACCOUNT_ID:'owner-account',CHEST_BACKUP_API_TOKEN:'fake-owner-edge',CHEST_BACKUP_BUCKET:'owner-backups',CHEST_BACKUP_KEY:key};

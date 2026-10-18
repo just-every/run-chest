@@ -93,7 +93,9 @@ and restore its pre-upgrade archive using the steps above. Do not apply an old
 archive over the changed schema. Check the restored product and originals
 before directing staff to it.
 
-D1 and R2 do not have a shared snapshot transaction. Quiesce writes for a strict
+Cloudflare D1 export can briefly pause database requests. Schedule backups for
+a quiet period; if a page reports a database error during export, reload it
+after export finishes. D1 and R2 do not have a shared snapshot transaction. Quiesce writes for a strict
 point-in-time backup/drill; missing referenced originals fail the backup. Restoration is ordered: verified originals first, then the database. There is
 no cross-service transaction. If publication is interrupted, keep the archive,
 discard the disposable incomplete target and restore into another empty target

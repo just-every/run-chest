@@ -38,6 +38,7 @@ export async function hostedEdge(config) {
     const open = () => client ??= r2(creds, name);
     return {
       async *list(prefix) { yield* (await open()).list(prefix); },
+      async delete(key) { return (await open()).delete(key); },
       async download(key, file) { return (await open()).download(key, file); },
       async upload(key, file) { return (await open()).upload(key, file); },
     };
@@ -48,7 +49,7 @@ export async function hostedEdge(config) {
     exportDatabase: output => runWrangler(live, ['d1','export',resources.database,'--remote','--output',output]),
     executeDatabase: file => runWrangler(live, ['d1','execute',resources.database,'--remote','--file',file,'--yes']),
     query: sql => query(live,id,sql),
-    deleteArchive: key => runWrangler(destination,['r2','object','delete',`${bucket}/${key}`,'--remote']),
+    deleteArchive: key => archives.delete(key),
   };
 }
 export async function listBackups(config, edge) {
