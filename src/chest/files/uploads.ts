@@ -1,4 +1,4 @@
-import { prepareFiling } from './folder-metadata'
+import { effectiveGovernance, prepareFiling } from './folder-metadata'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { custody, signature, SMALL, streamDigest } from '../blobs'
@@ -39,7 +39,9 @@ export async function begin(env: Bindings, s: Session, w: Who, input: any) {
  const open = (await where<Upload>(env, 'upload', '$.owner', w.email)).find(r => { const u = r.payload; return u.state === 'open' && Date.parse(u.expiresAt) > Date.now() && u.space === target.space && u.parent === target.parent && u.item === target.item && u.name === value && u.size === size && u.lastModified === lastModified })
  const ctx = target.item ? await context(env,w,target.item) : await place(env,w,target.space,target.parent)
  const existingItem = target.item ? ctx.chain.at(-1)!.payload : {type:'file',createdBy:w.email} as Item
- const filing = (await prepareFiling(env,ctx,existingItem,input,w.email)).filing
+ // Reservations have no trusted media type yet. A scan-intake reservation may defer missing values;
+ // completion inspects actual bytes and applies the folder rule before publishing any file.
+ const filing = (await prepareFiling(env,ctx,existingItem,input,w.email,!!effectiveGovernance(ctx,existingItem)?.scanIntake)).filing
  if (open) {
   const updated=next(open,{...open.payload,filing});await commit(env,s,[{row:updated,previous:open}],{fences:ctx.fences});return view(env,updated)
  }
