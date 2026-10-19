@@ -99,7 +99,7 @@ Every user has a trash view of the items they trashed and restores any of them, 
 
 ## Everyday files, sharing and hosted operation (0.2.0)
 
-These clauses are what Chest 0.2.0 promises. Each states only what the 0.2.0 release gate (18 October 2026) saw working, in a browser at 1440 and 390 pixels on a local copy and in a Chest deployed to its own Cloudflare account with real email. Broader target behaviour stays in the target clauses below.
+These clauses are what Chest 0.2.0 promises. Each states only what the 0.2.0 release gate (18 October 2026) saw working, in a browser at 1440 and 390 pixels on a local copy and in a Chest deployed to its own Cloudflare account with real email. Broader target behavior stays in the target clauses below.
 
 ### CHEST-14 — Team spaces, nested folders and phone uploads.
 
