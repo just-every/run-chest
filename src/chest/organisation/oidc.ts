@@ -8,6 +8,7 @@ const constantEqual=(a:unknown,b:unknown)=>{if(typeof a!=='string'||typeof b!=='
 import { ChestError, insist } from '../model'
 import { discovery,providerJson } from './provider-http'
 import { seal,unseal,ssoSettings,type SsoConfig } from './settings'
+import { assertCompanyDomain } from './domains'
 const enc=new TextEncoder()
 // Google documents that its ID tokens may name their issuer without the scheme (accounts.google.com).
 const googleIssuers=(issuer:string)=>issuer==='https://accounts.google.com'?[issuer,'accounts.google.com']:issuer
@@ -22,6 +23,7 @@ export async function consume(env:Bindings,request:Request,state:string) {
 }
 export async function finish(env:Bindings,request:Request,tx:any,principal:any) {
  const current=await ssoSettings(env);insist(current&&current.revision===tx.revision,'sso_configuration_changed',409)
+ await assertCompanyDomain(env,principal.email)
  const policy=await mfaPolicy(env);insist(!policy.requireIdpMfa||principal.mfa===true,'identity_provider_mfa_required',403)
  const completed=await operatorAuth(env).admission.admit(request,{...principal,provider:'organisation',providerGeneration:tx.generation},{returnTo:tx.test?'/app/sso-tested':'/app/files'})
  if(principal.mfa===true)await stampMfa(env,{...completed.session,operator:completed.operator} as any,'idp')

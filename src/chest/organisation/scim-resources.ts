@@ -1,3 +1,6 @@
+import { deprovisionAuthority } from './revoke-authority'
+import { deprovisionTransfer } from './offboarding'
+import { reviewGroupChange } from './group-review'
 import type { Bindings } from '../../auth.server'
 import { id, now } from '../model'
 import { tokenHash } from '../files/capability'
@@ -72,7 +75,7 @@ function fences(row: Resource): Sql[] {
  if (row.resource_type === 'User') guards.push(assertion({ sql: "EXISTS(SELECT 1 FROM oa_operators WHERE id=? AND email=? AND version=? AND status=? AND display_name=? AND role!='owner')", params: [row.operator_id, row.email, row.operator_version, row.status, row.display_name] }))
  return guards
 }
-export async function saveResource(env: Bindings, auth: { predicate: Predicate; actor: string }, type: ResourceType, input: any, previous?: Resource, deleted = false): Promise<Resource> {
+export async function saveResource(env: Bindings, auth: { predicate: Predicate; actor: string }, type: ResourceType, input: any, previous?: Resource, deleted = false, options: { reviewed?: boolean; statements?: Sql[] } = {}): Promise<Resource> {
  const key = previous?.id ?? id(), at = now(), revision = id(), statements: Sql[] = previous ? fences(previous) : []
  const external = string(input.externalId, 'externalId', 255, true) || null
  const recordKey = previous?.record_id ?? (type === 'User' ? email(input.userName) : `group:${key}`)
@@ -82,12 +85,14 @@ export async function saveResource(env: Bindings, auth: { predicate: Predicate; 
   data = userData(input, previous); if (deleted) data.active = false
   const status = data.active ? 'active' : 'inactive'
   payload = { email: data.userName, name: data.displayName, role: previous?.role ?? 'member', status, development: false }
+  if (previous && previous.status === 'active' && !data.active) statements.push(...(await deprovisionTransfer(env, previous.email, auth.actor)).statements)
   if (previous) statements.push(sql('UPDATE oa_operators SET display_name=?,status=? WHERE id=?', data.displayName, status, operator))
   else statements.push(
    assertion({ sql: "NOT EXISTS(SELECT 1 FROM oa_operators WHERE lower(email)=?) AND NOT EXISTS(SELECT 1 FROM chest_records WHERE kind='person' AND (lower(id)=? OR lower(json_extract(payload,'$.email'))=?))", params: [data.userName, data.userName, data.userName] }),
    sql("INSERT INTO oa_operators(id,email,display_name,role,status,created_at) VALUES(?,?,?,'member',?,?)", operator, data.userName, data.displayName, status, Date.now())
   )
   if (previous && !data.active) statements.push(
+   ...deprovisionAuthority(previous.email, auth.actor),
    sql('UPDATE chest_device_credentials SET revoked_at=COALESCE(revoked_at,?) WHERE email=?', at, previous.email),
    sql("UPDATE chest_records SET payload=json_set(payload,'$.revokedAt',?,'$.revokedBy',?),revision=? WHERE kind='device' AND json_extract(payload,'$.owner')=? AND json_extract(payload,'$.revokedAt') IS NULL", at, auth.actor, revision, previous.email)
   )
@@ -96,6 +101,7 @@ export async function saveResource(env: Bindings, auth: { predicate: Predicate; 
   const group = await groupData(env, input); data = group.data; if (deleted) data.active = false
   statements.push(assertion({ sql: "(SELECT COUNT(*) FROM chest_scim_resources m JOIN oa_operators o ON o.id=m.operator_id JOIN json_each(?) j ON m.id=json_extract(j.value,'$.id') AND o.email=json_extract(j.value,'$.email') WHERE m.resource_type='User' AND m.deleted=0 AND m.record_id=o.email)=?", params: [JSON.stringify(group.identities), group.keys.length] }))
   payload = { name: data.displayName, members: data.active ? group.emails : [] }
+  if (previous && !options.reviewed) await reviewGroupChange(env, auth, previous, input, payload, deleted)
  }
  if (previous) statements.push(
   sql('UPDATE chest_records SET payload=?,revision=? WHERE id=?', JSON.stringify(payload), revision, recordKey),
@@ -105,7 +111,7 @@ export async function saveResource(env: Bindings, auth: { predicate: Predicate; 
   sql('INSERT INTO chest_records(id,kind,payload,revision) VALUES(?,?,?,?)', recordKey, type === 'User' ? 'person' : 'group', JSON.stringify(payload), revision),
   sql('INSERT INTO chest_scim_resources(id,resource_type,record_id,operator_id,external_id,data,revision,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)', key, type, recordKey, operator, external, JSON.stringify(data), revision, at, at)
  )
- await transact(env, auth.predicate, statements, `scim.${type.toLowerCase()}.${deleted ? 'delete' : previous ? 'update' : 'create'}`, key, auth.actor)
+ await transact(env, auth.predicate, [...statements, ...options.statements ?? []], `scim.${type.toLowerCase()}.${deleted ? 'delete' : previous ? 'update' : 'create'}`, key, auth.actor)
  // DELETE leaves an identity reservation and its person record; old grants never attach to a replacement account.
  if (deleted) return { ...previous!, data, deleted: 1, revision }
  return load(env, type, key)

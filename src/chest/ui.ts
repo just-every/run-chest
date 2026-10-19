@@ -1,3 +1,9 @@
+import { offboardingView } from './organisation/offboarding'
+import { offboardingCard } from './organisation/offboarding-ui'
+import { domainView } from './organisation/domains'
+import { domainCard } from './organisation/domains-ui'
+import { groupReviewView } from './organisation/group-review'
+import { groupReviewCard } from './organisation/group-review-ui'
 import { erasurePage } from './erasure/ui'
 import { erasureView } from './erasure/service'
 import { QuotaConfirmation } from './quota/errors'
@@ -83,7 +89,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
  if(url.pathname==='/app/sso-tested'){insist(s.kind==='oidc','company_signin_required',403);body=card('Company sign-in works',`<p>You are signed in as <strong>${esc(me.name)}</strong> (${esc(me.email)}). The identity provider connection has been tested.</p><p><a class="btn" href="/app/files">Open files</a></p>${me.role==='owner'?'<p><a class="link" href="/app/admin">Back to people &amp; settings</a></p>':'<p>The owner can now turn off email-link sign-in in People &amp; settings.</p>'}`)}
  else if(url.pathname==='/app')return new Response(null,{status:303,headers:{...headers,location:'/app/files'}})
  else if(url.pathname==='/app/library')body=library(data,url.searchParams.get('q')||'',url.searchParams.get('trash')==='true')
- else if(url.pathname==='/app/admin'){owner(s);body=adminPage({...data,local:env.AUTH_LOCAL==='true'},readerCard(await readerView(env))+organisationCard(await ssoView(env),await scimView(env),env.AUTH_ORIGIN)+await quotaAdminCard(env,s)+await mfaAdminCard(env))}
+ else if(url.pathname==='/app/admin'){owner(s);body=adminPage({...data,local:env.AUTH_LOCAL==='true'},readerCard(await readerView(env))+organisationCard(await ssoView(env),await scimView(env),env.AUTH_ORIGIN)+domainCard(await domainView(env))+groupReviewCard(await groupReviewView(env))+offboardingCard(await offboardingView(env))+await quotaAdminCard(env,s)+await mfaAdminCard(env))}
  else if(url.pathname==='/app/archive'){owner(s);body=archivePage(data)}
  else if(url.pathname==='/app/audit')body=auditScreen(await history(env,s,url.searchParams),await recordNames(env),url.searchParams,await privacy(env,s.operator.email),s.operator.role==='owner',s.operator.role==='owner'?await list(env,'group'):[])
  else if(url.pathname.startsWith('/app/documents/')){const key=url.pathname.split('/').at(-1)!;const row=await execute(env,request,s,'GET',`/documents/${key}`,{}),readers=me.role==='owner'?await execute(env,request,s,'GET',`/documents/${key}/readers`,{}):[],mine=(await roles(env,s,row.payload)).roles;body=documentPage(row,data,readers,mine.includes('reviewer'),{readings:await documentReadings(env,row.id,row.payload),editor:mine.includes('editor')})}

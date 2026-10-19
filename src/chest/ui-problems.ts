@@ -1,5 +1,15 @@
 // What a refused action says, in plain words. The code stays on the page in small print for anyone reporting it.
 const words: Record<string, string> = {
+ company_signin_domain_refused: 'Your work email domain is not allowed to use company sign-in here. Ask the owner to check Sign-in domains in People & settings.',
+ organisation_sso_required: 'Your email domain requires company sign-in. Use the company sign-in button instead of an email link.',
+ invalid_domain: 'Enter exact email domains, such as example.com, without @, wildcards or web addresses.',
+ invalid_domains: 'Enter one exact email domain per line, up to 100 domains.',
+ required_domain_not_allowed: 'Every domain that must use company sign-in must also be allowed to use it.',
+ lifecycle_review_changed: 'This provider change was replaced or already decided. Reload Provider group changes before confirming.',
+ offboarding_successor_unavailable: 'The selected successor must be a different active person. Save a new successor before deactivating this account.',
+ offboarding_successor_reconfirmation_required: 'This successor setting came from another installation. Save an active successor again before deactivating this person.',
+ offboarding_owner_protected: 'Provisioning cannot deactivate or transfer the installation owner. Use the accepted owner-transfer workflow.',
+ offboarding_owner_unavailable: 'No active installation owner is available to receive content. Choose an active successor before deactivating this account.',
  app_policy_authorization_disabled: 'Your organization or group policy does not allow app authorization. Ask an administrator with sharing and security scope.',
  app_policy_app_blocked: 'Your organization or group policy blocks this app. It cannot receive access to your files.',
  app_policy_allowlist_only: 'Your organization or group permits only allowlisted apps. This app is not on the list.',

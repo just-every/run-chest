@@ -10,13 +10,14 @@ import { beginSaml,samlCallback,samlMetadata } from './saml'
 import { managed,providerOrigin,ssoSettings } from './settings'
 import { boundedForm } from './body'
 import { signInPage } from './ui'
+import { enforceLocalDomain } from './domains'
 export async function companyResponse(request:Request,env:Bindings):Promise<Response|null> {
  const url=new URL(request.url),path=url.pathname
  if(!path.startsWith('/auth/company/')&&path!=='/signin'&&!['/auth/magic-link','/auth/confirm'].includes(path))return null
  try {
   const row=await ssoSettings(env)
   if(path==='/signin'&&request.method==='GET'&&row){if(await operatorAuth(env).getSession(request))return null;return signInPage(row.config.label,!!row.local_disabled,managed(env),providerOrigin(row.config))}
-  if(['/auth/magic-link','/auth/confirm'].includes(path)){if(row?.local_disabled)return Response.json({error:'organisation_sso_required',message:'Your organisation requires company sign-in.'},{status:403,headers:{'cache-control':'no-store'}});return null}
+  if(['/auth/magic-link','/auth/confirm'].includes(path)){if(row?.local_disabled)return Response.json({error:'organisation_sso_required',message:'Your organisation requires company sign-in.'},{status:403,headers:{'cache-control':'no-store'}});await enforceLocalDomain(env,request);return null}
   if(path==='/signin')return null
   if(path==='/auth/company/metadata')return await samlMetadata(env)
   if(path==='/auth/company/callback')return await oidcCallback(env,request)

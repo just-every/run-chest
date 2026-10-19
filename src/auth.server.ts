@@ -1,3 +1,4 @@
+import { assertDomainSession } from './chest/organisation/domains'
 import { firstRunResponse } from './base/setup'
 import { fontDocumentResponse } from './base/font-response'
 import { createOperatorAuth, createAuthHandler, createSignInHandler, devGate, devNotFound, type AuthConfig } from './modules/operator-auth/index.mjs'
@@ -55,7 +56,7 @@ export function baseOperatorAuth(env: Bindings, inviter?: string) {
 
 export function operatorAuth(env:Bindings,inviter?:string){
  const auth=baseOperatorAuth(env,inviter)
- return {...auth,async getSession(request:Request){const s=await auth.getSession(request);if(s)await requireMfa(env,s);return s}}
+ return {...auth,async getSession(request:Request){const s=await auth.getSession(request);if(s){await assertDomainSession(env,s);await requireMfa(env,s)}return s}}
 }
 
 export async function authResponse(request: Request, original: Bindings): Promise<Response | null> {

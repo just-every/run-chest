@@ -1,3 +1,4 @@
+import { deprovisionAuthority } from '../organisation/revoke-authority'
 import type { Bindings } from '../../auth.server'
 import { authConfig } from '../../auth.server'
 import { createOperatorAuth,type Session } from '../../modules/operator-auth/index.mjs'
@@ -7,8 +8,7 @@ import { operatorMail } from '../../mail.server.mjs'
 import { insist,now,type Group } from '../model'
 import { list,sessionPredicate } from '../store'
 import { commit,fresh,maybe,next,type Op } from '../files/repo'
-import type { Space } from '../files/model'
-import { personalId } from '../files/model'
+import { deprovisionTransfer,planTransfer } from '../organisation/offboarding'
 import { requireAdmin,canAdmin,guardAdminDeactivation,requireAdminGroup } from './roles'
 // Identity administration deliberately does not elevate the actor's OA role or content ACL.
 export async function administrativePeople(env:Bindings,s:Session){
@@ -42,9 +42,11 @@ export async function administrativePersonAction(env:Bindings,request:Request,s:
   await requireAdmin(env,s,'user-management',email);insist(email!==s.operator.email&&target.role!=='owner','owner_required',403);await guardAdminDeactivation(env,s,email)
   const previous=await maybe(env,'person',email),person={email,name:target.name,role:target.role,status:action==='reactivate'?'active':'inactive',development:email.endsWith('@dev.localhost')},ops:Op[]=[{row:previous?next(previous,person):fresh('person',person,email),previous:previous??undefined}],statements:{sql:string;params:unknown[]}[]=[{sql:'INSERT INTO chest_assert(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM oa_operators WHERE id=? AND version=? AND status=?) THEN 1 ELSE 0 END',params:[target.id,target.version,target.status]}]
   if(action==='offboard'){
-   const successor=String(input.to??'').toLowerCase();insist(successor!==email&&await env.DB.prepare("SELECT 1 FROM oa_operators WHERE email=? AND status='active'").bind(successor).first(),'invalid_successor');await requireAdmin(env,s,'user-management',successor)
-   const area=await maybe<Space>(env,'space',personalId(email)),old=await maybe(env,'offboarding',`offboarding:${email}`),payload={from:email,to:successor,by:s.operator.email,at:now()};if(area)ops.push({row:next(area,{...area.payload,owner:successor,formerOwner:email,name:`Files from ${email}`}),previous:area});ops.push(old?{row:next(old,payload),previous:old}:{row:fresh('offboarding',payload,`offboarding:${email}`)})
+   const plan=input.to?await planTransfer(env,email,String(input.to),s.operator.email):await deprovisionTransfer(env,email,s.operator.email)
+   await requireAdmin(env,s,'user-management',plan.summary.to)
+   statements.push(...plan.statements)
   }
+  if(action!=='reactivate')statements.push(...deprovisionAuthority(email,s.operator.email))
   statements.push({sql:'UPDATE oa_operators SET status=? WHERE id=?',params:[action==='reactivate'?'active':'inactive',target.id]});if(action!=='reactivate')statements.push({sql:'UPDATE chest_device_credentials SET revoked_at=? WHERE email=?',params:[now(),email]})
   await commit(env,s,ops,{audits:[{action:'admin.person.'+action,object:email,detail:{before:target.status,after:action==='reactivate'?'active':'inactive',successor:input.to??null}}],statements});return {updated:true}
  }
