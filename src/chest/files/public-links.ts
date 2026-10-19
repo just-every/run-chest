@@ -50,11 +50,11 @@ export async function revokePublicLink(env: Bindings, s: Session, w: Who, id: st
  return { link: describe(row) }
 }
 export type LinkState = 'active' | 'revoked' | 'expired' | 'limit reached'
-export function linkState(l: PublicLink, at = Date.now()): LinkState { return l.revokedAt ? 'revoked' : l.expires && Date.parse(l.expires) <= at ? 'expired' : l.limit !== null && l.downloads >= l.limit ? 'limit reached' : 'active' }
+export function linkState(l: PublicLink, at = Date.now()): LinkState { return l.revokedAt || l.custodyRevokedAt ? 'revoked' : l.expires && Date.parse(l.expires) <= at ? 'expired' : l.limit !== null && l.downloads >= l.limit ? 'limit reached' : 'active' }
 const monthDay = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
 // "Expires Nov 30 · 3 of 10 downloads", the way the item's link list and the Links view show every link.
 export function linkSummary(l: PublicLink) {
- const state = linkState(l), parts = [state === 'revoked' ? `Revoked ${monthDay(l.revokedAt!)}` : state === 'expired' ? `Expired ${monthDay(l.expires!)}` : l.expires ? `Expires ${monthDay(l.expires)}` : 'No expiry']
+ const state = linkState(l), parts = [state === 'revoked' ? `Revoked ${monthDay((l.revokedAt ?? l.custodyRevokedAt)!)}` : state === 'expired' ? `Expired ${monthDay(l.expires!)}` : l.expires ? `Expires ${monthDay(l.expires)}` : 'No expiry']
  parts.push(l.limit === null ? `${l.downloads} download${l.downloads === 1 ? '' : 's'}` : `${l.downloads} of ${l.limit} downloads`)
  if (l.password) parts.push('password')
  if(l.versionMode === 'pinned')parts.push(l.snapshot?'pinned folder snapshot':'pinned version')
@@ -62,7 +62,7 @@ export function linkSummary(l: PublicLink) {
  if(l.download === false)parts.push('preview only')
  return parts.join(' · ')
 }
-export const describe = (row: Row<PublicLink>) => ({ id: row.id, item: row.payload.item, audience: row.payload.audience ?? 'public', role:row.payload.role ?? 'viewer', snapshot:!!row.payload.snapshot, versionMode: row.payload.versionMode ?? 'current', version: row.payload.version, download: row.payload.download ?? true, guests: row.payload.guests, domain: row.payload.domain, password: !!row.payload.password, expires: row.payload.expires, limit: row.payload.limit, downloads: row.payload.downloads, createdBy: row.payload.createdBy, at: row.payload.at, revokedAt: row.payload.revokedAt ?? null, state: linkState(row.payload), summary: linkSummary(row.payload) })
+export const describe = (row: Row<PublicLink>) => ({ id: row.id, item: row.payload.item, audience: row.payload.audience ?? 'public', role:row.payload.role ?? 'viewer', snapshot:!!row.payload.snapshot, versionMode: row.payload.versionMode ?? 'current', version: row.payload.version, download: row.payload.download ?? true, guests: row.payload.guests, domain: row.payload.domain, password: !!row.payload.password, expires: row.payload.expires, limit: row.payload.limit, downloads: row.payload.downloads, createdBy: row.payload.createdBy, at: row.payload.at, revokedAt: row.payload.revokedAt ?? row.payload.custodyRevokedAt ?? null, state: linkState(row.payload), summary: linkSummary(row.payload) })
 export async function describePolicy(env: Bindings,row: Row<PublicLink>,space: string | undefined){if(!space)return {...describe(row),unavailable:true,policyBlocked:false};const p=await creatorLinkPolicy(env,row.payload.custodian ?? row.payload.createdBy,space);return {...describe(row),policyBlocked:!!publicPolicyReason(p.rules,row.payload),policyReason:publicPolicyReason(p.rules,row.payload)}}
 export async function linksOn(env: Bindings,key:string){const item=await get<Item>(env,'item',key);return Promise.all((await where<PublicLink>(env,'public-link','$.item',key)).map(l=>describePolicy(env,l,item.payload.space)))}
 // The public door. Resolution answers why a link cannot be used, never which item it was for.
@@ -71,6 +71,7 @@ export type Refusal = { refused: 'not_found' | 'revoked' | 'expired' | 'limit' |
 export async function resolveLink(env: Bindings, secret: string): Promise<Resolved | Refusal> {
  if (!tokenShape(publicPrefix).test(secret)) return { refused: 'not_found' }
  const [link] = await where<PublicLink>(env, 'public-link', '$.tokenHash', await tokenHash(secret)); if (!link) return { refused: 'not_found' }
+ if (link.payload.custodyRevokedAt && !link.payload.revokedAt) return { refused: 'unavailable' }
  const s = linkState(link.payload); if (s !== 'active') return { refused: s === 'revoked' ? 'revoked' : s === 'expired' ? 'expired' : 'limit' }
  const ctx = await stillSharing(env, link.payload.custodian ?? link.payload.createdBy, link.payload.item); if (!ctx) return { refused: 'unavailable' }
  const policy=await creatorLinkPolicy(env,link.payload.custodian ?? link.payload.createdBy,ctx.space.id);if(publicPolicyReason(policy.rules,link.payload))return {refused:'policy'}

@@ -1,5 +1,5 @@
 import type { Bindings } from '../../auth.server'
-import { id, now } from '../model'
+import { ChestError, id, now } from '../model'
 
 export const CORE = 'urn:ietf:params:scim:schemas:core:2.0:'
 export const API = 'urn:ietf:params:scim:api:messages:2.0:'
@@ -31,6 +31,7 @@ export function reply(value: unknown, status = 200, extra: Record<string, string
  return new Response(value === null ? null : JSON.stringify(value), { status, headers: { 'content-type': 'application/scim+json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', ...extra } })
 }
 export function failure(error: unknown) {
+ if (error instanceof ChestError) return reply({ schemas: [API + 'Error'], status: String(error.status), detail: error.code }, error.status)
  if (error instanceof ScimError) return reply({ schemas: [API + 'Error'], status: String(error.status), detail: error.message, ...(error.scimType ? { scimType: error.scimType } : {}) }, error.status, error.status === 401 ? { 'www-authenticate': 'Bearer' } : {})
  const message = error instanceof Error ? error.message : ''
  // Never expose SQL, internal payloads, or credentials in protocol errors.

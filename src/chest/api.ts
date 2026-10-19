@@ -1,3 +1,6 @@
+import { offboardingView, saveOffboarding } from './organisation/offboarding'
+import { groupReviewView, decideGroupReview } from './organisation/group-review'
+import { domainView, saveDomainPolicy } from './organisation/domains'
 import { integrationsExecute } from './integrations/service'
 import { erasureExecute } from './erasure/service'
 import { administrationExecute } from './administration/service'
@@ -56,6 +59,9 @@ async function dispatch(env:Bindings,request:Request,s:Session,method:string,pat
  const erasure=await erasureExecute(env,s,method,parts,input);if(erasure!==undefined)return erasure
  const administration=await administrationExecute(env,request,s,method,parts,input,url);if(administration!==undefined)return administration
  if(parts[0]==='collection')return collectionExecute(env,request,s,method,parts,input,url)
+ if(path==='/organisation/offboarding') {owner(s);return method==='POST'?saveOffboarding(env,s,input):offboardingView(env)}
+ if(path==='/organisation/domains') {await requireAdmin(env,s,'service-settings');return method==='POST'?saveDomainPolicy(env,s,input):domainView(env)}
+ if(path==='/organisation/groups/review') {owner(s);return method==='POST'?decideGroupReview(env,s,input):groupReviewView(env)}
  if(path==='/organisation/sso') {await requireAdmin(env,s,'service-settings');return method==='POST'?saveSso(env,s,input):ssoView(env)}
  if(path==='/organisation/policy'&&method==='POST')return localPolicy(env,s,input)
  if(path==='/organisation/scim/tokens') {await requireAdmin(env,s,'service-settings');return method==='POST'?issueScimToken(env,request,s,input):scimView(env)}

@@ -20,7 +20,7 @@ export async function scanLinks(env: Bindings, w: Who, item: string, intended: s
   const reasons: string[] = [], repairs = ['revoke']
   const custodian = p.custodian ?? p.createdBy, active = !!await env.DB.prepare("SELECT 1 FROM oa_operators WHERE email=? AND status='active'").bind(custodian).first()
   const custody = active ? await stillSharing(env,custodian,item) : null
-  if (!custody) { reasons.push('The link custodian has left or no longer has sharing access'); repairs.push('adopt') }
+  if (!custody || p.custodyRevokedAt) { reasons.push(p.custodyRevokedAt ? 'The link custodian grant was revoked when the account was disabled' : 'The link custodian has left or no longer has sharing access'); repairs.push('adopt') }
   const policy = await creatorLinkPolicy(env,custodian,ctx.space.id)
   if (pub ? !policy.rules.allowPublic : audience === 'organisation' && (!policy.rules.allowOrganisation || m.discoverable && !policy.rules.allowDiscovery)) reasons.push('The current sharing policy blocks this audience')
   if (p.expires && Date.parse(p.expires) <= Date.now()) { reasons.push('The link has expired'); repairs.push('renew') }

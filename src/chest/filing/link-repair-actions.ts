@@ -24,7 +24,7 @@ export async function repairLink(env:Bindings,s:Session|null,w:Who,input:any,sco
  let payload:any={...row.payload}
  if(action==='revoke') payload=finding.kind==='public-link'?{...p,revokedAt:now(),revokedBy:w.email}:{...row.payload,expires:now()}
  if(action==='renew'){insist(finding.repairs.includes('renew'),'repair_unavailable',409);payload.expires=linkDate(input.expires,input.zone);insist(payload.expires,'expiry_required')}
- if(action==='adopt'){insist(finding.kind==='public-link' && finding.repairs.includes('adopt'),'repair_unavailable',409);payload.custodian=w.email}
+ if(action==='adopt'){insist(finding.kind==='public-link' && finding.repairs.includes('adopt'),'repair_unavailable',409);payload.custodian=w.email;delete payload.custodyRevokedAt;delete payload.custodyRevokedBy}
  if(action==='pin-approved'){const node=ctx.chain.at(-1)!;payload={...payload,...normalizeLinkVersion(node.payload,{versionMode:'pinned',version:node.payload.approved})};insist(finding.repairs.includes('pin-approved'),'repair_unavailable',409)}
  if(action==='restrict-guests'){const intended=scope?.payload.intended??input.intended;insist(Array.isArray(intended)&&intended.length>0 && intended.every((email:unknown)=>typeof email==='string' && p.guests?.includes(email)),'repair_cannot_expand_audience',403);insist(p.audience==='guests','repair_unavailable');payload.guests=[...new Set(intended)]}
  const fences=[...ctx.fences,...scan.fences,...scope?[scope]:[]]
