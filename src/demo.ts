@@ -5,6 +5,8 @@ import { inspect, retain } from './chest/blobs'
 import { collections, documents, groups, schemas, team } from './demo-sample'
 import { seedFiles } from './demo-files'
 
+export const ownerName = 'Dana Reyes'
+
 /** Demo data for `rer demo` and the hosted demo (Base modules/demo runs it once,
  * after the owner exists): a lived-in Harborworks library with its team, groups,
  * document types, collections, records with version histories, review and expiry
@@ -20,9 +22,9 @@ export async function seedDemo(env: Bindings, { ownerEmail, now }: { ownerEmail:
   const audit: unknown[][] = []
   const log = (actor: string, action: string, object: string, when: string) => audit.push([`demo-audit-${audit.length + 1}`, actor, action, object, JSON.stringify({ sample: true }), when])
 
-  // The owner claim leaves the default name 'Owner'; name the demo owner from their email as the team are named.
-  const ownerName = me.split('@')[0].split(/[._-]+/).filter(Boolean).map(part => part[0].toUpperCase() + part.slice(1)).join(' ')
-  if (ownerName) await statement("UPDATE oa_operators SET display_name = ? WHERE id = ? AND display_name = 'Owner'", ownerName, owner.id).run()
+  // The signed-in owner is the drawings' Dana Reyes in every demo (a plain `rer setup` owner, a custom one, the hosted
+  // demo's visitor), so the sample people, devices and conflict copies read the same everywhere.
+  await statement('UPDATE oa_operators SET display_name = ? WHERE id = ?', ownerName, owner.id).run()
 
   // The team are real operator identities, as an accepted invitation leaves them; the
   // library's people mirror them the way Chest's identity sync does.
@@ -66,6 +68,5 @@ export async function seedDemo(env: Bindings, { ownerEmail, now }: { ownerEmail:
   ])
   // Everyday files: team spaces, the Vendors / Acme folder and its history (src/demo-files.ts).
   const person = (id: string) => { const p = team.find(t => t.id === id)!; return { email: p.email, name: p.name } }
-  const meName = (await env.DB.prepare('SELECT display_name FROM oa_operators WHERE id = ?').bind(owner.id).first<{ display_name: string }>())?.display_name ?? ownerName
-  await seedFiles(env, { me, meName, luis: person('demo-luis'), maria: person('demo-maria'), priya: person('demo-priya'), now })
+  await seedFiles(env, { me, meName: ownerName, luis: person('demo-luis'), maria: person('demo-maria'), priya: person('demo-priya'), now })
 }

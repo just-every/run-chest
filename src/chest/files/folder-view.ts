@@ -15,12 +15,12 @@ import { live, type Item, type PublicLink } from './model'
 // figure comes from records the person can already see on their own pages (Sync devices, Links, Duplicates,
 // Notices); nothing here grants access or acts.
 export type Sync = 'synced' | 'syncing' | 'conflict' | 'paused' | 'failed' | 'cloud'
-export type Row = { id: string; name: string; type: 'file' | 'folder'; updatedAt: string; size: number | null; by: { email: string; name: string } | null; versions: number; approval: 'approved' | 'in review' | null; sharing: { people: { email: string; name: string }[]; link: { expires: string | null } | null }; sync: Sync; syncNote: string }
+export type Row = { id: string; name: string; type: 'file' | 'folder'; updatedAt: string; size: number | null; by: { email: string; name: string } | null; version: number; approval: 'approved' | 'in review' | null; pending: number | null; sharing: { people: { email: string; name: string }[]; link: { expires: string | null } | null }; sync: Sync; syncNote: string }
 export type Copy = { item: string; device: string; at: string; size: number; by: string }
 export type Conflict = { original: Copy & { name: string }; copy: Copy & { name: string }; keepBothName: string }
 export type Agent = { filedToday: number; latest: { message: string; item: string | null; undo: string | null } | null; duplicates: { name: string; count: number } | null; external: { name: string; item: string } | null }
 
-const conflictName = /^(.*) \(conflicted copy from (.+) \d{4}-\d{2}-\d{2} \d{2}:\d{2}\)(\.[^.]*)?$/
+const conflictName = /^(.*) \(conflicted copy(?: \d+)? from (.+)\)(\.[^.]*)?$/
 export const personName = (people: Map<string, string>, email: string) => people.get(email) ?? email
 const states: Record<string, Sync> = { 'up-to-date': 'synced', queued: 'syncing', conflicted: 'conflict', paused: 'paused', failed: 'failed' }
 
@@ -45,12 +45,15 @@ export async function folderRows(env: Bindings, s: Session, w: Who, space: strin
  }
  const rows: Row[] = entries.map(e => {
   const p: Item = e.row.payload, v = p.versions.find(v => v.id === p.current), report = reported.get(e.row.id)
+  // The chip names the current version (numbered oldest first) with its own state, and a newer version waiting for
+  // review beside it, so a reviewer never reads a pending version as approved.
+  const newest = p.versions.at(-1), pending = newest && newest.id !== p.current && newest.review?.state === 'submitted' ? p.versions.length : null
   const members = p.restricted ? [] : e.space.payload.members.filter(m => live(m) && people.has(m.principal)).map(m => m.principal)
   const share = [...new Set([...members, ...p.grants.filter(g => live(g) && people.has(g.principal)).map(g => g.principal)])].map(email => ({ email, name: personName(people, email) }))
   const link = links.filter(l => l.payload.item === e.row.id).sort((a, b) => (a.payload.expires ?? '9').localeCompare(b.payload.expires ?? '9'))[0]
   const sync: Sync = originals.has(e.row.id) || copies.has(e.row.id) ? 'conflict' : report ? states[report.state] ?? 'syncing' : 'cloud'
   const syncNote = originals.has(e.row.id) || copies.has(e.row.id) ? 'Edited on two devices; both copies are kept' : report ? `As ${report.device} last reported` : 'In Chest; no sync device holds a copy'
-  return { id: e.row.id, name: p.name, type: p.type, updatedAt: p.updatedAt, size: v?.size ?? null, by: v ? { email: v.actor, name: personName(people, v.actor) } : { email: p.createdBy, name: personName(people, p.createdBy) }, versions: p.versions.length, approval: p.approved && p.approved === p.current ? 'approved' : v?.review?.state === 'submitted' ? 'in review' : null, sharing: { people: share, link: link ? { expires: link.payload.expires } : null }, sync, syncNote }
+  return { id: e.row.id, name: p.name, type: p.type, updatedAt: p.updatedAt, size: v?.size ?? null, by: v ? { email: v.actor, name: personName(people, v.actor) } : { email: p.createdBy, name: personName(people, p.createdBy) }, version: p.versions.findIndex(x => x.id === p.current) + 1, approval: p.approved && p.approved === p.current ? 'approved' : v?.review?.state === 'submitted' ? 'in review' : null, pending, sharing: { people: share, link: link ? { expires: link.payload.expires } : null }, sync, syncNote }
  })
  return { rows, conflicts }
 }

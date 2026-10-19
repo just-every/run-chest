@@ -5,7 +5,7 @@ import type { Row as FolderRow, Sync } from './folder-view'
 // file-type tile, then the facts. A folder shows Sync, Modified, By, Size, Sharing and Version; other lists (search,
 // Shared with me, Recent, Starred) show where each file lives, when it changed, its size and your access. Clicking a
 // row outside its links opens it in the details panel; the name opens the file or folder itself.
-export const size = (n: number | null) => n === null || n === undefined ? '' : n < 1024 ? `${n} bytes` : n < 1048576 ? `${(n / 1024).toFixed(1).replace(/\.0$/, '')} KB` : n < 1073741824 ? `${(n / 1048576).toFixed(1)} MB` : `${(n / 1073741824).toFixed(2)} GB`
+export const size = (n: number | null) => n === null || n === undefined ? '' : n < 1024 ? `${n} bytes` : n < 1048576 ? `${(n / 1024).toFixed(1).replace(/\.0$/, '')} KB` : n < 1073741824 ? `${(n / 1048576).toFixed(1)} MB` : `${(n / 1073741824).toFixed(1).replace(/\.0$/, '')} GB`
 export const kindLabels: Record<FileKind, string> = { word: 'Word document', sheet: 'Excel workbook', slides: 'PowerPoint presentation', pdf: 'PDF document', image: 'Image', archive: 'ZIP archive', text: 'Text file', file: 'File', folder: 'Folder' }
 export const kindOf = (name: string, type = 'file') => kindLabels[fileKind(name, type)]
 const syncWords: Record<Sync, [string, 'cloud' | 'sync' | 'warn' | 'cloudOff']> = { synced: ['Synced', 'cloud'], syncing: ['Syncing', 'sync'], conflict: ['Conflict', 'warn'], paused: ['Paused', 'cloudOff'], failed: ['Needs repair', 'warn'], cloud: ['Cloud only', 'cloud'] }
@@ -15,7 +15,8 @@ export function people(list: { email: string; name: string }[], max = 2) {
  return `<span class="faces" title="${esc(list.map(p => p.name).join(', '))}">${list.slice(0, max).map(p => avatar(p)).join('')}${list.length > max ? `<span class="avatar avatar-more" aria-hidden="true">+${list.length - max}</span>` : ''}<span class="sr-only">Shared with ${list.length} ${list.length === 1 ? 'person' : 'people'}</span></span>`
 }
 const sharing = (r: FolderRow) => r.sharing.link ? `<span class="ft-link" title="A link for anyone${r.sharing.link.expires ? `, expires ${day(r.sharing.link.expires)}` : ', no expiry'}">Link${r.sharing.link.expires ? `, expires ${day(r.sharing.link.expires)}` : ''}</span>` : r.sharing.people.length ? people(r.sharing.people) : '<span class="quiet">—</span>'
-const version = (r: FolderRow) => r.type === 'folder' ? '' : `<span class="vchip">v${r.versions}</span>${r.approval === 'approved' ? '<span class="chip chip-ok">approved</span>' : r.approval ? '<span class="chip chip-warn">in review</span>' : ''}`
+const state = (approval: FolderRow['approval']) => approval === 'approved' ? '<span class="chip chip-ok">approved</span>' : approval ? '<span class="chip chip-warn">in review</span>' : ''
+const version = (r: FolderRow) => r.type === 'folder' ? '' : `<span class="ft-vers"><span><span class="vchip">v${r.version}</span>${state(r.approval)}</span>${r.pending ? `<span class="ft-pending"><span class="vchip">v${r.pending}</span>${state('in review')}</span>` : ''}</span>`
 const check = (id: string, name: string) => `<label class="ft-check"><input type="checkbox" name="items" value="${esc(id)}"><span class="sr-only">Select ${esc(name)}</span></label>`
 const nameCell = (r: { id: string; name: string; type: string }, extra = '') => `<span class="ft-name">${fileTile(fileKind(r.name, r.type))}<span class="ft-title"><a href="/app/items/${esc(r.id)}" title="${esc(r.name)}">${esc(r.name)}</a>${extra}</span></span>`
 // The selection form wraps the table so its checkboxes, count and buttons are one form (chest-bulk.js keeps the

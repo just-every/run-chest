@@ -19,7 +19,7 @@ try{
   const a=pages.owner,b=pages.jordan,space=(await h.api('/files',cookies.owner)).personal;
   const folder=await h.api('/items',cookies.owner,{space,type:'folder',name:`Harbor Freight — handover ${width}`});
   const file=await h.api('/items',cookies.owner,{parent:folder.id,type:'file',name:'Operations handover.txt',base64:b64('Supplier contacts and Q4 delivery schedule')});
-  await go(a,`/app/items/${folder.id}`);await a.getByText('Transfer ownership',{exact:true}).click();await a.getByLabel('New owner').selectOption('jordan@example.test');await fit(a,'offer',width);await press(a,'Send ownership request');await fit(a,'sent',width);
+  await go(a,`/app/items/${folder.id}?manage`);await a.getByText('Transfer ownership',{exact:true}).click();await a.getByLabel('New owner').selectOption('jordan@example.test');await fit(a,'offer',width);await press(a,'Send ownership request');await fit(a,'sent',width);
   assert.equal((await h.api(`/items/${file.id}`,cookies.owner)).role,'owner');
   await go(b,'/app/notices');await fit(b,'notice',width);await b.locator('li').filter({hasText:folder.payload.name}).getByRole('link',{name:'Open request'}).click();assert.ok(b.url().includes('/app/ownership/'));await go(b,'/app/ownership');await fit(b,'inbox',width);await b.getByRole('link',{name:folder.payload.name,exact:true}).click();await fit(b,'decision',width);await press(b,'Accept ownership');await fit(b,'accepted',width);await b.getByRole('link',{name:'Open transferred item',exact:true}).click();assert.equal((await h.api(`/items/${file.id}`,cookies.jordan)).role,'owner');await fit(b,'received-folder',width);
   await go(a,`/app/items/${file.id}`);assert.equal((await h.api(`/items/${file.id}`,cookies.owner)).role,'editor');await fit(a,'sender-editor',width);

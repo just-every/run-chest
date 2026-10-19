@@ -19,7 +19,7 @@ export function filters(q: URLSearchParams) {
   modifiedTo = modified === 'lastYear' ? `${year-1}-12-31` : today
   modifiedFrom = modified === 'year' ? `${year}-01-01` : modified === 'lastYear' ? `${year-1}-01-01` : modified === 'today' ? today : new Date(Date.parse(today)- (Number(modified)-1)*86_400_000).toISOString().slice(0,10)
  } insist(!modifiedFrom || !modifiedTo || modifiedFrom <= modifiedTo, 'invalid_search_date_range')
- return { customFrom, customTo, modified, type, owner, creator, sharedBy, modifiedFrom, modifiedTo, timeZone, versions, location: q.get('location') || q.get('space') || 'anywhere' }
+ return { customFrom, customTo, modified, type, owner, creator, sharedBy, modifiedFrom, modifiedTo, timeZone, timeZoneChosen: q.has('timeZone'), versions, location: q.get('location') || q.get('space') || 'anywhere' }
 }
 // The original's byte signature and extraction format determine its category, never its filename.
 export function category(v?: FileVersion, format = ''): string {

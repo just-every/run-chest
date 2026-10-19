@@ -66,6 +66,8 @@ body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: 
 .rail-sync.is-off .dot { background: #b5b9c8; box-shadow: 0 0 0 3px #eef0f5; }
 .rail-storage { display: grid; gap: 6px; }
 .rail-storage progress { height: 7px; }
+/* Any use at all shows on the meter, however small against the limit. */
+.rail-storage progress::-webkit-progress-value { min-width: 5px; }
 .app-who { display: flex; align-items: center; gap: 10px; min-width: 0; margin-top: 2px; padding-top: 12px; border-top: 1px solid var(--chest-line); }
 .app-signout { align-self: end; margin-top: 2px; padding-top: 12px; border-top: 1px solid var(--chest-line); }
 .app-who .avatar { width: 32px; height: 32px; font-size: 14px; }

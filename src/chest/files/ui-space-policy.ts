@@ -14,7 +14,7 @@ export function spaceDefaultFields(d: SpaceDefaults, admin = false) {
 export function spaceSettingsCard(d: any) {
  const lock = !d.settings.managerOverride && !d.serviceAdmin ? '<p class="quiet">Your administrator has locked defaulted settings. You can ask an admin to change these settings. Ask a service-settings admin to change this space.</p>' : ''
  const body = lock + spaceDefaultFields(d.settings, d.serviceAdmin) + select('Content managers may share files', 'editorSharing', yesNo, String(d.settings.editorSharing)) + `<p class="quiet">Current storage: ${esc(d.storage.usedBytes)} bytes. Organization sharing restrictions still apply.</p>` + select('Confirm saving a storage limit below current usage', 'confirmOverLimit', [{id:'false',label:'No'},{id:'true',label:'Yes, keep existing files and refuse new writes above the limit'}], 'false')
- return card('Space settings', form(`/spaces/${d.id}/settings`, body, 'Save space settings', `/app/spaces/${d.id}`, { buttonClass: 'btn btn-outline btn-block' }), 'side-card')
+ return card('Space settings', form(`/spaces/${d.id}/settings`, body, 'Save space settings', `/app/spaces/${d.id}?manage`, { buttonClass: 'btn btn-outline btn-block' }), 'side-card')
 }
 export function spaceCreationPanel(d: any) {
  const create = d.spaceCreation.allowed ? form('/spaces', field('New team space name', 'name'), 'Create team space', '/app/files', { className: 'form form-create' }) : `<p>${esc(problemWords(d.spaceCreation.rule))}</p>${details('Request a team space', form('/space-requests', field('Requested team space name', 'name') + area('Why do you need this space?', 'message', '', false), 'Send space request', '/app/files'), 'btn btn-outline')}`

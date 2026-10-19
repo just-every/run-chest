@@ -6,7 +6,7 @@ import { esc, field, select, form, hidden, card, details, personPicker, stamp } 
 import { noticeWords } from '../ui-words'
 import { addHere, listing, restores, rewindForm } from './ui-item'
 import { folderTable } from './ui-table'
-import { agentStrip, conflictBanner, emptyFolder, folderTitle } from './ui-folder'
+import { agentStrip, conflictBanner, emptyFolder, folderTitle, manageTools } from './ui-folder'
 import { detailsPanel } from './ui-panel'
 import { fileTile, icons } from '../../ui/icons'
 import { storagePanel } from '../quota/ui'
@@ -40,19 +40,20 @@ function memberRows(d: any, people: any[], groups: any[], manager: boolean, retu
  return `<ul class="events members">${d.members.map(row).join('')}</ul>${add}<p class="quiet">Viewers open and download. Commenters also comment. Contributors also add files. Content managers also share, move and trash. Managers also change members and settings.</p>`
 }
 // A space opens as its folder browser: the heavy title, the agent strip, any sync conflict, the file table and the
-// details panel; with nothing selected the panel is the space itself (members, settings and storage).
+// details panel; with nothing selected the panel is the space itself and its storage, with members and settings
+// under Manage this space.
 export function spacePage(d: any, people: any[], groups: any[]) {
  const returnTo = `/app/spaces/${d.id}`, manager = d.kind === 'team' && d.can.administer, f = d.folder, sel = f.selected
  const named = (email: string) => people.find((p: any) => p.id === email)?.payload.name ?? email
- const members = d.kind === 'team' ? card('Members', memberRows(d, people, groups, manager, returnTo), 'side-card') : ''
+ const members = d.kind === 'team' ? card('Members', memberRows(d, people, groups, manager, `${returnTo}?manage`), 'side-card') : ''
  const settings = manager ? spaceSettingsCard(d) : ''
  const rows = f.show === 'files' ? f.rows.filter((r: any) => r.type === 'file') : f.show === 'folders' ? f.rows.filter((r: any) => r.type === 'folder') : f.rows
  const table = rows.length ? folderTable(rows, returnTo, sel?.id ?? null, returnTo) : emptyFolder(f.rows.length ? 'Nothing of this kind here.' : 'Nothing here yet.', d.can.contribute)
- const add = d.can.contribute ? `<div id="new" class="add-bar">${addHere({ space: d.id }, returnTo, d.uploads, d.can.administer || d.kind === 'personal' ? rewindForm({ space: d.id }, returnTo) : '', d.creation, '', false)}</div>` : ''
+ const add = d.can.contribute ? `<div id="new" class="add-bar">${addHere({ space: d.id }, returnTo, [], d.can.administer || d.kind === 'personal' ? rewindForm({ space: d.id }, returnTo) : '', d.creation, '', false)}</div>` : ''
  const lede = `<p class="lede ftitle-lede">${d.kind === 'team' ? `Team space · your role: ${esc(String(d.role).replace('_', ' '))}` : 'Your personal area. Share any file or folder from its page.'}</p>`
  const main = folderTitle([], d.name, returnTo, f.show) + lede + agentStrip(f.agent, returnTo) + f.conflicts.map((c: any) => conflictBanner(c, returnTo, d.can.manage, d.can.contribute)).join('') + `<div id="contents">${table}</div>` + add + restores(d.rewinds, returnTo)
  const own = `<aside class="panel" aria-label="Details of ${esc(d.name)}"><div class="panel-head">${fileTile('folder')}<div><h2>${esc(d.name)}</h2><p class="quiet">${d.kind === 'team' ? `Team space · ${d.members.length} member${d.members.length === 1 ? '' : 's'}` : 'Personal area'} · ${f.rows.length} item${f.rows.length === 1 ? '' : 's'}</p></div></div></aside>`
- const side = sel ? detailsPanel(sel, named, { close: returnTo, returnTo: `${returnTo}?file=${sel.id}`, uploads: d.uploads }) : own + members + settings + storagePanel(d.storage, d.quotaOwner)
+ const side = sel ? detailsPanel(sel, named, { close: returnTo, returnTo: `${returnTo}?file=${sel.id}`, uploads: d.uploads }) : own + storagePanel(d.storage, d.quotaOwner) + manageTools('space', manager ? 'Members, roles and space settings' : 'Members and their roles', members + settings, d.manage)
  return `<div class="browse"><div class="browse-main">${main}</div><div class="browse-side doc-side">${side}</div></div>`
 }
 // Words in scans and photos are searchable only once they are read; without a working AI key the page says why.

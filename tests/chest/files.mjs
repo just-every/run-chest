@@ -323,7 +323,7 @@ try{
   const part=await sync(`/sync/items/${created.item}/content`,{headers:{range:'bytes=7-10'}});assert.equal(part.status,206);assert.equal(await part.text(),body.slice(7,11));
   const saved=await(await sync(`/sync/items/${created.item}/content`,{method:'PUT',headers:{'if-match':created.version},body:'second save'})).json();assert.equal(saved.conflict,false);
   const conflict=await(await sync(`/sync/items/${created.item}/content`,{method:'PUT',headers:{'if-match':created.version},body:'offline edit'})).json();assert.equal(conflict.conflict,true);
-  const kept=await h.api(`/items/${conflict.kept}`,people.ana);assert.match(kept.item.name,/^desk \(conflicted copy from Ana desktop .*\)\.txt$/);assert.equal(kept.versions[0].arrival,'conflict copy');
+  const kept=await h.api(`/items/${conflict.kept}`,people.ana);assert.equal(kept.item.name,'desk (conflicted copy from Ana desktop).txt');assert.equal(kept.versions[0].arrival,'conflict copy');
   assert.equal(sha(await bytesOf('ana',created.item,(await h.api(`/items/${created.item}`,people.ana)).item.current)),sha('second save'),'the remote version stays current');
   assert.equal((await sync(`/sync/items/${created.item}`,{method:'DELETE'})).status,200);
   const feed=await(await sync(`/sync/changes?cursor=${start.cursor}`)).json();assert.equal(feed.changes.find(c=>c.id===created.item).state,'removed');assert.equal(feed.changes.find(c=>c.id===conflict.kept).state,'present');

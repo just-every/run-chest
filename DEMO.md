@@ -1,7 +1,8 @@
 # Chest demo
 
 After the ordinary `rer setup`, run `rer demo` (`rer dev --demo`) and open its
-private `RER_OPEN` link. It opens signed in as the saved owner, on a finished
+private `RER_OPEN` link. It opens signed in as the saved owner, who plays the
+drawings' Dana Reyes in every demo (the seed sets the owner's display name), on a finished
 first run, in a lived-in sample library. The product name in the nav and the
 page title read **Chest Demo** (**Chest Dev** under `rer dev`); nothing else is
 added to the page. `rer demo --stop`, Ctrl-C or the demo's end (one hour)
@@ -19,21 +20,28 @@ start.
   Ortega, and Elena Rossi still invited) as operator identities, mirrored into the library's
   people, plus the *Accounts team* and *Site leads* groups.
 - Four document types (insurance certificate, supplier contract, procedure,
-  permit or licence) and five collections with group and person grants.
-- Fourteen records with their originals (PDFs, plain-text and Markdown
-  procedures): approved versions, a renewal awaiting the owner's approval, a
+  permit or license) and five collections with group and person grants.
+- Fourteen records with their originals (scanned PDFs with a text layer,
+  plain-text and Markdown procedures), all in US terms: general liability,
+  workers' compensation and professional liability certificates, an equipment
+  rental agreement, a site orientation checklist, a fall protection procedure, a
+  county on-call contract; one legal name, Harborworks, Inc.: approved versions, a renewal awaiting the owner's approval, a
   replacement with changes requested, one awaiting another reviewer, a private
   record, one in trash, review and expiry work that is upcoming, due, overdue or
   completed with evidence, and the audit trail that history leaves.
-- Everyday files (`src/demo-files.ts`), drawn for an owner named Dana Reyes: team spaces Finance, Legal, Operations
+- Everyday files (`src/demo-files.ts`), with Dana Reyes as the owner: team spaces Finance, Legal, Operations
   and Vendors, and the Vendors / Acme folder a few weeks into working with
   Acme Supply Co. (Tacoma, WA): Word, Excel, PowerPoint, PDF, photo, ZIP and
   text originals with their versions (the contract's v7 approved under the
   folder's version review), a rate-card sync conflict kept as a copy from
-  the owner's iPhone, links for anyone with expiry and download limits, the sync
+  Dana's iPhone, links for anyone with expiry and download limits, the sync
   companions' reports, five files the filing agent filed in the last day (each
   undoable), two copies of an invoice in Accounts payable for the duplicate
-  check, and an upload of the owner's still going up (62%, one part held in R2).
+  check, an upload of Dana's still going up (62%, one part held in R2), and the
+  organization's storage plan (100 GB per team space, 10 GB per person's My
+  files), so the rail's storage meter draws. Originals have working sizes:
+  scans of about 80 KB a page, Office files with the preview picture Office saves,
+  phone and product photos of several hundred KB to 2 MB (`src/demo-media.ts`).
 
 Originals go through Chest's own byte inspection and R2 custody
 (`src/chest/blobs.ts`); records go into the same tables with fixed IDs and
@@ -54,7 +62,8 @@ dependency modules are not wired into Chest.
 
 ## Hosted demo
 
-`deploy-demo.json` puts the demo at `https://demo.run-chest.com/`;
+`deploy-demo.json` puts the demo at `https://demo.run-chest.com/`, with
+`dana.reyes@harborworks.example` as its owner;
 `.github/workflows/run-demo.yml` deploys it on manual dispatch (or each push to
 `main` once `RUN_DEMO_DEPLOY` is `true`) from the `run-demo` environment. With
 `test_only` it deploys the separate test host `demo.test.run-chest.com` with

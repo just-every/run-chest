@@ -161,7 +161,7 @@ export async function sweep(env: Bindings) {
    } else if (!x.payload.noticeAt && Date.parse(x.payload.expires) - t <= day && grant) {
     // A grantee group may since have been deleted: its former members are no longer told; the sharer still is.
     const emails = x.payload.principal.includes('@') ? [x.payload.principal] : (await maybe<Group>(env, 'group', x.payload.principal))?.payload.members ?? []
-    const text = `Access to "${item.payload.name}" for ${x.payload.principal} (${grant.role}) expires ${x.payload.expires.slice(0, 16).replace('T', ' ')} UTC.`
+    const text = `Access to "${item.payload.name}" for ${x.payload.principal} (${grant.role}) expires ${new Date(x.payload.expires).toLocaleString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })} UTC.`
     const rows = [...new Set([x.payload.by, ...emails])].map(e => notice(e, 'share.expiring', item.id, 'chest:system', text))
     await commit(env, null, [{ row: next(x, { ...x.payload, noticeAt: new Date(t).toISOString() }), previous: x }, ...rows.map(row => ({ row }))], { audits: [{ action: 'share.expiry_notice', object: item.id, detail: { principal: x.payload.principal, notices: rows.length } }] })
     await deliver(env, null, rows)

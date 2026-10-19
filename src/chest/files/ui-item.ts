@@ -16,7 +16,7 @@ import { governancePanel, versionReview } from './ui-governance'
 import { newFileMenu, templatePublisher } from '../office/new-ui'
 import { listTable, folderTable, size } from './ui-table'
 import { detailsPanel } from './ui-panel'
-import { agentStrip, conflictBanner, emptyFolder, folderTitle } from './ui-folder'
+import { agentStrip, conflictBanner, emptyFolder, folderTitle, manageTools } from './ui-folder'
 import { fileKind, fileTile } from '../../ui/icons'
 // A date field's day ends on the person's own clock: chest-time.js puts the browser's zone here.
 const zoneField = '<input type="hidden" name="zone" value="UTC" data-zone>'
@@ -112,9 +112,11 @@ export function itemPage(d: any, extra: { people: any[]; groups: any[]; destinat
   const f = d.folder, sel = f.selected
   const rows = f.show === 'files' ? f.rows.filter((r: any) => r.type === 'file') : f.show === 'folders' ? f.rows.filter((r: any) => r.type === 'folder') : f.rows
   const table = rows.length ? folderTable(rows, returnTo, sel?.id ?? null, returnTo) : emptyFolder(f.rows.length ? 'Nothing of this kind here.' : 'This folder is empty.', d.can.contribute)
-  const add = d.can.contribute ? `<div id="new" class="add-bar">${addHere({ parent: d.id }, returnTo, d.uploads, rewindForm({ folder: d.id }, returnTo), d.creation, folderFilingInputs(d.metadata, extra.people, d.me), false)}</div>` : ''
-  const main = folderTitle([d.space.name, ...d.path.map((p: any) => p.name)], d.item.name, returnTo, f.show) + agentStrip(f.agent, returnTo) + f.conflicts.map((c: any) => conflictBanner(c, returnTo, d.can.manage, d.can.contribute)).join('') + notes(d) + (nearLimit(d.storage) ? storagePanel(d.storage, false) : '') + `<div id="contents">${table}</div>` + add + restores(d.rewinds, returnTo) + custody
-  const side = sel ? detailsPanel(sel, named, { close: returnTo, returnTo: `${returnTo}?file=${sel.id}`, uploads: d.uploads }) : detailsPanel(d, named, { returnTo, uploads: d.uploads, children: d.children.length, head: false }) + manageCards(d, extra, returnTo)
+  // Uploads still going up show once, in the panel's Recent upload; the drop area resumes them when the file is dropped again.
+  // Under the table, one row of the folder's own tools: New folder, Restore to a date, Rename, Move and Move to trash.
+  const add = d.can.contribute ? `<div id="new" class="add-bar">${addHere({ parent: d.id }, returnTo, [], rewindForm({ folder: d.id }, returnTo) + rename + manage, d.creation, folderFilingInputs(d.metadata, extra.people, d.me), false)}</div>` : ''
+  const main = folderTitle([d.space.name, ...d.path.map((p: any) => p.name)], d.item.name, returnTo, f.show) + agentStrip(f.agent, returnTo) + f.conflicts.map((c: any) => conflictBanner(c, returnTo, d.can.manage, d.can.contribute)).join('') + notes(d) + (nearLimit(d.storage) ? storagePanel(d.storage, false) : '') + `<div id="contents">${table}</div>` + add + restores(d.rewinds, returnTo) + (d.can.contribute ? '' : custody)
+  const side = sel ? detailsPanel(sel, named, { close: returnTo, returnTo: `${returnTo}?file=${sel.id}`, uploads: d.uploads }) : detailsPanel(d, named, { returnTo, uploads: d.uploads, children: d.children.length }) + manageTools('folder', 'Access, sharing, links, file requests, review and settings', manageCards(d, extra, `${returnTo}?manage`), d.manage)
   return `<div class="browse"><div class="browse-main">${main}</div><div class="browse-side doc-side">${side}</div></div>`
  }
  const main = `<div class="page-head file-head">${fileTile(fileKind(d.item.name))}<div><h1>${esc(d.item.name)}</h1><p class="lede">File · created by ${esc(named(d.item.createdBy))}</p></div></div>${notes(d)}${nearLimit(d.storage) ? storagePanel(d.storage, false) : ''}

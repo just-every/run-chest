@@ -3,7 +3,7 @@ import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get } from '../store'
 import { ChestError, insist, type Row } from '../model'
 import { allowed, context, demand, everything, who, type Entry } from './access'
-import { addVersion, bytes, createItem, move, rename } from './items'
+import { addVersion, bytes, createItem, move, rename, siblings } from './items'
 import { trash } from './trash'
 import type { Item } from './model'
 // The sync protocol a desktop or mobile client speaks with its device credential: enumerate what the person can see,
@@ -36,14 +36,18 @@ export async function hydrate(env: Bindings, s: Session, key: string, url: URL, 
  insist(version, 'not_a_file')
  return bytes(env, s, await who(env, s), key, version, true, request.headers.get('range'), 'sync.hydrate')
 }
-const conflictName = (name: string, device: string) => { const dot = name.lastIndexOf('.'), stem = dot > 0 ? name.slice(0, dot) : name, ext = dot > 0 ? name.slice(dot) : ''; return `${stem} (conflicted copy from ${device.replace(/[\x00-\x1f\/\\]/g, ' ').slice(0, 60)} ${new Date().toISOString().slice(0, 16).replace('T', ' ')})${ext}` }
+// The copy is named after the device that made it; a second copy from the same device in the same folder is numbered.
+const conflictName = (name: string, device: string, taken: Set<string>) => {
+ const dot = name.lastIndexOf('.'), stem = dot > 0 ? name.slice(0, dot) : name, ext = dot > 0 ? name.slice(dot) : '', from = device.replace(/[\x00-\x1f\/\\]/g, ' ').slice(0, 60)
+ for (let n = 1; ; n++) { const copy = `${stem} (conflicted copy${n > 1 ? ` ${n}` : ''} from ${from})${ext}`; if (!taken.has(copy.toLowerCase())) return copy }
+}
 export async function upload(env: Bindings, s: Session, key: string, request: Request) {
  const w = await who(env, s), base = request.headers.get('if-match'), body = new Uint8Array(await request.arrayBuffer()), device = (s as any).device as string
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'contribute'); insist(item.payload.type === 'file', 'not_a_file'); insist(base, 'base_version_required', 428)
  if (base === item.payload.current) return { conflict: false, item: (await addVersion(env, s, w, key, body, { device }, 'sync client')).id }
  insist(item.payload.versions.some(v => v.id === base), 'unknown_base_version', 409)
  const deviceName = (await get<{ name: string }>(env, 'device', device)).payload.name
- const copy = await createItem(env, s, w, { space: item.payload.space, parent: item.payload.parent, name: conflictName(item.payload.name, deviceName), device }, 'conflict copy', body)
+ const copy = await createItem(env, s, w, { space: item.payload.space, parent: item.payload.parent, name: conflictName(item.payload.name, deviceName, new Set((await siblings(env, item.payload.space, item.payload.parent)).map(r => r.payload.name.toLowerCase()))), device }, 'conflict copy', body)
  return { conflict: true, current: item.payload.current, kept: copy.id }
 }
 export async function create(env: Bindings, s: Session, url: URL, request: Request) {

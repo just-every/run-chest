@@ -27,7 +27,7 @@ try{
   const space=(await h.api('/files',cookies.owner)).personal,item=await h.api('/items',cookies.owner,{space,type:'file',name:`Harbor terms ${width}.docx`,base64:b64(original)}),v=item.payload.current;
   await h.api(`/items/${item.id}/versions`,cookies.owner,{filename:item.payload.name,base64:b64(replacement)});
   await h.api(`/items/${item.id}/links`,cookies.owner,{audience:'organisation',discoverable:true});
-  const folder=await h.api('/items',cookies.owner,{space,type:'folder',name:`Harbor delivery folder ${width}`});await go(a,`/app/items/${folder.id}`);await fit(a,'folder-links',width);
+  const folder=await h.api('/items',cookies.owner,{space,type:'folder',name:`Harbor delivery folder ${width}`});await go(a,`/app/items/${folder.id}?manage`);await fit(a,'folder-links',width);
   await go(a,`/app/items/${item.id}`);const form=a.locator('form').filter({has:a.getByRole('button',{name:'Create link',exact:true})});
   await form.getByLabel('Audience').selectOption('public');await form.getByLabel('Version for links for anyone').selectOption('pinned:'+v);await form.getByLabel('Password').fill('harbor-delivery-brief');await form.getByLabel('Expires').fill('2099-11-30');await form.getByLabel('Download limit').fill('10');await fit(a,'create-pinned',width);await press(form,'Create link');await fit(a,'created',width);const url=(await a.locator('pre.receipt').innerText()).trim(),path=new URL(url).pathname;
   await go(g,path);await fit(g,'password',width);await g.getByLabel('Password').fill('wrong');await press(g,'Open');await fit(g,'wrong-password',width);await g.getByLabel('Password').fill('harbor-delivery-brief');await press(g,'Open');await fit(g,'public-file',width);

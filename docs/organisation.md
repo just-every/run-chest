@@ -1,4 +1,4 @@
-# Organisation sign-in, provisioning and space storage
+# Organization sign-in, provisioning and space storage
 
 The installation owner opens **People & settings**. All setup forms work without JavaScript.
 

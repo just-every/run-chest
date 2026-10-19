@@ -52,7 +52,8 @@
 .bulk-selection:has(.ftable) { margin: 0; }
 .ftable { display: grid; margin: 0; padding: 0; list-style: none; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: 10px; font-size: 12px; font-variant-numeric: tabular-nums; }
 .ft-head, .ft-row { display: grid; align-items: center; column-gap: 8px; min-height: 37px; padding: 0 10px 0 2px; }
-.ftable-folder .ft-head, .ftable-folder .ft-row { grid-template-columns: 24px minmax(0, 1.85fr) 76px 132px minmax(0, 1fr) 46px minmax(0, 1.15fr) 94px; font-size: 11.5px; }
+/* Modified is sized for the longest time ("Oct 19, 2026, 12:59 PM"), so a date never loses its time. */
+.ftable-folder .ft-head, .ftable-folder .ft-row { grid-template-columns: 24px minmax(0, 1.8fr) 74px 140px minmax(0, 0.9fr) 60px minmax(0, 1.05fr) 86px; font-size: 11.5px; }
 .ftable-list .ft-head, .ftable-list .ft-row { grid-template-columns: 34px minmax(180px, 1.6fr) minmax(110px, 1fr) 146px 72px 104px; }
 .ftable-list.no-check .ft-head, .ftable-list.no-check .ft-row { grid-template-columns: minmax(180px, 1.6fr) minmax(110px, 1fr) 146px 72px 104px; padding-left: 14px; }
 .ft-head { min-height: 38px; color: var(--chest-muted); font-size: 12px; border-bottom: 1px solid var(--chest-line); }
@@ -75,7 +76,8 @@
 .ft-by { display: flex; align-items: center; gap: 8px; color: var(--chest-ink); }
 .ft-by > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ft-link { display: block; overflow: hidden; color: var(--chest-body); text-overflow: ellipsis; white-space: nowrap; }
-.ft-ver { display: flex; align-items: center; gap: 5px; }
+.ft-vers, .ft-vers > span { display: flex; align-items: center; gap: 5px; }
+.ft-vers { flex-direction: column; align-items: flex-start; gap: 3px; padding-block: 4px; }
 .ft-ver .chip { padding: 1px 7px; font-size: 11px; }
 .ft-sync { display: flex; align-items: center; }
 .sync { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; line-height: 1; }
@@ -177,6 +179,16 @@
 .pact { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 13px; }
 .pact li { display: grid; gap: 1px; }
 .pact .quiet { font-size: 12px; }
+/* The folder's own tools, folded under its details until Manage or Share opens them. */
+.manage-folder { margin-top: 22px; border-top: 1px solid var(--chest-line); }
+.manage-folder > summary { position: relative; display: grid; gap: 2px; padding: 14px 28px 4px 0; color: var(--chest-ink); font-size: 14.5px; font-weight: 700; letter-spacing: -0.015em; list-style: none; cursor: pointer; }
+.manage-folder > summary::-webkit-details-marker { display: none; }
+.manage-folder > summary .quiet { font-size: 12.5px; font-weight: 400; letter-spacing: 0; }
+.manage-folder > summary::after { content: ""; position: absolute; right: 6px; top: 20px; width: 7px; height: 7px; border: solid #8d93a8; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
+.manage-folder[open] > summary::after { top: 23px; transform: rotate(-135deg); }
+.manage-folder > summary:hover span:first-child { color: var(--chest-action-ink); }
+.manage-cards { display: grid; gap: 12px; margin-top: 14px; }
+.manage-cards > .card, .manage-cards > .side-cards > .card { margin: 0; }
 
 /* The Files home: My files and the team spaces as cards, and the tools. */
 .space-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 12px; margin: 0 0 16px; padding: 0; list-style: none; }

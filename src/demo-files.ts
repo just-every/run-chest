@@ -2,13 +2,14 @@ import type { Bindings } from './auth.server'
 import type { FileVersion, Item, PublicLink, Space, Grant, Notice } from './chest/files/model'
 import type { Report } from './chest/sync-repair/model'
 import type { FilingMove } from './chest/filing/shared'
+import type { QuotaRule } from './chest/quota/rules'
 import { reportKey } from './chest/sync-repair/model'
 import { admit } from './chest/files/items'
 import { digest } from './chest/blobs'
 import { createOffice } from './chest/office/create-office'
 import { pdf } from './demo-pdf'
+import { photo as picture, scan, withThumbnail } from './demo-media'
 import { zipSync, strToU8 } from 'fflate'
-import jpeg from 'jpeg-js'
 
 /** The demo's everyday files (Files, as the picked app look draws it): four team spaces, the Vendors / Acme folder
  * a few weeks into working with Acme Supply, and what that history leaves: versions with one approved, a sync
@@ -18,8 +19,8 @@ import jpeg from 'jpeg-js'
  * inspection and R2 custody. Times are relative to the demo's start; the folder's last change is an hour ago. */
 type Person = { email: string; name: string }
 export async function seedFiles(env: Bindings, { me, meName, luis, maria, priya, now }: { me: string; meName: string; luis: Person; maria: Person; priya: Person; now: Date }) {
-  // The owner's own devices are named after them (Dana's, when Dana Reyes is the owner).
-  const mine = `${(meName.trim().split(/\s+/)[0] || 'Owner')}'s`
+  // The owner's own devices are named after them: Dana's.
+  const mine = `${meName.trim().split(/\s+/)[0]}'s`
   const at = (minutes: number) => new Date(now.getTime() - minutes * 60_000).toISOString()
   const day = 1440
   const statement = (sql: string, ...params: unknown[]) => env.DB.prepare(sql).bind(...params)
@@ -32,6 +33,10 @@ export async function seedFiles(env: Bindings, { me, meName, luis, maria, priya,
   space('demo-space-vendors', 'Vendors', [member(luis.email, 'content_manager'), member(maria.email, 'contributor'), member(priya.email, 'viewer')])
   space('demo-space-legal', 'Legal', [member(priya.email, 'content_manager')])
   space('demo-space-operations', 'Operations', [member(luis.email, 'contributor'), member(maria.email, 'contributor')])
+  // The organization's storage plan, as an owner saves it under Storage: 100 GB for each team space and 10 GB for each
+  // person's My files, so every space has a limit and the rail's meter draws.
+  const gb = 1024 ** 3
+  for (const [scope, limitBytes] of [['space-default', 100 * gb], ['personal-default', 10 * gb]] as const) { record(`quota-rule:${scope}`, 'quota-rule', { scope, limitBytes } satisfies QuotaRule); log(me, 'quota.policy', `quota-rule:${scope}`, at(40 * day), { scope, before: null, after: { scope, limitBytes } }) }
 
   // Devices: the owner's three, and Luis's laptop that made the other side of the rate card conflict.
   const devices = [['demo-device-macbook', me, `${mine} MacBook Pro`, 'macos', 2], ['demo-device-iphone', me, `${mine} iPhone`, 'ios', 9], ['demo-device-ipad', me, `${mine} iPad`, 'ios', 3 * day], ['demo-device-luis', luis.email, "Luis's laptop", 'windows', 70]] as const
@@ -56,10 +61,11 @@ export async function seedFiles(env: Bindings, { me, meName, luis, maria, priya,
   }
   const folder = (id: string, space: string, parent: string | null, name: string, ago: number, extra: Partial<Item> = {}) => { const payload: Item = { space, parent, type: 'folder', name, createdBy: me, createdAt: at(ago), updatedAt: at(ago), restricted: false, noDownload: false, grants: [], trash: null, versions: [], current: null, ...extra }; items[id] = { id, payload }; record(id, 'item', payload); log(me, 'folder.create', id, at(ago)) }
   const text = (lines: string[]) => strToU8(lines.join('\n') + '\n')
-  const word = (lines: string[]) => createOffice('docx', { paragraphs: lines } as any)
-  const sheet = (rows: (string | number)[][]) => createOffice('xlsx', { rows } as any)
-  const deck = (slides: string[][]) => createOffice('pptx', { slides } as any)
-  const photo = (seed: number) => { const w = 96, h = 72, data = new Uint8Array(w * h * 4); for (let i = 0; i < w * h; i++) { const x = i % w, y = Math.floor(i / w); data.set([200 + (x + seed) % 40, 196 + (y * 2) % 30, 186 + (x + y) % 24, 255], i * 4) } return new Uint8Array(jpeg.encode({ data, width: w, height: h }, 82).data) }
+  // Office files carry the preview picture Office saves; signed or official PDFs are scans with a text layer.
+  const word = (lines: string[]) => withThumbnail(createOffice('docx', { paragraphs: lines } as any), 1)
+  const sheet = (rows: (string | number)[][]) => withThumbnail(createOffice('xlsx', { rows } as any), 2)
+  const deck = (slides: string[][]) => withThumbnail(createOffice('pptx', { slides } as any), 3)
+  const scanned = (title: string, lines: string[], seed: number) => pdf(title, lines, scan(seed))
   const contract = (n: number) => word(['ACME SUPPLY CO.', 'Supply Agreement', `Draft ${n} between Harborworks, Inc. (Seattle, WA) and Acme Supply Co. (Tacoma, WA).`, '1. Term. Twelve months from November 1, 2026, renewing for twelve months unless either party gives 60 days’ written notice.', '2. Pricing. Unit prices follow the Rate card 2027 schedule, fixed through October 31, 2027.', '3. Payment. Net 30 by ACH to the account on the vendor’s W-9 and ACH payment form.', '4. Insurance. General liability of $2,000,000 per occurrence, certificate on file.'])
 
   folder('demo-folder-acme', 'demo-space-vendors', null, 'Acme', 30 * day, { governance: { reviewer: me } })
@@ -75,25 +81,25 @@ export async function seedFiles(env: Bindings, { me, meName, luis, maria, priya,
     { bytes: contract(4), ago: 7 * day + 400, by: luis.email }, { bytes: contract(5), ago: 4 * day + 1101, by: me }, { bytes: contract(6), ago: 2 * day + 1390, by: luis.email },
     { bytes: contract(7), ago: 66, by: me, review: 'approved' },
   ], { approved: 'demo-file-contract-v7' })
-  await file('demo-file-nda', vendors, acme, 'NDA signed.pdf', [{ bytes: pdf('Mutual Nondisclosure Agreement', ['Harborworks, Inc. and Acme Supply Co.', 'Effective October 1, 2026. Governed by the laws of the State of Washington.']), ago: 2 * day + 1170, by: me }, { bytes: pdf('Mutual Nondisclosure Agreement', ['Harborworks, Inc. and Acme Supply Co.', 'Signed by both parties October 13, 2026.']), ago: 1048, by: me }])
-  await file('demo-file-receipt', vendors, acme, 'Receipt 2026-10-14.jpg', [{ bytes: photo(3), ago: 29, by: me, device: 'demo-device-iphone', arrival: 'sync client' }])
-  await file('demo-file-invoice', vendors, acme, 'Invoice 4471 Oct.pdf', [1, 2, 3, 4].map((n, i) => ({ bytes: pdf('Invoice 4471', ['Acme Supply Co., 1200 Dock St, Tacoma, WA 98402', 'Bill to: Harborworks, Inc., Seattle, WA', `October 2026 · Packaging film and labels · $${(4182.5 + i * 0).toFixed(2)}`, `Revision ${n}`]), ago: 2 * day + 1150 - i * 60, by: luis.email })))
+  await file('demo-file-nda', vendors, acme, 'NDA signed.pdf', [{ bytes: pdf('Mutual Nondisclosure Agreement', ['Harborworks, Inc. and Acme Supply Co.', 'Effective October 1, 2026. Governed by the laws of the State of Washington.']), ago: 2 * day + 1170, by: me }, { bytes: scanned('Mutual Nondisclosure Agreement', ['Harborworks, Inc. and Acme Supply Co.', 'Signed by both parties October 13, 2026.'], 4), ago: 1048, by: me }])
+  await file('demo-file-receipt', vendors, acme, 'Receipt 2026-10-14.jpg', [{ bytes: picture(3, 1512, 2016), ago: 29, by: me, device: 'demo-device-iphone', arrival: 'sync client' }])
+  await file('demo-file-invoice', vendors, acme, 'Invoice 4471 Oct.pdf', [1, 2, 3, 4].map((n, i) => ({ bytes: scanned('Invoice 4471', ['Acme Supply Co., 1200 Dock St, Tacoma, WA 98402', 'Bill to: Harborworks, Inc., Seattle, WA', `October 2026 · Packaging film and labels · $${(4182.5 + i * 0).toFixed(2)}`, `Revision ${n}`], 20), ago: 2 * day + 1150 - i * 60, by: luis.email })))
   const rate = (r: string) => sheet([['Item', 'Unit', 'Price (USD)', 'Effective'], ['Stretch film 18 in', 'roll', 24.5, 'Jan 1, 2027'], ['Thermal labels 4x6', 'case', 38, 'Jan 1, 2027'], ['Corner boards', 'bundle', r === 'dana' ? 15.75 : 16.25, 'Jan 1, 2027']])
   await file('demo-file-rates', vendors, acme, 'Rate card 2027.xlsx', [1, 2, 3, 4, 5].map((i): V => ({ bytes: rate(`v${i}`), ago: 6 * day - i * 300, by: luis.email })).concat([{ bytes: rate('luis'), ago: 78, by: luis.email, device: 'demo-device-luis', arrival: 'sync client' }]))
-  await file('demo-file-rates-copy', vendors, acme, `Rate card 2027 (conflicted copy from ${mine} iPhone ${at(62).slice(0, 16).replace('T', ' ')}).xlsx`, [{ bytes: rate('dana'), ago: 62, by: me, device: 'demo-device-iphone', arrival: 'conflict copy' }])
-  await file('demo-file-photos', vendors, acme, 'Q4 product photos.zip', [{ bytes: zipSync({ 'Q4 photos/stretch-film.jpg': photo(7), 'Q4 photos/labels.jpg': photo(11), 'Q4 photos/README.txt': text(['Acme Supply product photos for the Q4 catalog.']) }), ago: 3 * day + 435, by: luis.email }])
-  await file('demo-file-insurance', vendors, acme, 'Insurance certificate.pdf', [1, 2, 3].map(i => ({ bytes: pdf('Certificate of Liability Insurance', ['Insured: Acme Supply Co., Tacoma, WA', 'Insurer: Cascade Mutual Insurance Co.', `General liability $2,000,000 each occurrence · issue ${i}`, 'Policy period Oct 1, 2026 to Oct 1, 2027']), ago: 4 * day + 564 - i * 30, by: maria.email })))
-  await file('demo-file-license', vendors, acme, 'Business license.pdf', [{ bytes: pdf('Business License', ['Acme Supply Co.', 'Washington State Department of Revenue, UBI 604 112 873', 'Expires September 30, 2027']), ago: 5 * day + 46, by: me }])
-  await file('demo-file-ach', vendors, acme, 'ACH payment form.pdf', [1, 2].map(i => ({ bytes: pdf('ACH Payment Authorization', ['Payee: Acme Supply Co.', 'Bank: Puget Sound Bank, Tacoma, WA', `Remittance email: ar@acmesupply.example · form ${i}`]), ago: 6 * day + 492 - i * 10, by: luis.email })))
+  await file('demo-file-rates-copy', vendors, acme, `Rate card 2027 (conflicted copy from ${mine} iPhone).xlsx`, [{ bytes: rate('dana'), ago: 62, by: me, device: 'demo-device-iphone', arrival: 'conflict copy' }])
+  await file('demo-file-photos', vendors, acme, 'Q4 product photos.zip', [{ bytes: zipSync({ 'Q4 photos/stretch-film.jpg': picture(7, 2016, 1512), 'Q4 photos/labels.jpg': picture(11, 2016, 1512), 'Q4 photos/corner-boards.jpg': picture(13, 2016, 1512), 'Q4 photos/README.txt': text(['Acme Supply product photos for the Q4 catalog.']) }), ago: 3 * day + 435, by: luis.email }])
+  await file('demo-file-insurance', vendors, acme, 'Insurance certificate.pdf', [1, 2, 3].map(i => ({ bytes: scanned('Certificate of Liability Insurance', ['Insured: Acme Supply Co., Tacoma, WA', 'Insurer: Cascade Mutual Insurance Co.', `General liability $2,000,000 each occurrence · issue ${i}`, 'Policy period Oct 1, 2026 to Oct 1, 2027'], 5 + i), ago: 4 * day + 564 - i * 30, by: maria.email })))
+  await file('demo-file-license', vendors, acme, 'Business license.pdf', [{ bytes: scanned('Business License', ['Acme Supply Co.', 'Washington State Department of Revenue, UBI 604 112 873', 'Expires September 30, 2027'], 9), ago: 5 * day + 46, by: me }])
+  await file('demo-file-ach', vendors, acme, 'ACH payment form.pdf', [1, 2].map(i => ({ bytes: scanned('ACH Payment Authorization', ['Payee: Acme Supply Co.', 'Bank: Puget Sound Bank, Tacoma, WA', `Remittance email: ar@acmesupply.example · form ${i}`], 10 + i), ago: 6 * day + 492 - i * 10, by: luis.email })))
   await file('demo-file-questionnaire', vendors, acme, 'Vendor questionnaire.docx', [{ bytes: word(['Vendor Questionnaire', 'Acme Supply Co.', 'Primary contact: Jordan Lee, (253) 555-0142', 'Tax classification: C corporation']), ago: 7 * day + 1793, by: luis.email }])
   await file('demo-file-prices', vendors, acme, 'Price list 2027.xlsx', [1, 2, 3, 4].map(i => ({ bytes: sheet([['SKU', 'Description', 'List price (USD)'], ['SF-18', 'Stretch film 18 in', 26 + i], ['TL-46', 'Thermal labels 4x6', 41]]), ago: 8 * day + 81 - i * 5, by: maria.email })))
   await file('demo-file-notes', vendors, acme, 'Onboarding notes.txt', [{ bytes: text(['Acme Supply onboarding', '- W-9 received and filed to Tax.', '- ACH form verified by phone with Jordan Lee.', '- Insurance certificate on file; renews Oct 1, 2027.']), ago: 9 * day + 1028, by: me }])
   await file('demo-file-deck', vendors, acme, 'Acme intro deck.pptx', [1, 2, 3, 4, 5].map(i => ({ bytes: deck([['Acme Supply Co.', 'Packaging supplies for Puget Sound warehouses'], ['Our team', `Revision ${i}`]]), ago: 12 * day + 474 - i * 3, by: luis.email })))
-  await file('demo-file-w9', vendors, 'demo-folder-acme-tax', 'W-9 Acme Supply.pdf', [{ bytes: pdf('Form W-9 (Rev. March 2024)', ['Name: Acme Supply Co.', 'Federal tax classification: C corporation', 'Address: 1200 Dock St, Tacoma, WA 98402', 'Signed October 14, 2026']), ago: 133, by: luis.email, arrival: 'email' }])
+  await file('demo-file-w9', vendors, 'demo-folder-acme-tax', 'W-9 Acme Supply.pdf', [{ bytes: scanned('Form W-9 (Rev. March 2024)', ['Name: Acme Supply Co.', 'Federal tax classification: C corporation', 'Address: 1200 Dock St, Tacoma, WA 98402', 'Signed October 14, 2026'], 13), ago: 133, by: luis.email, arrival: 'email' }])
   // Two more copies of the October invoice arrived by email in Accounts payable: duplicates of Acme's copy.
   const invoice = items['demo-file-invoice'].payload.versions.at(-1)!
   for (const [n, name] of [[1, 'Invoice 4471 Oct.pdf'], [2, 'Invoice 4471 Oct (emailed).pdf']] as const) {
-    const bytes = pdf('Invoice 4471', ['Acme Supply Co., 1200 Dock St, Tacoma, WA 98402', 'Bill to: Harborworks, Inc., Seattle, WA', 'October 2026 · Packaging film and labels · $4182.50', 'Revision 4'])
+    const bytes = scanned('Invoice 4471', ['Acme Supply Co., 1200 Dock St, Tacoma, WA 98402', 'Bill to: Harborworks, Inc., Seattle, WA', 'October 2026 · Packaging film and labels · $4182.50', 'Revision 4'], 20)
     await file(`demo-file-invoice-dup${n}`, 'demo-space-finance', 'demo-folder-payables', name, [{ bytes, ago: 2 * day + 900 - n * 30, by: maria.email, arrival: 'email' }])
     if (items[`demo-file-invoice-dup${n}`].payload.versions[0].checksum !== invoice.checksum) throw new Error('demo invoice copies must match')
   }

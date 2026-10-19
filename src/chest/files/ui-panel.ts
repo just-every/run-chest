@@ -31,10 +31,11 @@ function versions(d: any, name: Named, returnTo: string) {
 function sharing(d: any, name: Named, returnTo: string) {
  const live = (d.publicLinks ?? []).filter((l: any) => l.state === 'active')
  const link = (l: any) => `<div class="pl"><span class="pl-icon">${icon('link')}</span><div class="pl-body"><p><strong>${l.audience === 'guests' ? 'Named guests' : l.audience === 'domain' ? `Verified ${esc(l.domain)}` : 'Link'}${l.expires ? `, expires ${day(l.expires)}` : ', no expiry'}</strong></p><p class="quiet">${l.limit === null ? `${l.downloads} download${l.downloads === 1 ? '' : 's'}` : `${l.downloads} of ${l.limit} downloads used`}</p>${l.limit === null ? '' : `<progress max="${l.limit}" value="${l.downloads}">${l.downloads} of ${l.limit}</progress>`}</div>${d.can.share ? form(`/public-links/${l.id}/revoke`, '', 'Revoke', returnTo, inline) : ''}</div>`
+ const manage = `/app/items/${esc(d.id)}${d.item.type === 'folder' ? '?manage' : ''}#share`
  const who = [...new Set([...(d.members ?? []), ...(d.grants ?? []).map((g: any) => g.principal)])].map(email => ({ email, name: name(email) }))
- const shared = who.length ? `<a class="pl-people" href="/app/items/${esc(d.id)}#share">${people(who)}<span>Shared with ${who.length} ${who.length === 1 ? 'person' : 'people'}</span>${icon('chevron')}</a>` : ''
+ const shared = who.length ? `<a class="pl-people" href="${manage}">${people(who)}<span>Shared with ${who.length} ${who.length === 1 ? 'person' : 'people'}</span>${icon('chevron')}</a>` : ''
  const body = live.map(link).join('') + shared
- return `<section class="ps" id="panel-sharing" aria-labelledby="pv-sharing"><div class="ps-head"><h3 id="pv-sharing">Sharing</h3>${d.can.share ? `<a class="link-quiet" href="/app/items/${esc(d.id)}#share">Manage</a>` : ''}</div>${body ? `<div class="pcard">${body}</div>` : '<p class="quiet">Only people with access to this space can open it.</p>'}</section>`
+ return `<section class="ps" id="panel-sharing" aria-labelledby="pv-sharing"><div class="ps-head"><h3 id="pv-sharing">Sharing</h3>${d.can.share ? `<a class="link-quiet" href="${manage}">Manage</a>` : ''}</div>${body ? `<div class="pcard">${body}</div>` : '<p class="quiet">Only people with access to this space can open it.</p>'}</section>`
 }
 function activity(d: any, name: Named) {
  const rows = (d.activity ?? []).filter((r: any) => !/^(get|post|put|delete|provider|automation|public)\./.test(r.action)).slice(0, 4)
