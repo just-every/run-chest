@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Run page.** run-chest.com/run takes Base's rer 0.2.71 /run page: the install command never runs under the Copy button, and the page does not scroll sideways at any width from 320 to 1600 px. Every Base copy is refreshed to rer-v0.2.71 (with the pin moved to `@runeditrun/rer` 0.2.71), and the run site keeps Chest's own favicons.
 - **Homepage.** run-chest.com follows the owner-approved page structure (page-s1): after the hero, one supplier's folder from the move-in on Sat, Sep 26 to the renewal (Follow one folder, Files that file themselves, On every desk and phone, Open it and edit together, Share out. Collect in., Every version, kept., The right version reached everyone., Find the sentence inside the file.), then the closing. The shared twelve-section skeleton is gone. `docs/CLAIMS.md` maps every claim on the new page to its clauses and code.
 
 ## 0.2.0 (18 Oct 2026)

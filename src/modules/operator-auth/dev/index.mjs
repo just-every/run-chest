@@ -49,7 +49,7 @@ export function withDevIdentity(worker, { bindings = env => env, config: authCon
       const gate = devGate({ key: env.RER_DEV_KEY, origin: env.AUTH_ORIGIN, local: env.AUTH_LOCAL === 'true' });
       registerDevAdmission(gate && env.RER_DEV_IDENTITY !== 'off' ? r => gate.admits(r) : null);
       const path = new URL(request.url).pathname;
-      if (path === '/__dev/key') return gate ? gate.exchange(request) : devNotFound();
+      if (path === '/__dev/key') return gate ? gate.exchange(request, authConfig(env).branding) : devNotFound();
       if (path === '/signin' && gate && env.RER_DEV_IDENTITY !== 'off' && ['GET', 'HEAD'].includes(request.method)) {
         if (!await gate.admits(request)) return new Response(null, { status: 303, headers: { ...headers, location: '/__dev/key' } });
         const context = identity(env, authConfig, declared);
@@ -58,7 +58,8 @@ export function withDevIdentity(worker, { bindings = env => env, config: authCon
           ...person, displayName: (await context.store.byEmail(person.email))?.displayName ?? declared.find(p => p.as === person.as)?.displayName ?? person.email,
           href: `/auth/dev/enter?as=${encodeURIComponent(person.as)}&returnTo=${encodeURIComponent(returnTo)}`,
         })));
-        return decorateLabel(await oneClickPage({ branding: context.config.branding, people, method: request.method }), env.RER_DEMO === '1' ? 'Demo' : 'Dev');
+        const providers = context.auth.providers ? (await context.auth.providers.list()).filter(provider => provider.visible) : [];
+        return decorateLabel(await oneClickPage({ branding: context.config.branding, people, providers, returnTo, method: request.method }), env.RER_DEMO === '1' ? 'Demo' : 'Dev');
       }
       if (path === '/auth/dev/enter' || path === '/__dev/personas' || path === '/auth/local/cli-session') {
         if (!gate || env.RER_DEV_IDENTITY === 'off' || (path !== '/auth/local/cli-session' && !await gate.admits(request))) return rejectedResponse(request, devNotFound());
@@ -130,15 +131,18 @@ async function enter(request, gate, { config, store, hash, current, everyone, ow
     reply.set('location', '/');
     return new Response(null, { status: 303, headers: reply });
   }
-  const persona = (await everyone()).find(p => p.as === as);
-  if (!persona) {
-    const value = await auth.oneClick.enter(request, { as, returnTo: url.searchParams.get('returnTo') ?? '/app' });
+  const oneClick = async email => {
+    const value = await auth.oneClick.enter(request, { as: email, returnTo: url.searchParams.get('returnTo') ?? '/app' });
     reply.append('set-cookie', value.cookie);
     reply.set('location', value.returnTo);
     return new Response(null, { status: 303, headers: reply });
-  }
+  };
+  const persona = (await everyone()).find(p => p.as === as);
+  if (!persona) return oneClick(as);
   if (!persona.email) return text(409, 'No active owner remains in this app. Sign in another way, or run rer reset --yes and rer setup for a new owner.');
   let operator = await store.byEmail(persona.email);
+  // Someone invited at a persona's address is that person, with the role they were invited to; accepting the invite signs them in.
+  if (operator?.status === 'invited') return oneClick(operator.email);
   // Personas are real operators, created only here, in local dev.
   if (!operator && persona.role) {
     if (persona.role === 'owner') {

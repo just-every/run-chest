@@ -7,7 +7,7 @@ edition-authoring source. `base-copies.json` records verbatim copies;
 provenance. The hydration README is adapted for package-mode commands, with its
 original path mapped in `edition.json`; it makes no claim of byte equality.
 
-The published `@runeditrun/rer` 0.2.63 is pinned exactly in `package.json` and
+The published `@runeditrun/rer` 0.2.71 is pinned exactly in `package.json` and
 `pnpm-lock.yaml`. It owns command execution and archive format v2, whose integrity
 digest binds the manifest, including source identity, erasure epoch and journal.
 Version 1 archives require the acknowledged, backup-only recovery procedure in
@@ -45,13 +45,13 @@ remain `documents/chest`, `@documents/chest`, `documents-chest`, `foundation` an
 [just-every/run-chest](https://github.com/just-every/run-chest).
 
 The demo, operator-auth, owner-claim, mail, dependencies and import-kit modules
-are refreshed together from `rer-v0.2.47` (9a4ba9eb975b4f3b5a5f95c682eea7d80b4d0fbb),
+are refreshed together from `rer-v0.2.71` (052e5ea88c1e7b73cca10c4813524a5f72580af8) with the edition-authoring tool's `refresh-base`,
 including import-kit’s shared d1-transport dependency. Their exact copies are
 recorded in `base-copies.json`; applied migrations remain unchanged.
 
 Chest owns the reversible arrival-rule planner and executor in `src/chest/filing/batch-*.ts`,
 its bounded Office-to-text and ZIP transforms, and the exercising HTTP and browser journeys.
-The command package is pinned to `@runeditrun/rer` 0.2.63; copied Base modules retain
+The command package is pinned to `@runeditrun/rer` 0.2.71; copied Base modules retain
 their separately recorded revisions.
 
 The arrival agent uses explicit inbox/destination grants and the installation reader provider.
