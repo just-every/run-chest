@@ -35,7 +35,7 @@
 .sec-center .sec-art { text-align: left; }
 
 @media (max-width: 1279px) {
-  .landing { --desk: 10px; font-size: 10px; }
+  .landing { --desk: 10px; font-size: 10px; text-wrap: pretty; }
   .desk-br { display: none; }
   .hero-sub { white-space: normal; }
   .landing .sec { display: flex; flex-direction: column; align-items: stretch; justify-items: stretch; gap: 3.2em; min-height: 0; padding: 6.4em var(--gutter) 2em; text-align: left; }
@@ -44,6 +44,8 @@
   .sec-center .sec-art { justify-items: center; }
   .sec-art > figure { margin-inline: auto; }
   .sec h2 { font-size: clamp(4.4em, 9.6vw, 6.4em); line-height: 1; white-space: normal; }
+  /* The gradient phrase holds together, so a heading never ends on one word of it ("edit / together."). */
+  .sec h2 .grad-part { white-space: nowrap; }
   .sec .lead { font-size: clamp(1.65em, 4.3vw, 2.1em); max-width: 36em; white-space: normal; }
   .eyebrow, .sec-center .eyebrow { font-size: 1.3em; letter-spacing: 0.16em; }
 }

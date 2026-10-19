@@ -6,8 +6,9 @@ import './arrivals.css'
 
 const sources: [IconName, string][] = [['mail', 'Email'], ['phone', 'Phone'], ['laptop', 'Laptop']]
 
-const arrivals: { name: string; kind: 'pdf' | 'sheet'; read: string; done: string; renamed?: boolean; flag?: boolean }[] = [
-  { name: 'NDA.pdf', kind: 'pdf', read: 'scanned, 3 pages · from legal@acme.example', done: 'Vendors / Acme Supply / Legal' },
+/** `from` follows `read` after a dot, and drops under it on narrow phones (arrivals.css). */
+const arrivals: { name: string; kind: 'pdf' | 'sheet'; read: string; from?: string; done: string; renamed?: boolean; flag?: boolean }[] = [
+  { name: 'NDA.pdf', kind: 'pdf', read: 'scanned, 3 pages', from: 'from legal@acme.example', done: 'Vendors / Acme Supply / Legal' },
   { name: 'Insurance_certificate.pdf', kind: 'pdf', read: 'expires Sep 30, 2027 · reminder set', done: 'Legal' },
   { name: 'Invoice-0042.pdf', kind: 'pdf', read: 'read: $4,180.00 due Nov 1', done: 'Invoices' },
   { name: 'scan_0931.pdf', kind: 'pdf', read: 'read: W-9 · Acme Supply Co.', done: 'renamed W-9 Acme Supply.pdf → Tax', renamed: true },
@@ -38,7 +39,7 @@ export function Arrivals() {
                 <FileTile kind={row.kind} />
                 <div className="arrival-text">
                   <b className="f17 ink">{row.name}</b>
-                  <span className="f15 dim">{keep(row.read)}</span>
+                  <span className="f15 dim">{keep(row.read)}{row.from ? <span className="then"><span className="sep">{keep(' · ')}</span>{row.from}</span> : null}</span>
                   <span className="arrival-done"><Icon name="checkCircle" className="ico" /><span className="f145 mid">{row.renamed ? null : <Icon name="arrowRight" className="ico to-ico" />}{keep(row.done)}</span><span className="f145 undo">Undo</span></span>
                 </div>
               </li>

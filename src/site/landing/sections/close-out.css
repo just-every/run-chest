@@ -43,3 +43,15 @@
   .close-rows li { padding: 1.2em 1.4em; gap: 1.2em; min-height: 0; }
   .close-done { padding: 1.6em 1.4em; gap: 1.2em; min-height: 0; }
 }
+/* On phones the part after the dot drops to its own line instead of splitting "Acme Supply" or "left open". */
+@media (max-width: 600px) {
+  .close-card .then { display: block; }
+  .close-card .sep { display: none; }
+}
+@media (max-width: 380px) {
+  .close-done .f20 { font-size: 1.8em; }
+}
+/* "reached everyone." is the longest gradient phrase: under 415 px the heading eases down just enough to keep it whole. */
+@media (max-width: 1279px) {
+  .sec.close-out h2 { font-size: clamp(min(4.4em, 10.6vw), 9.6vw, 6.4em); }
+}

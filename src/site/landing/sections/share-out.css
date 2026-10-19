@@ -27,11 +27,19 @@
   .share-card { min-height: 0; }
   .share-next { rotate: 90deg; width: 3.6em; height: 1.8em; margin: 0.6em 0; }
 }
+@media (max-width: 1279px) {
+  .share-out h2 .ink-part { white-space: nowrap; }
+}
 @media (max-width: 760px) {
+  .share-out h2 .ink-part::after { content: "\A"; white-space: pre; }
   .share-card { padding: 2em 1.8em; }
   .pack-rows div { justify-content: space-between; }
   .pack-rows dt::after { content: none; }
+  .pack-rows dt { white-space: nowrap; }
   .pack-rows dd { text-align: right; }
   .request-files li { gap: 1.2em; padding: 1em 1.2em; border: 0.1em solid #eceef4; border-radius: 0.9em; background: #fafbfd; }
   .request-files li + li { margin-top: 0.8em; }
+}
+@media (max-width: 380px) {
+  .share-card { padding-inline: 1.6em; }
 }

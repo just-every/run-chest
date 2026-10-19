@@ -55,3 +55,6 @@
   .checked-card .f16 { font-size: 1.4em; }
   .checked-ticks { display: none; }
 }
+@media (max-width: 440px) {
+  .closing-check { margin-top: -3.4em; }
+}

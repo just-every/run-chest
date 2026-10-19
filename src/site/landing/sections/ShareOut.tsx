@@ -25,7 +25,7 @@ export function ShareOut() {
         <div className="card share-card">
           <b className="f22 ink">File request</b>
           <p className="f15 ink request-ask">Upload your delivery schedule and bank details form</p>
-          <p className="f15 dim">Saves to {keep('Vendors / Acme Supply / Onboarding')}</p>
+          <p className="f15 dim">Saves to {keep('Vendors / Acme\u00a0Supply / Onboarding')}</p>
           <ul className="request-files">{received.map(name => <li key={name}><Icon name="checkCircle" className="ico" /><span className="f15 ink">{name}</span></li>)}</ul>
           <b className="f16 received">2 of 2 received</b>
         </div>
@@ -34,7 +34,7 @@ export function ShareOut() {
           <b className="f22 ink">Site survey.mp4 · 4.2 GB</b>
           <span className="upload-bar" aria-hidden="true"><i /><em /></span>
           <p className="f15 upload-drop">Connection dropped at 61%</p>
-          <p className="f15 upload-resumed">{keep('Resumed where it stopped · 4.2 GB uploaded')}</p>
+          <p className="f15 upload-resumed">{keep('Resumed where it stopped · 4.2\u00a0GB\u00a0uploaded')}</p>
           <p className="f15 dim upload-dest">Saved to Ops / Site surveys</p>
         </div>
       </figure>

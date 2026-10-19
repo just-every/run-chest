@@ -24,6 +24,8 @@
 .arrival-done { display: flex; align-items: center; gap: 1em; margin-top: 0.9em; }
 .arrival-done > .ico { width: 2.4em; height: 2.4em; color: #2fa65a; flex: none; }
 .arrival-done .mid { flex: 1; min-width: 0; }
+/* Undo sits on the baseline of the line it undoes (page-04), also when the destination wraps on a phone. */
+.arrival-done .mid, .arrival-done .undo { align-self: baseline; }
 .arrival-done .undo { margin-left: auto; color: #3a3e4c; text-decoration: underline; text-underline-offset: 0.2em; }
 @media (max-width: 1279px) {
   .arrivals-art { flex-direction: column; align-items: stretch; gap: 2.4em; max-width: 60em; }
@@ -46,5 +48,9 @@
   .agent-log .tile { width: 3.6em; height: 3.6em; }
   .arrival-done { align-items: flex-start; }
   .arrival-done > .ico { margin-top: -0.1em; }
+}
+@media (max-width: 479px) {
+  .agent-log .then { display: block; }
+  .agent-log .sep { display: none; }
 }
 .to-ico { display: inline-block; width: 1.2em; height: 1.2em; margin-right: 0.35em; vertical-align: -0.18em; color: #4a4f5e; }

@@ -169,7 +169,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "47d7d0260d29fa1f95acf4ba7e3aa9462089f2044b7f6f6038d18b920e6e2ef5",
+      "sha256": "4122ed3452fde20c9436b8dfc605459ef3fc8d383d9910d825fa3b22fa402e1d",
       "executable": false
     },
     "DEMO.md": {
@@ -3701,7 +3701,7 @@
       "executable": false
     },
     "src/site/landing/copy.ts": {
-      "sha256": "82599462778aec9858e30f6e76d376897f8c7dbd5f9fc834cba5abc98fd5c28e",
+      "sha256": "b61faf7b5f51513d488f8207db02f093e158f493d5610648431ab9dc23ddf56a",
       "executable": false
     },
     "src/site/landing/hero/cards.tsx": {
@@ -3709,7 +3709,7 @@
       "executable": false
     },
     "src/site/landing/hero/hero.css": {
-      "sha256": "6e1d4f54126f5b8211fd44ca3301c2ccd3f68f57825281318e461f90dbbbd453",
+      "sha256": "9f7b11bbb879aa8dd9806f27722ade072636a3e8f21e5bd9480cac5a12c4cab7",
       "executable": false
     },
     "src/site/landing/hero/Hero.tsx": {
@@ -3729,7 +3729,7 @@
       "executable": false
     },
     "src/site/landing/landing.css": {
-      "sha256": "ce050623cdf0e3fc0c7418f204151f27ae7c53010d16ecb5950faf73e59fc22a",
+      "sha256": "bf38460d47f4e5db0c6d9d9e0b8774aba7bdc3b6edb051dd940485fcf5207804",
       "executable": false
     },
     "src/site/landing/Landing.tsx": {
@@ -3745,23 +3745,23 @@
       "executable": false
     },
     "src/site/landing/sections/arrivals.css": {
-      "sha256": "5cabb78a493f103f08b0c0fc8918745b19cbb90f611956891ccb671632d63dae",
+      "sha256": "5fa5c8ce31ea5179b1a2209fb826ce346030b50d91f62ae4eafadb925d6c8c19",
       "executable": false
     },
     "src/site/landing/sections/Arrivals.tsx": {
-      "sha256": "38e05e258cba3cf0a61def737076aebc2f1249796956fa08471b0feeea0ef328",
+      "sha256": "9a7de61e6c50b22eef9ac987ee71b76e33e7d1a6289b5c52d44b5cc8dcb3cc0c",
       "executable": false
     },
     "src/site/landing/sections/close-out.css": {
-      "sha256": "3611e697541bbb1971feb117a795eaecf49dcc3756237a639e429934c2f02aff",
+      "sha256": "bbba5dcd6ecc74fd71eccd988bdbdc7c0e324d4cd6f5d47832ecae59ffe2fd93",
       "executable": false
     },
     "src/site/landing/sections/CloseOut.tsx": {
-      "sha256": "419ad1a74f5d9ee26a3f1cf4cae19c7b606a58c57b6ccb158e3bbfcacd5584f6",
+      "sha256": "9336a4745bef3e0ed83edc60a1927cc99554c6084736e5c1d49c29778409eda6",
       "executable": false
     },
     "src/site/landing/sections/closing.css": {
-      "sha256": "389c2551088369b62319a04b61c9f47d3c4b8054b8afd9db20e0d604980a3536",
+      "sha256": "c6195d1e52155c4811bc3825a024fd917069a8a65a50e85b56de8d513fb442d2",
       "executable": false
     },
     "src/site/landing/sections/Closing.tsx": {
@@ -3785,7 +3785,7 @@
       "executable": false
     },
     "src/site/landing/sections/pricing.css": {
-      "sha256": "1be5b105037e7064fd1ba737d508212481d7155da8bba5ccb352e5abbdfdac3f",
+      "sha256": "b87e103d222157e725b36740eab764f725381bf6fe24b46a0cb644e879cbeea9",
       "executable": false
     },
     "src/site/landing/sections/Pricing.tsx": {
@@ -3801,27 +3801,27 @@
       "executable": false
     },
     "src/site/landing/sections/road.css": {
-      "sha256": "fbe7dd07ff02f0a698833fbc4ff009d801ec6480ea4610ce2e86ba606811dfd2",
+      "sha256": "95d7b19adaf2e09e7af3f932dd60da7847fc16f5fca48c06577ff94ada061750",
       "executable": false
     },
     "src/site/landing/sections/Road.tsx": {
-      "sha256": "35855396a159c62f16c3d7f58d2a3c98185d73d528fa6cbe44f347dccb75db59",
+      "sha256": "4353a708a9873c29f370ca78758d674f6b8a25092ffa83b5c0978c4b98dd7c4e",
       "executable": false
     },
     "src/site/landing/sections/share-out.css": {
-      "sha256": "4d8f3e53c716f7eedf6eaaf0015272c635bf2660f90782ede56e996e678b3fbf",
+      "sha256": "2b29cb81bfb897316d96c7aa49fa62b3ccae758ac091765f4e2cf9e560984f30",
       "executable": false
     },
     "src/site/landing/sections/ShareOut.tsx": {
-      "sha256": "bc3667f0b4dee9ec58d901d4370a614c5973f16d27cbf877716d9025e3804fe0",
+      "sha256": "87b53d803affc2367aac7b51c5e0295fc2bc3259e36ede9bd2b920b1f91c6382",
       "executable": false
     },
     "src/site/landing/sections/sign-off.css": {
-      "sha256": "4257b3131cb629c2f7362e669645562f00318336a789346fdb5c37f25156cb12",
+      "sha256": "37b00a76f23a77eb67fc8ffd1cff81b4e5b39bedc07d1ed70a5b03c6d39fb7d2",
       "executable": false
     },
     "src/site/landing/sections/SignOff.tsx": {
-      "sha256": "246d73c46e8e0bce4054816193556b083b8d7a3c7d70fe69641f9953eb97a1da",
+      "sha256": "5bb8ff3bbd1c89525ff4af719bc021a73563218b3bce55a9548c01ba1f63fde3",
       "executable": false
     },
     "src/site/pages.tsx": {

@@ -37,10 +37,10 @@ export function Road() {
         </div>
         <div className="card popover">
           <p className="pop-row"><Icon name="checkCircle" className="ico pop-ok" /><span className="f15"><b>Chest</b>{keep(' · Up to date')}</span></p>
-          <p className="pop-row"><FileTile kind="doc" className="tile-xs" /><span className="f15"><b>Contract.docx</b>{keep(' · edited offline on the flight')}</span></p>
+          <p className="pop-row"><FileTile kind="doc" className="tile-xs" /><span className="f15"><b>Contract.docx</b><span className="then"><span className="sep">{keep(' · ')}</span>edited offline on the flight</span></span></p>
           <p className="pop-row pop-conflict"><span className="pop-alert" aria-hidden="true">!</span><span className="f15">Conflict: Dana changed it too</span></p>
           <p className="pop-row"><Icon name="checkCircle" className="ico pop-ok" /><span className="f15"><b>Kept both</b>{keep(' · Luis chose v5')}</span></p>
-          <p className="pop-row"><Icon name="cloud" className="ico pop-cloud" /><span className="f15"><b>Delivery photos</b>{keep(' · 45 of 48 · on demand')}</span></p>
+          <p className="pop-row"><Icon name="cloud" className="ico pop-cloud" /><span className="f15"><b>Delivery photos</b><span className="then"><span className="sep">{keep(' · ')}</span>{keep('45 of 48 · on demand')}</span></span></p>
           <p className="pop-foot dim"><span className="f13">{keep('Last synced 7:42 PM · 0 errors')}</span></p>
         </div>
         <div className="card finder">

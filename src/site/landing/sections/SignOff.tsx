@@ -4,12 +4,15 @@ import { keep } from '../Prose'
 import { Section } from '../Section'
 import './sign-off.css'
 
-/** Contract.docx's history (page-s1/STRUCTURE.md records): v7 approved, v8 saved over it, v5 the resolved conflict. */
+/**
+ * Contract.docx's history (page-s1/STRUCTURE.md records): v7 approved, v8 saved over it, v5 the resolved conflict.
+ * No-break spaces keep each time with its AM/PM and "3 and 4" whole when the detail wraps on a phone.
+ */
 const versions: { v: string; at: string; note?: string; state?: 'not' | 'approved' }[] = [
-  { v: 'v8', at: 'Oct 28, 4:52 PM', note: 'Luis · saved over sections 3 and 4', state: 'not' },
-  { v: 'v7', at: 'Oct 28, 11:06 AM', note: 'signed off by Dana and Priya', state: 'approved' },
-  { v: 'v6', at: 'Oct 24, 3:15 PM', note: 'Priya' },
-  { v: 'v5', at: 'Oct 9, 7:40 PM', note: 'Luis · offline edits, conflict resolved' },
+  { v: 'v8', at: 'Oct 28, 4:52\u00a0PM', note: 'Luis · saved over sections 3\u00a0and\u00a04', state: 'not' },
+  { v: 'v7', at: 'Oct 28, 11:06\u00a0AM', note: 'signed off by Dana and Priya', state: 'approved' },
+  { v: 'v6', at: 'Oct 24, 3:15\u00a0PM', note: 'Priya' },
+  { v: 'v5', at: 'Oct 9, 7:40\u00a0PM', note: 'Luis · offline edits, conflict resolved' },
   { v: 'v4', at: 'Oct 2' },
   { v: 'v3', at: 'Oct 2' },
 ]
@@ -32,8 +35,8 @@ export function SignOff() {
             ))}
           </ol>
         </div>
-        <svg className="restore-arrow" viewBox="0 0 70 420" aria-hidden="true"><path d="M8 4c44 70 66 210 4 404" /><path d="M2 384l10 24 22-12" /></svg>
-        <p className="card restored"><Icon name="checkFill" className="ico" /><span className="f20"><b>v7</b>{keep(' is current again · v8 kept in history')}</span></p>
+        <svg className="restore-arrow" viewBox="0 0 160 460" aria-hidden="true"><path d="M86 12C132 28 156 130 152 250C149 340 128 392 82 420" /><path d="M100 420H82l9-16" /></svg>
+        <p className="card restored"><Icon name="checkFill" className="ico" /><span className="f20"><b>v7</b>{keep(' is current again · v8 kept in\u00a0history')}</span></p>
       </figure>
     </Section>
   )

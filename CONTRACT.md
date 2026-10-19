@@ -811,56 +811,50 @@ CHEST-12 and RECOVER-002 specify Chest's product-specific Base portability repla
 
 ## Homepage claims
 
-Every capability claim on the approved homepage (`src/site/landing/copy.ts`, checked against br's claims truth table of 17 October 2026) maps to the clauses that promise it. A claim's status is `done` when every mapped clause is done, `missing` when every one is missing, and `partial` otherwise. SEARCH-002, OPEN-001 and OWN-001 were added and judged from the code at `22da3fcdc21765b16c26362a20f3d1f1a24cd530` (17 October 2026) for this table; every other status is from the Status table below.
+Every capability claim on the approved homepage maps to the clauses that promise it. The homepage is the owner-approved page-s1 structure (the hero, then one supplier's folder from the move-in on Sat, Sep 26 to the renewal, then the closing; `src/site/landing/`), and this table was rebuilt for it on 19 October 2026 from `docs/CLAIMS.md`, which carries the same rows with each claim's evidence files. A claim's status is `done` when every mapped clause is done, `missing` when every one is missing, and `partial` otherwise. SEARCH-002, OPEN-001 and OWN-001 were added and judged from the code at `22da3fcdc21765b16c26362a20f3d1f1a24cd530` (17 October 2026) for this table; every status is from the Status table below. The page's one limit ("Not in Chest yet.") states what the contract leaves out and is not a claim.
 
-| # | Claim | Clause(s) | Status |
-| --- | --- | --- | --- |
-| 1 | "Chest stores … your team's files" | SPACE-001, CHEST-03 | partial |
-| 2 | "syncs" | SYNC-001, SYNC-002 | partial |
-| 3 | "shares your team's files" | SHARE-004, SHARE-001, CHEST-10 | partial |
-| 4 | "reads every scan" | SEARCH-001 | partial |
-| 5 | "quietly files what arrives" | AGENT-001, RULE-001, CONNECT-006 | partial |
-| 6 | "100% free, open source" | OPEN-001 | done |
-| 7 | "alternative to Google Drive, Dropbox and Box" | SPACE-001, SYNC-001, SHARE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 | partial |
-| 8 | Collage: contract co-edited by Dana and Luis | EDIT-001 | partial |
-| 9 | Collage: receipt "Uploading 62%" | TRANSFER-001, MOBILE-001 | partial |
-| 10 | Collage: share link "expires Nov 30 · 3 of 10 downloads" | SHARE-001 | partial |
-| 11 | Collage: version stack v7 (approved), v6, v5 | CHEST-07, VERSION-001 | partial |
-| 12 | Collage: scanned NDA with extracted fields boxed | SEARCH-002 | partial |
-| 13 | Collage: "Filed W-9 Acme Supply.pdf → Vendors / Acme / Tax · Undo" | AGENT-001, RULE-001 | done |
-| 14 | "Files stay in sync on Mac, Windows, iPhone and Android" | SYNC-001, SYNC-002, MOBILE-001 | partial |
-| 15 | "open on demand without filling your disk" | SYNC-001 | partial |
-| 16 | "Links with a password, an expiry and a download limit" | SHARE-001 | partial |
-| 17 | "Revoke any link in one click" | SHARE-001 | partial |
-| 18 | "ask anyone to upload with a file request" | SHARE-002 | done |
-| 19 | "Chest reads every document and scan, so search finds the words inside" | SEARCH-001 | partial |
-| 20 | "and only shows what you are allowed to see" | CHEST-06 | done |
-| 21 | "Word, Excel and PowerPoint files open right in the browser" | PREVIEW-001, EDIT-001 | partial |
-| 22 | "Edit at the same time, comment" | EDIT-001, EDIT-003 | partial |
-| 23 | "and keep one copy" | EDIT-001 | partial |
-| 24 | "Go back to any earlier version of a file" | VERSION-001 | partial |
-| 25 | "or a whole folder" (and "Restore Clients / Harbor Freight to Oct 12") | RECOVER-001 | done |
-| 26 | "see who changed what" | AUDIT-001, VERSION-001 | partial |
-| 27 | "Approvals stay with the exact version signed off" | CHEST-07, CHEST-08 | done |
-| 28 | "Agents file what arrives from email and apps" | AGENT-001, CONNECT-006 | partial |
-| 29 | "merge duplicates" | AGENT-002 | done |
-| 30 | "flag links shared too widely" (and "Make private") | AGENT-005 | done |
-| 31 | Mascot filing files from email, phone and laptop; "312 files filed this week" | AGENT-001, CONNECT-006, MOBILE-001 | partial |
-| 32 | "Move from Google Drive, Dropbox or Box with folders, permissions, versions and shared links" | MIGRATE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 | partial |
-| 33 | "Old links forward to the new ones" (and "Shared links redirected · 214") (correction sent to br: vendor URLs cannot forward) | MIGRATE-007 | missing |
-| 34 | "Single sign-on" (Okta) | ADMIN-001 | done |
-| 35 | "automatic user setup" (User sync · 42 people) | ADMIN-001 | done |
-| 36 | "team spaces" | SPACE-001, SPACE-002 | partial |
-| 37 | "storage limits" (1.2 TB of 5 TB) | QUOTA-001, ADMIN-002 | partial |
-| 38 | "Run Chest on your own computer or server and keep every file. Export everything, any time." (Your own storage · Your own computer or server · Export any time; terminal: `npx -y @runeditrun/rer dev just-every/run-chest`) | OWN-001, CHEST-12, RECOVER-002 | partial |
-| 39a | "Exact-version approvals: Sign-off sticks to the version that was approved." | CHEST-07, CHEST-08 | done |
-| 39b | "File requests: Anyone can upload to the folder you choose." | SHARE-002 | done |
-| 39c | "Large files: Big uploads resume where they stopped." | TRANSFER-001 | partial |
-| 39d | "Trash you can undo: Deleted files come back for 30 days." (correction sent to br: trash keeps items until erasure, not 30 days) | CHEST-13 | done |
-| 39e | "Previews: Documents, video and design files open in the browser." | PREVIEW-001 | partial |
-| 39f | "Activity log: Every view, share and change, recorded." | AUDIT-001, CHEST-13 | done |
-| 40 | "Open source file storage for your whole team." | OPEN-001, SPACE-001 | partial |
-| 41 | "Free and open source, MIT licensed." | OPEN-001 | done |
+| # | Section | Claim | Clause(s) | Status |
+| --- | --- | --- | --- | --- |
+| 1 | Hero | "Chest stores … your team's files" | SPACE-001, CHEST-03 | partial |
+| 2 | Hero | "syncs" | SYNC-001, SYNC-002 | partial |
+| 3 | Hero | "shares your team's files" | SHARE-004, SHARE-001, CHEST-10 | partial |
+| 4 | Hero | "reads every scan" | SEARCH-001 | partial |
+| 5 | Hero | "quietly files what arrives" | AGENT-001, RULE-001, CONNECT-006 | partial |
+| 6 | Hero | "100% free, open source" | OPEN-001 | done |
+| 7 | Hero | "alternative to Google Drive, Dropbox and Box" | SPACE-001, SYNC-001, SHARE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 | partial |
+| 8 | Hero collage | Contract co-edited by Dana and Luis | EDIT-001 | partial |
+| 9 | Hero collage | Receipt 2026-10-09.jpg "Uploading 62%" | TRANSFER-001, MOBILE-001 | partial |
+| 10 | Hero collage | Share link "expires Oct 31 · 3 of 10 downloads" | SHARE-001 | partial |
+| 11 | Hero collage | Version stack v7 (approved), v6, v5 | CHEST-07, VERSION-001 | partial |
+| 12 | Hero collage | Scanned NDA with its date, party and amount boxed | SEARCH-002 | partial |
+| 13 | Hero collage | "Filed W-9 Acme Supply.pdf → Vendors / Acme Supply / Tax · Undo" | AGENT-001, RULE-001 | done |
+| 14 | Move in | "Move from Dropbox, Google Drive or Box. Folders, permissions, versions and shared links come across." (import ledger: 48,212 files, 3,906 folders, 1,104 permissions kept, 61,870 versions) | MIGRATE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 | partial |
+| 15 | Move in | Import ledger "Links inside files · 312 rewritten" | MIGRATE-007 | missing |
+| 16 | Move in | "7 file names too long for Windows" · "Renamed and retried · 7 of 7 imported" | MIGRATE-001 | partial |
+| 17 | Move in | Terminal: `rer setup` · "Chest is ready" | OWN-001 | partial |
+| 18 | Follow one folder | The company drive: My files, Shared with me, Recent, team spaces Finance, Ops, Sales, Vendors | SPACE-001, SHARE-004 | partial |
+| 19 | Follow one folder | Role chips "Dana · manager", "Luis · contributor", "Priya · guest"; "Shared with 4 people" | ROLE-001, SHARE-005 | partial |
+| 20 | Files that file themselves | "The Chest agent reads what arrives by email and from apps, names it, files it" (NDA.pdf from legal@acme.example, insurance certificate, Invoice-0042, scan_0931.pdf renamed W-9 Acme Supply.pdf; each with Undo) | AGENT-001, CONNECT-006, SEARCH-002 | partial |
+| 21 | Files that file themselves | Insurance certificate "expires Sep 30, 2027 · reminder set" | CHEST-09 | done |
+| 22 | Files that file themselves | "and closes links shared too widely" (Rate card.xlsx public link "limited to the Acme team", Undo) | AGENT-005 | done |
+| 23 | On every desk and phone | "Files open on demand on Mac and Windows" (Finder with Chest, on-demand and downloaded states, "Free up space") | SYNC-001 | partial |
+| 24 | On every desk and phone | "photos upload from the phone" ("45 of 48 uploaded · 3 waiting for Wi-Fi") | MOBILE-001, TRANSFER-001 | partial |
+| 25 | On every desk and phone | "edits made offline come home safely" ("Conflict: Dana changed it too" · "Kept both · Luis chose v5") | SYNC-002 | partial |
+| 26 | Open it and edit together | "Word, Excel and PowerPoint files open in the browser" | PREVIEW-001, EDIT-001 | partial |
+| 27 | Open it and edit together | "Edit at the same time, comment" (Pricing.xlsx with Dana and Luis, a resolved thread, "Saved · 2 people editing") | EDIT-001, EDIT-003 | partial |
+| 28 | Open it and edit together | "and keep one copy" | EDIT-001 | partial |
+| 29 | Share out. Collect in. | "Send a link with a password and an expiry" (Contract pack: password on, expires Oct 31, 3 of 10 downloads, opened by priya@acme.example, Revoke) | SHARE-001 | partial |
+| 30 | Share out. Collect in. | "and ask for files back without an account" (file request to Vendors / Acme Supply / Onboarding, 2 of 2 received) | SHARE-002 | done |
+| 31 | Share out. Collect in. | Site survey.mp4 · 4.2 GB: "Connection dropped at 61%" · "Resumed where it stopped" | TRANSFER-001 | partial |
+| 32 | Every version, kept. | "Restore any earlier version in one click." (Restore v7; "v7 is current again · v8 kept in history") | CHEST-16, VERSION-001 | partial |
+| 33 | Every version, kept. | "A sign-off stays with the exact version that was approved." (v7 signed off by Dana and Priya; v8 not approved) | CHEST-07, CHEST-08 | done |
+| 34 | The right version reached everyone. | "The agent checks that everyone has the signed version" (v7 reached Dana, Luis, Priya, accounts@acme.example and the warehouse; the warehouse sent v7) | AGENT-004 | done |
+| 35 | The right version reached everyone. | "and that nothing is left open" (2 links open to a former contractor revoked; broken link in Ops handbook.docx points to v7; 63 files · 0 public links) | AGENT-005 | done |
+| 36 | The right version reached everyone. | "3 invoices filed · 0 duplicates" | AGENT-002 | done |
+| 37 | Find the sentence inside the file. | "Chest reads every document and scan, so search finds the words inside" ("net 30 acme": 3 results) | SEARCH-001 | partial |
+| 38 | Find the sentence inside the file. | "and only shows what you are allowed to see" | CHEST-06 | done |
+| 39 | Closing | "Open source file storage for your whole team." | OPEN-001, SPACE-001 | partial |
+| 40 | Closing | "Free and open source, MIT licensed." | OPEN-001 | done |
 
 ## Status
 

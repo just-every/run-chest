@@ -77,6 +77,12 @@
   .finder-body { grid-template-columns: 1fr; }
   .finder-side { display: none; }
   .finder-row { flex-wrap: wrap; row-gap: 0.2em; padding: 0.8em 0.8em; }
+  /* A row's name never wraps; its note takes the line under it, so the state icon stays on the name's line. */
+  .finder-row > .grow { flex: 1 0 auto; }
+  .finder-row > .f13 { order: 3; flex-basis: 100%; padding-left: calc(3.6em / 1.3); } /* under the name: the 2.4em tile and 1.2em gap, in the note's 13 px type */
+  /* The two long popover rows set their detail under the name, as the stacked rows below do. */
+  .pop-row .then { display: block; }
+  .pop-row .sep { display: none; }
   .finder-menu { padding-left: 4.4em; }
   .phone { padding: 0.8em; }
   .phone-screen { padding-left: 0.4em; padding-right: 0.4em; }
