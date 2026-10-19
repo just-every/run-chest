@@ -1,8 +1,8 @@
-import { icons } from '../ui/icons'
+import { icons, type IconName } from '../ui/icons'
 import { typedFields } from './ui-fields'
 export const esc=(v:unknown)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!))
 export const json=(v:unknown)=>esc(JSON.stringify(v,null,2))
-export const icon=(name:keyof typeof icons)=>`<span class="icon" aria-hidden="true">${icons[name]}</span>`
+export const icon=(name:IconName)=>`<span class="icon" aria-hidden="true">${icons[name]}</span>`
 // Form controls: the label text sits above its control, both inside the label so it names the control.
 export const field=(label:string,name:string,value='',type='text',required=true)=>`<label class="field"><span class="field-label">${esc(label)}</span><input name="${esc(name)}" type="${type}" value="${esc(value)}" ${required?'required':''}${type==='date'||type==='email'?' class="mono"':''}></label>`
 export const area=(label:string,name:string,value:unknown,required=true)=>`<label class="field"><span class="field-label">${esc(label)}</span><textarea name="${esc(name)}" ${required?'required':''}>${typeof value==='string'?esc(value):json(value)}</textarea></label>`
@@ -10,8 +10,17 @@ export const select=(label:string,name:string,rows:{id:string,label:string}[],se
 export const form=(path:string,body:string,button:string,returnTo='/app/library',{className='form',buttonClass='btn'}:{className?:string,buttonClass?:string}={})=>`<form class="${className}" method="post" action="/app/action" enctype="multipart/form-data"><input type="hidden" name="path" value="${esc(path)}"><input type="hidden" name="returnTo" value="${esc(returnTo)}">${body}<button class="${buttonClass}">${esc(button)}</button></form>`
 // An email box that suggests the people already in this Chest; any other address can be typed.
 export const personPicker=(label:string,name:string,people:{id:string,payload:{name:string}}[],list:string)=>`<label class="field"><span class="field-label">${esc(label)}</span><input name="${esc(name)}" type="email" required class="mono" list="${esc(list)}" autocomplete="off"><datalist id="${esc(list)}">${people.map(p=>`<option value="${esc(p.id)}">${esc(p.payload.name)}</option>`).join('')}</datalist></label>`
-// A moment: UTC on the server, the person's own clock in the browser (/chest-time.js).
+// A moment: UTC on the server, the person's own clock in the browser (/chest-time.js). `when` is the compact US form
+// the file table and details panel use ("Oct 14, 2026, 9:24 AM"); `day` is a date alone ("Nov 30").
 export const stamp=(at:string)=>at?`<time datetime="${esc(at)}" data-local>${esc(at.slice(0,16).replace('T',' '))} UTC</time>`:''
+const us=(at:string,o:Intl.DateTimeFormatOptions)=>new Date(at).toLocaleString('en-US',{timeZone:'UTC',...o})
+export const when=(at:string)=>at&&!isNaN(Date.parse(at))?`<time datetime="${esc(at)}" data-local="short">${esc(us(at,{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}))}</time>`:''
+export const day=(at:string)=>at&&!isNaN(Date.parse(at))?esc(us(at,{month:'short',day:'numeric'})):''
+// A calendar date kept as YYYY-MM-DD, read the US way ("Oct 24, 2026"); anything else prints as it is.
+export const isoDay=(date:string)=>/^\d{4}-\d{2}-\d{2}$/.test(date)?esc(us(date+'T12:00:00Z',{month:'short',day:'numeric',year:'numeric'})):esc(date)
+// A person as a round initial in one of five soft tones, picked from their email so it stays the same everywhere.
+export const tone=(email:string)=>1+[...email].reduce((n,c)=>n+c.charCodeAt(0),0)%5
+export const avatar=(p:{email:string,name:string},label=false)=>`<span class="avatar tone-${tone(p.email)}"${label?` title="${esc(p.name)}"`:' aria-hidden="true"'}>${esc((p.name||p.email).trim()[0]?.toUpperCase()??'?')}</span>`
 export const hidden=(name:string,value:string)=>`<input type="hidden" name="${name}" value="${esc(value)}">`
 // A disclosure: the summary looks like a button (ink by default) and opens its form in a card below it.
 export const details=(title:string,body:string,summaryClass='btn')=>`<details class="disclosure"><summary class="${summaryClass}">${esc(title)}</summary><div class="disclosure-panel">${body}</div></details>`

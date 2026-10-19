@@ -16,7 +16,10 @@ import { notices, requestView, sharedWithMe } from './shares'
 import { devices } from './devices'
 import { openLink } from './links'
 import { filesExecute } from './api'
-import { itemPage, requestAccessPage, rewindDonePage, rewindPage, rewindUndonePage } from './ui-item'
+import { itemCrumbs, itemPage, requestAccessPage, rewindDonePage, rewindPage, rewindUndonePage } from './ui-item'
+import { agentStrip as agentData, folderRows } from './folder-view'
+import { newFileMenu } from '../office/new-ui'
+import type { Bar } from '../ui-shell'
 import { devicesPage, homePage, noticesPage, requestPage, requestsPage, searchPage, secretPage, sharedPage, spacePage, trashPage } from './ui-pages'
 import { repairView } from '../filing/link-repairs'
 import { linksPage } from './ui-links'
@@ -84,7 +87,21 @@ async function destinations(env: Bindings, w: Awaited<ReturnType<typeof who>>) {
  const spaces = (await list<Space>(env, 'space')).filter(r => allowed({ space: r, state: start(r.payload, w) }, 'contribute')).map(r => ({ id: `space:${r.id}`, label: r.payload.kind === 'personal' ? (r.payload.formerOwner ? r.payload.name : 'My files') : r.payload.name }))
  return [...spaces, ...[...all.values()].filter(e => e.row.payload.type === 'folder' && !e.state.trash && allowed(e, 'contribute')).map(e => ({ id: `folder:${e.row.id}`, label: name(e.row.id) }))]
 }
-export async function filesPage(env: Bindings, request: Request, s: Session, url: URL): Promise<{ body: string } | { redirect: string } | null> {
+// The folder browser's extra read: each row's facts, the conflicts, the agent strip and the file picked into the
+// details panel (?file=, which must be one of this folder's files).
+async function browser(env: Bindings, s: Session, w: Awaited<ReturnType<typeof who>>, space: string, parent: string | null, ids: string[], url: URL) {
+ const { rows, conflicts } = await folderRows(env, s, w, space, parent, ids), pick = url.searchParams.get('file'), show = ['files', 'folders'].includes(url.searchParams.get('show') ?? '') ? url.searchParams.get('show')! : ''
+ const selected = pick && rows.some(r => r.id === pick && r.type === 'file') ? await itemView(env, s, w, pick) : null
+ return { rows, conflicts, agent: await agentData(env, s, w, ids), selected: selected ? { ...selected, members: await members(env, w, pick!) } : null, show }
+}
+// Who reaches an item through its space: the space's members, unless the item or a folder above it is restricted.
+async function members(env: Bindings, w: Awaited<ReturnType<typeof who>>, key: string) {
+ const all = await everything(env, w), e = all.get(key); if (!e || e.space.payload.kind !== 'team') return []
+ for (let at: typeof e | undefined = e; at; at = at.row.payload.parent ? all.get(at.row.payload.parent) : undefined) if (at.row.payload.restricted) return []
+ return e.space.payload.members.map(m => m.principal).filter(p => p.includes('@'))
+}
+const bar = (crumbs: Bar['crumbs'], creation: any, target: { space?: string; parent?: string }, returnTo: string, share?: string): Bar => ({ crumbs, new: newFileMenu(target, returnTo, creation) || undefined, upload: '#upload', share })
+export async function filesPage(env: Bindings, request: Request, s: Session, url: URL): Promise<{ body: string, bar?: Bar } | { redirect: string } | null> {
  const bulk=await bulkPage(env,s,url);if(bulk)return {body:bulk}
  const path = url.pathname, parts = path.split('/').filter(Boolean)
  if (parts[0] === 's' && parts[1]) return { redirect: `/app/items/${(await openLink(env, s, parts[1])).item}` }
@@ -101,9 +118,13 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (path === '/app/files') return { body: homePage(await home(env, s, w)) }
  if (path === '/app/files/search') { const reader = await readerState(env); return { body: searchPage(url.searchParams.get('q') || '', await search(env, w, url), 'config' in reader ? null : 'unavailable' in reader ? reader.unavailable : reader.missing) } }
  if (path === '/app/files/trash') return { body: trashPage(await trashView(env, s, w)) }
- if (parts[1] === 'spaces' && parts[2]) { const d = await spaceView(env, w, parts[2]); return { body: spacePage({ ...d, creation: d.can.contribute ? await listTemplates(env, s, w, { space: d.id }) : null, serviceAdmin: isAdmin(s), quotaOwner: s.operator.role === 'owner' }, people, groups) } }
+ if (parts[1] === 'spaces' && parts[2]) { const d = await spaceView(env, w, parts[2]), creation = d.can.contribute ? await listTemplates(env, s, w, { space: d.id }) : null, folder = await browser(env, s, w, d.id, null, d.children.map((c: any) => c.id), url); return { body: spacePage({ ...d, folder, creation, serviceAdmin: isAdmin(s), quotaOwner: s.operator.role === 'owner' }, people, groups), bar: bar([{ label: d.name }], creation, { space: d.id }, `/app/spaces/${d.id}`) } }
  if (parts[1] === 'items' && parts[2]) {
-  try { const officeEdit = url.searchParams.get('edit') === '1' ? await readOffice(env, w, parts[2], undefined, true) : null, d = await itemView(env, s, w, parts[2]); return { body: itemPage({ ...d, creation: d.item.type === 'folder' && d.can.contribute ? await listTemplates(env, s, w, { parent: parts[2] }) : null, officeEdit, me: s.operator.email, ownerRole: s.operator.role === 'owner' }, { people, groups, destinations: await destinations(env, w) }) } }
+  try {
+   const officeEdit = url.searchParams.get('edit') === '1' ? await readOffice(env, w, parts[2], undefined, true) : null, d = await itemView(env, s, w, parts[2]), returnTo = `/app/items/${d.id}`
+   const creation = d.item.type === 'folder' && d.can.contribute ? await listTemplates(env, s, w, { parent: parts[2] }) : null, folder = d.item.type === 'folder' ? await browser(env, s, w, d.space.id, d.id, d.children.map((c: any) => c.id), url) : null
+   return { body: itemPage({ ...d, folder, members: await members(env, w, d.id), creation, officeEdit, me: s.operator.email, ownerRole: s.operator.role === 'owner' }, { people, groups, destinations: await destinations(env, w) }), bar: d.item.type === 'folder' ? bar(itemCrumbs(d), creation, { parent: d.id }, returnTo, d.can.share ? '#share' : undefined) : { crumbs: itemCrumbs(d), upload: d.can.contribute ? '#upload' : undefined, share: d.can.share ? '#share' : undefined } }
+  }
   catch (e) { if (e instanceof ChestError && e.code === 'access_required') return { body: requestAccessPage(parts[2]) }; throw e }
  }
  if (path === '/app/shared') return { body: sharedPage(await sharedWithMe(env, w, url.searchParams), url.searchParams) }

@@ -2,6 +2,7 @@ import { runtimeBindings, type Bindings } from '../../auth.server'
 import { authenticated, failure, headers } from '../api'
 import { insist } from '../model'
 import { page, refusedPage } from '../ui-shell'
+import { withRail } from '../ui-rail'
 import { card, esc } from '../ui-shared'
 import { authorize, requestBudget, action, resource } from './auth'
 import { exchange, consent } from './oauth'
@@ -31,7 +32,7 @@ export async function integrationsResponse(request: Request,original: Bindings):
   if(path==='/oauth/chest/authorize'){
    const s=await authenticated(env,request);if(request.method==='GET')return await consentPage(env,s,url);insist(request.method==='POST','method_not_allowed',405);return new Response(null,{status:303,headers:{...headers,location:await consent(env,s,await input(request))}})
   }
-  if(isUi){const s=await authenticated(env,request);if(request.method==='GET')return await managementPage(env,s);insist(request.method==='POST','method_not_allowed',405);const data=integrationInput(await request.formData()),result=await integrationsExecute(env,request,s,'POST',String(data.path).split('/').filter(Boolean),data,url);if((result as any)?.clientSecret)return page(card('App registered',`<p>Client ID: <code>${esc((result as any).client.id)}</code></p><p>Copy this secret now. It is shown once.</p><code>${esc((result as any).clientSecret)}</code><p><a href="/app/integrations">Connected apps</a></p>`),{name:s.operator.displayName,email:s.operator.email,role:s.operator.role},path);return new Response(null,{status:303,headers:{...headers,location:'/app/integrations'}})}
+  if(isUi){const s=await authenticated(env,request);if(request.method==='GET')return await managementPage(env,s);insist(request.method==='POST','method_not_allowed',405);const data=integrationInput(await request.formData()),result=await integrationsExecute(env,request,s,'POST',String(data.path).split('/').filter(Boolean),data,url);if((result as any)?.clientSecret)return page(card('App registered',`<p>Client ID: <code>${esc((result as any).client.id)}</code></p><p>Copy this secret now. It is shown once.</p><code>${esc((result as any).clientSecret)}</code><p><a href="/app/integrations">Connected apps</a></p>`),await withRail(env,s,path),path);return new Response(null,{status:303,headers:{...headers,location:'/app/integrations'}})}
   let auth=await authorize(env,request)
   if(origin){insist(origin===env.AUTH_ORIGIN||auth.client.payload.pickerOrigins.includes(origin)||auth.client.payload.redirects.some(u=>new URL(u).origin===origin),'oauth_origin_mismatch',403);permittedOrigin=origin}
   insist(request.method==='GET'||request.method==='POST','method_not_allowed',405)

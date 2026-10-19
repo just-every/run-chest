@@ -11,12 +11,12 @@ checkout's own `.wrangler/state` is never opened.
 ## Sample library
 
 `src/demo.ts` (`seedDemo`, run once by Base's `withDemo` after the owner exists)
-loads `src/demo-sample.ts`: Harbourworks, a small build-out contractor, using the
+loads `src/demo-sample.ts`: Harborworks, a small build-out contractor, using the
 names from the run-chest.com drawings. Every date is relative to the demo's
 start.
 
-- Five teammates (Maria Chen, Dan Hale, Priya Natarajan, Tom Okafor, and Elena
-  Rossi still invited) as operator identities, mirrored into the library's
+- Six teammates (Maria Chen, Dan Hale, Priya Natarajan, Tom Okafor, Luis
+  Ortega, and Elena Rossi still invited) as operator identities, mirrored into the library's
   people, plus the *Accounts team* and *Site leads* groups.
 - Four document types (insurance certificate, supplier contract, procedure,
   permit or licence) and five collections with group and person grants.
@@ -25,6 +25,15 @@ start.
   replacement with changes requested, one awaiting another reviewer, a private
   record, one in trash, review and expiry work that is upcoming, due, overdue or
   completed with evidence, and the audit trail that history leaves.
+- Everyday files (`src/demo-files.ts`), drawn for an owner named Dana Reyes: team spaces Finance, Legal, Operations
+  and Vendors, and the Vendors / Acme folder a few weeks into working with
+  Acme Supply Co. (Tacoma, WA): Word, Excel, PowerPoint, PDF, photo, ZIP and
+  text originals with their versions (the contract's v7 approved under the
+  folder's version review), a rate-card sync conflict kept as a copy from
+  the owner's iPhone, links for anyone with expiry and download limits, the sync
+  companions' reports, five files the filing agent filed in the last day (each
+  undoable), two copies of an invoice in Accounts payable for the duplicate
+  check, and an upload of the owner's still going up (62%, one part held in R2).
 
 Originals go through Chest's own byte inspection and R2 custody
 (`src/chest/blobs.ts`); records go into the same tables with fixed IDs and

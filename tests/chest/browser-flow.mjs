@@ -5,8 +5,9 @@ import {pdfReady} from './browser-preview.mjs';
 import {browserSignIn,json} from './local.mjs';
 import {createReviewerGroup,retainRecoveryRecords,chooseType} from './browser-custody.mjs';
 import {signOutFlow} from './browser-session.mjs';
-// The top bar's links, as a person reaches them: behind the "Menu" disclosure at phone width (760px and below).
-async function nav(page,name){if(page.viewportSize().width<=760)await page.getByText('Menu',{exact:true}).click();await page.getByRole('navigation',{name:'Chest'}).getByRole('link',{name,exact:true}).click()}
+// The rail's links, as a person reaches them: behind the "Menu" disclosure at phone width (760px and below), and
+// the workspace pages under the rail's "Workspace" fold.
+async function nav(page,name){if(page.viewportSize().width<=760)await page.getByText('Menu',{exact:true}).click();const rail=page.getByRole('navigation',{name:'Chest'}),link=rail.getByRole('link',{name,exact:true});if(!await link.isVisible())await rail.getByText('Workspace',{exact:true}).click();await link.click()}
 export async function browserFlow({browser,origin,devKey,width}){
  const ownerContext=await browser.newContext({viewport:{width,height:1000}}),owner=await ownerContext.newPage();await browserSignIn(owner,origin,devKey);
  // Staff are dev personas, real operators at <as>@dev.localhost; each width has its own.

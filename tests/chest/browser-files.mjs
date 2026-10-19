@@ -36,7 +36,7 @@ async function journey(width){
  const p=Object.fromEntries(await Promise.all(people.map(async n=>[n,await as(n,width)]))),xlsx=n=>Buffer.concat([Buffer.from([0x50,0x4b,3,4]),Buffer.from(`budget ${width} revision ${n}`)]);
  // Mo creates a team space and its members in the browser; Ana builds a nested tree with an ordinary file.
  await go(p.mo,'/app/files');await p.mo.getByLabel('New team space name').fill(`Projects ${width}`);await press(p.mo,'Create team space');
- await p.mo.getByRole('link',{name:`Projects ${width}`}).click();const space=id(p.mo);
+ await p.mo.getByRole('main').getByRole('link',{name:`Projects ${width}`}).click();const space=id(p.mo);
  for(const [email,role] of [['ana@example.test','content_manager'],['ben@example.test','viewer'],['cy@example.test','contributor'],['eve@example.test','commenter']]){await open(p.mo,'Add a person');const add=p.mo.locator('form').filter({has:p.mo.getByRole('button',{name:'Add to space'})});await add.getByLabel('Email').fill(email);await add.getByLabel('Role').selectOption(role);await press(add,'Add to space')}
  // A manager changes a role and removes a member on their row; the change is the space's real membership.
  const benRow=()=>p.mo.locator('li.member').filter({hasText:'ben@example.test'});await benRow().getByLabel(/^Role for/).selectOption('commenter');await press(benRow(),'Change role');await press(benRow(),'Remove');

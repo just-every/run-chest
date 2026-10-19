@@ -3,9 +3,10 @@ import type { Document, Person, Version } from './chest/model'
 import { schemaDefinition, validateFields } from './chest/fields'
 import { inspect, retain } from './chest/blobs'
 import { collections, documents, groups, schemas, team } from './demo-sample'
+import { seedFiles } from './demo-files'
 
 /** Demo data for `rer demo` and the hosted demo (Base modules/demo runs it once,
- * after the owner exists): a lived-in Harbourworks library with its team, groups,
+ * after the owner exists): a lived-in Harborworks library with its team, groups,
  * document types, collections, records with version histories, review and expiry
  * work, and the audit trail that history leaves. Originals go through Chest's own
  * byte inspection and R2 custody; every insert uses a fixed ID with ON CONFLICT DO
@@ -63,4 +64,8 @@ export async function seedDemo(env: Bindings, { ownerEmail, now }: { ownerEmail:
     ...audit.map(row => statement('INSERT INTO chest_audit(id, actor, action, object_id, detail, at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING', ...row)),
     statement('INSERT INTO oa_first_run (singleton, completed_by, completed_at) VALUES (1, ?, ?) ON CONFLICT(singleton) DO NOTHING', owner.id, now.getTime()),
   ])
+  // Everyday files: team spaces, the Vendors / Acme folder and its history (src/demo-files.ts).
+  const person = (id: string) => { const p = team.find(t => t.id === id)!; return { email: p.email, name: p.name } }
+  const meName = (await env.DB.prepare('SELECT display_name FROM oa_operators WHERE id = ?').bind(owner.id).first<{ display_name: string }>())?.display_name ?? ownerName
+  await seedFiles(env, { me, meName, luis: person('demo-luis'), maria: person('demo-maria'), priya: person('demo-priya'), now })
 }

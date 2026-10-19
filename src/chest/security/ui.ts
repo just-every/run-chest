@@ -2,13 +2,14 @@ import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { card,field,hidden,esc,select } from '../ui-shared'
 import { page } from '../ui-shell'
+import { withRail } from '../ui-rail'
 import { list } from '../store'
 import { factors } from './service'
 import { mfaPolicy } from './policy'
 import { sessionSecurity } from './session'
 const form=(action:string,body:string,label:string)=>`<form method="post" action="/security" class="form">${hidden('action',action)}${body}<button class="btn">${esc(label)}</button></form>`
 export async function securityPage(env:Bindings,s:Session,result:any={},reset=''){
- const all=await factors(env,s),state=await sessionSecurity(env,s,false),me={name:s.operator.displayName,email:s.operator.email,role:s.operator.role}
+ const all=await factors(env,s),state=await sessionSecurity(env,s,false),me=await withRail(env,s,'/security')
  const proof=await env.DB.prepare("SELECT verified_at FROM chest_mfa_verified WHERE session_id=? AND method IN ('totp','webauthn','recovery')").bind(s.id).first<{verified_at:number}>(),canManage=all.length===0||!!proof&&Date.now()-proof.verified_at<300000
  const codes=result.codes?card('Save your recovery codes',`<p>Store these somewhere private. Each works once. Generating new codes replaces the old ones.</p><pre data-recovery-codes>${result.codes.map(esc).join('\n')}</pre><a class="btn" href="/security">I saved my codes</a>`):''
  const enroll=result.secret?card('Connect your authenticator',`<p>In an authenticator app choose Enter a setup key, use your Chest email, and select time-based codes.</p><p>Setup key</p><p class="mono" data-totp-secret>${esc(result.secret)}</p><details><summary>Authenticator setup link</summary><a href="${esc(result.uri)}">Open authenticator</a></details>${form('totp-enroll',field('Six-digit authenticator code','code','','text'),'Confirm authenticator')}`):''

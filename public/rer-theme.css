@@ -1,42 +1,61 @@
 @import url('/fonts/fonts.css');
 /* Chest's theme: the one place its tokens are defined. Every Chest page links this file: the app (with
-   public/chest.css), the run site (landing, docs, Run page), the Lobby, sign-in and first-run setup.
+   public/chest.css and chest-app.css), the run site (landing, docs, Run page), the Lobby, sign-in and setup.
    The --chest-* tokens are Chest's own; the --rer-* tokens below map them for Base's shared documents
    (Lobby, Run page, sign-in, setup), which read only --rer-*.
-   Visual authority: the brand and run site follow the owner-approved desk images (desk-chest, 16 Oct 2026:
-   white grid paper, near-black ink, the violet chest mark, a violet-to-blue gradient). The app's own tokens
-   (paper, cobalt, manila, status chips) stay until the app screens move to that look. */
+   Visual authority: the run site follows the owner-approved homepage (desk-chest, 16 Oct 2026); the app follows
+   the owner-picked app look (desk-chest app, option A, 17 Oct 2026): crisp white paper, near-black ink, hairline
+   borders, soft layered cards, one violet accent for selection, links and the agent, and small status colours. */
 :root {
-  /* Colour. Chrome is ink on warm paper; cobalt is the one accent (current approved, approve, callouts,
-     focus); manila belongs to folders and tabs. Status colours appear only on app status chips. */
-  --chest-paper: #fdfcf8;
+  /* App colour. White paper with a faint cool tint; hairlines, not outlines; violet is the one accent. */
+  --chest-paper: #fafbff;
   --chest-surface: #ffffff;
-  --chest-ink: #181818;
-  --chest-muted: #55524c;
-  --chest-line: #2a2a2a;
-  --chest-hairline: #e4e0d6;
-  --chest-manila: #ead6b4;
-  --chest-manila-deep: #d9c296;
-  --chest-cobalt: #004be9;
-  --chest-cobalt-ink: #ffffff;
-  --chest-chip: #d2d6da;
-  --chest-due: #f6d7cf;
-  --chest-due-ink: #7a2414;
-  --chest-upcoming: #f4e3b8;
-  --chest-upcoming-ink: #5c4300;
-  --chest-issue: #9a2a12;
+  --chest-ink: #090d30;
+  --chest-body: #414b70;
+  --chest-muted: #727c9f;
+  --chest-line: #e9edf8;
+  --chest-line-strong: #d3d6e2;
+  --chest-hover: #f5f6fb;
+  --chest-selected: #eeefff;
+  --chest-action: #5035ff;
+  --chest-action-hover: #4a2ee6;
+  --chest-action-soft: #efecff;
+  --chest-action-ink: #321bff;
+  --chest-chevron: #4b5064;
+  --chest-ok: #009b59;
+  --chest-ok-soft: #d4f6df;
+  --chest-warn: #e8a10f;
+  --chest-warn-ink: #7a5000;
+  --chest-warn-soft: #fff6e2;
+  --chest-warn-line: #ffd787;
+  --chest-alert: #c93232;
+  --chest-alert-soft: #fdebeb;
+  /* Avatars: one soft tone per person, picked from their email. */
+  --chest-tone-1: #ebe6ff; --chest-tone-1-ink: #5b3ff6;
+  --chest-tone-2: #e2f3e7; --chest-tone-2-ink: #2e7d48;
+  --chest-tone-3: #e3efff; --chest-tone-3-ink: #1f63d8;
+  --chest-tone-4: #ffeadf; --chest-tone-4-ink: #b4501d;
+  --chest-tone-5: #fff1d1; --chest-tone-5-ink: #8a5a00;
 
-  /* Type. Archivo carries headings (compact width 80, weight 800) and body (width 100); exact facts are
-     IBM Plex Mono; Caveat is only for the hand-inked callouts inside drawings. */
-  --chest-font-sans: Archivo, 'Helvetica Neue', Arial, sans-serif;
-  --chest-font-display: 'Archivo Compact', Archivo, 'Arial Narrow', Arial, sans-serif;
+  /* Type. Inter everywhere: the homepage's heavy tight cut for page titles only, a clean UI weight elsewhere,
+     tabular figures for sizes and dates; IBM Plex Mono for exact facts (hashes, IDs, receipts); Caveat only for
+     the run site's hand-inked callouts. */
+  --chest-font-ui: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --chest-font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
   --chest-font-hand: Caveat, 'Bradley Hand', cursive;
+  --chest-font-doc: 'Times New Roman', Tinos, Times, serif;
+  --chest-font-type: 'Courier New', Courier, monospace;
 
-  /* Shape. */
+  /* Shape and depth. */
   --chest-radius: 10px;
-  --chest-radius-input: 8px;
-  --chest-focus: 3px solid var(--chest-cobalt);
+  --chest-radius-sm: 8px;
+  --chest-card-radius: 14px;
+  --chest-shadow: 0 1px 2px rgba(22, 2, 82, 0.04), 0 8px 24px -16px rgba(38, 28, 110, 0.22);
+  --chest-shadow-pop: 0 1px 2px rgba(22, 2, 82, 0.05), 0 22px 44px -22px rgba(38, 28, 110, 0.32);
+  --chest-focus-ring: 0 0 0 3px rgba(91, 63, 246, 0.22);
+  /* A <select>'s chevron (Base #247, foundation/runtime/select-style.ts): two 6 px gradient strokes in the chevron
+     ink, 20 and 14 px in from the right edge. */
+  --chest-chevron-image: linear-gradient(to top right, transparent calc(50% - 1.1px), var(--chest-chevron) calc(50% - .55px), var(--chest-chevron) calc(50% + .55px), transparent calc(50% + 1.1px)), linear-gradient(to top left, transparent calc(50% - 1.1px), var(--chest-chevron) calc(50% - .55px), var(--chest-chevron) calc(50% + .55px), transparent calc(50% + 1.1px));
 
   /* Brand and run site (desk-chest). The violet, indigo, lilac and file blue are sampled from the approved
      mark; the gradient from the hero's "where it should be."; the grid line from its paper. */
@@ -55,15 +74,6 @@
   --chest-file-blue: #3c9cfd;
   --chest-blue: #0a6cff;
   --chest-gradient: linear-gradient(104deg, #7b2cfb 0%, #6d33fc 34%, #5a41f6 56%, #1f63fe 74%, #006efe 100%);
-  --chest-ok: #2e8a4c;
-  --chest-ok-soft: #e1f5e6;
-  --chest-warn: #c7861a;
-  --chest-alert: #c93232;
-  --chest-alert-soft: #fdebeb;
-  --chest-font-ui: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --chest-font-doc: 'Times New Roman', Tinos, Times, serif;
-  --chest-font-type: 'Courier New', Courier, monospace;
-  --chest-card-radius: 16px;
   --chest-card-shadow: 0 1px 2px rgba(22, 2, 82, 0.05), 0 22px 44px -22px rgba(38, 28, 110, 0.28);
 
   /* Base's shared documents (Lobby, Run page, 404) take the brand: Inter on white grid paper, ink buttons,
@@ -88,6 +98,7 @@
   --rer-wordmark-tracking: -0.035em;
   --rer-logo: url('/brand/mark.svg');
 }
+
 
 
 /* Base's Run and not-found pages on the run site (src/base/run-site.ts): the landing's grid paper, lockup,
@@ -117,51 +128,54 @@ body:has(> header.bar) .facts a, body:has(> header.bar) .link { text-decoration-
   body:has(> header.bar) .code pre { font-size: 13px; }
 }
 
-/* Sign-in and first-run setup (Base frames, html.rer-themed): the wordmark centred above one 1px ink card,
-   compact heavy heading, ink buttons. html.rer-themed outranks the frames' own .rer-themed rules. */
+
+/* Sign-in and first-run setup (Base frames, html.rer-themed), in the app's look: the lockup above one white card
+   with a hairline border and a soft shadow on faint grid paper, a heavy tight heading, hairline inputs with a
+   violet focus ring and the violet action. html.rer-themed outranks the frames' own .rer-themed rules. */
 html.rer-themed { background: var(--chest-paper); }
-html.rer-themed body { display: block; min-height: 100vh; margin: 0; padding: 24px 20px 64px; background: var(--chest-paper); color: var(--chest-ink); font: 400 16px/1.5 var(--chest-font-sans); -webkit-font-smoothing: antialiased; }
-html.rer-themed main { position: relative; box-sizing: border-box; width: 100%; max-width: 520px; margin: 116px auto 0; padding: 36px 40px 40px; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: var(--chest-radius); box-shadow: none; }
+html.rer-themed body { display: block; min-height: 100vh; margin: 0; padding: 24px 20px 64px; background: linear-gradient(rgba(251, 251, 254, .55), rgba(251, 251, 254, .55)), url('/site/grid.svg') top center / 1536px auto repeat, var(--chest-paper); color: var(--chest-ink); font: 400 15px/1.5 var(--chest-font-ui); -webkit-font-smoothing: antialiased; }
+html.rer-themed main { position: relative; box-sizing: border-box; width: 100%; max-width: 460px; margin: 120px auto 0; padding: 32px 36px 36px; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: 16px; box-shadow: var(--chest-shadow-pop); }
 html.rer-themed main > .brand,
-html.rer-themed main > .rer-brand { position: absolute; left: 0; right: 0; top: -84px; display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0; color: var(--chest-site-ink); font: 750 40px/1 var(--chest-font-ui); letter-spacing: -0.035em; }
+html.rer-themed main > .rer-brand { position: absolute; left: 0; right: 0; top: -82px; display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0; color: var(--chest-ink); font: 800 34px/1 var(--chest-font-ui); letter-spacing: -0.04em; }
 /* The lockup: the violet chest mark (--rer-logo) beside the name. */
 html.rer-themed main > .brand::before,
-html.rer-themed main > .rer-brand::before { width: 46px; height: 46px; }
+html.rer-themed main > .rer-brand::before { width: 40px; height: 40px; }
 html.rer-themed .mark { display: none; }
-html.rer-themed h1 { margin: 0 0 20px; color: var(--chest-ink); font: 800 44px/1.05 var(--chest-font-display); letter-spacing: -0.02em; text-wrap: balance; }
-html.rer-themed h2 { margin: 32px 0 12px; padding-top: 28px; border-top: 1px solid var(--chest-hairline); color: var(--chest-ink); font: 800 28px/1.1 var(--chest-font-display); letter-spacing: -0.02em; }
-html.rer-themed p { margin: 0 0 20px; color: var(--chest-muted); font-size: 16px; }
-html.rer-themed .notice { border-left: 3px solid var(--chest-ink); color: var(--chest-ink); }
-html.rer-themed .secondary-link { margin: 20px 0 0; text-align: center; font-size: 15px; }
+html.rer-themed main { overflow-wrap: anywhere; }
+html.rer-themed :where(pre, code) { white-space: pre-wrap; overflow-wrap: anywhere; }
+html.rer-themed h1 { margin: 0 0 12px; color: var(--chest-ink); font: 800 30px/1.1 var(--chest-font-ui); letter-spacing: -0.035em; text-wrap: balance; }
+html.rer-themed h2 { margin: 28px 0 10px; padding-top: 22px; border-top: 1px solid var(--chest-line); color: var(--chest-ink); font: 700 18px/1.25 var(--chest-font-ui); letter-spacing: -0.015em; }
+html.rer-themed p { margin: 0 0 18px; color: var(--chest-body); font-size: 15px; }
+html.rer-themed .notice { padding: 10px 14px; border: 1px solid var(--chest-line); border-left: 3px solid var(--chest-action); border-radius: var(--chest-radius-sm); background: var(--chest-action-soft); color: var(--chest-ink); }
+html.rer-themed .secondary-link { margin: 18px 0 0; text-align: center; font-size: 14px; }
 html.rer-themed .divider::before,
-html.rer-themed .divider::after { border-color: var(--chest-hairline); }
-html.rer-themed label { margin: 0 0 8px; color: var(--chest-ink); font-size: 15px; font-weight: 500; }
-html.rer-themed input:not([type=checkbox]):not([type=hidden]) { box-sizing: border-box; width: 100%; min-height: 48px; margin: 0 0 16px; padding: 10px 14px; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: var(--chest-radius-input); color: var(--chest-ink); font: 400 15px/1.4 var(--chest-font-mono); }
-html.rer-themed input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--chest-ink); }
-html.rer-themed label:has(input[type=checkbox]) { display: flex; gap: 12px; align-items: flex-start; margin: 0; font-weight: 400; }
+html.rer-themed .divider::after { border-color: var(--chest-line); }
+html.rer-themed label { margin: 0 0 6px; color: var(--chest-ink); font-size: 14px; font-weight: 500; }
+html.rer-themed input:not([type=checkbox]):not([type=hidden]) { box-sizing: border-box; width: 100%; min-height: 44px; margin: 0 0 16px; padding: 10px 12px; background: var(--chest-surface); border: 1px solid var(--chest-line-strong); border-radius: var(--chest-radius-sm); box-shadow: none; color: var(--chest-ink); font: 400 15px/1.4 var(--chest-font-ui); }
+html.rer-themed input:not([type=checkbox]):not([type=hidden]):focus { border-color: var(--chest-action); box-shadow: var(--chest-focus-ring); outline: none; }
+html.rer-themed input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--chest-action); }
+html.rer-themed label:has(input[type=checkbox]) { display: flex; gap: 10px; align-items: flex-start; margin: 0; font-weight: 400; }
 html.rer-themed button,
-html.rer-themed .action { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; padding: 12px 20px; background: var(--chest-ink); border: 1px solid var(--chest-ink); border-radius: var(--chest-radius); box-shadow: none; color: var(--chest-surface); font: 600 16px/1.2 var(--chest-font-sans); text-decoration: none; cursor: pointer; }
+html.rer-themed .action { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 44px; padding: 10px 18px; background: var(--chest-action); border: 1px solid var(--chest-action); border-radius: var(--chest-radius); box-shadow: 0 1px 2px rgba(22, 2, 82, 0.12); color: #fff; font: 600 15px/1.2 var(--chest-font-ui); text-decoration: none; cursor: pointer; }
 html.rer-themed button:hover,
-html.rer-themed .action:hover { background: #2f2f2f; box-shadow: none; }
-html.rer-themed button.secondary { background: transparent; color: var(--chest-ink); border-color: var(--chest-line); }
-html.rer-themed a { color: var(--chest-ink); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+html.rer-themed .action:hover { background: var(--chest-action-hover); border-color: var(--chest-action-hover); }
+html.rer-themed button.secondary { background: var(--chest-surface); color: var(--chest-ink); border-color: var(--chest-line-strong); box-shadow: none; }
+html.rer-themed button.secondary:hover { background: var(--chest-hover); }
+html.rer-themed a { color: var(--chest-action-ink); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 html.rer-themed a:hover { text-decoration-thickness: 2px; }
 html.rer-themed :focus-visible,
-html.rer-themed button:focus-visible,
-html.rer-themed input:focus-visible { outline: var(--chest-focus); outline-offset: 2px; }
-/* First-run setup: the owner facts between hairlines, in mono. */
-html.rer-themed dl { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px 16px; margin: 0 0 24px; padding: 20px 0; border-top: 1px solid var(--chest-hairline); border-bottom: 1px solid var(--chest-hairline); }
-html.rer-themed dt { color: var(--chest-ink); font-size: 15px; }
-html.rer-themed dd { margin: 0; color: var(--chest-ink); font: 400 15px/1.5 var(--chest-font-mono); overflow-wrap: anywhere; }
+html.rer-themed button:focus-visible { outline: 2px solid var(--chest-action); outline-offset: 2px; }
+/* First-run setup: the owner facts between hairlines. */
+html.rer-themed dl { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px 16px; margin: 0 0 22px; padding: 16px 0; border-top: 1px solid var(--chest-line); border-bottom: 1px solid var(--chest-line); }
+html.rer-themed dt { color: var(--chest-muted); font-size: 14px; }
+html.rer-themed dd { margin: 0; color: var(--chest-ink); font: 500 14px/1.5 var(--chest-font-ui); overflow-wrap: anywhere; }
 html.rer-themed form p { margin: 0 0 4px; color: var(--chest-ink); }
 @media (max-width: 480px) {
-  html.rer-themed body { padding: 16px 16px 40px; }
-  html.rer-themed main { margin-top: 88px; }
-  html.rer-themed main { padding: 28px 20px 28px; }
+  html.rer-themed body { padding: 16px 16px 40px; background-size: 960px auto, auto; }
+  html.rer-themed main { margin-top: 92px; padding: 24px 20px; }
   html.rer-themed main > .brand,
-  html.rer-themed main > .rer-brand { top: -68px; font-size: 34px; }
+  html.rer-themed main > .rer-brand { top: -70px; font-size: 30px; }
   html.rer-themed main > .brand::before,
-  html.rer-themed main > .rer-brand::before { width: 38px; height: 38px; }
-  html.rer-themed h1 { font-size: 32px; line-height: 1.1; }
-  html.rer-themed h2 { font-size: 24px; }
+  html.rer-themed main > .rer-brand::before { width: 34px; height: 34px; }
+  html.rer-themed h1 { font-size: 26px; }
 }

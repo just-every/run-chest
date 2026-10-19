@@ -4,7 +4,6 @@ import { list } from '../store'
 import { allowed, everything, start, who } from '../files/access'
 import type { Space } from '../files/model'
 import { esc, field, hidden, select, form, card, stamp } from '../ui-shared'
-import { filesLinks } from '../files/ui-pages'
 import { pathOf } from '../files/exposure'
 import { intakeExecute } from './intake'
 import { intakePage } from './ui-intake'
@@ -15,7 +14,7 @@ import { agentPanel } from './ui-agent'
 import { duplicatesExecute } from './duplicates'
 import { duplicatesPanel } from './ui-duplicates'
 const back='/app/filing', inline={className:'form form-inline',buttonClass:'btn btn-outline'}
-const head=(title:string,lede:string)=>`<div class="page-head"><h1>${esc(title)}</h1><p class="lede">${esc(lede)}</p></div><div class="lib-tools">${filesLinks()}<p class="lib-links"><a class="link" href="/app/filing">Filing activity</a> · <a class="link" href="/app/filing/intake">Email intake</a> · <a class="link" href="/app/filing/rules">Rules &amp; agent</a> · <a class="link" href="/app/filing/duplicates">Duplicates</a></p></div>`
+const head=(title:string,lede:string)=>`<div class="page-head"><h1>${esc(title)}</h1><p class="lede">${esc(lede)}</p></div><div class="lib-tools"><p class="lib-links"><a class="link" href="/app/filing">Filing activity</a> · <a class="link" href="/app/filing/intake">Email intake</a> · <a class="link" href="/app/filing/rules">Rules &amp; agent</a> · <a class="link" href="/app/filing/duplicates">Duplicates</a></p></div>`
 const item=(id:string,name:string)=>`<a class="link" href="/app/items/${esc(id)}">${esc(name)}</a>`
 export async function filingPage(env:Bindings,s:Session,url:URL):Promise<string|null>{
  if(!/^\/app\/filing(\/|$)/.test(url.pathname))return null

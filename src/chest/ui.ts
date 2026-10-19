@@ -21,6 +21,7 @@ import { personName } from './names'
 import { get,list } from './store'
 import { typedValues } from './ui-fields'
 import { page,refusedPage } from './ui-shell'
+import { withRail } from './ui-rail'
 import { auditPage,mappingPage,receiptPage } from './ui-receipts'
 import { library } from './ui-library'
 import { documentPage } from './ui-document'
@@ -45,7 +46,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
  try {
  // Sign out: revoke this session (the auth service checks method and origin), clear the cookie, go to sign-in.
  if(url.pathname==='/app/signout'){insist(request.method==='POST','method_not_allowed',405);const {cookie}=await operatorAuth(env).signOut(request);return new Response(null,{status:303,headers:{...headers,location:'/signin','set-cookie':cookie}})}
- const s=await authenticated(env,request);await syncPeople(env,request,s);await sweep(env);if(request.method==='GET')kick(env);const me={email:s.operator.email,name:s.operator.displayName,role:s.operator.role}
+ const s=await authenticated(env,request);await syncPeople(env,request,s);await sweep(env);if(request.method==='GET')kick(env);const me=await withRail(env,s,url.pathname)
  if(request.method==='POST'&&url.pathname==='/app/action'){
   const fields=await request.formData();const input:any={};for(const [key,value] of fields)if(typeof value==='string')input[key]=value
   const returnTo=input.returnTo||'/app/files';back=returnTo
@@ -84,7 +85,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
  const administrative=await administrationPage(env,s,url);if(administrative)return page(administrative,me,url.pathname)
  const collecting=await collectionPage(env,request,s,url);if(collecting)return page(collecting,me,url.pathname)
  const filing=await filingPage(env,s,url);if(filing)return page(filing,me,url.pathname)
- const files=await filesPage(env,request,s,url);if(files)return 'redirect' in files?new Response(null,{status:303,headers:{...headers,location:files.redirect}}):page(files.body,me,url.pathname)
+ const files=await filesPage(env,request,s,url);if(files)return 'redirect' in files?new Response(null,{status:303,headers:{...headers,location:files.redirect}}):page(files.body,me,url.pathname,files.bar)
  const data=await overview(env,s,url);let body=''
  if(url.pathname==='/app/sso-tested'){insist(s.kind==='oidc','company_signin_required',403);body=card('Company sign-in works',`<p>You are signed in as <strong>${esc(me.name)}</strong> (${esc(me.email)}). The identity provider connection has been tested.</p><p><a class="btn" href="/app/files">Open files</a></p>${me.role==='owner'?'<p><a class="link" href="/app/admin">Back to people &amp; settings</a></p>':'<p>The owner can now turn off email-link sign-in in People &amp; settings.</p>'}`)}
  else if(url.pathname==='/app')return new Response(null,{status:303,headers:{...headers,location:'/app/files'}})

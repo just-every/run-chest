@@ -1,16 +1,17 @@
-// The demo's sample library: Harbourworks, a small build-out contractor, a few months
+// The demo's sample library: Harborworks, a small build-out contractor, a few months
 // into using Chest. Names follow the run-chest.com drawings (Kestrel Freight, Maria Chen,
 // Dan Hale, the Accounts team). Every date is relative to the demo's start.
 import type { Field, Grant } from './chest/model'
 import { pdf } from './demo-pdf'
 
-const domain = 'harbourworks.example'
+const domain = 'harborworks.example'
 export const team = [
   { id: 'demo-maria', email: `maria.chen@${domain}`, name: 'Maria Chen', role: 'admin', status: 'active' },
   { id: 'demo-dan', email: `dan.hale@${domain}`, name: 'Dan Hale', role: 'member', status: 'active' },
   { id: 'demo-priya', email: `priya.natarajan@${domain}`, name: 'Priya Natarajan', role: 'member', status: 'active' },
   { id: 'demo-tom', email: `tom.okafor@${domain}`, name: 'Tom Okafor', role: 'member', status: 'active' },
   { id: 'demo-elena', email: `elena.rossi@${domain}`, name: 'Elena Rossi', role: 'member', status: 'invited' },
+  { id: 'demo-luis', email: `luis.ortega@${domain}`, name: 'Luis Ortega', role: 'member', status: 'active' },
 ] as const
 const [maria, dan, priya, tom] = team.map(person => person.email)
 
@@ -56,17 +57,17 @@ export function documents(owner: string, now: Date): SampleDocument[] {
       fields: { 'policy number': 'PL-448120', insurer: 'Aldgate Mutual', 'cover limit (USD)': 2_000_000 }, reference: { kind: 'supplier', name: 'Kestrel Freight' }, review: 5, expiry: 12,
       versions: [
         { filename: 'kestrel-public-liability-2025.pdf', days: -352, by: maria, reviewer: owner, events: [approve(owner, -350, 'Matches the broker schedule.')],
-          bytes: pdf('Certificate of general liability insurance', ['Insured: Kestrel Freight LLC', 'Policy number: PL-448120', 'Insurer: Aldgate Mutual', 'Each occurrence limit: $2,000,000', `Period: ${on(-353)} to ${on(12)}`, 'Additional interest noted: Harbourworks LLC']) },
+          bytes: pdf('Certificate of general liability insurance', ['Insured: Kestrel Freight LLC', 'Policy number: PL-448120', 'Insurer: Aldgate Mutual', 'Each occurrence limit: $2,000,000', `Period: ${on(-353)} to ${on(12)}`, 'Additional interest noted: Harborworks LLC']) },
         { filename: 'kestrel-public-liability-2026.pdf', days: -2, by: priya, reviewer: owner, events: [{ action: 'comment', by: priya, days: -2, message: 'Renewal from Kestrel, same limit. Starts the day after the current one ends.' }],
-          bytes: pdf('Certificate of general liability insurance', ['Insured: Kestrel Freight LLC', 'Policy number: PL-448120/R1', 'Insurer: Aldgate Mutual', 'Each occurrence limit: $2,000,000', `Period: ${on(13)} to ${on(377)}`, 'Additional interest noted: Harbourworks LLC']) },
+          bytes: pdf('Certificate of general liability insurance', ['Insured: Kestrel Freight LLC', 'Policy number: PL-448120/R1', 'Insurer: Aldgate Mutual', 'Each occurrence limit: $2,000,000', `Period: ${on(13)} to ${on(377)}`, 'Additional interest noted: Harborworks LLC']) },
       ] },
     { id: 'demo-doc-02', title: 'Equipment hire terms', collection: 'demo-col-suppliers', schema: 'demo-type-contract', owner: dan, reviewer: owner,
       fields: { 'contract reference': 'NPH-2291', 'annual value (USD)': 38_400, 'auto-renews': false, 'notice period (days)': 30 }, reference: { kind: 'supplier', name: 'Northgate Equipment Rental' }, review: 20, expiry: 140,
       versions: [
         { filename: 'northgate-hire-terms-v3.pdf', days: -96, by: dan, reviewer: owner, events: [approve(owner, -94)],
-          bytes: pdf('Northgate Equipment Rental - rental terms', ['Customer: Harbourworks LLC    Account: NPH-2291', '1. Minimum rental period is one week.', '4. Delivery and collection within 25 miles included.', '7. Damage waiver: 9% of rental charges.', '11. Either party may end this agreement on 30 days notice.']) },
+          bytes: pdf('Northgate Equipment Rental - rental terms', ['Customer: Harborworks LLC    Account: NPH-2291', '1. Minimum rental period is one week.', '4. Delivery and collection within 25 miles included.', '7. Damage waiver: 9% of rental charges.', '11. Either party may end this agreement on 30 days notice.']) },
         { filename: 'northgate-hire-terms-v4.pdf', days: -6, by: dan, reviewer: owner, events: [{ action: 'changes', by: owner, days: -4, message: 'Clause 7 still has the old damage waiver rate. Please ask Northgate for the corrected copy.' }],
-          bytes: pdf('Northgate Equipment Rental - rental terms', ['Customer: Harbourworks LLC    Account: NPH-2291', '1. Minimum rental period is one week.', '4. Delivery and collection within 30 miles included.', '7. Damage waiver: 9% of rental charges.', '11. Either party may end this agreement on 30 days notice.']) },
+          bytes: pdf('Northgate Equipment Rental - rental terms', ['Customer: Harborworks LLC    Account: NPH-2291', '1. Minimum rental period is one week.', '4. Delivery and collection within 30 miles included.', '7. Damage waiver: 9% of rental charges.', '11. Either party may end this agreement on 30 days notice.']) },
       ] },
     { id: 'demo-doc-03', title: 'Site induction checklist', collection: 'demo-col-safety', schema: 'demo-type-procedure', owner: tom, reviewer: owner,
       fields: { 'procedure code': 'HS-04', 'applies to': 'Everyone arriving on site' }, reference: { kind: 'project', name: 'Riverside Library build-out' }, review: -10, expiry: null,
@@ -82,19 +83,19 @@ export function documents(owner: string, now: Date): SampleDocument[] {
     { id: 'demo-doc-04', title: 'Freight services agreement', collection: 'demo-col-suppliers', schema: 'demo-type-contract', owner: priya, reviewer: maria,
       fields: { 'contract reference': 'KF-HW-0142', 'annual value (USD)': 52_000, 'auto-renews': true, 'notice period (days)': 60 }, reference: { kind: 'supplier', name: 'Kestrel Freight' }, review: 45, expiry: 105,
       versions: [{ filename: 'kestrel-freight-services-agreement.pdf', days: -260, by: priya, reviewer: maria, events: [approve(maria, -258, 'Signed copy, both parties.')],
-        bytes: pdf('Freight services agreement', ['Between Kestrel Freight LLC and Harbourworks LLC', 'Reference: KF-HW-0142', 'Scope: palletized deliveries to Harbourworks sites within 80 miles', 'Charges: per schedule 2, reviewed annually', 'Term: 12 months, renewing automatically unless ended on 60 days notice']) }] },
+        bytes: pdf('Freight services agreement', ['Between Kestrel Freight LLC and Harborworks LLC', 'Reference: KF-HW-0142', 'Scope: palletized deliveries to Harborworks sites within 80 miles', 'Charges: per schedule 2, reviewed annually', 'Term: 12 months, renewing automatically unless ended on 60 days notice']) }] },
     { id: 'demo-doc-05', title: "Employers' liability certificate", collection: 'demo-col-insurance', schema: 'demo-type-insurance', owner: maria, reviewer: owner,
       fields: { 'policy number': 'EL-77310', insurer: 'Thornbury Insurance', 'cover limit (USD)': 1_000_000 }, reference: null, review: 130, expiry: 160,
       versions: [{ filename: 'workers-compensation-2026.pdf', days: -205, by: maria, reviewer: owner, events: [approve(owner, -204)],
-        bytes: pdf("Certificate of workers' compensation and employer's liability insurance", ['Policyholder: Harbourworks LLC', 'Policy number: EL-77310', 'Insurer: Thornbury Insurance', 'Each accident limit: $1,000,000', `Period: ${on(-205)} to ${on(160)}`, "Post the workers' compensation notice where employees can read it."]) }] },
+        bytes: pdf("Certificate of workers' compensation and employer's liability insurance", ['Policyholder: Harborworks LLC', 'Policy number: EL-77310', 'Insurer: Thornbury Insurance', 'Each accident limit: $1,000,000', `Period: ${on(-205)} to ${on(160)}`, "Post the workers' compensation notice where employees can read it."]) }] },
     { id: 'demo-doc-06', title: 'Professional indemnity schedule', collection: 'demo-col-insurance', schema: 'demo-type-insurance', owner: maria, reviewer: owner,
       fields: { 'policy number': 'PI-20931', insurer: 'Aldgate Mutual', 'cover limit (USD)': 2_000_000 }, reference: null, review: -3, expiry: -6,
       versions: [{ filename: 'professional-indemnity-schedule.pdf', days: -371, by: maria, reviewer: owner, events: [approve(owner, -370)],
-        bytes: pdf('Professional liability - declarations page', ['Insured: Harbourworks LLC', 'Policy number: PI-20931', 'Insurer: Aldgate Mutual', 'Limit: $2,000,000 each claim', `Period: ${on(-371)} to ${on(-6)}`]) }] },
+        bytes: pdf('Professional liability - declarations page', ['Insured: Harborworks LLC', 'Policy number: PI-20931', 'Insurer: Aldgate Mutual', 'Limit: $2,000,000 each claim', `Period: ${on(-371)} to ${on(-6)}`]) }] },
     { id: 'demo-doc-07', title: 'Scaffolding subcontract', collection: 'demo-col-suppliers', schema: 'demo-type-contract', owner: dan, reviewer: owner,
       fields: { 'contract reference': 'TS-1187', 'annual value (USD)': 64_750, 'auto-renews': false, 'notice period (days)': 14 }, reference: { kind: 'supplier', name: 'Tallis Scaffolding' }, review: -1, expiry: 75,
       versions: [{ filename: 'tallis-scaffolding-subcontract.pdf', days: -88, by: dan, reviewer: owner, events: [{ action: 'comment', by: owner, days: -87, message: 'Check the inspection schedule is weekly, not fortnightly.' }, approve(owner, -86, 'Weekly inspections confirmed in clause 5.')],
-        bytes: pdf('Subcontract - scaffolding', ['Subcontractor: Tallis Scaffolding LLC', 'Main contractor: Harbourworks LLC', 'Reference: TS-1187', '5. Scaffold inspected and tagged every 7 days and after bad weather', '9. Either party may end this subcontract on 14 days notice']) }] },
+        bytes: pdf('Subcontract - scaffolding', ['Subcontractor: Tallis Scaffolding LLC', 'Main contractor: Harborworks LLC', 'Reference: TS-1187', '5. Scaffold inspected and tagged every 7 days and after bad weather', '9. Either party may end this subcontract on 14 days notice']) }] },
     { id: 'demo-doc-08', title: 'Working at height procedure', collection: 'demo-col-safety', schema: 'demo-type-procedure', owner: tom, reviewer: owner,
       fields: { 'procedure code': 'HS-07', 'applies to': 'Ladders, towers, MEWPs and scaffold' }, reference: null, review: 60, expiry: null,
       versions: [{ filename: 'working-at-height.md', days: -150, by: tom, reviewer: owner, events: [approve(owner, -149)],
@@ -110,15 +111,15 @@ export function documents(owner: string, now: Date): SampleDocument[] {
     { id: 'demo-doc-11', title: 'Construction fence permit: Riverside Library', collection: 'demo-col-projects', schema: 'demo-type-licence', owner: dan, reviewer: owner,
       fields: { 'license number': 'BC-HL-5521', 'issued by': 'Brightwater County', 'issued on': on(-74) }, reference: { kind: 'project', name: 'Riverside Library build-out' }, review: 10, expiry: 18,
       versions: [{ filename: 'construction-fence-permit-riverside.pdf', days: -73, by: dan, reviewer: owner, events: [approve(owner, -72)],
-        bytes: pdf('Permit to place a construction fence in the public right-of-way', ['Permittee: Harbourworks LLC', 'Location: Riverside Library, Mill Street frontage', 'Permit number: BC-HL-5521', 'Issued by: Brightwater County public works', `Valid until: ${on(18)}. Apply for an extension 14 days before expiry.`]) }] },
+        bytes: pdf('Permit to place a construction fence in the public right-of-way', ['Permittee: Harborworks LLC', 'Location: Riverside Library, Mill Street frontage', 'Permit number: BC-HL-5521', 'Issued by: Brightwater County public works', `Valid until: ${on(18)}. Apply for an extension 14 days before expiry.`]) }] },
     { id: 'demo-doc-12', title: 'Brightwater County framework agreement', collection: 'demo-col-projects', schema: 'demo-type-contract', owner: owner, reviewer: maria,
       fields: { 'contract reference': 'BWC-FW-2026-03', 'annual value (USD)': 420_000, 'auto-renews': false, 'notice period (days)': 90 }, reference: { kind: 'customer', name: 'Brightwater County' }, review: 90, expiry: 600,
       versions: [{ filename: 'brightwater-framework-agreement.pdf', days: -180, by: owner, reviewer: maria, events: [approve(maria, -177, 'Countersigned copy received from the council.')],
-        bytes: pdf('Framework agreement - minor works and build-out', ['Customer: Brightwater County', 'Contractor: Harbourworks LLC (Lot 2, interior build-out)', 'Reference: BWC-FW-2026-03', 'Call-off contracts awarded by mini-competition', 'Term: two years from signature; 90 days notice to end']) }] },
+        bytes: pdf('Framework agreement - minor works and build-out', ['Customer: Brightwater County', 'Contractor: Harborworks LLC (Lot 2, interior build-out)', 'Reference: BWC-FW-2026-03', 'Call-off contracts awarded by mini-competition', 'Term: two years from signature; 90 days notice to end']) }] },
     { id: 'demo-doc-13', title: 'Staff handbook', collection: 'demo-col-people', schema: 'demo-type-procedure', owner: maria, reviewer: owner, private: true, grants: [g(maria, 'editor')],
       fields: { 'procedure code': 'HR-01', 'applies to': 'All employees' }, reference: null, review: 200, expiry: null,
       versions: [{ filename: 'staff-handbook.md', days: -140, by: maria, reviewer: owner, events: [approve(owner, -139)],
-        bytes: text(['# Harbourworks staff handbook', '', '## Hours', 'Site days run 07:30 to 16:30, Monday to Friday. The office opens at 08:30.', '', '## Holiday', '25 days plus public holidays. Book through Maria at least two weeks ahead.', '', '## Sickness', 'Call your site lead before 07:00 on the first day.']) }] },
+        bytes: text(['# Harborworks staff handbook', '', '## Hours', 'Site days run 7:30 AM to 4:30 PM, Monday through Friday. The office opens at 8:30 AM.', '', '## Paid time off', '15 days plus federal holidays. Request it through Maria at least two weeks ahead.', '', '## Sick days', 'Call your site lead before 7:00 AM on the first day.']) }] },
     { id: 'demo-doc-14', title: 'Fire risk assessment (2024)', collection: 'demo-col-safety', schema: 'demo-type-procedure', owner: tom, reviewer: owner, trash: -30,
       fields: { 'procedure code': 'HS-02', 'applies to': 'Head office' }, reference: null, review: null, expiry: null,
       versions: [{ filename: 'fire-risk-assessment-2024.txt', days: -500, by: tom, reviewer: owner, events: [approve(owner, -498)],
