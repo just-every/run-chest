@@ -102,3 +102,20 @@
   .stage-flow .scan { height: auto; padding: 2.4em 2em; }
   .stage-flow .receipt-frame { width: 25.6em; height: 29.6em; margin: 0 auto; }
 }
+/* 390 (m01-hero-a, m01-hero-b): Run Chest full width over both links; the collage as one column of whole cards
+   joined by violet arrows, without the three photographs. */
+@media (max-width: 760px) {
+  .hero-actions { display: grid; grid-template-columns: 1fr 1fr; justify-items: center; gap: 2.2em 1.6em; }
+  .hero-actions .btn { grid-column: 1 / -1; justify-self: stretch; }
+  .hero-actions .text-link:first-of-type { justify-self: end; }
+  .hero-actions .text-link:last-of-type { justify-self: start; }
+  .hero .stage-flow > .stage { gap: 4.4em; }
+  .hero .stage-flow .tablet-only { display: none; }
+  .hero .stage-flow .then-down::after { content: ""; position: absolute; left: 50%; bottom: -3.6em; width: 1.6em; height: 2.8em; translate: -50% 0; background: url('/site/arrow-down.svg') center / contain no-repeat; }
+  .hero .stage-flow .at.then-down { position: relative; left: auto !important; top: auto !important; }
+  .stage-flow .clause-text { white-space: normal; }
+  .stage-flow .clause-text br { display: none; }
+  /* The reflowed clauses leave room under each highlight for its name tag. */
+  .stage-flow .clause-2 { margin-top: 4.6em !important; }
+  .stage-flow .contract { padding-bottom: 4.6em; }
+}

@@ -1,0 +1,80 @@
+/* page-06 (1536 × 1024): the sheet window at desk (78, 115), 934 × 575; the three file tiles below from y 705;
+   the copy from x 1065. */
+.pricing { --h: 7.8em; --l: 2.8em; --cw: 46em; min-height: 102.4em; padding: 11.4em 2.4em 10em 7.8em; grid-template-columns: minmax(0, 1fr) var(--cw); column-gap: 5.4em; }
+.pricing-art { position: relative; width: 93.4em; margin: 0; padding-bottom: 22em; }
+.sheet-window { padding: 2.2em 2.4em 1.8em 1.6em; border-radius: 2em; rotate: -0.6deg; }
+.sheet-window > .term-dots { margin: 0 0 1.4em 0.6em; }
+.sheet-top { display: flex; align-items: center; justify-content: space-between; gap: 2em; padding: 0 0.6em 1.6em 1.2em; }
+.sheet-name { display: flex; align-items: center; gap: 1.8em; }
+.sheet-badge { width: 5.6em; height: 5.6em; }
+.sheet-tools { display: flex; align-items: center; gap: 2.4em; color: #3d4150; }
+.sheet-tools .ico { width: 2.4em; height: 2.4em; }
+.sheet-tools i { width: 0.1em; height: 2.6em; background: #dfe1ea; }
+.sheet-body { display: grid; grid-template-columns: minmax(0, 1fr) 26em; gap: 1.2em; }
+.sheet-grid { position: relative; border: 0.1em solid #e3e5ee; border-radius: 0.8em; }
+.sheet-row { display: grid; grid-template-columns: 2.7em 8.65em 5.68em 8.92em minmax(0, 1fr); min-height: 3.03em; border-top: 0.054em solid #e8eaf1; color: #2b2e3a; font-size: max(1.85em, 11px); }
+.sheet-row > * { display: flex; align-items: center; padding: 0 0.8em; border-left: 0.054em solid #e8eaf1; white-space: nowrap; font-size: 1em; }
+.sheet-row > :first-child { justify-content: center; border-left: 0; color: #6d7284; background: #f7f8fb; }
+.sheet-cols { border-top: 0; min-height: 2.6em; background: #f7f8fb; color: #6d7284; }
+.sheet-cols > * { justify-content: center; font-size: max(0.81em, 11px); }
+.sheet-heads { background: #f7f8fb; }
+.sheet-row b { font-weight: 600; color: #11131a; }
+.cell-edit { position: relative; gap: 0.5em; margin: -0.1em; box-shadow: inset 0 0 0 0.11em #8d6cf3; background: #f6f2ff; }
+.cell-edit s { color: #8a8fa0; text-decoration-thickness: 0.06em; }
+.cell-sum { position: relative; box-shadow: inset 0 0 0 0.11em #36b263; background: #effaf2; }
+.sheet-empty { min-height: 3.6em; }
+/* Luis on C2 (his tag in C3, right of $0.85) and Dana on the total (her tag under it), as page-06 draws them. */
+.sheet-grid .cursor { z-index: 3; }
+.cursor-on-unit { left: 37.8em; top: 13.8em; }
+.cursor-on-total { left: 59em; top: 29.3em; }
+.sheet-thread { display: grid; align-content: start; gap: 2.4em; padding: 2em 1.8em; border: 0.1em solid #e3e5ee; border-radius: 1.2em; background: #fff; }
+.thread-note { display: flex; align-items: flex-start; gap: 1.2em; margin: 0; color: #4a4f5e; line-height: 1.5; }
+.thread-note + .thread-note { padding-top: 2.4em; border-top: 0.1em solid #eceef4; }
+.thread-note b { color: #11131a; font-weight: 600; }
+.mention { color: #4b2fe6; font-weight: 550; }
+.thread-note .avatar { width: 3.2em; height: 3.2em; flex: none; font-size: 1.4em; }
+.resolved { justify-self: start; margin-left: 4.4em; padding: 0.6em 1.4em; gap: 0.6em; }
+.resolved .ico { width: 1.6em; height: 1.6em; }
+.sheet-foot { display: flex; align-items: center; gap: 1.2em; margin: 1.8em 0 0 1.2em !important; }
+.dot-live { width: 1.3em; height: 1.3em; border-radius: 50%; background: #34c06a; }
+.kinds { position: absolute; left: 9.6em; top: auto; bottom: 0; display: flex; gap: 2.2em; margin: 0; padding: 0; list-style: none; }
+.kinds li { display: grid; justify-items: center; align-content: center; gap: 1.8em; width: 21.2em; height: 17.6em; padding: 1.6em 0.8em; border-radius: 1.4em; text-align: center; }
+.kinds li:nth-child(1) { rotate: 4deg; } .kinds li:nth-child(2) { rotate: -2deg; translate: 0 -0.8em; } .kinds li:nth-child(3) { rotate: -3deg; translate: 0 -2em; }
+.kinds .app-file { width: 8em; height: 8.8em; }
+.kinds-arrow { position: absolute; left: 44em; bottom: 17.4em; width: 7em; height: 8em; fill: none; stroke: #4b2fe6; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.kinds-ticks-l { left: 5.6em; bottom: 13.8em; }
+.kinds-ticks-r { left: 79em; bottom: 15.6em; }
+@media (max-width: 1279px) {
+  .pricing-art { width: auto; max-width: 93.4em; padding-bottom: 0; }
+  .sheet-window { rotate: none; }
+  .kinds { position: static; justify-content: center; margin-top: 2.4em; }
+  .kinds-arrow, .kinds-ticks-l, .kinds-ticks-r { display: none; }
+}
+@media (max-width: 1279px) {
+  .sheet-body { grid-template-columns: 1fr; }
+  /* The grid is narrower here: Dana points at the total from its right edge, her tag hanging back under it. */
+  .cursor-on-total { left: auto; right: 3.4em; }
+  .cursor-on-total b { left: auto; right: 1.4em; }
+}
+@media (max-width: 1000px) {
+  .sheet-tools { display: none; }
+}
+@media (max-width: 760px) {
+  .sheet-window { padding: 1.6em 1.2em 1.4em; }
+  .sheet-top { padding: 0 0 1.2em; }
+  .sheet-name { gap: 1.2em; }
+  .sheet-badge { width: 4.4em; height: 4.4em; }
+  .sheet-name .f26 { font-size: 2.2em; }
+  .sheet-row { font-size: 1.3em; grid-template-columns: 1.7em minmax(0, 1.25fr) minmax(0, 0.55fr) minmax(0, 1.05fr) minmax(0, 1.12fr); min-height: 3em; }
+  .sheet-row > * { padding: 0 0.4em; }
+  .sheet-grid .cursor { display: none; }
+  .sheet-row > * { white-space: normal; line-height: 1.2; }
+  .sheet-cols > * { font-size: max(0.93em, 13px); }
+  .cell-edit { flex-direction: column; justify-content: center; align-items: flex-start; gap: 0; line-height: 1.15; }
+  .sheet-thread { padding: 1.6em 1.4em; gap: 1.6em; }
+  .thread-note + .thread-note { padding-top: 1.6em; }
+  .kinds { gap: 1em; }
+  .kinds li { width: auto; flex: 1; height: auto; padding: 1.6em 0.8em; gap: 1em; rotate: none !important; translate: none !important; }
+  .kinds .app-file { width: 5.2em; height: 5.8em; }
+  .kinds .f15 { font-size: 1.3em; }
+}

@@ -1,0 +1,45 @@
+/* page-09 (1536 × 1024): the copy centred from desk y 100; the card at (260, 330), 1017 wide. The desk drew a plain
+   checklist; BUILD-NOTES asked for its own form: the signed version's recipients first, then the exceptions. */
+.close-out { --h: 7.8em; --l: 2.95em; min-height: 102.4em; padding: 10em 8em 7em; row-gap: 4.6em; }
+.close-card { width: 101.7em; margin: 0; padding: 3.4em 1.6em 1.6em; border-radius: 2.2em; text-align: left; }
+.close-head { display: flex; align-items: center; gap: 2em; margin: 0 0 2.6em 2.8em; }
+.close-card .sparkle { width: 3.6em; height: 3.6em; color: #7c48fd; }
+.signed { display: grid; grid-template-columns: 22em 4em minmax(0, 1fr); align-items: center; padding: 2.4em 2.4em; border: 0.1em solid #eceef4; border-radius: 1.6em; background: #fbfaff; }
+.signed-doc { display: flex; align-items: center; gap: 1.4em; padding: 1.4em 1.6em; border-radius: 1.2em; background: #fff; box-shadow: 0 0 0 0.1em #e2dcfd, 0 1.2em 2.4em -1.6em rgba(60, 30, 180, 0.4); }
+.signed-doc .stack { gap: 0.2em; }
+.signed-fan { height: 0.2em; background: linear-gradient(90deg, #b9a8fb, #7c48fd); border-radius: 1em; }
+.recipients { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1em; margin: 0; padding: 0; list-style: none; }
+.recipients li { display: grid; justify-items: center; gap: 0.3em; padding: 1.4em 0.6em 1.4em; border: 0.1em solid #eceef4; border-radius: 1.2em; background: #fff; text-align: center; }
+.recipients li.is-fixed { border-color: #f4d9a2; background: #fff8ea; }
+.recipients .avatar { width: 4em; height: 4em; margin-bottom: 0.6em; font-size: 1.8em; }
+.recipients .chip { margin-top: 0.8em; }
+.chip-amber { background: #fcebc4; color: #8a5a00; }
+.chip-to { width: 1.1em; height: 1.1em; }
+.close-lists { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6em; margin-top: 1.6em; }
+.list-label { margin: 0 0 0.9em 1.2em !important; color: #6d7284; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+.close-rows { display: grid; gap: 0.8em; margin: 0; padding: 0; list-style: none; }
+.close-rows li { display: flex; align-items: center; gap: 1.6em; min-height: 6.4em; padding: 0.8em 2em; border: 0.1em solid #eceef4; border-radius: 1.2em; color: #22252f; }
+.close-rows.is-amber li { border-color: #f6e6c2; background: #fffaf0; }
+.close-rows .ico, .close-done .ico { width: 3.2em; height: 3.2em; color: #2fb35e; flex: none; }
+.close-done { display: flex; align-items: center; gap: 2em; min-height: 8em; margin: 1.6em 0 0 !important; padding: 0 2.8em; border-radius: 1.2em; background: #e9f7ee; color: #11131a; }
+.close-done b { font-weight: 650; }
+@media (max-width: 1279px) {
+  .close-card { width: 100%; max-width: 76em; }
+  .signed { grid-template-columns: 1fr; row-gap: 1.6em; }
+  .signed-fan { width: 0.2em; height: 2em; justify-self: center; }
+  .signed-doc { justify-self: center; }
+}
+@media (max-width: 1100px) {
+  .close-lists { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .close-card { padding: 2.4em 0.8em 0.8em; }
+  .close-head { align-items: flex-start; gap: 1.2em; margin: 0 1.2em 2em; }
+  .close-head .f26 { font-size: 2.1em; }
+  .close-card .sparkle { width: 2.8em; height: 2.8em; }
+  .signed { padding: 1.6em 1.2em; }
+  .recipients { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .recipients li:last-child { grid-column: 1 / -1; }
+  .close-rows li { padding: 1.2em 1.4em; gap: 1.2em; min-height: 0; }
+  .close-done { padding: 1.6em 1.4em; gap: 1.2em; min-height: 0; }
+}

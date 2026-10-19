@@ -47,3 +47,7 @@ body.site {
   .btn { min-height: 52px; font-size: 18px; padding: 0 26px; }
   .text-link { font-size: 16px; }
 }
+/* On the homepage at phone width the header keeps the lockup and Docs, as m01-hero-a draws it (Source stays in the footer). */
+@media (max-width: 520px) {
+  .site-header:has(+ .landing) nav a:not([href="/docs"]) { display: none; }
+}

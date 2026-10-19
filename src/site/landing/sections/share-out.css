@@ -1,0 +1,37 @@
+/* page-07 (1536 × 620): the copy centred from desk y 80; three cards at y 273, 430 wide, x 54 / 551 / 1051. */
+.share-out { --h: 7.7em; --l: 2.4em; min-height: 62em; padding: 7.8em 5.2em 7em; row-gap: 4.2em; }
+.share-cards { display: grid; grid-template-columns: minmax(0, 1fr) 6.6em minmax(0, 1fr) 6.6em minmax(0, 1fr); align-items: stretch; width: 100%; margin: 0; text-align: left; }
+.share-card { display: flex; flex-direction: column; min-height: 27.7em; padding: 2.4em 2.4em 2.6em; border-radius: 1.6em; }
+.share-next { align-self: center; width: 4.8em; height: 2.4em; justify-self: center; fill: none; stroke: #6a3cf0; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.pack-rows { margin: 1.2em 0 0; }
+.pack-rows div { display: flex; align-items: baseline; gap: 0.8em; padding: 0.9em 0; border-top: 0.1em solid #eceef4; }
+.pack-rows div:last-child { border-bottom: 0.1em solid #eceef4; }
+.pack-rows dt::after { content: " ·"; }
+.pack-rows dd { margin: 0; white-space: nowrap; }
+.revoke { align-self: flex-start; margin-top: 1.4em; padding: 0.7em 1.4em; border: 0.1em solid #f0a5ad; border-radius: 0.7em; background: #fdecee; color: #d23646; font-weight: 600; }
+.request-ask { margin-top: 1.2em !important; }
+.request-ask + p { margin-top: 0.4em !important; }
+.request-files { margin: 1.4em 0 0; padding: 0; list-style: none; }
+.request-files li { display: flex; align-items: center; gap: 2em; padding: 1.1em 0.4em; border-top: 0.1em solid #eceef4; }
+.request-files li:last-child { border-bottom: 0.1em solid #eceef4; }
+.request-files .ico { width: 2.6em; height: 2.6em; color: #2fa65a; }
+.received { margin-top: 1.4em; color: #23864a; font-weight: 650; }
+.upload-bar { position: relative; display: block; height: 1.3em; margin: 2.8em 0 2.4em; border-radius: 1em; background: #e8ebf3; }
+.upload-bar i { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, #2f6df6, #2a86f6); }
+.upload-bar em { position: absolute; left: 61%; top: -0.5em; width: 0.25em; height: 2.3em; border-radius: 0.2em; background: #e0303f; box-shadow: 0 0 0 0.15em #fff; }
+.upload-drop { color: #d23646; }
+.upload-resumed { margin-top: 0.8em !important; color: #23864a; }
+.upload-dest { margin-top: 0.8em !important; }
+@media (max-width: 1279px) {
+  .share-cards { grid-template-columns: 1fr; justify-items: stretch; row-gap: 0.8em; max-width: 56em; }
+  .share-card { min-height: 0; }
+  .share-next { rotate: 90deg; width: 3.6em; height: 1.8em; margin: 0.6em 0; }
+}
+@media (max-width: 760px) {
+  .share-card { padding: 2em 1.8em; }
+  .pack-rows div { justify-content: space-between; }
+  .pack-rows dt::after { content: none; }
+  .pack-rows dd { text-align: right; }
+  .request-files li { gap: 1.2em; padding: 1em 1.2em; border: 0.1em solid #eceef4; border-radius: 0.9em; background: #fafbfd; }
+  .request-files li + li { margin-top: 0.8em; }
+}

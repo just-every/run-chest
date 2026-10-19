@@ -1,0 +1,84 @@
+/* page-05 (1536 × 1024): the copy from desk x 74; the drawing from x 590, with the critic's fix: a flat Finder
+   card with the sync popover in place of the laptop render, and the phone at the dock time, 4:18 PM. */
+.road { --h: 7.5em; --l: 2.5em; --cw: 49em; min-height: 102.4em; padding: 10em 3.6em 10em 7.4em; grid-template-columns: var(--cw) minmax(0, 1fr); column-gap: 2em; }
+.road-art { position: relative; width: 91em; height: 80em; margin: 0 0 0 auto; }
+.menubar { position: absolute; left: 0; top: 1em; width: 52em; height: 4em; display: flex; align-items: center; justify-content: flex-end; gap: 1.6em; padding: 0 2em; border-radius: 1.2em; background: rgba(232, 230, 255, 0.7); border: 0.1em solid #e1defa; color: #1f2130; }
+.menubar .ico { width: 2.2em; height: 2.2em; }
+.menubar-chest { display: grid; place-items: center; width: 3.4em; height: 2.8em; border-radius: 0.7em; background: rgba(255, 255, 255, 0.9); color: #4b2fe6; }
+.battery { position: relative; width: 2.6em; height: 1.3em; border: 0.15em solid currentColor; border-radius: 0.35em; }
+.battery::after { content: ""; position: absolute; inset: 0.15em 0.6em 0.15em 0.15em; border-radius: 0.1em; background: currentColor; }
+.popover { position: absolute; left: 13em; top: 6.8em; width: 39em; padding: 1.2em 1.4em 0; border-radius: 1.6em; z-index: 2; }
+.popover::before { content: ""; position: absolute; top: -0.8em; left: 23.6em; width: 1.6em; height: 1.6em; rotate: 45deg; background: #fff; border-left: 0.1em solid #e6e7f1; border-top: 0.1em solid #e6e7f1; }
+.pop-row { display: flex; align-items: center; gap: 1.2em; min-height: 4.8em; margin: 0; padding: 0 1em; color: #2b2e3a; }
+.pop-row + .pop-row { border-top: 0.1em solid #eef0f5; }
+.pop-row b { color: #11131a; font-weight: 600; }
+.pop-ok { width: 2.4em; height: 2.4em; color: #2fa65a; }
+.pop-cloud { width: 2.4em; height: 2.4em; color: #3a6ff2; }
+.pop-conflict { border-radius: 0.9em; background: #fdecee; color: #c42b3a; }
+.pop-conflict + .pop-row { border-top: 0; }
+.pop-alert { display: grid; place-items: center; width: 2.2em; height: 2.2em; border-radius: 50%; background: #e0303f; color: #fff; font: 700 max(1.3em, 11px)/1 var(--chest-font-ui); flex: none; }
+.tile-xs { width: 2.4em; height: 2.4em; border-radius: 0.5em; }
+.tile-xs svg { width: 1.8em; height: 1.8em; }
+.pop-foot { margin: 0.4em -1.4em 0; padding: 1.2em 2.4em 1.4em; border-top: 0.1em solid #eef0f5; }
+.finder { position: absolute; left: 0; top: 43em; width: 52em; border-radius: 1.6em; overflow: hidden; }
+.finder-bar { display: flex; align-items: center; gap: 1.6em; height: 4.6em; padding: 0 1.8em; border-bottom: 0.1em solid #eceef4; background: #f8f8fc; }
+.finder-bar .term-dots { margin: 0 !important; }
+.finder-nav { width: 2em; height: 2em; color: #8a8fa0; }
+.finder-body { display: grid; grid-template-columns: 14em minmax(0, 1fr); }
+.finder-side { display: grid; align-content: start; gap: 1em; padding: 1.8em 1.6em; background: #f8f8fc; border-right: 0.1em solid #eceef4; }
+.finder-label { margin-top: 0.6em; font-weight: 600; }
+.finder-chest { display: flex; align-items: center; gap: 0.6em; margin: 0 -0.6em; padding: 0.4em 0.6em; border-radius: 0.6em; background: #e9e2ff; color: #3d1fc4; font-weight: 550; }
+.finder-chest img { width: 1.8em; height: 1.8em; }
+.finder-list { margin: 0; padding: 0.8em 1.2em 1.2em; list-style: none; }
+.finder-list li { border-radius: 0.8em; }
+.finder-row { display: flex; align-items: center; gap: 1.2em; min-height: 4em; padding: 0 1em; }
+.finder-row .tile-folder { color: #4c9bf8; }
+.finder-row .tile-image { background: #ece6ff; color: #8a6cf6; }
+.finder-row .f13 { white-space: nowrap; }
+.is-selected { background: #f3f0ff; }
+.state-local { width: 2em; height: 2em; color: #2fa65a; }
+.state-cloud { width: 2.2em; height: 2.2em; color: #6d7284; }
+.finder-menu { display: flex; flex-wrap: wrap; gap: 0.8em; padding: 0 1em 1.1em 4.6em; }
+.finder-menu span { padding: 0.4em 1em; border: 0.1em solid #e3e0f4; border-radius: 0.6em; background: #fff; color: #3a3e4c; white-space: nowrap; }
+.finder-menu .is-hot { border-color: #5a2ce8; background: #5a2ce8; color: #fff; }
+.road-arrow { position: absolute; left: 50em; top: 1.6em; width: 9em; height: 6em; fill: none; stroke: #6a3cf0; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.phone { position: absolute; left: 55em; top: 8em; width: 36em; padding: 1.1em; border-radius: 5.4em; background: #1d1c24; box-shadow: 0 0 0 0.25em #c9c6d6, 0 3em 5em -2.6em rgba(30, 20, 80, 0.55); }
+.phone-screen { padding: 1.6em 0.8em 2.4em; border-radius: 4.4em; background: #fff; }
+.phone-status { display: flex; align-items: center; justify-content: space-between; padding: 0 2.4em; margin: 0; }
+.island { width: 9.6em; height: 2.8em; border-radius: 999px; background: #121117; }
+.phone-icons { display: flex; align-items: center; gap: 0.6em; color: #11131a; }
+.phone-icons .ico { width: 1.8em; height: 1.8em; }
+.bars { width: 1.8em; height: 1.2em; background: linear-gradient(90deg, currentColor 0 18%, transparent 18% 27%, currentColor 27% 45%, transparent 45% 54%, currentColor 54% 72%, transparent 72% 81%, currentColor 81%); clip-path: polygon(0 75%, 100% 0, 100% 100%, 0 100%); }
+.phone-back { width: 2.6em; height: 2.6em; margin: 1.6em 0 0 1.2em; color: #2f6df6; }
+.phone-title { margin: 0.4em 0 1.2em 1.2em; color: #0b0b12; font: 750 2.8em/1.1 var(--chest-font-ui); letter-spacing: -0.03em; }
+.dock-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.3em; }
+.dock-photo { position: relative; display: block; aspect-ratio: 0.72; overflow: hidden; background: #d8d4cc; }
+.dock-grid .dock-photo:first-child { border-top-left-radius: 0.6em; }
+.dock-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.dock-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 1.6em 0.4em 0.4em; background: linear-gradient(transparent, rgba(0, 0, 0, 0.55)); color: #fff; letter-spacing: -0.02em; white-space: nowrap; }
+.phone-progress { display: block; height: 1.1em; margin: 2em 1.2em 1em; border-radius: 1em; background: #e8ebf3; overflow: hidden; }
+.phone-progress i { display: block; width: 93.75%; height: 100%; border-radius: inherit; background: #2f6df6; }
+.phone-note { margin: 0 1.2em; }
+@media (max-width: 1279px) {
+  .road-art { width: auto; height: auto; margin: 0; display: flex; flex-direction: column; gap: 2em; max-width: 52em; }
+  .menubar, .popover, .finder, .phone { position: static; width: auto; }
+  .road-arrow { display: none; }
+  .phone { order: -2; width: 100%; max-width: 36em; align-self: center; }
+  .menubar { order: -1; }
+  .popover::before { left: auto; right: 9.6em; }
+  .popover { position: relative; left: auto; top: auto; margin-top: -0.8em; }
+}
+@media (max-width: 760px) {
+  .menubar { gap: 1.2em; padding: 0 1.4em; }
+  .menubar-date { display: none; }
+  .popover { padding: 0.8em 0.8em 0; }
+  .pop-row { align-items: flex-start; padding: 1.1em 0.8em; min-height: 0; }
+  .pop-foot { margin: 0.4em -0.8em 0; padding: 1.1em 1.6em 1.3em; }
+  .finder-body { grid-template-columns: 1fr; }
+  .finder-side { display: none; }
+  .finder-row { flex-wrap: wrap; row-gap: 0.2em; padding: 0.8em 0.8em; }
+  .finder-menu { padding-left: 4.4em; }
+  .phone { padding: 0.8em; }
+  .phone-screen { padding-left: 0.4em; padding-right: 0.4em; }
+  .dock-caption { padding: 1.6em 0.25em 0.3em; letter-spacing: -0.035em; }
+}

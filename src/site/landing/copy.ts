@@ -1,5 +1,6 @@
-// Every line of the homepage's copy, exactly as the owner accepted it on the desk (desk-chest/README.md and
-// page-01 … page-09). docs/CLAIMS.md maps each capability claim to the code that backs it.
+// Every line of the homepage's copy, as the owner accepted it on the desk (desk-chest/README.md and page-s1/
+// page-01 … page-11), with the build's fixes from page-s1/BUILD-NOTES.md. docs/CLAIMS.md maps each capability
+// claim to the code that backs it. A "\n" is the desk's line break on wide screens and a space on phones.
 
 export const heroCopy = {
   sub: 'Chest stores, syncs and shares your team’s files,\nreads every scan, and quietly files what arrives.',
@@ -7,27 +8,24 @@ export const heroCopy = {
   demo: 'https://demo.run-chest.com/',
 }
 
-export const featureCopy = {
-  sync: { eyebrow: 'Sync', ink: 'On every\n', grad: 'desk and phone.', lead: 'Files stay in sync on Mac, Windows, iPhone and Android,\nand open on demand without filling your disk.' },
-  sharing: { eyebrow: 'Sharing', ink: 'Share\n', grad: 'without worry.', lead: 'Links with a password, an expiry and a download limit.\nRevoke any link in one click, or ask anyone to upload\nwith a file request.' },
-  search: { eyebrow: 'Search', ink: 'Find the sentence,\n', grad: 'not just the file.', lead: 'Chest reads every document and scan, so search\nfinds the words inside, and only shows what you\nare allowed to see.' },
-  together: { eyebrow: 'Work together', ink: 'Open it and\n', grad: 'edit together.', lead: 'Word, Excel and PowerPoint files open right\nin the browser. Edit at the same time, comment,\nand keep one copy.' },
-  versions: { eyebrow: 'Versions', ink: 'Every', grad: 'version,\nkept.', lead: 'Go back to any earlier version of a file or a whole\nfolder, and see who changed what. Approvals stay\nwith the exact version signed off.' },
-  agents: { eyebrow: 'Agents', ink: 'Files that\n', grad: 'file themselves.', lead: 'Agents file what arrives from email and apps,\nmerge duplicates, and flag links shared too widely.' },
-  moveIn: { eyebrow: 'Move in', ink: 'Bring', grad: 'everything\nwith you.', lead: 'Move from Google Drive, Dropbox or Box with\nfolders, permissions, versions and shared links.\nLinks inside your files point to the new copies, and\nany old link opens its new home in Chest.' },
-  teams: { eyebrow: 'For teams', ink: 'Your team,\n', grad: 'your rules.', lead: 'Single sign-on, automatic user setup,\nteam spaces and storage limits, all in one place.' },
-  ownership: { eyebrow: 'Ownership', ink: 'Yours,\n', grad: 'start to finish.', lead: 'Run Chest on your own computer or server\nand keep every file. Export everything, any time.' },
-} as const
+export type SectionCopy = { eyebrow: string; ink: string; grad: string; lead: string }
 
-export const ownershipList = ['Your own storage', 'Your own computer or server', 'Export any time'] as const
+/** One supplier's folder, Sat Sep 26 to the renewal: each section's date eyebrow, two-tone heading and lead. */
+export const sectionCopy = {
+  moveIn: { eyebrow: 'Sat, Sep 26 · Move in', ink: 'Bring everything\n', grad: 'with you.', lead: 'Move from Dropbox, Google Drive or Box. Folders,\npermissions, versions and shared links come across.' },
+  folder: { eyebrow: 'One supplier, end to end', ink: 'Follow ', grad: 'one folder.', lead: 'Acme Supply joined in October. Everything about them lives here.' },
+  arrivals: { eyebrow: 'Fri, Oct 2 · Arrivals', ink: 'Files that\n', grad: 'file themselves.', lead: 'The Chest agent reads what arrives\nby email and from apps, names it,\nfiles it and closes links shared\ntoo widely.' },
+  road: { eyebrow: 'Fri, Oct 9 · On the road', ink: 'On every desk\n', grad: 'and phone.', lead: 'Files open on demand on Mac and\nWindows, photos upload from the\nphone, and edits made offline come\nhome safely.' },
+  pricing: { eyebrow: 'Wed, Oct 14 · Pricing', ink: 'Open it and\n', grad: 'edit together.', lead: 'Word, Excel and PowerPoint files\nopen in the browser. Edit at the\nsame time, comment, and keep\none copy.' },
+  shareOut: { eyebrow: 'Tue, Oct 20 · Contract out', ink: 'Share out. ', grad: 'Collect in.', lead: 'Send a link with a password and an expiry, and ask for files back without an account.' },
+  signOff: { eyebrow: 'Wed, Oct 28 · Sign-off', ink: 'Every version,\n', grad: 'kept.', lead: 'Restore any earlier version in one click.\nA sign-off stays with the exact version\nthat was approved.' },
+  closeOut: { eyebrow: 'Mon, Nov 30 · Close out', ink: 'The right version ', grad: 'reached everyone.', lead: 'The agent checks that everyone has the signed version, and that nothing is left open.' },
+  renewal: { eyebrow: 'Oct 2027 · Renewal', ink: 'Find the sentence\n', grad: 'inside the file.', lead: 'Chest reads every document and scan,\nso search finds the words inside, and\nonly shows what you are allowed to see.' },
+} satisfies Record<string, SectionCopy>
 
-export const details = [
-  { icon: 'fileCheck', tone: 'lilac', title: 'Exact-version approvals', body: 'Sign-off sticks to the version that was approved.', mark: 'ticks' },
-  { icon: 'upload', tone: 'sky', title: 'File requests', body: 'Anyone can upload to the folder you choose.', mark: 'curl' },
-  { icon: 'cloudUp', tone: 'peach', title: 'Large files', body: 'Big uploads resume where they stopped.', mark: 'ticks' },
-  { icon: 'trash', tone: 'sky', title: 'Trash you can undo', body: 'Deleted files come back until you choose to erase them.', mark: 'undo' },
-  { icon: 'eye', tone: 'lilac', title: 'Previews', body: 'Documents, video and design files open in the browser.', mark: 'ticks' },
-  { icon: 'list', tone: 'peach', title: 'Activity log', body: 'Every view, share and change, recorded.', mark: 'ticks' },
-] as const
-
-export const closingCopy = { line: 'Open source file storage for your whole team.', licence: 'Free and open source, MIT licensed.' }
+export const closingCopy = {
+  limitsTitle: 'Not in Chest yet.',
+  limits: 'No Linux desktop app, and no editor for CAD, video or design files.',
+  line: 'Open source file storage for your whole team.',
+  licence: 'Free and open source, MIT licensed.',
+}

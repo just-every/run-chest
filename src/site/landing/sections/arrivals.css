@@ -1,0 +1,50 @@
+/* page-04 (1536 × 1024): sources at desk x 40, the mascot at (235, 345), the agent's log at (570, 147), 434 wide;
+   the copy from x 1065. */
+.arrivals { --h: 6.7em; --l: 2.75em; --cw: 47em; min-height: 102.4em; padding: 12em 1.8em 12em 3.6em; grid-template-columns: minmax(0, 1fr) var(--cw); column-gap: 5em; }
+.arrivals-art { display: flex; align-items: center; gap: 1em; margin: 0; }
+.intake { position: relative; width: 47em; height: 50em; flex: none; }
+.sources { position: absolute; left: 0; top: 4em; display: grid; gap: 6.4em; margin: 0; padding: 0; list-style: none; }
+.source-card { display: grid; justify-items: center; gap: 0.6em; width: 10.8em; padding: 2em 0 1.4em; border-radius: 2em; color: #1b1d26; font-weight: 550; }
+.source-card .ico { width: 5em; height: 5em; color: #2b1f7a; stroke-width: 1.5; }
+.intake-paths { position: absolute; left: 11.4em; top: 2em; width: 22em; height: 46em; fill: none; stroke: #7c4cf0; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 7 7; }
+.intake-paths path:last-child { stroke-dasharray: none; }
+.mascot { position: absolute; left: 18.6em; top: 19.6em; width: 28.4em; height: 28.4em; filter: drop-shadow(0 2em 2.4em rgba(80, 40, 220, 0.18)); }
+.mascot-glow { position: absolute; left: 17em; top: 44.6em; width: 31em; height: 6em; border-radius: 50%; background: radial-gradient(closest-side, rgba(124, 72, 253, 0.28), transparent); }
+.agent-log { width: 47.6em; flex: none; padding: 2.6em 1.2em 1.2em; border-radius: 2em; }
+.agent-head { display: flex; align-items: center; gap: 2em; padding: 0 2em 2em; }
+.agent-head .stack { gap: 0.3em; }
+.sparkle { width: 4em; height: 4em; color: #7c48fd; }
+.agent-log ul { display: grid; gap: 0.8em; margin: 0; padding: 0; list-style: none; }
+.agent-log li { display: flex; gap: 2.2em; padding: 2em 1.4em 1.6em 2em; border: 0.1em solid #eceef4; border-radius: 1.4em; background: #fff; }
+.agent-log li.is-flag { background: #fff6e4; border-color: #f7e3b8; }
+.agent-log .tile { width: 4.2em; height: 4.2em; border-radius: 0.8em; }
+.agent-log .tile-sheet { background: #1e9e57; color: #fff; }
+.agent-log .tile-sheet svg { width: 2.6em; height: 2.6em; }
+.arrival-text { display: grid; gap: 0.35em; min-width: 0; flex: 1; }
+.arrival-done { display: flex; align-items: center; gap: 1em; margin-top: 0.9em; }
+.arrival-done > .ico { width: 2.4em; height: 2.4em; color: #2fa65a; flex: none; }
+.arrival-done .mid { flex: 1; min-width: 0; }
+.arrival-done .undo { margin-left: auto; color: #3a3e4c; text-decoration: underline; text-underline-offset: 0.2em; }
+@media (max-width: 1279px) {
+  .arrivals-art { flex-direction: column; align-items: stretch; gap: 2.4em; max-width: 60em; }
+  .intake { width: auto; height: auto; display: flex; align-items: center; justify-content: space-between; gap: 1.6em; }
+  .sources { position: static; display: flex; gap: 1.2em; }
+  .source-card { width: 9.6em; padding: 1.4em 0 1.1em; }
+  .source-card .ico { width: 3.6em; height: 3.6em; }
+  .intake-paths, .mascot-glow { display: none; }
+  .mascot { position: static; width: 18em; height: 18em; }
+  .agent-log { width: auto; }
+}
+@media (max-width: 760px) {
+  .intake { flex-direction: column-reverse; }
+  .sources { width: 100%; justify-content: space-between; }
+  .source-card { flex: 1; width: auto; }
+  .mascot { width: 16em; height: 16em; }
+  .agent-log { padding: 2em 0.8em 0.8em; }
+  .agent-head { padding: 0 1.2em 1.6em; gap: 1.4em; }
+  .agent-log li { gap: 1.4em; padding: 1.6em 1.2em 1.4em; }
+  .agent-log .tile { width: 3.6em; height: 3.6em; }
+  .arrival-done { align-items: flex-start; }
+  .arrival-done > .ico { margin-top: -0.1em; }
+}
+.to-ico { display: inline-block; width: 1.2em; height: 1.2em; margin-right: 0.35em; vertical-align: -0.18em; color: #4a4f5e; }

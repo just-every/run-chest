@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Homepage.** run-chest.com follows the owner-approved page structure (page-s1): after the hero, one supplier's folder from the move-in on Sat, Sep 26 to the renewal (Follow one folder, Files that file themselves, On every desk and phone, Open it and edit together, Share out. Collect in., Every version, kept., The right version reached everyone., Find the sentence inside the file.), then the closing. The shared twelve-section skeleton is gone. `docs/CLAIMS.md` maps every claim on the new page to its clauses and code.
+
 ## 0.2.0 (18 Oct 2026)
 
 Chest 0.2.0 is a team file store you own: a free, open source (MIT) replacement for the everyday file storage and sharing of Google Drive, Dropbox or Box. It runs on your own computer or in your own Cloudflare account, keeps every file and record in your own storage, and charges nothing. The governed records Library from 0.1.0 is still there, at **Library**.

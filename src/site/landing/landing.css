@@ -1,53 +1,57 @@
 /* The homepage's frame. The desk drew it at 1536 px wide; .landing's 1em is 10 of those pixels, so every
-   section keeps the desk's proportions from 1280 px up (and stops growing past 1536). Below 1280 px the desk's
-   smallest labels would fall under 11 px, so each section reflows to a column: copy, then its drawing as whole
-   cards. */
+   section keeps the desk's proportions from 1280 px up (and stops growing past 1536). Below 1280 px each section
+   reflows to a column at one desk pixel to one CSS pixel: copy, then its drawing as whole cards. */
 .landing { --desk: min(10px, calc(100vw / 153.6)); font-size: var(--desk); max-width: 153.6em; margin: 0 auto; }
 .landing .stage { --art: var(--desk); }
 
 .two-tone { width: fit-content; background: var(--chest-gradient); background-size: 100% 100%; -webkit-background-clip: text; background-clip: text; color: transparent !important; -webkit-text-fill-color: transparent; }
 .two-tone .ink-part { color: var(--chest-site-ink); -webkit-text-fill-color: var(--chest-site-ink); }
+/* A section heading's second part carries the gradient on its own, line by line, as the desk paints it. */
+.grad-part { background: var(--chest-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 
-.feature { position: relative; }
-.feature-copy, .feature-art { position: absolute; }
-.feature-copy { z-index: 2; }
-.feature-art { z-index: 1; }
-.panel { position: absolute; border: 1px solid #e3e5f8; border-radius: 2.4em; background: rgba(255, 255, 255, 0.55); }
+/* Type in desk pixels (.f13 = 13 desk px). Sizes under 13.2 would fall under 11 px between 1280 and 1408 px wide,
+   so they stop at 11 px; on phones nothing goes under 13 px. */
+.landing .f11 { font-size: max(1.1em, 11px); } .landing .f12 { font-size: max(1.2em, 11px); } .landing .f13 { font-size: max(1.3em, 11px); }
+.landing .f14 { font-size: 1.4em; } .landing .f145 { font-size: 1.45em; } .landing .f15 { font-size: 1.5em; } .landing .f16 { font-size: 1.6em; } .landing .f165 { font-size: 1.65em; }
+.landing .f17 { font-size: 1.7em; } .landing .f18 { font-size: 1.8em; } .landing .f19 { font-size: 1.9em; } .landing .f20 { font-size: 2em; } .landing .f22 { font-size: 2.2em; } .landing .f24 { font-size: 2.4em; } .landing .f26 { font-size: 2.6em; }
 
-.eyebrow { color: #575c6c; font: 600 1.45em/1 var(--chest-font-ui); letter-spacing: 0.16em; text-transform: uppercase; }
-.eyebrow-wide { letter-spacing: 0.32em; color: #3e4250; }
+/* One section: the date eyebrow, the two-tone heading and the lead beside (or above) its drawing. Each section's
+   own sheet sets its desk geometry: padding, the copy column (--cw) and the gap. */
+.sec { --h: 8.4em; --l: 2.6em; position: relative; display: grid; align-items: center; }
+.sec-right .sec-copy { grid-column: 2; grid-row: 1; }
+.sec-right .sec-art { grid-column: 1; grid-row: 1; }
+.sec-center { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; }
+.sec-center .sec-copy { display: grid; justify-items: center; }
+.sec-art { min-width: 0; }
+.sec-center .sec-art { width: 100%; display: grid; justify-items: center; }
+.eyebrow { margin: 0; color: #4b5060; font: 600 1.45em/1 var(--chest-font-ui); letter-spacing: 0.16em; text-transform: uppercase; }
+.sec-center .eyebrow { letter-spacing: 0.32em; color: #3e4250; }
 /* Tight tracking narrows the space too; word-spacing gives the words back the desk's gap. */
-.feature h2, .hero h1, .closing h2, .details h2 { color: var(--chest-site-ink); font-weight: 860; letter-spacing: -0.05em; word-spacing: 0.06em; line-height: 0.98; text-wrap: balance; }
-.feature h2 { margin-top: 0.3em; white-space: nowrap; }
-.lead { white-space: nowrap; margin-top: 1.25em; color: #4f5464; font-weight: 400; line-height: 1.5; letter-spacing: -0.005em; text-wrap: pretty; }
-.feature .lead { margin-top: 1.1em; }
+.sec h2, .hero h1, .closing h2 { color: var(--chest-site-ink); font-weight: 860; letter-spacing: -0.05em; word-spacing: 0.06em; line-height: 0.98; text-wrap: balance; }
+.sec h2 { margin-top: 0.32em; font-size: var(--h); white-space: nowrap; }
+.sec-center h2 { margin-top: 0.2em; }
+.sec .lead { margin-top: 1.1em; color: #4f5464; font: 400 var(--l)/1.55 var(--chest-font-ui); letter-spacing: -0.005em; white-space: nowrap; }
+.sec-center .lead { margin-top: 0.7em; }
+.sec-center .sec-art { text-align: left; }
 
 @media (max-width: 1279px) {
   .landing { --desk: 10px; font-size: 10px; }
   .desk-br { display: none; }
-  .lead, .hero-sub { white-space: normal; }
-  .feature { height: auto !important; display: flex; flex-direction: column; gap: 2.8em; padding: 6.4em var(--gutter) 2em; }
-  .panel { display: none; }
-  .feature-copy, .feature-art { position: static; width: auto !important; }
-  .feature h2 { font-size: clamp(3.8em, 9.6vw, 6.4em) !important; line-height: 1; white-space: normal; }
-  .feature .lead { font-size: clamp(1.65em, 4.3vw, 2.1em) !important; max-width: 36em; }
-  .eyebrow { font-size: 1.3em; }
-  .feature-art { align-self: center; }
-  .stage-window { position: relative; font-size: min(8.4px, calc((100vw - 2 * var(--gutter)) / var(--sw))); width: calc(var(--sw) * 1em); height: calc(var(--sh) * 1em); }
-  .stage-window > .stage { font-size: inherit; }
-  /* A flowing stage stacks its pieces as whole cards at the desk's own type sizes (one desk pixel to one CSS pixel,
-     so the smallest label is 12 px), in the order each piece's `phone` gives; the hand-drawn marks stay on desktop. */
-  .feature-art:has(.stage-flow), .hero-art:has(.stage-flow) { align-self: stretch; }
-  .stage-flow { width: 100%; height: auto; font-size: 10px; }
-  .stage-flow > .stage { display: flex; flex-direction: column; gap: 1.6em; width: auto !important; height: auto !important; margin: 0; font-size: inherit; }
-  .stage-flow .at { position: static; order: var(--phone-order, 0); width: auto !important; height: auto !important; rotate: none !important; }
-  .stage-flow .phone-out, .stage-flow > .stage > svg, .stage-flow > .stage > .cursor, .stage-flow > .stage > .mascot-glow { display: none; }
-  /* A separator and the item after it (.then) share a line on the desk; in the column the item drops under and
-     every separator goes, so no line starts or ends on a dot. */
-  .stage-flow .then { display: block; }
-  .stage-flow .sep { display: none; }
+  .hero-sub { white-space: normal; }
+  .landing .sec { display: flex; flex-direction: column; align-items: stretch; justify-items: stretch; gap: 3.2em; min-height: 0; padding: 6.4em var(--gutter) 2em; text-align: left; }
+  .sec-center .sec-copy { justify-items: start; }
+  /* The drawing sits centred under its copy, as the tablet layout has since br/wide. */
+  .sec-center .sec-art { justify-items: center; }
+  .sec-art > figure { margin-inline: auto; }
+  .sec h2 { font-size: clamp(4.4em, 9.6vw, 6.4em); line-height: 1; white-space: normal; }
+  .sec .lead { font-size: clamp(1.65em, 4.3vw, 2.1em); max-width: 36em; white-space: normal; }
+  .eyebrow, .sec-center .eyebrow { font-size: 1.3em; letter-spacing: 0.16em; }
 }
 /* On a small laptop the column keeps a tablet's measure, centred. */
 @media (min-width: 1000px) and (max-width: 1279px) {
   .landing { max-width: 86em; }
+}
+@media (max-width: 760px) {
+  .sec h2 { text-wrap: pretty; }
+  .landing .f11, .landing .f12 { font-size: 1.3em; }
 }

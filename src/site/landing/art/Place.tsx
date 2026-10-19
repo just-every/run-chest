@@ -15,13 +15,12 @@ export function Place({ x, y, w, h, r = 0, z, phone = 0, className = '', childre
 }
 
 /**
- * A collage's stage: `w` by `h` desk pixels, scaled with the page. In the phone column a `flow` stage stacks its
- * pieces as whole cards at readable sizes and leaves the hand-drawn marks out; any other stage scales to the column.
+ * A collage's stage: `w` by `h` desk pixels, scaled with the page. Below 1280 px it stacks its pieces as whole cards
+ * at readable sizes and leaves the hand-drawn marks out (art.css).
  */
-export function Stage({ w, h, flow = false, className = '', label, children }: { w: number; h: number; flow?: boolean; className?: string; label: string; children: ReactNode }) {
-  const vars = { '--sw': w / 10, '--sh': h / 10 } as CSSProperties
+export function Stage({ w, h, className = '', label, children }: { w: number; h: number; className?: string; label: string; children: ReactNode }) {
   return (
-    <div className={flow ? 'stage-window stage-flow' : 'stage-window'} style={vars}>
+    <div className="stage-flow">
       <figure className={`stage ${className}`.trim()} style={{ width: `${w / 10}em`, height: `${h / 10}em` }} role="img" aria-label={label}>
         {children}
       </figure>

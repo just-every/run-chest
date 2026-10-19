@@ -1,0 +1,42 @@
+/* page-08 (1536 × 1024): the copy from desk x 88; the history card at (663, 165), 805 × 592; the toast at (992, 787). */
+.sign-off { --h: 8.25em; --l: 2.8em; --cw: 54em; min-height: 102.4em; padding: 16.5em 6.8em 14em 8.8em; grid-template-columns: var(--cw) minmax(0, 1fr); column-gap: 3.5em; }
+.sign-art { position: relative; margin: 0; padding-bottom: 10.6em; }
+.history { padding: 2.6em 1em 1em; border-radius: 2em; }
+.history-title { display: flex; align-items: center; gap: 1.2em; margin: 0 0 1.6em 1.8em; }
+.history-ico { display: none; }
+.history ol { margin: 0; padding: 0; list-style: none; }
+.history li { display: flex; align-items: center; gap: 1.5em; min-height: 8.3em; padding: 0 1.4em 0 2em; }
+.history li + li { border-top: 0.1em solid #eceef4; }
+.history li.is-over { border-radius: 1.2em; background: #fdeeee; }
+.history li.is-over + li { border-top: 0; }
+.ver-ico { display: grid; place-items: center; width: 4.2em; height: 4.4em; border-radius: 0.9em; background: #f4f5f9; color: #3d4150; flex: none; }
+.ver-ico .ico { width: 2.6em; height: 2.6em; }
+.ver-text { flex: 1; min-width: 0; font-size: 1.74em; }
+.ver-v { margin-right: 0.45em; color: #11131a; font-weight: 700; }
+.ver-v::after { content: " ·"; font-weight: 400; color: #4a4f5e; }
+.chip-grey { background: #eceef3; color: #4a4f5e; }
+.restore { padding: 0.7em 1.1em; border-radius: 0.6em; background: #5b2ff0; color: #fff; font-weight: 600; white-space: nowrap; box-shadow: 0 0.8em 1.6em -0.8em rgba(70, 30, 220, 0.7); }
+.history .chip { white-space: nowrap; }
+.restore-arrow { position: absolute; right: -3.6em; top: 20em; width: 7em; height: 42em; fill: none; stroke: #6a3cf0; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.restored { position: absolute; right: 0.9em; bottom: 0; display: flex; align-items: center; gap: 2em; margin: 0; padding: 2em 3.6em 2em 2.6em; border-radius: 1.6em; color: #2b2e3a; white-space: nowrap; }
+.restored b { color: #11131a; font-weight: 650; }
+.restored .ico { width: 4.2em; height: 4.2em; color: #23a24e; }
+@media (max-width: 1279px) {
+  .sign-art { padding-bottom: 0; display: grid; gap: 1.6em; max-width: 72em; }
+  .restore-arrow { display: none; }
+  .restored { position: static; justify-self: end; }
+}
+@media (max-width: 760px) {
+  .history { padding: 2em 0.6em 0.6em; }
+  .history-title { margin: 0 0 1.2em 1.2em; }
+  .history-ico { display: block; width: 3.4em; height: 3.4em; color: #3a6ff2; }
+  .history li { display: grid; grid-template-columns: 4.2em minmax(0, 1fr) auto; column-gap: 1.4em; row-gap: 1.2em; align-items: start; min-height: 0; padding: 1.6em 1.2em; }
+  .ver-text { display: grid; gap: 0.3em; font-size: 1.5em; }
+  .ver-v { font-size: 1.4em; }
+  .ver-v::after { content: none; }
+  .history .chip { grid-column: 3; grid-row: 1; font-size: 1.3em; }
+  .restore { grid-column: 1 / -1; grid-row: 2; text-align: center; font-size: 1.6em; padding: 0.8em; }
+  .restored { justify-self: stretch; white-space: normal; padding: 1.6em 1.8em; gap: 1.4em; }
+  .restored .f20 { font-size: 1.6em; }
+  .restored .ico { width: 2.8em; height: 2.8em; flex: none; }
+}

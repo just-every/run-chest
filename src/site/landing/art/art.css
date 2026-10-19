@@ -1,24 +1,24 @@
 /* The drawn product screens: stages, cards, file tiles, chips, avatars, cursors and the hand-drawn layer.
    A stage's 1em is 10 desk pixels (the desk drew the page at 1536 px); --art scales it with the viewport.
-   Containers keep the stage's em; only text sets its own size (.f13 = 13 desk px). */
+   Containers keep the stage's em; only text sets its own size (.f13 = 13 desk px, landing.css). */
 .stage { --art: min(10px, calc(100vw / 153.6)); position: relative; margin: 0; font-size: var(--art); flex: none; }
 .at { position: absolute; }
-/* Desk sizes under 13.2 px would fall under 11 px between 1280 and 1408 px wide, so they stop at 11 px. */
-.stage .f11 { font-size: max(1.1em, 11px); } .stage .f12 { font-size: max(1.2em, 11px); } .stage .f13 { font-size: max(1.3em, 11px); } .stage .f14 { font-size: 1.4em; }
-.stage .f125 { font-size: max(1.25em, 11px); } .stage .f135 { font-size: 1.35em; } .stage .f15 { font-size: 1.5em; } .stage .f165 { font-size: 1.65em; } .stage .f16 { font-size: 1.6em; } .stage .f17 { font-size: 1.7em; } .stage .f18 { font-size: 1.8em; }
-.stage .f20 { font-size: 2em; } .stage .f22 { font-size: 2.2em; }
 .stage p, .stage b, .stage span { line-height: 1.35; }
 .stage { letter-spacing: -0.006em; }
 .stage b { font-weight: 550; }
 .stage :where(p) { margin: 0; }
+/* The section drawings take the same defaults at no specificity, so each drawing's own rules win. */
+:where(.sec-art, .closing) :where(p, b, span) { line-height: 1.35; }
+:where(.sec-art) { letter-spacing: -0.006em; }
+:where(.sec-art, .closing) :where(b) { font-weight: 550; }
+/* A drawn card's title (b.ink) is set bold, as the desk draws them. */
+:where(.sec-art, .closing) b.ink { font-weight: 650; letter-spacing: -0.012em; }
+:where(.sec-art, .closing) :where(p, ul, ol, dl, dd) { margin: 0; }
 
 .card { position: relative; background: var(--chest-site-card); border: 0.1em solid #e6e7f1; border-radius: 1.6em; box-shadow: 0 0.1em 0.2em rgba(22, 2, 82, 0.04), 0 2.2em 4.4em -2.2em rgba(38, 28, 110, 0.26); color: var(--chest-site-ink); }
-.card-flat { box-shadow: 0 0.1em 0.2em rgba(22, 2, 82, 0.03), 0 1.2em 2.4em -1.6em rgba(38, 28, 110, 0.18); }
 .ink { color: var(--chest-site-ink); font-weight: 500; }
 .dim { color: #727789; }
 .mid { color: #4a4f5e; }
-.violet { color: var(--chest-violet-deep); }
-.strong { font-weight: 600; }
 .row { display: flex; align-items: center; }
 .grow { flex: 1; min-width: 0; }
 .stack { display: grid; }
@@ -31,25 +31,24 @@
 .tile { display: grid; place-items: center; width: 4.4em; height: 4.4em; border-radius: 1em; flex: none; }
 .tile svg { width: 2.6em; height: 2.6em; }
 .tile-doc { background: #e8efff; color: #2f6df6; }
-.tile-word { background: #fff; }
-.tile-word svg { width: 3.4em; height: 3.4em; }
 .tile-sheet { background: #e6f6ec; color: #1e9e57; }
-.tile-slides { background: #fff0e6; color: #f06a1d; }
 .tile-pdf { background: #fdecec; color: #e0312b; }
 .tile-image { background: #e8efff; color: #2f6df6; }
 .tile-folder { background: transparent; color: #4c9bf8; }
 .tile-folder svg { width: 3.4em; height: 3.4em; }
 .tile-sm { width: 3.6em; height: 3.6em; border-radius: 0.9em; }
 .tile-sm svg { width: 2.2em; height: 2.2em; }
+.app-file { display: block; width: 4em; height: 4.4em; filter: drop-shadow(0 0.4em 0.6em rgba(20, 30, 80, 0.16)); }
 
 .chip { display: inline-flex; align-items: center; gap: 0.4em; padding: 0.35em 0.9em; border-radius: 999px; font-weight: 500; line-height: 1.2; white-space: nowrap; }
 .chip-ok { background: #e1f5e6; color: #2c8a4a; }
-.chip-violet { background: var(--chest-lilac-soft); color: var(--chest-violet-deep); }
 
-.avatar { display: grid; place-items: center; width: 2.8em; height: 2.8em; border-radius: 50%; color: #fff; font: 500 1.4em/1 var(--chest-font-ui); border: 0.15em solid #fff; }
+.avatar { display: grid; place-items: center; width: 2.8em; height: 2.8em; border-radius: 50%; color: #fff; font: 500 1.4em/1 var(--chest-font-ui); border: 0.15em solid #fff; flex: none; }
 .avatar-violet { background: #a888fb; }
 .avatar-green { background: #8fd39f; }
 .avatar-blue { background: #5c9cf8; }
+.avatar-peach { background: #f6b48f; }
+.avatar-amber { background: #f2b33d; }
 .avatar-grey { background: #eef0f5; color: #6d7284; }
 
 /* Named cursors: an arrow and a pill. */
@@ -58,17 +57,30 @@
 .cursor b { position: absolute; left: 2.4em; top: 2.4em; padding: 0.35em 0.9em; border-radius: 999px; font: 600 1.6em/1.2 var(--chest-font-ui); white-space: nowrap; }
 .cursor-violet { color: #4a2ee6; } .cursor-violet b { background: #d8cdfd; color: #3f22d8; }
 .cursor-green { color: #1f9a46; } .cursor-green b { background: #c5edcf; color: #1c7f3c; }
-.cursor-blue { color: #1d63f2; } .cursor-blue b { background: #2a6af2; color: #fff; font-size: 1.4em; }
-.cursor-amber { color: #f0a20c; } .cursor-amber b { background: #f6b324; color: #3d2a00; font-size: 1.4em; }
-.cursor-lilac { color: #5a33e8; } .cursor-lilac b { background: #e5dcff; color: #4a2ad8; font-size: 1.5em; }
 
 /* The hand-drawn layer. */
 .ticks { position: absolute; width: 4em; height: 4em; fill: none; stroke: var(--chest-violet-deep); stroke-width: 2.6; stroke-linecap: round; }
 .arrow-ink { position: absolute; fill: none; stroke: #5b31ea; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
 .sticky { position: relative; width: 100%; height: 100%; display: grid; place-content: center; padding: 0.4em 0.5em; background: #e9e6ff; color: #1f1a6b; font: 500 2.6em/1.05 var(--chest-font-hand); text-align: left; box-shadow: 0 0.06em 0.1em rgba(30, 20, 90, 0.06), 0 1em 1.6em -1em rgba(40, 30, 120, 0.35); }
 .sticky span { display: block; }
-.sticky-butter { background: #fbf3c4; color: #3d2ac8; }
-.sticky-line { display: block; width: 100%; height: 0.4em; margin-top: 0.1em; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
 
-/* A photo, cropped from the approved hero (receipt, product photos, site photos). */
+/* A photo, cropped from the approved hero (receipt, product photos). */
 .photo { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* Window chrome: the three dots on a drawn window. */
+.term-dots { display: flex; gap: 0.7em; }
+.term-dots i { width: 1.3em; height: 1.3em; border-radius: 50%; background: #ff5f57; }
+.term-dots i + i { background: #febc2e; } .term-dots i + i + i { background: #28c840; }
+
+/* Below 1280 px a stage stacks its pieces as whole cards at the desk's own type sizes (one desk pixel to one CSS pixel) in the order each piece's `phone` gives; the hand-drawn
+   marks stay on desktop. A separator and the item after it (.then) share a line on the desk; in the column the
+   item drops under and the separator goes, so no line starts or ends on a dot. */
+@media (max-width: 1279px) {
+  .hero-art:has(.stage-flow) { align-self: stretch; }
+  .stage-flow { width: 100%; height: auto; font-size: 10px; }
+  .stage-flow > .stage { display: flex; flex-direction: column; gap: 1.6em; width: auto !important; height: auto !important; margin: 0; font-size: inherit; }
+  .stage-flow .at { position: static; order: var(--phone-order, 0); width: auto !important; height: auto !important; rotate: none !important; }
+  .stage-flow .phone-out, .stage-flow > .stage > svg, .stage-flow > .stage > .cursor { display: none; }
+  .stage-flow .then { display: block; }
+  .stage-flow .sep { display: none; }
+}

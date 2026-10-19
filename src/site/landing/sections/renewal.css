@@ -1,0 +1,49 @@
+/* page-10 (1536 × 1024): two printed papers behind the search card at desk (122, 409), 807 × 566; the copy from x 984. */
+.renewal { --h: 6.8em; --l: 2.95em; --cw: 54.6em; min-height: 102.4em; padding: 4em 1.6em 5em 4em; grid-template-columns: minmax(0, 1fr) var(--cw); column-gap: 3.4em; }
+.renewal-art { position: relative; width: 91em; height: 94em; margin: 0; }
+.paper { position: absolute; display: grid; align-content: start; gap: 1.6em; padding: 5em 4.4em; background: #fff; color: #1e2029; box-shadow: 0 0.2em 0.4em rgba(20, 20, 60, 0.05), 0 2em 4em -2.4em rgba(30, 30, 90, 0.3); border: 0.1em solid #eceef4; }
+.paper p { margin: 0; line-height: 1.45; }
+.paper b { font-weight: 600; }
+.paper mark { padding: 0 0.2em; border-radius: 0.2em; background: #e6dcff; color: inherit; }
+.paper-contract { left: 0; top: 4em; width: 47em; height: 54em; rotate: -6deg; }
+.paper-contract b { margin-bottom: 0.2em; }
+.paper-invoice { left: 50em; top: 7em; width: 40em; height: 34em; padding: 4.6em 4em; rotate: 6deg; gap: 1.2em; font-family: var(--chest-font-ui); }
+.paper-invoice b { letter-spacing: 0.04em; margin-bottom: 0.6em; }
+.search-card { position: absolute; left: 8.2em; top: 37em; width: 80.7em; padding: 2.8em 3.2em 2.4em; border-radius: 2.4em; z-index: 2; }
+.search-box { display: flex; align-items: center; gap: 2em; height: 6.8em; margin: 0; padding: 0 2.4em; border: 0.15em solid #d7d9e3; border-radius: 1.4em; }
+.search-box .ico { width: 3.2em; height: 3.2em; color: #2b2e3a; stroke-width: 2.2; }
+.search-count { margin: 2em 0 0.4em !important; }
+.hits { margin: 0; padding: 0; list-style: none; }
+.hits li { display: flex; gap: 3em; padding: 1.8em 0.6em; }
+.hits li + li { border-top: 0.1em solid #eceef4; }
+.hit-text { display: grid; gap: 0.5em; min-width: 0; }
+.hit-tag { font-weight: 400; }
+.hit-text mark { padding: 0.05em 0.3em; border-radius: 0.25em; background: #e6dcff; color: #1e2029; }
+.hit-tile { width: 7em; height: 7em; border-radius: 1.4em; }
+.hit-tile svg { width: 5.6em; height: 5.6em; }
+.hit-tile.tile-doc { background: transparent; }
+.hit-photo { background: #eef0f5; color: #7c8296; }
+.hit-pdf { background: transparent; color: #e0312b; }
+@media (max-width: 1279px) {
+  /* One paper strip behind the search card (BUILD-NOTES 390 plan): its words stay above the card's edge. */
+  .renewal-art { width: auto; height: auto; max-width: 80.7em; }
+  .paper-invoice, .paper-desk { display: none; }
+  .paper-contract { position: relative; left: auto; top: auto; width: auto; height: auto; margin: 0 3em -3.6em 2em; padding: 2.4em 3em 5.2em; rotate: -2.5deg; gap: 1em; }
+  .paper-contract p:nth-of-type(1), .paper-contract br { display: none; }
+  .search-card { position: relative; left: 0; top: 0; width: auto; }
+}
+@media (max-width: 760px) {
+  .paper-contract { margin: 0 1.6em -3.6em 1em; padding: 1.8em 2em 5em; }
+  .paper-contract b { font-size: 1.5em; }
+  .paper-contract p { font-size: 1.4em; }
+  .search-card { padding: 1.8em 1.6em 1em; }
+  .search-box { height: 5.6em; padding: 0 1.6em; gap: 1.2em; }
+  .search-box .f24 { font-size: 2em; }
+  .hits li { gap: 1.4em; padding: 1.6em 0.2em; }
+  .hit-tile { width: 4.8em; height: 4.8em; }
+  .hit-tile svg { width: 4em; height: 4em; }
+  .hit-text .f20 { font-size: 1.7em; }
+  .hit-tag { display: block; font-size: 0.88em; }
+  .hit-tag .sep { display: none; }
+  .hit-text .f18 { font-size: 1.5em; }
+}

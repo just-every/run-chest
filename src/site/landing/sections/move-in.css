@@ -1,0 +1,47 @@
+/* page-02 (1536 × 512): copy from desk x 86; the terminal at (717, 147), tilted, under the import ledger at (980, 43). */
+.move-in { --h: 7.9em; --l: 2.25em; --cw: 60em; min-height: 51.2em; padding: 4.3em 6.8em 6.6em 8.6em; grid-template-columns: var(--cw) minmax(0, 1fr); column-gap: 3.4em; }
+.move-in .sec-copy { padding-top: 6em; }
+.movein-art { position: relative; height: 40.2em; margin: 0; }
+.terminal { position: absolute; left: 2.6em; top: 10.4em; width: 30em; height: 17.6em; padding: 1.6em 2em; border-radius: 1.4em; background: #141a33; color: #e8eaf6; font-family: var(--chest-font-mono); rotate: -3.5deg; box-shadow: 0 2.4em 4em -2em rgba(16, 14, 60, 0.55); }
+.terminal p { margin: 0; line-height: 1.6; white-space: nowrap; }
+.terminal p + p { margin-top: 0.7em; }
+.terminal .term-dots { margin-bottom: 1.8em !important; }
+.term-prompt { color: #9aa3c7; }
+.term-ok span { color: #43d17a; }
+.term-caret { display: inline-block; width: 0.6em; height: 1.1em; vertical-align: -0.15em; background: #8f97c2; }
+.ledger { position: absolute; left: 29em; top: 0; width: 48.8em; padding: 2.2em 2.4em 2.2em; border-radius: 2em; z-index: 2; }
+.ledger-head { display: flex; align-items: center; gap: 2em; }
+.ledger-head .stack { gap: 0.5em; }
+.ledger-when { white-space: nowrap; }
+.ledger-ico { display: grid; place-items: center; width: 6em; height: 6em; border-radius: 1.2em; background: var(--chest-lilac-soft); color: #4b2fe6; flex: none; }
+.ledger-ico .ico { width: 3.2em; height: 3.2em; }
+.ledger-bar { display: block; height: 1.4em; margin: 2.2em 0 1.2em; border-radius: 1em; background: linear-gradient(90deg, #6b4cf5, #5a6cf7 60%, #6b5cf5); }
+.ledger-rows { margin: 0; }
+.ledger-rows div { display: flex; justify-content: space-between; align-items: center; gap: 1.6em; min-height: 3.24em; padding: 0 0.8em; border-top: 0.1em solid #eceef4; }
+.ledger-rows dt { color: #2b2e3a; }
+.ledger-rows dd { display: flex; align-items: center; gap: 1.4em; margin: 0; color: #2b2e3a; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ok-ico { width: 1.9em; height: 1.9em; color: #2fa65a; stroke-width: 2.4; }
+.ledger-note { display: flex; align-items: center; gap: 2.2em; min-height: 3.8em; margin-top: 1em !important; padding: 0.4em 2.2em; border-radius: 1em; }
+.ledger-alert { margin-top: 1.4em !important; background: #fdecee; color: #c42b3a; }
+.ledger-fixed { background: #eaf7ee; color: #23864a; }
+.note-ico { display: grid; place-items: center; width: 2.4em; height: 2.4em; border-radius: 50%; background: #e0303f; color: #fff; font: 700 max(1.4em, 11px)/1 var(--chest-font-ui); flex: none; }
+.ledger-fixed .ico { width: 2.6em; height: 2.6em; color: #2fa65a; }
+.ledger-arrow { position: absolute; right: 9.6em; bottom: 2.4em; width: 3em; height: 5em; fill: none; stroke: #5b31ea; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 1279px) {
+  .movein-art { height: auto; display: grid; gap: 1.6em; max-width: 60em; }
+  .terminal, .ledger { position: static; width: auto; height: auto; rotate: none; }
+  .terminal { max-width: 34em; }
+  .ledger-arrow { display: none; }
+}
+@media (max-width: 760px) {
+  .ledger { padding: 1.8em 1.6em; }
+  .ledger-head { align-items: flex-start; gap: 1.4em; }
+  .ledger-ico { width: 4.8em; height: 4.8em; }
+  .ledger-when { white-space: normal; }
+  .ledger-head .then { display: block; }
+  .ledger-head .sep { display: none; }
+  .ledger-rows div { padding: 0.4em 0.2em; }
+  .ledger-note { align-items: flex-start; padding: 1em 1.2em; }
+  .ledger-fixed .then { display: block; }
+  .ledger-fixed .sep { display: none; }
+}

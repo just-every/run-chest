@@ -1,26 +1,57 @@
-/* Page 9: the closing. The art is the hero's cards again (no cursors) and the mascot, cut by the footer. */
-.closing { position: relative; height: 85.5em; overflow: hidden; }
-.closing-art { position: absolute; inset: 0; }
-.closing-art .photos { width: 100%; height: 100%; }
-.mascot-peek { display: block; width: 100%; height: 100%; }
-.closing-copy { position: absolute; left: 0; right: 0; top: 24.6em; display: grid; justify-items: center; text-align: center; z-index: 2; }
-.closing h2 { font-size: 12em; line-height: 0.9; letter-spacing: -0.055em; text-align: left; }
-.closing-line { margin-top: 1.6em; color: #3f4352; font: 400 2.75em/1.3 var(--chest-font-ui); letter-spacing: -0.012em; }
-.closing-actions { display: flex; align-items: center; gap: 5.6em; margin-top: 3.4em; }
-.closing-actions .btn { font-size: 2.4em; min-height: 2.65em; padding: 0 2.35em; }
-.closing-actions .text-link { font-size: 2.2em; }
-.closing-licence { margin-top: 2.8em; color: #4f5464; font: 400 2em/1.3 var(--chest-font-ui); }
+/* page-11 (1536 × 890 above the footer): the limits card at desk (374, 112), 787 wide; the headline centred from
+   y 320; the sticky at (88, 356) and the checked folder at (1170, 456), both turned. */
+.closing { position: relative; display: grid; justify-items: center; padding: 11.2em 4em 6.4em; }
+.limits { display: flex; align-items: center; gap: 2.4em; width: 78.7em; margin: 0; padding: 2.8em 3.2em; border-radius: 1.8em; }
+.limits .stack { gap: 0.5em; }
+.limits-ico { display: grid; place-items: center; width: 6.4em; height: 6.4em; border-radius: 50%; background: var(--chest-lilac-soft); color: #5a2ce8; flex: none; }
+.limits-ico .ico { width: 3.2em; height: 3.2em; }
+.closing-stage { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; width: 100%; margin-top: 6.6em; }
+.closing-note { position: relative; justify-self: start; display: flex; align-items: center; padding-left: 4.8em; }
+.closing-sticky { width: 6.56em; height: 6.56em; rotate: -9deg; font-size: 3.2em; padding: 0.6em 0.7em; place-items: start; line-height: 1.12; }
+.closing-arrow { width: 8em; height: 4em; margin-left: -0.6em; fill: none; stroke: #5b31ea; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.closing-copy { display: grid; justify-items: center; text-align: center; }
+.closing h2 { font-size: 14.6em; line-height: 0.88; letter-spacing: -0.055em; text-align: left; }
+.closing-line { margin-top: 1.1em; color: #5a5f70; font: 400 3.45em/1.3 var(--chest-font-ui); letter-spacing: -0.012em; }
+.closing-copy .btn { margin-top: 1.8em; font-size: 2.4em; min-height: 2.75em; padding: 0 2.6em; }
+.closing-copy .text-link { margin-top: 1.6em; font-size: 2.4em; }
+.closing-licence { margin-top: 2.2em; color: #5a5f70; font: 400 1.8em/1.3 var(--chest-font-ui); }
+.closing-check { position: relative; justify-self: end; margin-top: -8em; }
+.checked-card { display: flex; align-items: center; gap: 1.8em; margin: 0; padding: 2.6em 3.4em 2.6em 2.6em; border-radius: 1.6em; rotate: 6deg; }
+.checked-card .ico { width: 5em; height: 5em; color: #23a24e; flex: none; }
+.checked-card .stack { gap: 0.3em; }
+.checked-ticks { right: -1.6em; top: -5em; }
 @media (max-width: 1279px) {
-  .closing { height: auto; padding: 4em var(--gutter) 0; display: flex; flex-direction: column; }
-  .closing-copy { position: static; justify-items: start; text-align: left; }
-  .closing h2 { font-size: clamp(4.4em, 12vw, 7.2em); }
-  .closing-line { font-size: 1.9em; }
-  .closing-actions { flex-wrap: wrap; gap: 1.6em 2.8em; margin-top: 2.6em; }
-  .closing-actions .btn { font-size: 1.8em; }
-  .closing-actions .text-link { font-size: 1.6em; }
-  .closing-licence { font-size: 1.5em; margin-top: 2em; }
-  .closing-art { position: relative; order: 2; height: 17em; margin: 2em calc(-1 * var(--gutter)) 0; overflow: hidden; }
-  .closing-art .at:not(.peek), .closing-art .ticks { display: none; }
-  .closing-art .stage-window { position: absolute; left: 50%; top: 0; width: 22em; height: 22em; font-size: 10px; translate: -50% 0; }
-  .closing-art .stage-window > .stage { margin: -66em 0 0 -110.8em; font-size: 7.3px; }
+  .closing { justify-items: stretch; padding: 4.4em var(--gutter) 5.6em; }
+  .limits { width: auto; padding: 2em; gap: 1.6em; align-items: flex-start; }
+  .limits-ico { width: 4.8em; height: 4.8em; }
+  .closing-stage { grid-template-columns: 1fr; margin-top: 5.6em; row-gap: 3.2em; }
+  .closing-copy { order: -1; justify-items: start; text-align: left; }
+  .closing h2 { font-size: clamp(5.2em, 13vw, 9.6em); }
+  .closing-line { font-size: clamp(1.8em, 4.4vw, 2.4em); }
+  .closing-copy .btn { font-size: 1.9em; }
+  .closing-copy .text-link { font-size: 1.7em; }
+  .closing-licence { font-size: 1.5em; }
+  .closing-note, .closing-check { justify-self: start; margin: 0; }
+  .closing-note { padding-left: 0; }
+  .closing-arrow { display: none; }
+  .closing-sticky { font-size: 2.4em; rotate: -4deg; }
+  .checked-card { rotate: 3deg; }
+  .checked-ticks { right: -3.2em; }
+  .closing-stage { grid-template-columns: auto minmax(0, 1fr); column-gap: 3.2em; }
+  .closing-copy { grid-column: 1 / -1; }
+  .closing-check { align-self: center; }
+}
+@media (max-width: 760px) {
+  .closing-copy .btn { align-self: stretch; justify-self: stretch; }
+  .closing-copy .text-link { justify-self: center; }
+  .closing-licence { justify-self: center; }
+  .closing-stage { grid-template-columns: 1fr; row-gap: 2.4em; }
+  .closing-note { justify-self: start; }
+  .closing-check { justify-self: end; margin-top: -9.6em; }
+  .closing-sticky { font-size: 2em; }
+  .checked-card { padding: 1.6em 1.8em; gap: 1.2em; rotate: 2deg; }
+  .checked-card .ico { width: 3.6em; height: 3.6em; }
+  .checked-card .f20 { font-size: 1.6em; }
+  .checked-card .f16 { font-size: 1.4em; }
+  .checked-ticks { display: none; }
 }
