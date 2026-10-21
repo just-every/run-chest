@@ -4121,7 +4121,7 @@
       "executable": false
     },
     "tests/chest/browser-ownership.mjs": {
-      "sha256": "ce609799810dcaf9ec602595cb7b00eb118b8f49a4518576ddb52906c9306c58",
+      "sha256": "bceedcccba12769aeea50ef818744c76bf6c582c96c0dcd369700e3c87555a08",
       "executable": false
     },
     "tests/chest/browser-preview.mjs": {
