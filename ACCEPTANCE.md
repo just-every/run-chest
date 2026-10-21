@@ -78,9 +78,9 @@ Current evidence: `src/chest/files/trash.ts`; `src/chest/documents.ts`; `tests/c
 
 Current evidence: `src/chest/files/spaces.ts`; `src/chest/files/items.ts`; `src/chest/files/ui-item.ts`; `public/chest-upload.js`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`.
 
-**CHEST-15 — Large uploads resume where they stopped (partial).** Upload a 150 MB file, reload the page once progress passes a quarter, see "Unfinished uploads · N% of 150.0 MB received", choose the same file again, see progress resume above zero, and compare the stored and downloaded SHA-256 with the original's.
+**CHEST-15 — Large uploads resume where they stopped (done).** Upload a 150 MB file, reload the page once progress passes a quarter, see "Unfinished uploads · N% of 150.0 MB received", choose the same file again, see progress resume above zero, and compare the stored and downloaded SHA-256 with the original's.
 
-Current evidence: `src/chest/files/uploads.ts`; `src/chest/blobs.ts`; `public/chest-upload.js`; `tests/chest/files.mjs`. Remaining: Multipart upload, persisted part resumption after Worker restart, idempotent completion and original-byte checks are exercised with a 17 MB original in tests/chest/files.mjs. Missing retained acceptance: a 150 MB browser upload reloaded after one quarter, the unfinished-upload percentage and resumed browser progress, and the final stored/downloaded SHA-256 comparison. The documented manual 0.2.0 gate is not an existing repository assertion for that complete journey.
+Current evidence: `src/chest/files/uploads.ts`; `src/chest/blobs.ts`; `public/chest-upload.js`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `tests/chest/upload-resume-flow.mjs`. The browser journey exercises the complete 150 MB reload/resume and original-byte acceptance at 1440/390.
 
 **CHEST-16 — Restore a file to an earlier version (done).** Upload three versions of a file, restore version 1, and check that version 4 reads "restore of version 1", its downloaded bytes equal version 1, and versions 1 to 3 are still listed.
 

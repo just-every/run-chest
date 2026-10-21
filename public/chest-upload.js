@@ -68,6 +68,10 @@
   // A resumed upload shows its live progress only: its line under Unfinished uploads goes, and the list with its last.
   function resumed(job) {
     const panel = job.row.closest('[data-upload]'), line = panel.querySelector(`[data-waiting="${CSS.escape(job.id)}"]`)
+    for (const summary of document.querySelectorAll(`[data-upload-summary="${CSS.escape(job.id)}"]`)) {
+      const section = summary.closest('section'); summary.remove()
+      if (section && !section.querySelector('[data-upload-summary]')) section.remove()
+    }
     if (!line) return
     line.remove()
     const waiting = panel.querySelector('.upload-waiting')

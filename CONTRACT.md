@@ -858,7 +858,7 @@ Every capability claim on the approved homepage maps to the clauses that promise
 
 ## Status
 
-Judged from the code and tests at commit `4135789ac1c9d6d88aa1757213f12edb836a0aeb` (21 October 2026).
+Judged from the code and tests at commit `af2c5b07b444bc00777f2d86f98cfbbdc54eb15f` (21 October 2026).
 
 The clause rows below include the 18 October filing, sharing, audit and file-request work. ACCEPTANCE.md mirrors these rows. RECOVER-001 and VERSION-001 were re-judged at their own scope against main `27ee65afd77da074650d16f4501166166ed3eb49`; the moved requirements remain in ADMIN-003, SHARE-005 and SYNC-001.
 
@@ -870,9 +870,9 @@ Ownership, new-file creation, folder version review, link version and link-polic
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 22 | 2 | 0 | 24 |
+| Published | 23 | 1 | 0 | 24 |
 | Target and push further | 18 | 33 | 21 | 72 |
-| All | 40 | 35 | 21 | 96 |
+| All | 41 | 34 | 21 | 96 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -890,7 +890,7 @@ Ownership, new-file creation, folder version review, link version and link-polic
 | `CHEST-12` | Complete independent local recovery | published | done | `scripts/installer/local.mjs`; `scripts/check-public-assets.mjs`; `tests/chest/restore.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-13` | Self-service reversible trash and mutation audit | published | done | `src/chest/files/trash.ts`; `src/chest/documents.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
 | `CHEST-14` | Team spaces, nested folders and phone uploads | published | done | `src/chest/files/spaces.ts`; `src/chest/files/items.ts`; `src/chest/files/ui-item.ts`; `public/chest-upload.js`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
-| `CHEST-15` | Large uploads resume where they stopped | published | partial | `src/chest/files/uploads.ts`; `src/chest/blobs.ts`; `public/chest-upload.js`; `tests/chest/files.mjs` | Multipart upload, persisted part resumption after Worker restart, idempotent completion and original-byte checks are exercised with a 17 MB original in tests/chest/files.mjs. Missing retained acceptance: a 150 MB browser upload reloaded after one quarter, the unfinished-upload percentage and resumed browser progress, and the final stored/downloaded SHA-256 comparison. The documented manual 0.2.0 gate is not an existing repository assertion for that complete journey. |
+| `CHEST-15` | Large uploads resume where they stopped | published | done | `src/chest/files/uploads.ts`; `src/chest/blobs.ts`; `public/chest-upload.js`; `tests/chest/files.mjs` ; `tests/chest/browser-files.mjs`; `tests/chest/upload-resume-flow.mjs` | The retained real-browser journey uploads 150 MB at 1440/390, interrupts after 26%, reloads, checks the persisted unfinished percentage, rechooses the same file, verifies resumed progress without resending stored parts, and compares both stored and downloaded SHA-256 with the original. |
 | `CHEST-16` | Restore a file to an earlier version | published | done | `src/chest/files/items.ts`; `src/chest/files/ui-item.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
 | `CHEST-17` | Restore a folder to a date, and undo it | published | done | `src/chest/files/rewind.ts`; `src/chest/files/ui-item.ts`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
 | `CHEST-18` | Links for anyone with a password, expiry and download limit, and revoke | published | done | `src/chest/files/public-links.ts`; `src/chest/files/capability.ts`; `src/chest/files/public.ts`; `src/chest/files/ui-public.ts`; `tests/chest/files.mjs` |  |

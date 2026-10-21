@@ -49,7 +49,7 @@ export function spacePage(d: any, people: any[], groups: any[]) {
  const settings = manager ? spaceSettingsCard(d) : ''
  const rows = f.show === 'files' ? f.rows.filter((r: any) => r.type === 'file') : f.show === 'folders' ? f.rows.filter((r: any) => r.type === 'folder') : f.rows
  const table = rows.length ? folderTable(rows, returnTo, sel?.id ?? null, returnTo) : emptyFolder(f.rows.length ? 'Nothing of this kind here.' : 'Nothing here yet.', d.can.contribute)
- const add = d.can.contribute ? `<div id="new" class="add-bar">${addHere({ space: d.id }, returnTo, [], d.can.administer || d.kind === 'personal' ? rewindForm({ space: d.id }, returnTo) : '', d.creation, '', false)}</div>` : ''
+ const add = d.can.contribute ? `<div id="new" class="add-bar">${addHere({ space: d.id }, returnTo, d.uploads, d.can.administer || d.kind === 'personal' ? rewindForm({ space: d.id }, returnTo) : '', d.creation, '', false)}</div>` : ''
  const lede = `<p class="lede ftitle-lede">${d.kind === 'team' ? `Team space · your role: ${esc(String(d.role).replace('_', ' '))}` : 'Your personal area. Share any file or folder from its page.'}</p>`
  const main = folderTitle([], d.name, returnTo, f.show) + lede + agentStrip(f.agent, returnTo) + f.conflicts.map((c: any) => conflictBanner(c, returnTo, d.can.manage, d.can.contribute)).join('') + `<div id="contents">${table}</div>` + add + restores(d.rewinds, returnTo)
  const own = `<aside class="panel" aria-label="Details of ${esc(d.name)}"><div class="panel-head">${fileTile('folder')}<div><h2>${esc(d.name)}</h2><p class="quiet">${d.kind === 'team' ? `Team space · ${d.members.length} member${d.members.length === 1 ? '' : 's'}` : 'Personal area'} · ${f.rows.length} item${f.rows.length === 1 ? '' : 's'}</p></div></div></aside>`

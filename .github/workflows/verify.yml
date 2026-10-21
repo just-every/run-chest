@@ -49,6 +49,10 @@ jobs:
       - run: pnpm exec rer check --profile first-party
       - run: pnpm exec rer verify
   browser:
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [files, other]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -84,11 +88,11 @@ jobs:
       - run: pnpm install --frozen-lockfile && pnpm exec rer install
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm run build
-      - run: pnpm run test:browser
+      - run: pnpm run test:browser:${{ matrix.suite }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: chest-files-pages
+          name: chest-files-pages-${{ matrix.suite }}
           path: test-results/*.png
   journey:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')

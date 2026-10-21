@@ -7,6 +7,7 @@ import {mkdir,readFile} from 'node:fs/promises';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
 import {zip} from './fixtures.mjs';
+import {uploadResumeJourney} from './upload-resume-flow.mjs';
 const h=await harness(),sha=v=>createHash('sha256').update(v).digest('hex'),day=86_400_000,cookies={},b64=v=>Buffer.from(v).toString('base64');
 let browser;
 const people=['ana','ben','cy','mo','dee','eve'];
@@ -43,6 +44,7 @@ async function journey(width){
  await open(p.mo,'Add a person');{const add=p.mo.locator('form').filter({has:p.mo.getByRole('button',{name:'Add to space'})});await add.getByLabel('Email').fill('ben@example.test');await add.getByLabel('Role').selectOption('viewer');await press(add,'Add to space')}
  assert.deepEqual((await json(p.mo,`/spaces/${space}`)).members.map(m=>[m.principal,m.role]),[['mo@example.test','manager'],['ana@example.test','content_manager'],['cy@example.test','contributor'],['eve@example.test','commenter'],['ben@example.test','viewer']]);
  await fit(p.mo,'space',width);
+ await uploadResumeJourney(h,p.mo,width,space);
  // Move in (MIGRATE-002 partial): a Takeout zip arrives with its folder tree under "Google Drive"; running it again adds nothing.
  const takeout={name:`takeout-${width}.zip`,mimeType:'application/zip',buffer:zip([['Takeout/archive_browser.html','<p>index</p>'],[`Takeout/Drive/Clients ${width}/Harbor/MSA.txt`,'Master services '+width],[`Takeout/Drive/Budget ${width}.txt`,'Budget '.repeat(3000)]])};
  const moveIn=async()=>{await go(p.mo,'/app/move-in');await p.mo.locator('[data-destination]').selectOption({label:'My files'});await p.mo.locator('[data-zips]').setInputFiles(takeout);await p.mo.getByRole('button',{name:'Start move-in'}).click();await p.mo.getByText('Move-in finished').waitFor({timeout:60_000});return `${await p.mo.locator('[data-counts]').innerText()}${await p.mo.locator('[data-failed]').innerText()}`};
@@ -54,6 +56,7 @@ async function journey(width){
  assert.match(await moveIn(),/^0 file\(s\) and 0 folder\(s\) added · 2 already there · 0 not added$/);
  await go(p.ana,`/app/spaces/${space}`);await open(p.ana,'New folder');await p.ana.getByLabel('Folder name').fill('Client');await press(p.ana,'Create folder');const client=id(p.ana);
  await open(p.ana,'New folder');await p.ana.getByLabel('Folder name').fill('Contracts');await press(p.ana,'Create folder');const contracts=id(p.ana);
+ await uploadResumeJourney(h,p.ana,width,space,contracts);await go(p.ana,`/app/items/${contracts}`);
  await pick(p.ana,{name:'terms.txt',mimeType:'text/plain',buffer:Buffer.from(`Payment terms ${width}`)});const terms=id(p.ana);
  await go(p.ana,`/app/items/${client}`);await fit(p.ana,'folder',width);
  // CHEST-13: a contributor has no trash action and is refused; the content manager trashes and restores her own folder.
