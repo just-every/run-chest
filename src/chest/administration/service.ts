@@ -9,6 +9,7 @@ import { prepareRecovery,applyRecovery,recoveryView,recoveryTargets } from './re
 import { administrativeAudit,administrativeAuditCsv } from './reports'
 import { administrativeStorage,administrativeStorageCsv } from './report-storage'
 import { costSettings,saveCostSettings } from './costs'
+import { administrativeGuests,administrativeGuestsCsv } from './report-guests'
 export async function administrationView(env:Bindings,s:Session){
  insist(await isAdministrator(env,s),'admin_required',403)
  const owner=await ownerOffers(env,s),people=await administrativePeople(env,s),allGroups=await list(env,'group'),groups=[]
@@ -36,6 +37,7 @@ export async function administrationExecute(env:Bindings,request:Request,s:Sessi
   if(post&&key)return applyRecovery(env,s,key,input)
  }
  if(section==='costs')return post?saveCostSettings(env,s,input):costSettings(env,s)
+ if(get&&section==='guests')return key==='export'?administrativeGuestsCsv(env,s,url.searchParams):administrativeGuests(env,s,url.searchParams)
  if(get&&section==='storage')return key==='export'?administrativeStorageCsv(env,s,url.searchParams):administrativeStorage(env,s,url.searchParams)
  if(get&&section==='audit')return key==='export'?administrativeAuditCsv(env,s,url.searchParams):administrativeAudit(env,s,url.searchParams)
  insist(false,'not_found',404)

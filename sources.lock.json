@@ -141,7 +141,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "90d71e8b090875da4b31842b663440428d232e623818ccd87d5dc08e9b0bfb4f",
+      "sha256": "e5dd97cfa954116b822c76de990d3d13deeadf1fb0d3b5f1b02fad7a13f22a94",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -169,7 +169,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "e7cbcb728736848d5b23c72fddd0e42df813c3134820071855bf2a1cd38d0be9",
+      "sha256": "14fcb568c22710eb735f1d3ae569173e5e528c43a0723cec894e624dd3f8c0d7",
       "executable": false
     },
     "DEMO.md": {
@@ -193,7 +193,7 @@
       "executable": false
     },
     "docs/administration.md": {
-      "sha256": "184129c7021a17d96f17106bfd52e9747cb983a8b9b2af40a1507290d91862fc",
+      "sha256": "6f69fd62bbac60ba412e0e9c67cc07dea7c12bb1dcfe1d7287e7e0ee7ba656b2",
       "executable": false
     },
     "docs/backup-and-restore.md": {
@@ -205,7 +205,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "69e19dfd9bd66a35b6b77afcc65e953903760202c94ec9c8f1e5697a1cef5d04",
+      "sha256": "709e5ab8bb12af73d1a8b9f58548dd1bcfd1b58b5143e812f842b79e2aeba93f",
       "executable": false
     },
     "docs/collections.md": {
@@ -1108,6 +1108,10 @@
       "sha256": "d3c7955b260e41bbbe72a189116edcb9e0f0fd8d0e9805af55ff89ee746b5d41",
       "executable": false
     },
+    "src/chest/administration/report-guests.ts": {
+      "sha256": "0988556f945785105382630309e10b0a2feeb31b3d463eaa788f71e97d0f7c73",
+      "executable": false
+    },
     "src/chest/administration/report-scope.ts": {
       "sha256": "2e9ed0cc210d6baf802862ce2a8a3adb2399b90a030ca705bb1ea9238a9d1bbe",
       "executable": false
@@ -1117,7 +1121,7 @@
       "executable": false
     },
     "src/chest/administration/report-ui.ts": {
-      "sha256": "1dd6bd2915fd74a477266ea026eb82b0fec35852352bcb8dd8254078ee8909d2",
+      "sha256": "8771ae1d347cca67d443cae97687a15cfe26a6708da59f801f5f063c761d330c",
       "executable": false
     },
     "src/chest/administration/reports.ts": {
@@ -1129,7 +1133,7 @@
       "executable": false
     },
     "src/chest/administration/service.ts": {
-      "sha256": "4287fdfcd096a77653260d4f35d0b4a5bec9c8315b2a37f3da8c64e1972373fb",
+      "sha256": "409efed6a9c58f8793c6cf1ca04ceac18201e6912d905312e776edf047cd0a91",
       "executable": false
     },
     "src/chest/administration/ui.ts": {
@@ -4016,8 +4020,12 @@
       "sha256": "e4de0804ecc84245fe1fae93d0d541c6a85e0ae37e607b8f2b62712478875be2",
       "executable": false
     },
+    "tests/chest/administration-guest-flow.mjs": {
+      "sha256": "668a6eebd3cb92d56883cb8ac7df11c6d5a8b357a739f3192467bcbfb0fb4688",
+      "executable": false
+    },
     "tests/chest/administration-report-flow.mjs": {
-      "sha256": "ba94a481a0fd7808925643d7573d6b64058110ffe7d55b6b3d508776c7da45f1",
+      "sha256": "6471668c142ed07ee63007f7adef74667b093ec79c1d98a33d5f609dfe54e6e1",
       "executable": false
     },
     "tests/chest/administration.mjs": {

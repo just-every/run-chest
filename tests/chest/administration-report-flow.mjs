@@ -1,5 +1,6 @@
 // ADMIN-002 reporting slice, exercised from the existing administrative public journey.
 import assert from 'node:assert/strict';
+import {guestInventoryJourney} from './administration-guest-flow.mjs';
 const b64=s=>Buffer.from(s).toString('base64');
 const cookieRows=(cookie,url)=>cookie.split('; ').map(c=>{const i=c.indexOf('=');return{name:c.slice(0,i),value:c.slice(i+1),url}});
 const csvRows=text=>text.trimEnd().split('\r\n').slice(1).map(line=>line.split(',').map(s=>s.replace(/^"|"$/g,'').replaceAll('""','"')));
@@ -71,6 +72,7 @@ export async function reportingJourney(h,browser,owner){
  await api('/audit/privacy',staff,{hidden:true});
  assert.equal((await api('/administration/audit?'+filter,admin)).rows.length,0);
  await api('/audit/privacy',staff,{hidden:false});
+ await guestInventoryJourney(h,browser,{owner,staff,admin,outside,file,folder,secret,group,otherGroup});
  const contexts=[];
  try{
   for(const width of [1440,390]){
@@ -113,6 +115,8 @@ export async function reportingJourney(h,browser,owner){
  await api('/administration/roles',owner,{action:'revoke',id:grant.id});
  await api('/administration/audit?cursor='+encodeURIComponent(report.next),admin,undefined,403);
  await api('/administration/storage',admin,undefined,403);
+ await api('/administration/guests',admin,undefined,403);
+ assert.equal((await h.raw('/api/chest/administration/guests/export',admin)).status,403);
  assert.equal((await h.raw('/api/chest/administration/audit/export',admin)).status,403);
  const unchanged=await api(`/items/${file.id}`,staff);assert.equal(unchanged.item.current,current);assert.equal(unchanged.versions.length,2);
  assert.equal((await api(`/items/${duplicate.id}`,staff)).versions.length,1);
