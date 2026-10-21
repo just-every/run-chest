@@ -10,7 +10,8 @@ it contacts Chest the console says **Never**, and does not claim a backup exists
 scheduled runs; it does not interrupt a run already writing an archive.
 
 On the independent machine, use the same Chest revision and install dependencies.
-Put these names in a private file, such as `/private/chest-backup.env` (mode 600):
+Put these names in a private file, such as `/private/chest-backup.env` (mode 600).
+Replace the synthetic credential examples with your private credentials:
 
 ```
 CLOUDFLARE_ACCOUNT_ID=live-owner-account-id
