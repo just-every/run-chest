@@ -4097,7 +4097,7 @@
       "executable": false
     },
     "tests/chest/browser-guest-links.mjs": {
-      "sha256": "c48b7b96af08e5f310ee77a6e0b054dfe9573bd50057457d2e4ba66243dbe93f",
+      "sha256": "a226a20a0101322750ec567bc78d56d3e451ec49ce04eff273bd758a9379379c",
       "executable": false
     },
     "tests/chest/browser-integrations.mjs": {
