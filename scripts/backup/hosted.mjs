@@ -48,9 +48,9 @@ export async function hostedEdge(config) {
   const id = await databaseId(live, resources.database);
   // Authenticate object stores only inside the claimed run so a revoked backup credential
   // becomes a durable failed attempt, rather than a runner disappearing before reporting.
-  const lazy = (creds, name) => {
+  const lazy = factory => {
     let client;
-    const open = () => client ??= name === bucket && creds === destination && config.provider === 's3' ? Promise.resolve(s3(creds, name)) : r2(creds, name);
+    const open = () => client ??= factory();
     return {
       async *list(prefix) { yield* (await open()).list(prefix); },
       async delete(key) { return (await open()).delete(key); },
@@ -58,7 +58,7 @@ export async function hostedEdge(config) {
       async upload(key, file) { return (await open()).upload(key, file); },
     };
   };
-  const originals=lazy(live,resources.bucket),archives=lazy(destination,bucket);
+  const originals=lazy(() => r2(live,resources.bucket)),archives=lazy(() => config.provider === 's3' ? Promise.resolve(s3(destination,bucket)) : r2(destination,bucket));
   return {
     originals, archives,
     exportDatabase: output => runWrangler(live, ['d1','export',resources.database,'--remote','--output',output]),
