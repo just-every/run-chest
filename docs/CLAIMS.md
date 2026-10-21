@@ -79,7 +79,7 @@ public-door tests; their status matches the CONTRACT.md Status cell.
 
 | External-sharing, trusted-domain and member/editor policy with recipient confirmation and reversible grant suspension | POLICY-001 | partial | `src/chest/files/sharing-policy.ts`; `src/chest/files/policy-suspensions.ts`; `src/chest/files/link-policy.ts`; `src/chest/files/ui-link-policy.ts`; `tests/chest/link-policy.mjs`; `tests/chest/browser-sharing-policy.mjs` |
 
-| Independent encrypted R2 backup schedules, retention, status and clean-target recovery | RECOVER-002 | partial | `scripts/backup/hosted.mjs`; `scripts/backup/schedule.mjs`; `src/chest/backups/service.ts`; `src/chest/backups/ui.ts`; `tests/chest/backup-archive.mjs`; `tests/chest/browser-backups.mjs` |
+| Independent encrypted S3/R2 backups, retention, status and upgrade recovery | RECOVER-002 | done | `scripts/backup/hosted.mjs`; `scripts/hosted/s3.mjs`; `tests/chest/backup-archive.mjs`; `tests/chest/browser-backups.mjs`; `tests/chest/backup-sandbox.mjs`; `tests/chest/upgrade.mjs` |
 
 SHARE-003 was selected because sending originals and distinguishing delivery from
 human receipt is central to browser file exchange. Signed sync/mobile clients
@@ -108,17 +108,20 @@ also requires the same acceptance in provider connectors that have not shipped.
 Signed native clients and direct provider migrations remain skipped for signing
 credentials and provider developer applications respectively.
 
-RECOVER-002 was selected because keeping an independent recoverable copy of a
-team's original files is core browser-file-system work and needs no signed client
-or provider developer app. The owner can configure a schedule and retention in
-Administration; the separate runner owns encryption and independent storage.
-The encrypted independent R2 copy was authenticated, a live original was
-corrupted in the isolated installation, and a clean hosted restore reconciled
-the complete archived graph and all original hashes. Fresh real-mail sign-in
-worked at both widths; old session/device authority and queued notices did not
-revive. A partial upgrade schema was refused before target writes, and recovery
-worked after returning to the prior schema. The genuine v0.1.0 upgrade journey
-preserved its records and originals. RECOVER-002 is done.
+RECOVER-002 is done. The owner schedules and inspects independent encrypted
+backups in Administration. The CLI supports Amazon S3, Cloudflare R2 and custom
+S3-compatible HTTPS endpoints, including multipart archives and temporary
+credentials. `tests/chest/backup-archive.mjs` exercises the complete recovery,
+retention, scheduling and refusal paths at the provider boundary;
+`tests/chest/browser-backups.mjs` proves owner controls, status and single failure
+notices at 1440/390. `tests/chest/backup-sandbox.mjs` passed against the held
+RunEditRun account's real R2 S3 API with independent bucket credentials, recovered
+a clean target after corrupting live originals, and removed all its resources.
+`tests/chest/upgrade.mjs` interrupted the genuine populated v0.1.0 upgrade after a
+migration committed, recovered its private pre-upgrade archive into the prior
+release, reconciled graph/originals/settings/identity/history and refused old
+sessions. Recovered and upgraded pages passed at 1440/390. This supporting clause
+changes no homepage wording or aggregate homepage claim.
 
 ## Additional browser contract delivery
 
