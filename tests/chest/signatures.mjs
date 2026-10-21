@@ -121,5 +121,10 @@ try{
  const guarded=await open(['ext@outside.test']),guardPath=link(mailsTo('ext@outside.test').at(-1));await post(guardPath+'/pin',{});const pin=mailsTo('ext@outside.test').at(-1).text.match(/PIN is (\d{6})/)[1];
  for(let i=0;i<5;i++)await post(guardPath+'/verify',{pin:pin==='123456'?'654321':'123456'});assert.equal((await post(guardPath+'/verify',{pin})).status,403,'five wrong PINs burn it');
  const resent=await h.api(`/signatures/${guarded}/remind`,owner,{signer:(await h.api(`/signatures/${guarded}`,owner)).signers[0].id});assert.match(resent.mail,/accepted|suppressed/);const fresh=link(mailsTo('ext@outside.test').at(-1));assert.notEqual(fresh,guardPath);assert.equal((await h.fetch(guardPath)).status,404);assert.match(await text(await h.fetch(fresh)),/Verify your email/);
- console.log('SIGN-001 DOCX fidelity report, declined, expired, voided, PIN limits and resend passed');
+ // Custody and retention: the key is sealed, no view carries a link hash or PIN credential, and erasing the file erases its requests and signed copies.
+ const key=(await h.sql('SELECT key_sealed,certificate FROM chest_signing_key')).results[0];assert.match(key.key_sealed,/^v1\./);const view=JSON.stringify(await h.api(`/signatures/${draft.id}`,owner));assert.doesNotMatch(view,/tokenHash|credential|chest_sign_/);
+ await h.api(`/items/${file.id}/trash`,owner,{});const receipt=await h.api('/erasure',owner,{item:file.id});assert.equal(receipt.payload.state,'complete');
+ assert.equal((await h.raw(`/api/chest/signatures/${draft.id}`,owner)).status,404);assert.equal((await h.fetch(ext)).status,404,'the signer link stops with the file');assert.equal((await h.fetch(ext+'/signed',{headers:{cookie}})).status,404);
+ assert.equal((await h.sql("SELECT COUNT(*) n FROM chest_records WHERE kind='signature' AND json_extract(payload,'$.item')=?",file.id)).results[0].n,0);
+ console.log('SIGN-001 DOCX fidelity report, declined, expired, voided, PIN limits, resend, custody and erasure passed');
 }finally{rmSync(dir,{recursive:true,force:true});await h.close()}

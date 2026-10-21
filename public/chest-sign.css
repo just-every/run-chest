@@ -1,15 +1,15 @@
-/* Signature sheets: a readable stand-in for each PDF page with the fields placed over it. */
+/* Signature sheets: an SVG stand-in for each PDF page with the fields placed over it (src/chest/signatures/ui-sheet.ts). */
 .sign-pages { display: grid; gap: 20px; margin: 16px 0; }
-.sheet-box { container-type: inline-size; max-width: 760px; }
+.sheet-box { max-width: 760px; }
 .sheet-label { margin: 0 0 6px; font-size: .85rem; color: var(--chest-muted, #5b6270); }
-.sheet-frame { border: 1px solid #c7ccd6; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-.sheet { --s: calc(100cqw / var(--w)); position: relative; width: 100%; overflow: hidden; color: #111; cursor: default; }
+.sheet { display: block; width: 100%; height: auto; border: 1px solid #c7ccd6; box-shadow: 0 1px 4px rgba(0,0,0,.08); background: #fff; }
 [data-compose] .sheet { cursor: crosshair; }
-.sheet-text { position: absolute; white-space: nowrap; line-height: 1; font-family: Helvetica, Arial, sans-serif; pointer-events: none; }
-.sfield { position: absolute; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border: 2px dashed #3b5bdb; background: rgba(59, 91, 219, .12); font-size: calc(var(--s) * 9); line-height: 1; overflow: hidden; }
-.sfield.other { border-color: #8a8fa0; background: rgba(138, 143, 160, .14); }
-.sfield.mine { border-style: solid; background: rgba(250, 204, 21, .25); border-color: #b7791f; }
-.sfield span { padding: 0 2px; white-space: nowrap; }
+.sheet-paper { fill: #fff; }
+.sheet-text { fill: #111; font-family: Helvetica, Arial, sans-serif; pointer-events: none; }
+.sfield rect { fill: rgba(59, 91, 219, .14); stroke: #3b5bdb; stroke-width: 1.5; stroke-dasharray: 4 2; }
+.sfield text { fill: #1f2a6b; pointer-events: none; }
+.sfield.other rect { fill: rgba(138, 143, 160, .16); stroke: #8a8fa0; }
+.sfield.mine rect { fill: rgba(250, 204, 21, .3); stroke: #b7791f; stroke-dasharray: none; }
 .field-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 12px; }
 .signers { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 8px; }
 .signer-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
@@ -18,3 +18,4 @@
 .sign-form label.check { display: flex; gap: 8px; align-items: start; }
 [data-field-list] li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 [data-field-list] input { width: 5.5em; }
+.sign-status .mono, .sign-status .hash { overflow-wrap: anywhere; word-break: break-word; }

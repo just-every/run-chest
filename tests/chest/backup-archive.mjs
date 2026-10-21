@@ -32,6 +32,7 @@ try {
   db.prepare("INSERT INTO chest_integration_secrets(id,value,email) VALUES('old-oauth-token','OLD_OAUTH_AUTHORITY','staff@example.test')").run();
   db.prepare("INSERT INTO chest_device_credentials VALUES('OLD_DEVICE_HASH','device','owner@example.test',?,NULL,NULL)").run(at);
   db.prepare("INSERT INTO chest_reader VALUES(1,'openai','https://example.test','model','workspace','OLD_READER_SECRET','hint','owner@example.test',?)").run(at);
+  db.prepare("INSERT INTO chest_signing_key VALUES(1,'v1.OLD_SIGNING_SECRET','certificate','fingerprint',?)").run(at);
   db.prepare("INSERT INTO chest_sso_config VALUES(1,?, 'revision',NULL,0)").run(JSON.stringify({clientSecret:'OLD_SSO_SECRET'}));
   db.prepare("INSERT INTO rer_dependency_keys VALUES('provider','OLD_PRIVATE_KEY')").run();
   const records=[
@@ -118,7 +119,7 @@ else process.exit(1);
   const restored=new DatabaseSync(target);
   assert.deepEqual({...restored.prepare('SELECT source_identity,import_job,applying FROM rer_portability_state WHERE id=1').get()},{source_identity:'independent-source',import_job:null,applying:0});
   for(const [id,kind,payload] of records.filter(r=>['item','space','comment','mapping','future'].includes(r[0])))assert.deepEqual(JSON.parse(restored.prepare('SELECT payload FROM chest_records WHERE id=?').get(id).payload),payload);
-  for(const table of ['oa_sessions','chest_integration_secrets','chest_reader','chest_sso_config','rer_dependency_keys'])assert.equal(restored.prepare('SELECT COUNT(*) AS n FROM '+table).get().n,0,'restored target requires new authorization for '+table);
+  for(const table of ['oa_sessions','chest_integration_secrets','chest_reader','chest_signing_key','chest_sso_config','rer_dependency_keys'])assert.equal(restored.prepare('SELECT COUNT(*) AS n FROM '+table).get().n,0,'restored target requires new authorization for '+table);
   assert.equal(restored.prepare('SELECT COUNT(*) AS n FROM chest_device_credentials').get().n,0);
   assert.equal(restored.prepare("SELECT COUNT(*) AS n FROM chest_records WHERE kind IN ('device','transfer-session')").get().n,0);
   const record=id=>JSON.parse(restored.prepare('SELECT payload FROM chest_records WHERE id=?').get(id).payload);

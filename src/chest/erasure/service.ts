@@ -43,7 +43,7 @@ export async function requestErasure(env:Bindings,s:Session,input:any,authorized
  for(const row of records)if(row.kind==='item'&&personal.some(p=>p.id===row.payload.space))items.add(row.id)
  let changed=true;while(changed){changed=false;for(const row of records)if(row.kind==='item'&&items.has(row.payload.parent)&&!items.has(row.id)){items.add(row.id);changed=true}}
  insist(items.size||documents.size||person,'erasure_selection_required')
- const selected=records.filter(r=>items.has(r.id)||documents.has(r.id)),checksums=[...new Set(selected.flatMap(r=>(r.payload.versions??[]).map((v:any)=>v.checksum as string)))],at=now(),key=id()
+ const selected=records.filter(r=>items.has(r.id)||documents.has(r.id)),checksums=[...new Set([...selected.flatMap(r=>(r.payload.versions??[]).map((v:any)=>v.checksum as string)),...records.filter(r=>r.kind==='signature'&&items.has(r.payload.item)&&r.payload.rendition).map(r=>r.payload.rendition.checksum as string)])],at=now(),key=id()
  const entry:JournalEntry={id:key,at,items:[...items],documents:[...documents],identities:person?[person.hash]:[],checksums}
  const holds=(await list<Hold>(env,'erasure-hold')).filter(h=>h.payload.active&&((h.payload.scope==='item'&&items.has(h.payload.subject))||(h.payload.scope==='document'&&documents.has(h.payload.subject))||(h.payload.scope==='identity'&&h.payload.subject===email)))
  const targets:ErasureTarget[]=holds.map(h=>({store:'preservation hold',status:'held',detail:h.payload.reason}))
