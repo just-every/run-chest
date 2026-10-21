@@ -6,7 +6,7 @@ for (const panel of document.querySelectorAll('[data-office-item]')) {
  // A remote version must not discard work in this editor or any other form on the file page.
  const controls = [...document.querySelectorAll('input, textarea, select')];
  const initial = new Map(controls.map(input => [input, {value: input.value, checked: input.checked}]));
- const hasUnsavedInput = () => controls.some(input => {
+ const hasUnsavedInput = () => document.querySelector('[data-upload] [data-state]:not([data-state="done"]):not([data-state="cancelled"])') || controls.some(input => {
   const before = initial.get(input);
   return input.isConnected && (input.value !== before.value || input.checked !== before.checked || input.files?.length);
  });
