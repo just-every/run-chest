@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { credentials, names, databaseId, query } from '../hosted/account.mjs';
 import { r2 } from '../hosted/r2.mjs';
+import { s3 } from '../hosted/s3.mjs';
 import { archiveKey, sha256 } from './crypto.mjs';
 import { sealArchive, openArchive } from './archive.mjs';
 import { sanitizeExport, inspectDatabase, reconcileOriginals, sameSchema, restorePlan, ident } from './database.mjs';
@@ -24,11 +25,23 @@ export async function runWrangler(creds, argv) {
 }
 export function configuration({ environment = 'production', envFile, backupBucket, key } = {}) {
   const live = credentials(envFile), resources = names(environment), env = live.env;
-  const destination = { account: env.CHEST_BACKUP_ACCOUNT_ID, token: env.CHEST_BACKUP_API_TOKEN };
-  const bucket = backupBucket ?? env.CHEST_BACKUP_BUCKET;
-  if (!destination.account || !destination.token || !/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucket ?? '')) throw new Error('Set CHEST_BACKUP_ACCOUNT_ID, CHEST_BACKUP_API_TOKEN and CHEST_BACKUP_BUCKET for a separately provisioned owner bucket.');
-  if (destination.token === live.token || destination.account === live.account && bucket === resources.bucket) throw new Error('Backup requires separate credentials and a bucket outside the live store.');
-  return { environment, live, destination, bucket, resources, key: archiveKey(key ?? env.CHEST_BACKUP_KEY) };
+  const provider = env.CHEST_BACKUP_PROVIDER ?? 'r2', bucket = backupBucket ?? env.CHEST_BACKUP_BUCKET;
+  if (!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucket ?? '')) throw new Error('Set CHEST_BACKUP_BUCKET to a separately provisioned owner bucket.');
+  let destination;
+  if (provider === 'r2') {
+    destination = { account: env.CHEST_BACKUP_ACCOUNT_ID, token: env.CHEST_BACKUP_API_TOKEN };
+    if (!destination.account || !destination.token) throw new Error('Set the independent R2 account and API token.');
+    if (destination.token === live.token || destination.account === live.account && bucket === resources.bucket) throw new Error('Backup requires separate credentials and a bucket outside the live store.');
+  } else if (provider === 's3') {
+    const region = env.CHEST_BACKUP_S3_REGION;
+    if (!/^[a-z0-9-]+$/.test(region ?? '')) throw new Error('Set the independent S3 region.');
+    const endpoint = new URL(env.CHEST_BACKUP_S3_ENDPOINT ?? `https://s3.${region}.amazonaws.com`);
+    if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.pathname !== '/' || endpoint.search || endpoint.hash) throw new Error('S3 endpoint must be an HTTPS origin.');
+    destination = { endpoint: endpoint.origin, region, accessKeyId: env.CHEST_BACKUP_S3_ACCESS_KEY_ID, secretAccessKey: env.CHEST_BACKUP_S3_SECRET_ACCESS_KEY, sessionToken: env.CHEST_BACKUP_S3_SESSION_TOKEN };
+    if (!destination.accessKeyId || !destination.secretAccessKey || [destination.accessKeyId,destination.secretAccessKey,destination.sessionToken].includes(live.token)) throw new Error('Set independent S3 credentials, outside the live store authority.');
+    if (endpoint.hostname === `${live.account}.r2.cloudflarestorage.com` && bucket === resources.bucket) throw new Error('Backup bucket must differ from the live store.');
+  } else throw new Error('CHEST_BACKUP_PROVIDER must be r2 or s3.');
+  return { environment, live, provider, destination, bucket, resources, key: archiveKey(key ?? env.CHEST_BACKUP_KEY) };
 }
 export async function hostedEdge(config) {
   const { live, destination, resources, bucket } = config;
@@ -37,7 +50,7 @@ export async function hostedEdge(config) {
   // becomes a durable failed attempt, rather than a runner disappearing before reporting.
   const lazy = (creds, name) => {
     let client;
-    const open = () => client ??= r2(creds, name);
+    const open = () => client ??= name === bucket && creds === destination && config.provider === 's3' ? Promise.resolve(s3(creds, name)) : r2(creds, name);
     return {
       async *list(prefix) { yield* (await open()).list(prefix); },
       async delete(key) { return (await open()).delete(key); },

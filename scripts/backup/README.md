@@ -81,7 +81,14 @@ its active import job and applying flag are cleared. Older archives which omitte
 that row cannot establish a supplied source journal match. Product erasure
 journal records and native portability fences are retained.
 
-The public CLI supports R2; there is no S3 adapter. The owner console and
+The public CLI supports R2 and Amazon S3/S3-compatible destinations. Set
+`CHEST_BACKUP_PROVIDER=s3`, `CHEST_BACKUP_S3_REGION`,
+`CHEST_BACKUP_S3_ACCESS_KEY_ID`, `CHEST_BACKUP_S3_SECRET_ACCESS_KEY`, and optionally
+`CHEST_BACKUP_S3_SESSION_TOKEN`. Amazon S3's regional endpoint is the default;
+`CHEST_BACKUP_S3_ENDPOINT` selects another provider's HTTPS origin. The bucket
+and encryption key settings are unchanged. See `docs/independent-backups.md`.
+`scripts/hosted/s3.mjs` shares the signed, bounded multipart object transport
+with R2; completion must return success, and failed uploads are aborted. The owner console and
 independent schedule runner record outcomes, and the live application sends
 failure notices. Full recovery and upgrade drill evidence is tracked in
 CONTRACT.md rather than inferred from an archive verification. Retention is deletion-based, with no provider object lock. Separate

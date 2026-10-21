@@ -12,7 +12,7 @@ import { archiveKey } from '../../scripts/backup/crypto.mjs';
 import { inspectDatabase } from '../../scripts/backup/database.mjs';
 
 const root=resolve(import.meta.dirname,'../..'), temp=await mkdtemp(join(tmpdir(),'chest-backup-test-'));
-const key=randomBytes(32).toString('hex'), bytes=Buffer.alloc(9*1024*1024,87), hash=createHash('sha256').update(bytes).digest('hex');
+const key=randomBytes(32).toString('hex'), bytes=Buffer.alloc(65*1024*1024,87), hash=createHash('sha256').update(bytes).digest('hex');
 const source=join(temp,'source.sqlite'), target=join(temp,'target.sqlite'), bin=join(temp,'bin'), edge=join(temp,'edge');
 await chmod(temp,0o700);
 try {
@@ -61,30 +61,7 @@ try {
   await mkdir(bucketPath('owner-account','owner-backups'),{recursive:true});
   await mkdir(bucketPath('recovery-account','chest-recovery-blobs'),{recursive:true});
   const preload=join(temp,'cloudflare-edge.mjs');
-  await writeFile(preload,`import {DatabaseSync} from 'node:sqlite';
-import {readFile,writeFile,mkdir,readdir,stat,rm} from 'node:fs/promises';
-import {join,dirname,relative} from 'node:path';
-const home=process.env.CHEST_BACKUP_TEST_HOME;
-async function files(dir){const out=[];for(const entry of await readdir(dir,{withFileTypes:true}).catch(()=>[])){const p=join(dir,entry.name);if(entry.isDirectory())out.push(...await files(p));else out.push(p);}return out;}
-globalThis.fetch=async(input,init={})=>{
- const url=new URL(input),method=init.method??'GET';
- const json=result=>Response.json({success:true,result});
- if(url.hostname==='api.cloudflare.com'){
-  if(url.pathname.endsWith('/tokens/verify'))return json({id:'test-access-key'});
-  const account=url.pathname.split('/')[4],file=join(home,account==='recovery-account'?'target.sqlite':'source.sqlite');
-  if(url.pathname.endsWith('/d1/database'))return json([{name:url.searchParams.get('name'),uuid:'database'}]);
-  if(url.pathname.endsWith('/query')){const db=new DatabaseSync(file);try{return json([{results:db.prepare(JSON.parse(init.body).sql).all()}]);}finally{db.close();}}
- }
- if(url.hostname.endsWith('.r2.cloudflarestorage.com')){
-  if(process.env.CHEST_BACKUP_TEST_FAIL==='yes'&&method==='PUT')throw Error('Independent provider refused write');
-  const account=url.hostname.split('.')[0],parts=url.pathname.slice(1).split('/').map(decodeURIComponent),bucket=join(home,'edge',account,parts.shift()),key=parts.join('/'),file=join(bucket,key);
-  if(method==='GET'&&url.searchParams.has('list-type')){const prefix=url.searchParams.get('prefix')??'',all=await files(bucket);return new Response('<ListBucketResult><IsTruncated>false</IsTruncated>'+ (await Promise.all(all.map(async p=>({key:relative(bucket,p),size:(await stat(p)).size})))).filter(o=>o.key.startsWith(prefix)).map(o=>'<Contents><Key>'+o.key+'</Key><Size>'+o.size+'</Size></Contents>').join('')+'</ListBucketResult>');}
-  if(method==='DELETE'){await rm(file,{force:true});return new Response(null,{status:204});}
-  if(method==='GET')return new Response(await readFile(file));
-  if(method==='PUT'){await mkdir(dirname(file),{recursive:true});await writeFile(file,init.body);return new Response('',{headers:{etag:'test-etag'}});}
- }
- throw new Error('Unexpected provider edge request');
-};`);
+  await copyFile(join(root,'tests/chest/backup-storage-edge.mjs'),preload);
   await writeFile(join(bin,'npx'),`#!/usr/bin/env node
 import {DatabaseSync} from 'node:sqlite';
 import {readFile,writeFile,rm} from 'node:fs/promises';
@@ -95,7 +72,7 @@ if(args.includes('export')){const result=spawnSync('/usr/bin/sqlite3',[file,'.du
 else if(args.includes('execute')){const db=new DatabaseSync(file);try{db.exec(await readFile(args[args.indexOf('--file')+1],'utf8'));}finally{db.close();}}
 else process.exit(1);
 `); await chmod(join(bin,'npx'),0o700);
-  const env={...process.env,PATH:bin+':'+process.env.PATH,CHEST_BACKUP_TEST_HOME:temp,CLOUDFLARE_ACCOUNT_ID:'live-account',CLOUDFLARE_API_TOKEN:'fake-live-edge',CHEST_BACKUP_ACCOUNT_ID:'owner-account',CHEST_BACKUP_API_TOKEN:'fake-owner-edge',CHEST_BACKUP_BUCKET:'owner-backups',CHEST_BACKUP_KEY:key};
+  const env={...process.env,PATH:bin+':'+process.env.PATH,CHEST_BACKUP_TEST_HOME:temp,CLOUDFLARE_ACCOUNT_ID:'live-account',CLOUDFLARE_API_TOKEN:'synthetic-chest-1',CHEST_BACKUP_ACCOUNT_ID:'owner-account',CHEST_BACKUP_API_TOKEN:'synthetic-chest-2',CHEST_BACKUP_BUCKET:'owner-backups',CHEST_BACKUP_KEY:key};
   async function cli(args,{account='live-account',refuse=false,entry='cli',extra={}}={}) {
     const child=spawn(process.execPath,['--import',preload,join(root,'scripts/backup/'+entry+'.mjs'),...args],{cwd:root,env:{...env,...extra,CLOUDFLARE_ACCOUNT_ID:account},stdio:['ignore','pipe','pipe']});
     let out='',err='';child.stdout.on('data',c=>out+=c);child.stderr.on('data',c=>err+=c);
@@ -157,6 +134,27 @@ else process.exit(1);
   const requested=new DatabaseSync(source);requested.prepare("UPDATE chest_records SET payload=json_set(payload,'$.requestedAt',?),revision='manual-request' WHERE id=?").run(new Date().toISOString(),scheduleId);requested.close();
   await cli(['--environment','production'],{entry:'schedule',extra:{CHEST_BACKUP_TEST_FAIL:'yes'},refuse:true});
   const failed=new DatabaseSync(source);assert.equal(JSON.parse(failed.prepare("SELECT payload FROM chest_records WHERE kind='backup-run' ORDER BY json_extract(payload,'$.at') DESC LIMIT 1").get().payload).state,'failed');failed.close();
+  // Each independent destination uses the same encrypted archive, CLI, cadence and recovery path.
+  for(const endpoint of ['https://s3.us-east-1.amazonaws.com','https://backup.example.test']) {
+    const extra={CHEST_BACKUP_PROVIDER:'s3',CHEST_BACKUP_S3_ENDPOINT:endpoint,CHEST_BACKUP_S3_REGION:endpoint.includes('amazonaws')?'us-east-1':'eu-west-2',CHEST_BACKUP_S3_ACCESS_KEY_ID:'synthetic-chest-3',CHEST_BACKUP_S3_SECRET_ACCESS_KEY:'synthetic-chest-4',CHEST_BACKUP_S3_SESSION_TOKEN:'synthetic-chest-5'};
+    await mkdir(bucketPath('s3-owner','owner-backups'),{recursive:true});
+    const s3=await cli(['backup','--environment','production'],{extra});
+    assert.equal((await cli(['verify','--environment','production','--key',s3.key],{extra})).verified,true);
+    const s3Stored=join(bucketPath('s3-owner','owner-backups'),s3.key);
+    const oldS3=s3.key.replace(/\/\d{4}-\d\d-\d\dT/,'/2000-01-01T');await copyFile(s3Stored,join(bucketPath('s3-owner','owner-backups'),oldS3));
+    assert.ok((await cli(['list','--environment','production'],{extra})).some(b=>b.key===oldS3),'paginated destination lists all archives');
+    assert.ok((await cli(['prune','--environment','production','--retention-days','1'],{extra})).includes(oldS3));
+    // Recover the S3 copy into an empty real SQLite/original target after corrupting its live source.
+    const reset=new DatabaseSync(target);for(const table of reset.prepare("SELECT name FROM sqlite_master WHERE type='table' AND (name LIKE 'chest_%' OR name LIKE 'ik_%')").all())reset.exec('DELETE FROM "'+table.name+'"');reset.close();await rm(originalTarget,{recursive:true});await mkdir(originalTarget);
+    await writeFile(join(liveBucket,'sha256',hash),'corrupt live original');
+    assert.equal((await cli(['restore','--environment','recovery','--input',s3Stored,'--acknowledge-offline-erasures'],{account:'recovery-account',extra})).restored,true);
+    assert.deepEqual(await readFile(join(originalTarget,'sha256',hash)),bytes);await writeFile(join(liveBucket,'sha256',hash),bytes);
+    const request=new DatabaseSync(source);request.prepare("UPDATE chest_records SET payload=json_set(payload,'$.requestedAt',?),revision=? WHERE id=?").run(new Date(Date.now()+1000).toISOString(),endpoint,scheduleId);request.close();
+    assert.equal((await cli(['--environment','production'],{entry:'schedule',extra})).state,'complete');
+    await cli(['backup','--environment','production'],{extra:{...extra,CHEST_BACKUP_TEST_COMPLETE_FAIL:'yes'},refuse:true});
+    assert.deepEqual(await readdir(join(temp,'parts','s3-owner')).catch(()=>[]),[],'failed multipart completion aborts private staging');
+    console.log('S3 destination CLI passed: signed multipart backup, readback, verify, paginated retention, corruption recovery, schedule and failed completion: '+endpoint);
+  }
   console.log('Scheduled CLI passed: durable claims, completed authenticated copy, cadence, no replay and recorded independent-provider failure.');
   console.log('Independent backup CLI passed: complete schema/graph/original roundtrip, credential exclusion, inert links/jobs, encrypted tamper/truncation/append refusal before target writes, empty-target refusal and scoped retention.');
 } finally { await rm(temp,{recursive:true,force:true}); }

@@ -1,5 +1,5 @@
-Chest can keep encrypted recovery copies in an owner's private Cloudflare R2
-bucket, separate from the live Worker's bucket and sync authority. The live
+Chest can keep encrypted recovery copies in an owner's private Amazon S3,
+Cloudflare R2 or S3-compatible bucket, separate from the live Worker's bucket and sync authority. The live
 application stores only the schedule and outcomes. A separate machine holds the
 backup credentials and the encryption key and performs the work.
 
@@ -14,9 +14,9 @@ Put these names in a private file, such as `/private/chest-backup.env` (mode 600
 
 ```
 CLOUDFLARE_ACCOUNT_ID=live-owner-account-id
-CLOUDFLARE_API_TOKEN=live-d1-and-original-bucket-credential
+CLOUDFLARE_API_TOKEN=synthetic-chest-1
 CHEST_BACKUP_ACCOUNT_ID=backup-owner-account-id
-CHEST_BACKUP_API_TOKEN=separate-backup-bucket-credential
+CHEST_BACKUP_API_TOKEN=synthetic-chest-2
 CHEST_BACKUP_BUCKET=independent-private-bucket
 CHEST_BACKUP_KEY=64-hex-characters-from-32-cryptographically-random-bytes
 ```
@@ -27,7 +27,32 @@ backup credential to its bucket. A different owner-controlled account also
 protects against loss of the live account. Do not bind the backup bucket or put
 its token or key in the live Worker. Keep a private copy of the encryption key
 outside both stores: without it, recovery is impossible. Provider storage charges
-belong to the owner's Cloudflare account; Chest charges nothing.
+belong to the owner's storage provider account; Chest charges nothing.
+
+For Amazon S3 or an S3-compatible destination, keep the live Cloudflare settings
+and encryption key above, and replace the backup account/token settings with:
+
+```
+CHEST_BACKUP_PROVIDER=s3
+CHEST_BACKUP_S3_REGION=us-east-1
+CHEST_BACKUP_S3_ACCESS_KEY_ID=synthetic-chest-3
+CHEST_BACKUP_S3_SECRET_ACCESS_KEY=synthetic-chest-4
+CHEST_BACKUP_BUCKET=independent-private-bucket
+```
+
+Amazon S3 uses `https://s3.REGION.amazonaws.com` by default. For another provider,
+set `CHEST_BACKUP_S3_ENDPOINT` to its HTTPS origin (without a bucket, path, query
+or embedded credentials), and use that provider's signing region. Requests use
+path-style bucket addressing and AWS Signature V4. Temporary credentials also
+need `CHEST_BACKUP_S3_SESSION_TOKEN`; renew them on the independent host before
+expiry. With `CHEST_BACKUP_PROVIDER=r2` (the default), the original R2 account and
+API-token configuration applies. Never place any destination credential in the
+live application. The owner must enforce the separate account/bucket permissions
+at the provider; the runner cannot certify IAM policy or account ownership.
+Both destinations support multipart archives, readback, listing and retention.
+Failed multipart uploads are aborted; failed readback removes only the newly
+created archive. Provider retention or object lock can prevent deletion and
+makes the run fail visibly rather than claiming retention succeeded.
 
 Run the worker on the independent machine:
 
