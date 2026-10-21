@@ -180,6 +180,19 @@ and restore its pre-upgrade archive using the steps above. Do not apply an old
 archive over the changed schema. Check the restored product and originals
 before directing staff to it.
 
+For a local installation, stop its own server process and run
+`rer export --output exports/pre-upgrade.rer` before upgrading. Keep that private
+archive and the previous release. After an interrupted upgrade, leave the changed
+store untouched, install the previous release in a new directory, place the
+archive in its private `exports` directory and run
+`rer import --input exports/pre-upgrade.rer --yes`, then `rer setup`. Reenter
+private mail/provider settings from the owner's private configuration; the
+archive carries no session secret. Sign in afresh, reconcile people, permissions,
+settings, approval/comment history and every original before using the recovery
+installation. The committed `tests/chest/upgrade.mjs` journey performs this drill
+against the genuine prior release, interrupting the real upgrade after a migration
+commits and before the new application becomes ready.
+
 Cloudflare D1 export can briefly pause database requests. Schedule backups for
 a quiet period; if a page reports a database error during export, reload it
 after export finishes. D1 and R2 do not have a shared snapshot transaction. Quiesce writes for a strict
