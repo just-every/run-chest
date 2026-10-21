@@ -12,6 +12,7 @@ globalThis.fetch=async(input,init={})=>{
  if(url.hostname==='api.cloudflare.com'){
   if(url.pathname.endsWith('/tokens/verify'))return json({id:'test-access-key'});
   const account=url.pathname.split('/')[4],file=join(home,account==='recovery-account'?'target.sqlite':'source.sqlite');
+  assert.equal(new Headers(init.headers).get('authorization'),'Bearer '+(account==='recovery-account'?'synthetic-chest-7':'synthetic-chest-1'),'provider requires the newly supplied target credential');
   if(url.pathname.endsWith('/d1/database'))return json([{name:url.searchParams.get('name'),uuid:'database'}]);
   if(url.pathname.endsWith('/query')){const db=new DatabaseSync(file);try{return json([{results:db.prepare(JSON.parse(init.body).sql).all()}]);}finally{db.close();}}
  }
@@ -22,7 +23,7 @@ globalThis.fetch=async(input,init={})=>{
   const region=s3?(url.hostname==='backup.example.test'?'eu-west-2':'us-east-1'):'auto';
   assert.equal(fields[1],s3?'synthetic-chest-3':'test-access-key');
   const stamp=headers.get('x-amz-date'),day=stamp.slice(0,8),scope=day+'/'+region+'/s3/aws4_request';assert.equal(fields[2],scope);
-  const secret=s3?'synthetic-chest-4':createHash('sha256').update(url.hostname.startsWith('live-account.')?'synthetic-chest-1':url.hostname.startsWith('recovery-account.')?'synthetic-chest-1':'synthetic-chest-2').digest('hex');
+  const secret=s3?'synthetic-chest-4':createHash('sha256').update(url.hostname.startsWith('live-account.')?'synthetic-chest-1':url.hostname.startsWith('recovery-account.')?'synthetic-chest-7':'synthetic-chest-2').digest('hex');
   if(s3)assert.equal(headers.get('x-amz-security-token'),'synthetic-chest-5');
   const digest=value=>createHash('sha256').update(value).digest('hex'),mac=(key,value)=>createHmac('sha256',key).update(value).digest();
   const canonical=[method,url.pathname,url.search.slice(1),fields[3].split(';').map(k=>k+':'+headers.get(k).trim()+'\n').join(''),fields[3],headers.get('x-amz-content-sha256')].join('\n');
