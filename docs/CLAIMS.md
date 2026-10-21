@@ -74,7 +74,7 @@ public-door tests; their status matches the CONTRACT.md Status cell.
 
 | Capability | Clause | Status | Code |
 | --- | --- | --- | --- |
-| Version-pinned delivery packages, resumable original downloads and distinct receipt events | SHARE-003 | partial | `src/chest/transfers/service.ts`; `src/chest/transfers/public.ts`; `src/chest/transfers/ui.ts`; `tests/chest/transfers.mjs`; `tests/chest/browser-transfers.mjs` |
+| Version-pinned delivery packages, resumable original downloads and distinct receipt events | SHARE-003 | done | `src/chest/transfers/service.ts`; `src/chest/transfers/public.ts`; `src/chest/transfers/ui.ts`; `tests/chest/transfers.mjs`; `tests/chest/transfer-large-flow.mjs`; `tests/chest/browser-transfers.mjs` |
 | Match requested records to exact approvals and intended-recipient confirmations, with scoped reminders and reopening | AGENT-004 | done | `src/chest/collection/api.ts`; `src/chest/collection/evidence.ts`; `src/chest/collection/reminders.ts`; `src/chest/collection/ui.ts`; `tests/chest/collection.mjs`; `tests/chest/browser-collection.mjs` |
 
 | External-sharing, trusted-domain and member/editor policy with recipient confirmation and reversible grant suspension | POLICY-001 | partial | `src/chest/files/sharing-policy.ts`; `src/chest/files/policy-suspensions.ts`; `src/chest/files/link-policy.ts`; `src/chest/files/ui-link-policy.ts`; `tests/chest/link-policy.mjs`; `tests/chest/browser-sharing-policy.mjs` |

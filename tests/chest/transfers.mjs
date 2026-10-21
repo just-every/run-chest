@@ -1,6 +1,7 @@
 // SHARE-003 public packages: actual stored originals, range resume and explicit verified receipt.
 import assert from 'node:assert/strict';
 import {harness} from './harness.mjs';
+import {largeTransferJourney} from './transfer-large-flow.mjs';
 const h=await harness();let owner;
 const post=(path,cookie,body)=>h.fetch(path,{method:'POST',headers:{origin:h.origin,...(cookie?{cookie}:{})},body:new URLSearchParams(body)});
 try {
@@ -36,5 +37,6 @@ try {
  const expired=await h.api('/transfers',owner,{item:file.id,expires:'2099-01-01'});const ep=new URL(expired.url).pathname,er=await post(ep+'/start',null,{}),ec=er.headers.get('set-cookie').split(';')[0];
  await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.expires','2000-01-01T00:00:00.000Z') WHERE kind='public-link' AND id=(SELECT json_extract(payload,'$.link') FROM chest_records WHERE id=?)",expired.id);
  assert.equal((await h.fetch(ep+'/f/'+file.id,{headers:{cookie:ec,range:'bytes=0-5'}})).status,410);
+ await largeTransferJourney(h,owner,space);
  console.log('SHARE-003 pinned packages, scanner/provider distinctions, restart/range resume, count limit, verified confirmation, expiry/revoke passed');
 }finally {await h.close()}

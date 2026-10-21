@@ -141,7 +141,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "e5dd97cfa954116b822c76de990d3d13deeadf1fb0d3b5f1b02fad7a13f22a94",
+      "sha256": "e04d1f46f7a940de6f886880b1f04199f905bfd72839feb276443691c94224bc",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -169,7 +169,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "14fcb568c22710eb735f1d3ae569173e5e528c43a0723cec894e624dd3f8c0d7",
+      "sha256": "f07db73bfcf8d95d93506439aedb13dbc8051b0be5e734ecee754f4bcdb1a091",
       "executable": false
     },
     "DEMO.md": {
@@ -205,7 +205,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "709e5ab8bb12af73d1a8b9f58548dd1bcfd1b58b5143e812f842b79e2aeba93f",
+      "sha256": "00a389d4524c79e085a6014766511347b2f83476617c091d58ef30e166444d49",
       "executable": false
     },
     "docs/collections.md": {
@@ -4352,8 +4352,12 @@
       "sha256": "c010ceb9d807d74af00f39a8c324186b4e6d4c8e8e22ca807dec9f0a91deb933",
       "executable": false
     },
+    "tests/chest/transfer-large-flow.mjs": {
+      "sha256": "d276ff5ad356ac586c529b8ea6515917a93d7cd5be1e9f321a9b629fa6a7be02",
+      "executable": false
+    },
     "tests/chest/transfers.mjs": {
-      "sha256": "36c49c341f5c2b45d89c1609b1184b463483935ff095558e9b13cc6ac3efc6b8",
+      "sha256": "d3cd9a922f0380d94485b4cb672b83d228497b713714bad31c3fed926619c664",
       "executable": false
     },
     "tests/chest/upgrade-local.mjs": {
