@@ -139,6 +139,29 @@ jobs:
           name: chest-browser-pages
           path: test-results/*.png
 
+  extra:
+    # Signatures: HTTP journeys against the built Worker, then their browser journeys at 1440 and 390.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.20.0'
+      - run: npm install --global pnpm@10.12.4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run build
+      - run: pnpm run test:chest:extra
+      - run: pnpm run test:browser:extra
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chest-pages-extra
+          path: test-results/*.png
   organisation:
     runs-on: ubuntu-latest
     timeout-minutes: 15
