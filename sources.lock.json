@@ -141,7 +141,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "e04d1f46f7a940de6f886880b1f04199f905bfd72839feb276443691c94224bc",
+      "sha256": "edc2b1643e55e3c73ef6b8d0b1579919be48a8121770f91ec3b5fc7af24ebed8",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -169,7 +169,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "f07db73bfcf8d95d93506439aedb13dbc8051b0be5e734ecee754f4bcdb1a091",
+      "sha256": "a1e7a7528cae25868cf134a1dd98d491f3b1aa1770b3ca7f7be52d7f3d34c0e5",
       "executable": false
     },
     "DEMO.md": {
@@ -205,7 +205,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "00a389d4524c79e085a6014766511347b2f83476617c091d58ef30e166444d49",
+      "sha256": "e8ae1c2188326dd4ef81ee9a7d1e93b649fa8cf014dbe986f27350921f38ebc4",
       "executable": false
     },
     "docs/collections.md": {
@@ -497,7 +497,7 @@
       "executable": false
     },
     "public/chest-office.js": {
-      "sha256": "2d929b97bcfef79eeb5c062903db6ab7726683bcaf7222dc4786b516729db957",
+      "sha256": "919c127e4c451f7100063ec7e0a005aaee045c57342a076f003f8b8652387ffe",
       "executable": false
     },
     "public/chest-organisation.css": {
@@ -1821,7 +1821,7 @@
       "executable": false
     },
     "src/chest/office/ui.ts": {
-      "sha256": "4b0fc3404f878d07054d93fd386aa5ef8186593bf2c2da94cac33e439fcf257c",
+      "sha256": "0c402ef91d3a92dfd2b7adb7ebdbdb2897e20e7c031d7196a8dc81f401da1a7e",
       "executable": false
     },
     "src/chest/office/word.ts": {
@@ -4129,7 +4129,7 @@
       "executable": false
     },
     "tests/chest/browser-new-files.mjs": {
-      "sha256": "9348ac3ac10f601adf56d2cf6a6d86574dbfaf4822f23b7ea23935dabf37e2c1",
+      "sha256": "5350dff68a9a07c5ae0beb2646da2095f3aa0fb1a3b4b102e5371cfe87b2edf6",
       "executable": false
     },
     "tests/chest/browser-ownership.mjs": {
@@ -4274,6 +4274,10 @@
     },
     "tests/chest/office-fixtures.mjs": {
       "sha256": "f20b7db6b64d3e57fc0a58db5734b884dc2d929396214151286f98edb7b7803a",
+      "executable": false
+    },
+    "tests/chest/office-restore-flow.mjs": {
+      "sha256": "034f6fe194177362174030f67e41bf07e9985bfca32091033a9826df4bbcfe2f",
       "executable": false
     },
     "tests/chest/office.mjs": {
