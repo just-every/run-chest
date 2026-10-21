@@ -73,7 +73,7 @@ try {
  for(const name of ['OWNER_EMAIL','MAIL_PROVIDER','MAIL_FROM'])assert.equal(restoredSettings[name],priorSettings[name],`rollback preserves configured ${name}`);
  assert.ok(restoredSettings.SESSION_SECRET&&restoredSettings.SESSION_SECRET!==priorSettings.SESSION_SECRET,'rollback regenerates the private session secret');
  assert.equal(await readFile(join(recovery,'src/branding.json'),'utf8'),brandingBefore,'rollback restores owner-selected application settings');
- server=await serve(recovery,port,setupEnv,true);
+ server=await serve(recovery,port,env,true);
  const recoveryKey=(await readFile(join(recovery,'.rer/local/dev-key.env'),'utf8')).trim().split('=')[1];assert.ok(recoveryKey!==key,'recovery has a fresh dev identity key');
  for(const cookie of [owner,member,legacyAdmin])assert.equal((await fetch(origin+'/api/chest/library',{headers:{cookie,'x-rer-dev-key':recoveryKey}})).status,401,'pre-upgrade credentials cannot open the recovered installation');
  const recoveredOwner=await session('owner',recoveryKey),recoveredMember=await session('member',recoveryKey);await session('admin',recoveryKey);

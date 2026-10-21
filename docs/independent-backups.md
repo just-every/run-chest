@@ -44,8 +44,8 @@ Amazon S3 uses `https://s3.REGION.amazonaws.com` by default. For another provide
 set `CHEST_BACKUP_S3_ENDPOINT` to its HTTPS origin (without a bucket, path, query
 or embedded credentials), and use that provider's signing region. Requests use
 path-style bucket addressing and AWS Signature V4. Temporary credentials also
-need `CHEST_BACKUP_S3_SESSION_TOKEN`; renew them on the independent host before
-expiry. With `CHEST_BACKUP_PROVIDER=r2` (the default), the original R2 account and
+need `CHEST_BACKUP_S3_SESSION_TOKEN`; replace them on the independent host and
+restart the runner before expiry. With `CHEST_BACKUP_PROVIDER=r2` (the default), the original R2 account and
 API-token configuration applies. Never place any destination credential in the
 live application. The owner must enforce the separate account/bucket permissions
 at the provider; the runner cannot certify IAM policy or account ownership.

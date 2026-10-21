@@ -101,3 +101,12 @@ the database after a failed object check. D1's multi-statement execution behavio
 and interrupted publication require the real-provider drill before claiming
 atomic recovery. Future authority tables/kinds need this policy updated; unknown
 product tables are retained and their JSON secret fields sanitized.
+
+The optional `tests/chest/backup-sandbox.mjs` journey runs the real backup CLI
+against disposable RunEditRun D1/R2 resources and a separately scoped temporary
+S3 destination credential. It requires privately injected held-account credentials,
+is separate from push Verify, and deletes only the resources it creates. The
+journey prints its tested source revision and recovery/cleanup outcome without
+printing credentials. `tests/chest/backup-archive.mjs` covers AWS regional and
+custom endpoints, signing, multipart failure and paginated retention at the
+network edge; `tests/chest/upgrade.mjs` covers the genuine prior-release rollback.
