@@ -1,0 +1,20 @@
+/* Signature sheets: a readable stand-in for each PDF page with the fields placed over it. */
+.sign-pages { display: grid; gap: 20px; margin: 16px 0; }
+.sheet-box { container-type: inline-size; max-width: 760px; }
+.sheet-label { margin: 0 0 6px; font-size: .85rem; color: var(--chest-muted, #5b6270); }
+.sheet-frame { border: 1px solid #c7ccd6; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.sheet { --s: calc(100cqw / var(--w)); position: relative; width: 100%; overflow: hidden; color: #111; cursor: default; }
+[data-compose] .sheet { cursor: crosshair; }
+.sheet-text { position: absolute; white-space: nowrap; line-height: 1; font-family: Helvetica, Arial, sans-serif; pointer-events: none; }
+.sfield { position: absolute; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border: 2px dashed #3b5bdb; background: rgba(59, 91, 219, .12); font-size: calc(var(--s) * 9); line-height: 1; overflow: hidden; }
+.sfield.other { border-color: #8a8fa0; background: rgba(138, 143, 160, .14); }
+.sfield.mine { border-style: solid; background: rgba(250, 204, 21, .25); border-color: #b7791f; }
+.sfield span { padding: 0 2px; white-space: nowrap; }
+.field-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 12px; }
+.signers { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 8px; }
+.signer-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+.sign-form { display: grid; gap: 12px; margin: 16px 0; }
+.sign-form label { display: grid; gap: 4px; }
+.sign-form label.check { display: flex; gap: 8px; align-items: start; }
+[data-field-list] li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+[data-field-list] input { width: 5.5em; }

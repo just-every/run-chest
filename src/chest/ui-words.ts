@@ -20,6 +20,7 @@ const events: Record<string, string> = {
  'review.approve': 'approved a version', 'review.submit': 'submitted a version', 'review.submitted': 'submitted a version', 'review.changes': 'asked for changes', 'review.comment': 'commented on a version', 'review.assign': 'assigned a reviewer',
  'collection.create': 'created a collection', 'schema.create': 'created a document type', 'schema.update': 'changed a document type', 'group.create': 'created a group', 'group.update': 'changed a group',
  'field.accept': 'accepted a value read from a scan', 'field.correct': 'corrected a value read from a scan', 'field.reject': 'rejected a value read from a scan', 'reader.save': 'changed the scan-reading settings', 'reader.remove': 'removed the scan-reading key',
+ 'signature.draft': 'prepared a signature request', 'signature.send': 'sent it for signature', 'signature.sign': 'signed it', 'signature.decline': 'declined to sign it', 'signature.void': 'voided a signature request', 'signature.expire': 'a signature request expired', 'signature.complete': 'filed the signed copy and audit certificate', 'signature.resend': 'sent a signer a fresh link', 'signature.pin': 'a signer asked for a PIN',
  'archive.apply': 'moved an archive in', 'archive.undo': 'undid an archive move-in',
 }
 // An unlisted code still reads as words: "thing.done-now" becomes "thing done now".

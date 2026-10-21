@@ -10,6 +10,8 @@ import { uiResponse } from './chest/ui'
 import { scimResponse } from './chest/organisation/scim'
 import { publicAttempt } from './chest/audit/public'
 import { publicResponse } from './chest/files/public'
+import { signResponse } from './chest/signatures/public'
+import { sweepSignatures } from './chest/signatures/sweep'
 import { dispatch } from './base/dispatch'
 import { staticAssetResponse } from './base/static-assets'
 import { deploymentHealth } from './base/deployment-health'
@@ -34,15 +36,17 @@ function documentResponse(response: Response): Response {
 }
 
 export default withDemo({
-  async scheduled(_controller, original) { await Promise.all([sweepIntegrations(runtimeBindings(original)),sweepBackups(runtimeBindings(original)),collectionSweep(runtimeBindings(original)),sweepLinkRepairs(runtimeBindings(original)),sweepAgents(runtimeBindings(original))]) },
+  async scheduled(_controller, original) { await Promise.all([sweepIntegrations(runtimeBindings(original)),sweepBackups(runtimeBindings(original)),collectionSweep(runtimeBindings(original)),sweepLinkRepairs(runtimeBindings(original)),sweepAgents(runtimeBindings(original)),sweepSignatures(runtimeBindings(original))]) },
   async email(message, env) { await receiveIntake(runtimeBindings(env), message) },
   async fetch(request, original, execution) {
     const asset = await staticAssetResponse(request, original)
     if (asset) return documentResponse(asset)
     const env = runtimeBindings(original)
-    if(new URL(request.url).pathname.startsWith('/app') || new URL(request.url).pathname.startsWith('/api/chest'))execution.waitUntil(Promise.all([sweepBackups(env),collectionSweep(env),sweepLinkRepairs(env),sweepAgents(env)]))
+    if(new URL(request.url).pathname.startsWith('/app') || new URL(request.url).pathname.startsWith('/api/chest'))execution.waitUntil(Promise.all([sweepBackups(env),collectionSweep(env),sweepLinkRepairs(env),sweepAgents(env),sweepSignatures(env)]))
     const publicPage = await setupStateResponse(request, env) ?? await lobbyResponse(request, env, identity)
     if (publicPage) return documentResponse(publicPage)
+    const signing = await signResponse(request, env)
+    if (signing) return documentResponse(signing)
     const shared = await publicAttempt(env, request, ()=>publicResponse(request, env))
     if (shared) return documentResponse(shared)
     const provisioning = await scimResponse(request, env)

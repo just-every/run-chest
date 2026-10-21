@@ -67,6 +67,9 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
   starred: prefs.starred.includes(key), shortcut: prefs.shortcuts.includes(key),
   uploads: allowed(ctx, 'contribute') ? await unfinished(env, w, item.payload.type === 'folder' ? { parent: key } : { item: key }) : [],
   rewinds: item.payload.type === 'folder' && allowed(ctx, 'contribute') ? await rewinds(env, `folder:${key}`) : [],
+  signable: item.payload.type === 'file' && allowed(ctx, 'contribute') && allowed(ctx, 'download') && !!currentVersion && (currentVersion.mediaType === 'application/pdf' || /\.docx$/i.test(currentVersion.filename)),
+  signatures: item.payload.type === 'file' && allowed(ctx, 'contribute') && allowed(ctx, 'download') ? await signatureList(env, key) : [],
  }
 }
+export async function signatureList(env: Bindings, key: string) { const { requestsOf, redacted } = await import('../signatures/store'); return (await requestsOf(env, key)).map(r => ({ id: r.id, ...redacted(r.payload) })).sort((a, b) => b.createdAt.localeCompare(a.createdAt)) }
 export { search } from './search'

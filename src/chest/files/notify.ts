@@ -17,6 +17,7 @@ function compose(env: Bindings, n: Notice, from: string) {
  if (n.type.startsWith('ownership')) return { subject: n.type === 'ownership.request' ? `${from} offered you ownership` : 'Ownership request updated', text: `${n.message}\n\nOpen the ownership request: ${base}/app/ownership/${n.request}` }
  if(n.type==='filing')return {subject:'Chest filed a file',text:`${n.message}\n\nReview the evidence and Undo in Chest: ${base}/app/filing`}
  if (n.type === 'link.repair') return { subject: 'Chest link repair', text: `${n.message}\n\nReview the record and request owner-approved Undo: ${base}/app/links` }
+ if (n.type.startsWith('signature.')) return { subject: n.message.slice(0, 120), text: `${n.message}\n\nOpen the request: ${base}/app/items/${n.item}` }
  if (n.type === 'share') return { subject: `${from} shared a file with you`, text: `${n.message}\n\nOpen it in Chest: ${open}\nFind everything shared with you: ${base}/app/shared` }
  if (n.type === 'request') return { subject: `${from} asked for access`, text: `${n.message}\n\nApprove or decline: ${base}/app/requests/${n.request}` }
  if (n.type === 'request.decision' || n.type === 'request.expired') return { subject: 'Your access request', text: `${n.message}\n\n${open}` }

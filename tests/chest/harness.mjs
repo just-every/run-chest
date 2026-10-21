@@ -50,5 +50,5 @@ export async function harness({edge,bindings={},hostname='127.0.0.1'}={}){
  }
  try{await start()}catch(e){await stop();await rm(directory,{recursive:true,force:true});throw e}// Time passing for expiry journeys: tests age stored timestamps; the Worker's clock is never faked.
  const sql=async(query,...params)=>(await worker.getD1Database('DB')).prepare(query).bind(...params).run();
- return {email:async(from,to,raw)=>{const response=await worker.dispatchFetch(origin+'/cdn-cgi/local/email?'+new URLSearchParams({from,to,format:'json'}),{method:'POST',body:raw});assert.equal(response.status,200,await response.clone().text());return response.json()},get origin(){return origin},vars,mails,fetch,raw,api,signIn,start,stop,directory,sql,async close(){await stop();await rm(directory,{recursive:true,force:true})}};
+ return {scheduled:async()=>(await worker.getWorker()).scheduled(),email:async(from,to,raw)=>{const response=await worker.dispatchFetch(origin+'/cdn-cgi/local/email?'+new URLSearchParams({from,to,format:'json'}),{method:'POST',body:raw});assert.equal(response.status,200,await response.clone().text());return response.json()},get origin(){return origin},vars,mails,fetch,raw,api,signIn,start,stop,directory,sql,async close(){await stop();await rm(directory,{recursive:true,force:true})}};
 }

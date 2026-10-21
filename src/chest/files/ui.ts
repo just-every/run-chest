@@ -1,3 +1,5 @@
+import { signatureInput } from '../signatures/ui'
+import { signaturePage } from '../signatures/page'
 import { bulkPage, bulkInput } from '../bulk/ui'
 import { incidents } from '../upload-protection/service'
 import { protectionPage } from '../upload-protection/ui'
@@ -43,9 +45,10 @@ import { listTemplates } from '../office/create-templates'
 import { creationSettings } from '../office/create-settings'
 import { templatesPage } from '../office/new-ui'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
-export const filesPath = (path: string) => /^\/(quota-policy|bulk|upload-protection|sync-repair|transfers|space-policy|space-requests|new-files|templates|creation-settings|items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
+export const filesPath = (path: string) => /^\/(quota-policy|bulk|upload-protection|sync-repair|transfers|space-policy|space-requests|new-files|templates|creation-settings|signatures|items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
  if(input.path.startsWith('/bulk'))bulkInput(input)
+ if(input.path.startsWith('/signatures'))signatureInput(input)
  if(input.path==='/link-policy' && input.domainRestriction==='false')input.trustedDomains=null
  if (input.path === '/new-files') { if (input.name === '') delete input.name; if (input.template === '') delete input.template }
  if (input.path === '/templates' && typeof input.templateAudience === 'string') {
@@ -105,8 +108,10 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  const bulk=await bulkPage(env,s,url);if(bulk)return {body:bulk}
  const path = url.pathname, parts = path.split('/').filter(Boolean)
  if (parts[0] === 's' && parts[1]) return { redirect: `/app/items/${(await openLink(env, s, parts[1])).item}` }
- if (parts[0] !== 'app' || !['upload-protection', 'transfers', 'templates', 'files', 'ownership', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in'].includes(parts[1])) return null
+ if (parts[0] !== 'app' || !['upload-protection', 'transfers', 'templates', 'files', 'ownership', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in', 'signatures'].includes(parts[1])) return null
  if (path === '/app/upload-protection') return {body:protectionPage(await incidents(env,s))}
+
+ if (parts[1] === 'signatures' && parts[2]) return { body: await signaturePage(env, s, await who(env, s), parts[2]) }
  if (path === '/app/storage') return { body: quotasPage(await quotaPolicyView(env, s)) }
  if (parts[1] === 'spaces' && parts[2] && parts[3] === 'quota') return { body: quotaPage(await quotaView(env, s, parts[2])) }
  const w = await who(env, s), people = (await list<Person>(env, 'person')).filter(p => p.payload.status !== 'inactive'), groups = await list<Group>(env, 'group')

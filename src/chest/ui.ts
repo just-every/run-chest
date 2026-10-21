@@ -20,6 +20,7 @@ import { insist,type Person,type Schema } from './model'
 import { personName } from './names'
 import { get,list } from './store'
 import { typedValues } from './ui-fields'
+import { checkPage } from './signatures/ui'
 import { page,refusedPage } from './ui-shell'
 import { withRail } from './ui-rail'
 import { auditPage,mappingPage,receiptPage } from './ui-receipts'
@@ -75,6 +76,8 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   if(input.path==='/administration/people'&&input.action==='sessions')return page(card('Sessions',`<ul class="events">${result.map((r:any)=>`<li>${esc(r.kind)} · ${stamp(new Date(r.createdAt).toISOString())} · ${r.active?'Active':'Ended'}</li>`).join('')}</ul><a class="btn" href="/app/administration">Administration</a>`),me,'/app/administration')
   if(input.path==='/organisation/scim/tokens')return page(tokenReceipt(result),me,'/app/admin')
   if(input.path==='/organisation/sso')return page(ssoReceipt(result),me,'/app/admin')
+  if(input.path==='/signatures'&&result?.id)return new Response(null,{status:303,headers:{...headers,location:`/app/signatures/${result.id}`}})
+  if(input.path==='/signatures/validate')return page(checkPage(result),me,returnTo)
   const secret=filesReceipt(input,result);if(secret)return page(secret,me,returnTo)
   if(input.path==='/reading/settings/test')return page(testReceipt(result),me,'/app/admin')
   if(input.path==='/archive/preview')return page(mappingPage(input,result),me,'/app/archive')
