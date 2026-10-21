@@ -8,16 +8,16 @@ import {createHash} from 'node:crypto';
 import {chromium} from '@playwright/test';
 import {localVariables} from '@runeditrun/rer/local/environment';
 import {command,currentRer,runtimeEnvironment,serve,snapshot,preserved,interruptUpgrade,archiveSnapshot} from './upgrade-local.mjs';
-const scratch=await mkdtemp(join(tmpdir(),'chest-upgrade-')),root=join(scratch,'chest'),recovery=join(scratch,'recovery'),home=join(scratch,'installer-home'),env=runtimeEnvironment(home),setupEnv=runtimeEnvironment(home,true),candidate=process.cwd(),answers=join(scratch,'setup.json');
+const scratch=await mkdtemp(join(tmpdir(),'chest-upgrade-')),root=join(scratch,'chest'),recovery=join(scratch,'recovery'),home=join(scratch,'installer-home'),env=runtimeEnvironment(home),setupEnv=runtimeEnvironment(home,true),candidate=process.cwd(),answers='.rer/local/upgrade-answers.json';
 let server,browser;
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 try {
  await mkdir(home,{recursive:true});
- await writeFile(answers,JSON.stringify({APP_NAME:'synthetic-chest-1',PRIMARY_COLOR:'#427c73',OWNER_EMAIL:'owner@example.test'}),{mode:0o600});
  await command(scratch,['git','clone','--depth','1','--filter=blob:none','--branch','v0.1.0','https://github.com/just-every/run-chest.git',root],env);
  await command(root,[process.execPath,currentRer,'install'],setupEnv);
  assert.equal((await command(root,['git','status','--porcelain','--untracked-files=no'],env)).trim(),'','install leaves the tagged application source unchanged');
  console.log('Installed genuine tagged application; preparing the owner.');
+ await mkdir(join(root,'.rer/local'),{recursive:true,mode:0o700});await writeFile(join(root,answers),JSON.stringify({APP_NAME:'synthetic-chest-1',PRIMARY_COLOR:'#427c73',OWNER_EMAIL:'owner@example.test'}),{mode:0o600});
  await command(root,[process.execPath,currentRer,'setup','--answers',answers],setupEnv);
  const socket=createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r));const origin=`http://127.0.0.1:${port}`;
  server=await serve(root,port,env,true);console.log('Prior-release application is serving.');
@@ -67,6 +67,7 @@ try {
  await command(recovery,[process.execPath,currentRer,'export','--output','exports/recovered.rer'],setupEnv);
  assert.deepEqual(await archiveSnapshot(join(recovery,'exports/recovered.rer')),backup,'rollback reconciles every portable cell, table and original byte chunk');
  assert.deepEqual((await snapshot(recovery)).objects,before.objects,'rollback retains original bytes and object metadata');
+ await mkdir(join(recovery,'.rer/local'),{recursive:true,mode:0o700});await copyFile(join(root,answers),join(recovery,answers));
  await command(recovery,[process.execPath,currentRer,'setup','--answers',answers,'--port',String(port)],setupEnv);
  const restoredSettings=localVariables(await readFile(join(recovery,'.dev.vars'),'utf8')),priorSettings=localVariables(settingsBefore);
  for(const name of ['OWNER_EMAIL','MAIL_PROVIDER','MAIL_FROM'])assert.equal(restoredSettings[name],priorSettings[name],`rollback preserves configured ${name}`);
