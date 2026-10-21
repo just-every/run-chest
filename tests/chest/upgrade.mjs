@@ -32,7 +32,7 @@ try {
    try{
     await context.addCookies(cookie.split('; ').map(c=>{const i=c.indexOf('=');return {name:c.slice(0,i),value:c.slice(i+1),url:origin}}));const page=await context.newPage();
     for(const [name,path] of screens){
-     if(path===null){const [response]=await Promise.all([page.waitForNavigation(),page.getByRole('link',{name:'Library',exact:true}).click()]);assert.equal(response.status(),200,'the prior release Library link opens its actual public route')}
+     if(path===null){if(width===390)await page.getByText('Menu',{exact:true}).click();const [response]=await Promise.all([page.waitForNavigation(),page.getByRole('link',{name:'Library',exact:true}).click()]);assert.equal(response.status(),200,'the prior release Library link opens its actual public route')}
      else{const response=await page.goto(origin+path);assert.equal(response.status(),200,`public ${name} page succeeds`);assert.equal(new URL(page.url()).pathname,path)}
      if(name==='library')await page.locator(`a[href="/app/documents/${documents[0].id}"]`).first().waitFor({state:'visible'});
      else await page.getByRole('heading',{name:name==='document'?'Harbor agreement':'Harbor upgraded project',exact:true}).waitFor({state:'visible'});
