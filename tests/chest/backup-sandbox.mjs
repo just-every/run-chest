@@ -58,6 +58,7 @@ try{
  assert.ok(temporary.accessKeyId&&temporary.secretAccessKey&&temporary.sessionToken,'provider issued separate destination credentials');
  const endpoint=`https://${account}.r2.cloudflarestorage.com`;
  archives=s3({endpoint,region:'auto',...temporary},buckets[1]);
+ let refused=false;try{for await(const object of s3({endpoint,region:'auto',...temporary},buckets[0]).list(''))void object}catch{refused=true}assert.ok(refused,'independent destination credentials cannot read live originals');
  backupEnv={CHEST_BACKUP_PROVIDER:'s3',CHEST_BACKUP_S3_ENDPOINT:endpoint,CHEST_BACKUP_S3_REGION:'auto',CHEST_BACKUP_S3_ACCESS_KEY_ID:temporary.accessKeyId,CHEST_BACKUP_S3_SECRET_ACCESS_KEY:temporary.secretAccessKey,CHEST_BACKUP_S3_SESSION_TOKEN:temporary.sessionToken,CHEST_BACKUP_BUCKET:buckets[1],CHEST_BACKUP_KEY:randomBytes(32).toString('hex')};
  const receipt=await cli('cli',['backup','--environment',environment,'--retention-days','30']);assert.equal(receipt.objects,1);
  assert.equal((await cli('cli',['verify','--environment',environment,'--key',receipt.key])).verified,true);
