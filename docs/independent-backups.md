@@ -185,7 +185,8 @@ For a local installation, stop its own server process and run
 archive and the previous release. After an interrupted upgrade, leave the changed
 store untouched, install the previous release in a new directory, place the
 archive in its private `exports` directory and run
-`rer import --input exports/pre-upgrade.rer --yes`, then `rer setup`. Reenter
+`rer import --input exports/pre-upgrade.rer --yes`, then `rer setup`. Sign in
+afresh and confirm **Finish setup** in the browser. Reenter
 private mail/provider settings from the owner's private configuration; the
 archive carries no session secret. Sign in afresh, reconcile people, permissions,
 settings, approval/comment history and every original before using the recovery

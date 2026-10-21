@@ -77,6 +77,7 @@ try {
  const recoveryKey=(await readFile(join(recovery,'.rer/local/dev-key.env'),'utf8')).trim().split('=')[1];assert.ok(recoveryKey!==key,'recovery has a fresh dev identity key');
  for(const cookie of [owner,member,legacyAdmin])assert.equal((await fetch(origin+'/api/chest/library',{headers:{cookie,'x-rer-dev-key':recoveryKey}})).status,401,'pre-upgrade credentials cannot open the recovered installation');
  const recoveredOwner=await session('owner',recoveryKey),recoveredMember=await session('member',recoveryKey);await session('admin',recoveryKey);
+ const finished=await fetch(origin+'/setup',{method:'POST',headers:{origin,cookie:recoveredOwner,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes',redirect:'manual'});assert.equal(finished.status,303,'the recovered owner completes ordinary Finish setup');
  const recoveredLibrary=await api('/library',undefined,recoveredOwner);
  assert.deepEqual(recoveredLibrary.people,peopleBefore,'portable people retain identity and roles after fresh sign-in');
  for(const [kind,expected] of [['collections',grantedCollection],['schemas',schema],['groups',group]])assert.deepEqual(recoveredLibrary[kind].find(row=>row.id===expected.id).payload,expected.payload,`rollback preserves ${kind} settings and rights`);
