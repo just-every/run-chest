@@ -29,7 +29,7 @@ export async function officeRestoreJourney(h,context,owner,width){
    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    await p.locator('.office-panel').screenshot({path:`test-results/${width}-restore-${ext}-${name}.png`});
   }
-  const conflict=dirty.waitForResponse(r=>r.url().includes(`/items/${file.id}/office`)&&r.request().method()==='POST');
+  const conflict=dirty.waitForResponse(r=>new URL(r.url()).pathname==='/app/action'&&r.request().method()==='POST');
   await dirty.getByRole('button',{name:'Save new version',exact:true}).click();assert.equal((await conflict).status(),409);
   const retained=await h.api(`/items/${file.id}`,owner);assert.equal(retained.item.current,current);assert.equal(retained.versions.length,3);
   assert.ok((await h.api(`/items/${file.id}/office`,owner)).fields.some(f=>f.value===before));
