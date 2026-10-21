@@ -34,7 +34,7 @@ try{
    assert.equal((await h.fetch(`/api/chest/items/${file.id}/bytes/${version}?download=true`,{headers:{cookie:people.owner}})).status,200);
    // Sam tunes only the Contractors group: 100 files with pause.
    assert.equal(await s.getByRole('button',{name:'Save organization rules',exact:true}).count(),0,'a group-scoped admin cannot change the organization rules');
-   await s.getByLabel('Group',{exact:true}).selectOption(contractors.id);await s.getByLabel('Downloads: more than this many files').fill('100');await s.getByLabel('At the download threshold').selectOption('pause');await go(s,'Save group rule');
+   await s.getByLabel('Group').selectOption(contractors.id);await s.getByLabel('Downloads: more than this many files').fill('100');await s.getByLabel('At the download threshold').selectOption('pause');await go(s,'Save group rule');
    assert.match(await s.locator('section.card').filter({has:s.getByRole('heading',{name:'Mass-activity rules',exact:true})}).innerText(),/Contractors · downloads above 100 files or 5 GB, pause/);await fit(s,'rules');
    await asSam.close();await asOwner.close();
   }finally{await h.close()}
