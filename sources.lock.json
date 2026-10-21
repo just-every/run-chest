@@ -4277,7 +4277,7 @@
       "executable": false
     },
     "tests/chest/office-restore-flow.mjs": {
-      "sha256": "e116322e41f24edbe9aea9302189c8c4e793245ccf8027463be90d7678af7fb7",
+      "sha256": "1b53add1a173ff2302d35c03ead0e3c9f514d03e2c3851388dea4facff6983fe",
       "executable": false
     },
     "tests/chest/office.mjs": {

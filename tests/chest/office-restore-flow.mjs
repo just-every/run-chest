@@ -32,7 +32,7 @@ export async function officeRestoreJourney(h,context,owner,width){
   const conflict=dirty.waitForResponse(r=>new URL(r.url()).pathname==='/app/action'&&r.request().method()==='POST');
   await dirty.getByRole('button',{name:'Save new version',exact:true}).click();assert.equal((await conflict).status(),409);
   const retained=await h.api(`/items/${file.id}`,owner);assert.equal(retained.item.current,current);assert.equal(retained.versions.length,3);
-  assert.ok((await h.api(`/items/${file.id}/office`,owner)).fields.some(f=>f.value===before));
+  assert.ok((await h.api(`/items/${file.id}/office?edit=true`,owner)).fields.some(f=>f.value===before));
   await clean.close();await dirty.close();
  }
  console.log(`VERSION-001 remote restore: DOCX/XLSX clean refresh, unsaved input and true base preserved, conflict refusal, no timer writes at ${width}`);
