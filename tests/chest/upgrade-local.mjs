@@ -9,6 +9,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {getPlatformProxy} from 'wrangler';
 import {createRedaction,credentialValues} from '@runeditrun/rer/redaction';
 import {localVariables} from '@runeditrun/rer/local/environment';
+import {readArchive} from '@runeditrun/rer/modules/portability';
 const require=createRequire(import.meta.url),runtime=dirname(require.resolve('@runeditrun/rer/package.json'));
 const loader=fileURLToPath(new URL('./upgrade-runtime-loader.mjs',import.meta.url));
 export const currentRer=join(runtime,'global/rer.mjs');
@@ -39,6 +40,55 @@ export async function serve(root,port,env,legacy=false) {
   while(!ready){if(failed||p.exitCode!==null||p.signalCode!==null)throw Error('Upgrade dev startup failed: '+await diagnostic(root,env,output));if(Date.now()>deadline)throw Error('Upgrade dev startup timed out');await new Promise(r=>setTimeout(r,200))}
   return {stop};
  }catch(e){await stop();throw e}
+}
+export async function interruptUpgrade(root,port,env,before) {
+ // Use the public dispatcher directly: the global launcher's prerequisite
+ // repair could finish setup before dev reaches its own migration phase.
+ const path=await database(root),previous=new Set(before.tables.d1_migrations.rows.map(row=>JSON.parse(row).name));
+ const migrations=(await readdir(join(root,'migrations/core'))).filter(name=>name.endsWith('.sql')&&!previous.has(name));
+ assert.ok(migrations.length>1,'the upgrade has multiple real pending migrations to interrupt');
+ const db=new DatabaseSync(path);let locked=false;
+ const p=spawn(process.execPath,[join(runtime,'bin/rer.mjs'),'dev','--port',String(port),'--json'],{cwd:root,env,stdio:['ignore','pipe','pipe']});
+ let output='',pending='',ready=false,spawnError,interrupted=false;
+ const closed=new Promise(resolve=>p.once('close',resolve));
+ p.on('error',error=>{spawnError=error});p.stderr.on('data',c=>output+=c);
+ p.stdout.on('data',c=>{output+=c;pending+=c;let end;while((end=pending.indexOf('\n'))>=0){const line=pending.slice(0,end);pending=pending.slice(end+1);try{const event=JSON.parse(line);if(event.verb==='dev'&&event.event==='ready')ready=true}catch{}}});
+ try {
+  const deadline=Date.now()+240_000;
+  while(!interrupted) {
+   if(spawnError||p.exitCode!==null||p.signalCode!==null)throw Error('Upgrade stopped before the interruption: '+await diagnostic(root,env,output));
+   assert.ok(!ready,'upgrade must be interrupted before the new application reports ready');
+   const applied=db.prepare('SELECT name FROM d1_migrations').all().map(row=>row.name);
+   if(applied.some(name=>!previous.has(name))){
+    // Hold the real store between commits while its upgrader is cancelled.
+    // This transaction changes no rows or schema. Without the lock, signal
+    // cleanup could let the remaining fast migrations finish on another CPU.
+    try{db.exec('BEGIN IMMEDIATE');locked=true}catch(error){if(error.errcode!==5)throw error}
+    if(locked){
+     const committed=new Set(db.prepare('SELECT name FROM d1_migrations').all().map(row=>row.name));
+     assert.ok(migrations.some(name=>!committed.has(name)),'the upgrade is only partially migrated when interrupted');
+     interrupted=true;p.kill('SIGTERM');break;
+    }
+   }
+   if(Date.now()>deadline)throw Error('Upgrade did not commit a new migration before the interruption deadline');
+   await new Promise(resolve=>setTimeout(resolve,10));
+  }
+  // RER's signal handler drains its own migration/runtime children. Do not
+  // kill an arbitrary process group or leave an upgrader writing beside restore.
+  const code=await closed;
+  assert.ok(code!==0,'interrupted upgrade must not report success');
+  assert.ok(!ready,'interruption precedes application readiness');
+  db.exec('ROLLBACK');locked=false;
+  assert.ok(db.prepare('SELECT name FROM d1_migrations').all().some(row=>!previous.has(row.name)),'the interrupted target contains a committed upgrade migration');
+  const committed=new Set(db.prepare('SELECT name FROM d1_migrations').all().map(row=>row.name));
+  assert.ok(migrations.some(name=>!committed.has(name)),'the stopped target retains unapplied upgrade migrations');
+ } finally {if(p.exitCode===null&&p.signalCode===null)p.kill('SIGTERM');await closed;if(locked)db.exec('ROLLBACK');db.close()}
+}
+export async function archiveSnapshot(path) {
+ const bytes=await readFile(path),records=[];
+ for await(const record of readArchive(new ReadableStream({start(controller){controller.enqueue(bytes);controller.close()}})))records.push(record);
+ const manifest=records[0];
+ return {tables:manifest.tables,objects:manifest.objects,items:records.filter(record=>record.kind==='part').flatMap(record=>record.items).map(({index,...item})=>item)};
 }
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const quote=name=>'"'+name.replaceAll('"','""')+'"';
