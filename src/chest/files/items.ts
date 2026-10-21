@@ -1,4 +1,7 @@
 import { protect, guardDownload } from '../upload-protection/guard'
+import { cleared } from '../threats/guard'
+import { noteDownload } from '../threats/activity'
+import { classify, noteClassified } from '../threats/classify'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get, recordAccess } from '../store'
@@ -23,7 +26,8 @@ export async function admit(env: Bindings, bytes: Uint8Array, filename: string, 
  const v = await inspect(bytes, filename, actor, '')
  insist(!input.checksum || input.checksum === v.checksum, 'checksum_mismatch'); insist(input.size === undefined || input.size === v.size, 'size_mismatch')
  await retain(env, bytes, v)
- return { id: v.id, filename: v.filename, checksum: v.checksum, size: v.size, mediaType: v.mediaType, preview: v.preview, text: v.text, parser: v.parser, at: v.at, actor, arrival, name: '', ...extra }
+ const classification = classify(bytes, v.mediaType, v.text)
+ return { id: v.id, filename: v.filename, checksum: v.checksum, size: v.size, mediaType: v.mediaType, preview: v.preview, text: v.text, parser: v.parser, at: v.at, actor, arrival, name: '', ...(classification ? { classification } : {}), ...extra }
 }
 // A resumable upload passes the version it already admitted, and the operations that close its session in the same batch.
 export type Admitted = { sender?: string; version?: FileVersion; ops?: (row: Row<Item>) => Op[]; fences?: Row[]; audits?: Audit[] }
@@ -36,7 +40,7 @@ export async function createItem(env: Bindings, s: Session, w: Who, input: any, 
  const payload: Item = { space: p.space.id, parent, type, name: value, createdBy: s.operator.email, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions: [], current: null }
  const row = fresh<Item>('item', versions[0] ? await versionPublication(env, p, payload, versions[0], input) : payload)
  await commit(env, s, [{ row }, ...more.ops?.(row) ?? []], { fences: [...p.fences,...more.fences ?? []], changes: [{ item: row.id, space: p.space.id, kind: 'create' }], audits: [{ action: type === 'folder' ? 'folder.create' : arrival === 'created' ? 'file.create' : 'file.upload', object: row.id, detail: { space: p.space.id, parent, version: row.payload.current, arrival } },...more.audits ?? []] })
- if(type === 'file'){const {runArrival}=await import('../filing/rules');return (await runArrival(env,s,w,row,more.sender)).item}
+ if(type === 'file'){await noteClassified(env,s,row);const {runArrival}=await import('../filing/rules');return (await runArrival(env,s,w,row,more.sender)).item}
  return row
 }
 export async function addVersion(env: Bindings, s: Session, w: Who, key: string, bytes: Uint8Array | null, input: any, arrival: Arrival = 'upload', more: Admitted = {}) {
@@ -45,6 +49,7 @@ export async function addVersion(env: Bindings, s: Session, w: Who, key: string,
  const v = more.version ?? await admit(env, bytes!, typeof input.filename === 'string' ? name(input.filename, 'filename') : item.payload.name, s.operator.email, arrival, input, input.device ? { device: input.device } : {})
  const row = next(item, await versionPublication(env, ctx, item.payload, v, input))
  await commit(env, s, [{ row, previous: item }, ...more.ops?.(row) ?? []], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'version' }], audits: [{ action: 'version.upload', object: key, detail: { version: v.id, arrival } }] })
+ await noteClassified(env, s, row)
  return row
 }
 export async function nameVersion(env: Bindings, s: Session, w: Who, key: string, versionId: string, input: any) {
@@ -118,11 +123,14 @@ export async function bytes(env: Bindings, s: Session, w: Who, key: string, vers
  await guardDownload(env,s,item)
  const v = item.payload.versions.find(v => v.id === versionId); insist(v, 'version_not_found', 404)
  if (download || (!allowed(ctx, 'download') && v.preview !== 'text')) demand(ctx, 'download')
+ await cleared(env, v.checksum, v.size)
+ if (download || range) await noteDownload(env, s, w, key, range ? rangeLength(range, v.size) : v.size)
  const response = range ? await ranged(env, v, range) : await serve(env, v as unknown as Version, download)
  demand(await context(env, w, key), download || range ? 'download' : 'view')
  await recordAccess(env, s, item, action ?? (download || range ? 'version.download' : 'version.preview'), v.id)
  return response
 }
+const rangeLength = (range: string, size: number) => { const m = /^bytes=(\d+)-(\d*)$/.exec(range); return m ? Math.max(0, Math.min(m[2] ? Number(m[2]) : size - 1, size - 1) - Number(m[1]) + 1) : 0 }
 async function ranged(env: Bindings, v: FileVersion, range: string) {
  const m = /^bytes=(\d+)-(\d*)$/.exec(range); if (!m) throw new ChestError('invalid_range', 416)
  const start = Number(m[1]), end = m[2] ? Math.min(Number(m[2]), v.size - 1) : v.size - 1; if (start > end || start >= v.size) throw new ChestError('invalid_range', 416)

@@ -1,4 +1,5 @@
 import type { Bindings } from '../../auth.server'
+import { cleared } from '../threats/guard'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { ChestError, insist, now, type Row } from '../model'
 import { get, list } from '../store'
@@ -65,6 +66,7 @@ export async function previewBatch(env: Bindings, s: Session, input: any) {
    if(action.convert||action.unzip) {
     demand(ctx,'download');const v=item.payload.versions.find(v=>v.id===version)!
     insist(v.size<=16*1024*1024,'filing_transform_too_large',413)
+    await cleared(env,v.checksum,v.size)
     const blob=await env.BLOBS.get(`sha256/${v.checksum}`);insist(blob,'blob_missing',503)
     const outputs=await transform(new Uint8Array(await blob.arrayBuffer()),entry.afterName,action.unzip?'unzip':'convert')
     for(const output of outputs)entry.derivatives.push({path:output.path,version:await admit(env,output.bytes,output.path.split('/').at(-1)!,s.operator.email,'created',{}, {transformation:{sourceItem:item.id,sourceVersion:version,operation:action.unzip?'unzip':'convert'}})})

@@ -1,4 +1,5 @@
 import type { Bindings } from '../auth.server'
+import { cleared, registerScan } from './threats/guard'
 import { insist, id, now, type Version } from './model'
 export async function digest(bytes:Uint8Array) { return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes as BufferSource)),b=>b.toString(16).padStart(2,'0')).join('') }
 export function fromBase64(value:unknown) { insist(typeof value==='string'&&value.length<=12_000_000&&/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value),'invalid_base64'); return Uint8Array.from(atob(value),c=>c.charCodeAt(0)) }
@@ -21,7 +22,7 @@ export async function inspect(bytes:Uint8Array,filename:string,actor:string,revi
  if(preview==='unsupported'){let decoded='';try {decoded=new TextDecoder('utf-8',{fatal:true}).decode(bytes)}catch{};if(decoded&&!/[\x00-\x08\x0e-\x1f]/.test(decoded)){insist(bytes.length<=500_000,'text_file_too_large');text=decoded;mediaType='text/plain';preview='text'}}
  return {id:id(),filename,checksum:await digest(bytes),size:bytes.length,mediaType,preview,text,parser:text?'chest:utf8-text:1':'chest:signature-only:1',at:now(),actor,reviewer,state:'submitted',events:[]}
 }
-export async function retain(env:Bindings,bytes:Uint8Array,v:Version) { await env.BLOBS.put(`sha256/${v.checksum}`,bytes,{httpMetadata:{contentType:v.mediaType}});const stored=await env.BLOBS.get(`sha256/${v.checksum}`);insist(stored&&stored.size===v.size&&await digest(new Uint8Array(await stored.arrayBuffer()))===v.checksum,'storage_verification_failed',503) }
+export async function retain(env:Bindings,bytes:Uint8Array,v:Version) { await env.BLOBS.put(`sha256/${v.checksum}`,bytes,{httpMetadata:{contentType:v.mediaType}});const stored=await env.BLOBS.get(`sha256/${v.checksum}`);insist(stored&&stored.size===v.size&&await digest(new Uint8Array(await stored.arrayBuffer()))===v.checksum,'storage_verification_failed',503);await registerScan(env,v.checksum,v.size,v.actor) }
 // Large originals (above the in-memory bound) are staged by resumable multipart upload. Their SHA-256 is computed by
 // streaming the staged bytes; R2 checks that digest again when it writes the content-addressed copy.
 // The DOM library's Crypto type hides the Workers runtime's streaming digest.
@@ -32,15 +33,17 @@ export async function streamDigest(env:Bindings,key:string) {
  const hash=digester();await blob.body.pipeTo(hash)
  return {checksum:hex(await hash.digest),size:blob.size}
 }
-export async function custody(env:Bindings,staging:string,checksum:string,size:number,mediaType:string) {
+export async function custody(env:Bindings,staging:string,checksum:string,size:number,mediaType:string,actor:string) {
  if(!await env.BLOBS.head(`sha256/${checksum}`)){
   const blob=await env.BLOBS.get(staging);insist(blob&&blob.size===size,'storage_verification_failed',503)
   const fixed=new FixedLengthStream(size);await Promise.all([blob.body.pipeTo(fixed.writable),env.BLOBS.put(`sha256/${checksum}`,fixed.readable,{sha256:checksum,httpMetadata:{contentType:mediaType}})])
  }
  const stored=await env.BLOBS.head(`sha256/${checksum}`);insist(stored&&stored.size===size,'storage_verification_failed',503)
+ await registerScan(env,checksum,size,actor)
 }
 const served=(v:Version,download:boolean)=>({'content-type':v.mediaType,'content-disposition':`${download?'attachment':'inline'}; filename*=UTF-8''${encodeURIComponent(v.filename)}`,'content-security-policy':"sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; base-uri 'none'",'x-content-type-options':'nosniff','cache-control':'no-store'})
 export async function serve(env:Bindings,v:Version,download:boolean) {
+ await cleared(env,v.checksum,v.size)
  const blob=await env.BLOBS.get(`sha256/${v.checksum}`);insist(blob,'blob_missing',503)
  if(!download&&v.preview==='unsupported')return Response.json({error:'preview_unavailable',message:'This format is available as an original download only.'},{status:415})
  if(v.size>SMALL){

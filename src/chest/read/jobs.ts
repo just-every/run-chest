@@ -1,4 +1,5 @@
 import type { Item } from '../files/model'
+import { cleared } from '../threats/guard'
 import { attempt } from '../audit/journal'
 import { waitUntil } from 'cloudflare:workers'
 import type { Bindings } from '../../auth.server'
@@ -218,6 +219,7 @@ export async function textHits(env: Bindings, q: string): Promise<Map<string, st
 export async function pageImageOf(env: Bindings, checksum: string, n: number): Promise<{ body: ReadableStream | ArrayBuffer; mediaType: string } | null> {
  const x = await extraction(env, checksum), page = x?.payload.pages.find(p => p.n === n && p.image)
  if (!x || !page) return null
+ await cleared(env, checksum, x.payload.size)
  const blob = await env.BLOBS.get(copyKey(checksum, n)); if (blob) return { body: blob.body, mediaType: page.image!.mediaType }
  const bytes = await original(env, checksum, x.payload.size), image = bytes && await picture(bytes, x.payload.mediaType, n)
  if (!image || 'problem' in image) return null

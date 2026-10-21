@@ -1,4 +1,5 @@
 import type { Bindings } from '../../auth.server'
+import { assertActive } from '../threats/activity'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { ChestError, insist, now, type Row } from '../model'
 import { get, snapshot } from '../store'
@@ -23,7 +24,7 @@ export async function credentialSession(env: Bindings,request: Request,tokenId: 
  const state=await policyState(env),reason=policyReason(state,g.user,g.client,g.actions);insist(!reason,reason??'app_policy_refused',403)
  const session={id:`integration:${grant.id}`,kind:'integration',operatorId:operator.id,operator:{id:operator.id,email:operator.email,displayName:operator.display_name,role:operator.role,status:'active',version:operator.version,createdAt:operator.created_at},createdAt:Date.parse(g.at),expiresAt:Date.parse(g.expires),predicate:{sql:"EXISTS(SELECT 1 FROM oa_operators WHERE id=? AND email=? AND status='active' AND version=?) AND EXISTS(SELECT 1 FROM chest_integration_secrets WHERE id=? AND value=?)",params:[operator.id,operator.email,operator.version,tokenId,saved.sealed]}} as unknown as Session
  const authority={...grant.payload} as any;delete authority.used;delete authority.lastUse
- attach(session,{sql:"EXISTS(SELECT 1 FROM chest_records WHERE id=? AND kind='integration-grant' AND json_remove(payload,'$.used','$.lastUse')=?)",params:[grant.id,JSON.stringify(authority)]});attach(session,snapshot(client));attach(session,policyPredicate(state));await requireMfa(env,session)
+ attach(session,{sql:"EXISTS(SELECT 1 FROM chest_records WHERE id=? AND kind='integration-grant' AND json_remove(payload,'$.used','$.lastUse')=?)",params:[grant.id,JSON.stringify(authority)]});attach(session,snapshot(client));attach(session,policyPredicate(state));await requireMfa(env,session);await assertActive(env,session,'source')
  return {session,grant,client,credential:saved.sealed,tokenId,request}
 }
 export function action(auth: Authorized,scope: Action) {insist(auth.grant.payload.actions.includes(scope),'oauth_action_outside_grant',403)}

@@ -1,4 +1,5 @@
 import { requireMfa, stampMfa } from '../security/session'
+import { assertActive } from '../threats/activity'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get, list } from '../store'
@@ -37,5 +38,5 @@ export async function deviceSession(env: Bindings, request: Request): Promise<Se
  if (!r) throw new ChestError('authentication_required', 401)
  await env.DB.prepare('UPDATE chest_device_credentials SET last_seen=? WHERE token_hash=?').bind(now(), hash).run()
  const session={ id: `device:${r.device}`, kind: 'device', operatorId: r.id, operator: { id: r.id, email: r.email, displayName: r.display_name, role: r.role, status: 'active', version: r.version, createdAt: r.created_at }, createdAt: Date.parse(r.device_created), expiresAt: 0, predicate: { sql: credential, params: [hash] }, device: r.device } as unknown as Session
- await requireMfa(env,session);return session
+ await requireMfa(env,session);await assertActive(env,session,'source');return session
 }

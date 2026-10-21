@@ -11,7 +11,9 @@ import { ancestors, category, filters, matches, sharedBy } from './search-filter
 // Access is resolved before filtering, counting, ranking or building suggestions. An index never grants access.
 export async function search(env: Bindings, w: Who, url: URL) {
  const q = (url.searchParams.get('q') || '').trim().toLowerCase(), f = filters(url.searchParams), all = await everything(env,w), entries = [...all.values()], hidden = await hiddenMerged(env,w,entries)
- const read = await textHits(env,q), formats = new Map((await list<Extraction>(env,'extract')).map(r => [r.id.slice(8), r.payload.format || '']))
+ // Text of an original the malware scanner holds (waiting or quarantined) is neither matched nor quoted.
+ const held = new Set((await env.DB.prepare("SELECT json_extract(payload,'$.checksum') c FROM chest_records WHERE kind='scan' AND json_extract(payload,'$.state') IN ('pending','infected')").all<{ c: string }>()).results.map(r => r.c))
+ const read = new Map([...await textHits(env,q)].filter(([checksum]) => !held.has(checksum))), formats = new Map((await list<Extraction>(env,'extract')).map(r => [r.id.slice(8), r.payload.format || '']))
  const prefs = (await maybe<Prefs>(env,'prefs',`prefs:${w.email}`))?.payload, links = await permittedLinks(env,await list<Link>(env,'link'),new Map(entries.map(e => [e.row.id,e.space.id])))
  const result: any[] = [], locations = new Map<string,string>(), people = new Set<string>(), types: Record<string,number> = {}
  for (const e of entries) {
@@ -27,9 +29,9 @@ export async function search(env: Bindings, w: Who, url: URL) {
   if (f.type.length && !f.type.includes(kind)) continue
   const metadata = [p.name,...(p.tags ?? []),JSON.stringify(p.filing?.fields ?? {}),p.filing?.owner ?? e.space.payload.owner,p.createdBy,p.updatedAt,...ancestors(e,all).filter(a => a.state.role).map(a => a.row.payload.name)].join(' ').toLowerCase()
   const metadataHit = !!q && metadata.includes(q), versions = f.versions === 'any' ? [current,...p.versions.slice().reverse().filter(v => v.id !== p.current)].filter(v => !!v) : current ? [current] : []
-  const found = versions.find(v => v.text.toLowerCase().includes(q) || read.has(v.checksum)), version = metadataHit || !q ? current : found
+  const found = versions.find(v => !held.has(v.checksum) && v.text.toLowerCase().includes(q) || read.has(v.checksum)), version = metadataHit || !q ? current : found
   if (q && !metadataHit && !found) continue
-  const at = q && version ? version.text.toLowerCase().indexOf(q) : -1, snippet = at >= 0 ? version!.text.slice(Math.max(0,at-24),at+q.length+80) : version ? read.get(version.checksum) ?? '' : ''
+  const at = q && version && !held.has(version.checksum) ? version.text.toLowerCase().indexOf(q) : -1, snippet = at >= 0 ? version!.text.slice(Math.max(0,at-24),at+q.length+80) : version ? read.get(version.checksum) ?? '' : ''
   const earlier = !!version && version.id !== p.current
   types[kind] = (types[kind] ?? 0) + 1
   result.push({ id:e.row.id,name:p.name,type:p.type,category:kind,role:e.state.role,updatedAt:p.updatedAt,size:version?.size ?? null,mediaType:version?.mediaType ?? null,space:{id:e.space.id,name:e.space.payload.kind === 'personal' ? e.space.payload.owner === w.email ? 'My files' : 'Shared with me' : e.space.payload.name},snippet,matchedVersion:version?.id ?? null,versionLabel:earlier ? `Earlier version ${p.versions.findIndex(v => v.id === version!.id)+1}${version!.name ? ` · ${version!.name}` : ''}` : null,rank:q ? (p.name.toLowerCase() === q ? 5 : p.name.toLowerCase().includes(q) ? 4 : metadataHit ? 3 : earlier ? 1 : 2) : 0 })

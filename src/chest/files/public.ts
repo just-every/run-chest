@@ -1,4 +1,5 @@
 import { transferPublic } from '../transfers/public'
+import { cleared } from '../threats/guard'
 import { runtimeBindings, type Bindings } from '../../auth.server'
 import { publicVersion } from './link-snapshots'
 import { externalComments, externalComment } from './link-comments'
@@ -57,6 +58,7 @@ async function preview(env: Bindings, request: Request, secret: string, key: str
  const file = await fileThrough(env, r, key, true); if (!file) return refusedLink('unavailable')
  const v = publicVersion(file.row,r.link.payload); insist(v, 'version_not_found', 404)
  insist(v.size <= 8_000_000, 'office_file_too_large', 413)
+ await cleared(env, v.checksum, v.size)
  const blob = await env.BLOBS.get(`sha256/${v.checksum}`); insist(blob, 'blob_missing', 503)
  const bytes = new Uint8Array(await blob.arrayBuffer()); insist(bytes.length === v.size && await digest(bytes) === v.checksum, 'blob_integrity', 503)
  const text = v.preview === 'text', result = text ? null : await officePreview(bytes); insist(text || result, 'office_format_unsupported', 415)

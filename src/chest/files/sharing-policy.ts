@@ -1,4 +1,5 @@
 import type { Bindings } from '../../auth.server'
+import { refuseExternal } from '../threats/classify'
 import { list } from '../store'
 import { ChestError, insist, type Group, type Row } from '../model'
 import type { Ctx, Who } from './access'
@@ -22,6 +23,8 @@ export async function sharePolicy(env:Bindings,w:Who,ctx:Ctx,emails:string[],inp
  const external=audience==='named'?emails.filter(e=>!p.organizationDomains.includes(e.split('@')[1])):emails
  const reason=audience==='named'&&!external.length?null:audience==='organisation'||audience==='restricted'?null:externalReason(p,audience,external)
  insist(!reason,reason??'sharing_policy_refused',403)
+ // SECURITY-002: a file labelled sensitive is never shared outside the organization while that rule is on.
+ if(ctx.chain.at(-1)?.payload.type==='file'&&(['public','guests','domain','request'].includes(audience)||audience==='named'&&external.length))await refuseExternal(env,ctx.chain.at(-1)!.payload)
  if(ctx.space.payload.kind==='team' && !p.allowNonMembers){
   insist(!['public','guests','domain','request'].includes(audience),'sharing_policy_non_members_disabled',403)
   for(const email of emails){const groups=(await list<Group>(env,'group')).filter(g=>g.payload.members.includes(email));insist(ctx.space.payload.members.some(g=>(g.principal===email||groups.some(r=>r.id===g.principal))&&(!g.expires||Date.parse(g.expires)>Date.now())),'sharing_policy_non_members_disabled',403);policy.fences.push(...groups as any)}

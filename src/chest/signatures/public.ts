@@ -1,4 +1,5 @@
 import { operatorAuth, runtimeBindings, type Bindings } from '../../auth.server'
+import { cleared } from '../threats/guard'
 import { failure } from '../api'
 import { ChestError, insist, now } from '../model'
 import { personName } from '../names'
@@ -55,7 +56,7 @@ export async function signResponse(request: Request, original: Bindings): Promis
 }
 const pdf = (bytes: Uint8Array, name: string) => new Response(bytes as unknown as BodyInit, { headers: { 'content-type': 'application/pdf', 'content-disposition': `inline; filename="${name.replace(/[^\w.-]+/g, '_')}"`, 'content-length': String(bytes.length), 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } })
 async function file(env: Bindings, p: SignRequest, kind: 'signed' | 'certificate') {
- const stored = p[kind]!, object = await env.BLOBS.get(`sha256/${stored.checksum}`); insist(object, 'blob_missing', 503)
+ const stored = p[kind]!, object = await env.BLOBS.get(`sha256/${stored.checksum}`); insist(object, 'blob_missing', 503); await cleared(env, stored.checksum, object.size)
  return pdf(new Uint8Array(await object.arrayBuffer()), `${p.name.replace(/\.(pdf|docx)$/i, '')}-${kind}.pdf`)
 }
 // Who is asking: a staff signer holds a Chest session for the invited address; an external signer holds the cookie a PIN earned.

@@ -1,4 +1,5 @@
 import type { Bindings } from '../../auth.server'
+import { cleared } from '../threats/guard'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { context, demand, isAdmin, start, type Who } from '../files/access'
 import type { Space } from '../files/model'
@@ -37,6 +38,7 @@ export async function listTemplates(env: Bindings, s: Session, w: Who, input: an
 // never the source item ID, its grants, its prior versions, or a source download URL.
 export async function templateBytes(env: Bindings, version: { checksum: string; size: number }) {
  insist(version.size <= 8_000_000, 'template_too_large', 413)
+ await cleared(env, version.checksum, version.size)
  const blob = await env.BLOBS.get(`sha256/${version.checksum}`); insist(blob, 'blob_missing', 503)
  const bytes = new Uint8Array(await blob.arrayBuffer())
  insist(bytes.length === version.size && await digest(bytes) === version.checksum, 'blob_integrity', 503)

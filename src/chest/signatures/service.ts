@@ -1,4 +1,5 @@
 import type { Bindings } from '../../auth.server'
+import { cleared } from '../threats/guard'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { guardDownload } from '../upload-protection/guard'
 import { inspect, retain } from '../blobs'
@@ -26,7 +27,7 @@ async function eligible(env: Bindings, s: Session, w: Who, key: string) {
  await guardDownload(env, s, item)
  return { ctx, item }
 }
-async function blob(env: Bindings, checksum: string): Promise<Uint8Array> { const o = await env.BLOBS.get(`sha256/${checksum}`); insist(o, 'blob_missing', 503); return new Uint8Array(await o.arrayBuffer()) }
+async function blob(env: Bindings, checksum: string): Promise<Uint8Array> { const o = await env.BLOBS.get(`sha256/${checksum}`); insist(o, 'blob_missing', 503); await cleared(env, checksum, o.size); return new Uint8Array(await o.arrayBuffer()) }
 export const documentBytes = (env: Bindings, r: SignRequest) => blob(env, r.document.checksum)
 // Step one: render (a DOCX becomes a PDF with a fidelity report) and open a draft; nothing is sent.
 export async function draft(env: Bindings, s: Session, w: Who, input: any) {

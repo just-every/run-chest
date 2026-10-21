@@ -1,4 +1,5 @@
 import type { Bindings } from '../../auth.server'
+import { cleared } from '../threats/guard'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { digest } from '../blobs'
 import { insist } from '../model'
@@ -11,6 +12,7 @@ import { versionPublication } from '../files/governance'
 export const isOffice = (name: string) => /\.(docx|xlsx|pptx)$/i.test(name)
 async function original(env: Bindings, version: { size: number; checksum: string }) {
  insist(version.size <= 8_000_000, 'office_file_too_large', 413)
+ await cleared(env, version.checksum, version.size)
  const blob = await env.BLOBS.get(`sha256/${version.checksum}`); insist(blob, 'blob_missing', 503)
  const bytes = new Uint8Array(await blob.arrayBuffer())
  insist(bytes.length === version.size && await digest(bytes) === version.checksum, 'blob_integrity', 503)

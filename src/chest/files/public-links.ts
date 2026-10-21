@@ -1,4 +1,5 @@
 import type { Bindings } from '../../auth.server'
+import { externalBlock } from '../threats/classify'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get } from '../store'
 import { insist, now, type Row } from '../model'
@@ -76,6 +77,7 @@ export async function resolveLink(env: Bindings, secret: string): Promise<Resolv
  const ctx = await stillSharing(env, link.payload.custodian ?? link.payload.createdBy, link.payload.item); if (!ctx) return { refused: 'unavailable' }
  const policy=await creatorLinkPolicy(env,link.payload.custodian ?? link.payload.createdBy,ctx.space.id);if(publicPolicyReason(policy.rules,link.payload))return {refused:'policy'}
  if(ctx.chain.at(-1)!.payload.type==='file' && !linkedVersion(ctx.chain.at(-1)!.payload,link.payload))return {refused:'unavailable'}
+ if(ctx.chain.at(-1)!.payload.type==='file' && await externalBlock(env,ctx.chain.at(-1)!.payload))return {refused:'policy'}
  let state = start(ctx.space.payload, nobody); for (const node of ctx.chain) state = descend(state, node, nobody, [])
  if (state.trash) return { refused: 'unavailable' }
  state.noDownload ||= link.payload.download === false
@@ -96,6 +98,6 @@ export async function fileThrough(env: Bindings, r: Resolved, key: string, previ
  const { chain: nodes } = await chain(env, key), at = nodes.findIndex(n => n.id === r.root.id)
  if (at < 0) return null
  const below = nodes.slice(at + 1), row = nodes.at(-1)!
- if (row.payload.type !== 'file' || below.some(n => n.payload.restricted || n.payload.trash || (!preview && n.payload.noDownload)) || (!preview && r.state.noDownload)) return null
+ if (row.payload.type !== 'file' || below.some(n => n.payload.restricted || n.payload.trash || (!preview && n.payload.noDownload)) || (!preview && r.state.noDownload) || await externalBlock(env, row.payload)) return null
  return { row, fences: [...r.fences, ...below] }
 }

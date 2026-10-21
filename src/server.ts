@@ -1,4 +1,5 @@
 import { integrationsResponse } from './chest/integrations/http'
+import { sweepThreats } from './chest/threats/sweep'
 import { sweepIntegrations } from './chest/integrations/webhooks'
 import { sweepBackups } from './chest/backups/service'
 import { collectionSweep } from './chest/collection'
@@ -36,13 +37,13 @@ function documentResponse(response: Response): Response {
 }
 
 export default withDemo({
-  async scheduled(_controller, original) { await Promise.all([sweepIntegrations(runtimeBindings(original)),sweepBackups(runtimeBindings(original)),collectionSweep(runtimeBindings(original)),sweepLinkRepairs(runtimeBindings(original)),sweepAgents(runtimeBindings(original)),sweepSignatures(runtimeBindings(original))]) },
+  async scheduled(_controller, original) { await Promise.all([sweepIntegrations(runtimeBindings(original)),sweepBackups(runtimeBindings(original)),collectionSweep(runtimeBindings(original)),sweepLinkRepairs(runtimeBindings(original)),sweepAgents(runtimeBindings(original)),sweepSignatures(runtimeBindings(original)),sweepThreats(runtimeBindings(original))]) },
   async email(message, env) { await receiveIntake(runtimeBindings(env), message) },
   async fetch(request, original, execution) {
     const asset = await staticAssetResponse(request, original)
     if (asset) return documentResponse(asset)
     const env = runtimeBindings(original)
-    if(new URL(request.url).pathname.startsWith('/app') || new URL(request.url).pathname.startsWith('/api/chest'))execution.waitUntil(Promise.all([sweepBackups(env),collectionSweep(env),sweepLinkRepairs(env),sweepAgents(env),sweepSignatures(env)]))
+    if(new URL(request.url).pathname.startsWith('/app') || new URL(request.url).pathname.startsWith('/api/chest'))execution.waitUntil(Promise.all([sweepBackups(env),collectionSweep(env),sweepLinkRepairs(env),sweepAgents(env),sweepSignatures(env),sweepThreats(env)]))
     const publicPage = await setupStateResponse(request, env) ?? await lobbyResponse(request, env, identity)
     if (publicPage) return documentResponse(publicPage)
     const signing = await signResponse(request, env)

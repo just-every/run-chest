@@ -1,4 +1,5 @@
 import type { Bindings } from '../../auth.server'
+import { noteDeletion } from '../threats/activity'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get, list } from '../store'
 import { ChestError, insist, now, type Row } from '../model'
@@ -11,6 +12,7 @@ import { eraseReading } from '../read/jobs'
 // opening content. Trashed originals and history stay until a manager (or a personal area's owner) erases them.
 export async function trash(env: Bindings, s: Session, w: Who, key: string) {
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'manage')
+ await noteDeletion(env, s, w, key)
  await commit(env, s, [{ row: next(item, { ...item.payload, trash: { by: s.operator.email, at: now(), role: ctx.state.role! } }), previous: item }], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'trash' }], audits: [{ action: 'item.trash', object: key, detail: { outcome: 'trashed', role: ctx.state.role } }] })
  return get<Item>(env, 'item', key)
 }
@@ -49,6 +51,7 @@ export async function erase(env: Bindings, s: Session, w: Who, key: string) {
  const { space, item, state, fences } = await standing(env, w, key)
  if (!(space.payload.kind === 'team' ? state.role === 'manager' : state.role === 'owner')) throw new ChestError(level(state) >= 1 ? 'erase_refused' : 'not_found', level(state) >= 1 ? 403 : 404)
  const rows = await spaceItems(env, space.id), tree: Row<Item>[] = [item], walk = (p: string) => { for (const r of rows) if (r.payload.parent === p) { tree.push(r); walk(r.id) } }; walk(key)
+ await noteDeletion(env, s, w, key)
  const { requestErasure }=await import('../erasure/service')
  return requestErasure(env,s,{item:key},tree)
 }

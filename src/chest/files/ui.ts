@@ -1,4 +1,6 @@
 import { signatureInput } from '../signatures/ui'
+import { consoleView } from '../threats/api'
+import { threatsPage } from '../threats/ui'
 import { signaturePage } from '../signatures/page'
 import { bulkPage, bulkInput } from '../bulk/ui'
 import { incidents } from '../upload-protection/service'
@@ -108,8 +110,9 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  const bulk=await bulkPage(env,s,url);if(bulk)return {body:bulk}
  const path = url.pathname, parts = path.split('/').filter(Boolean)
  if (parts[0] === 's' && parts[1]) return { redirect: `/app/items/${(await openLink(env, s, parts[1])).item}` }
- if (parts[0] !== 'app' || !['upload-protection', 'transfers', 'templates', 'files', 'ownership', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in', 'signatures'].includes(parts[1])) return null
+ if (parts[0] !== 'app' || !['threats', 'upload-protection', 'transfers', 'templates', 'files', 'ownership', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in', 'signatures'].includes(parts[1])) return null
  if (path === '/app/upload-protection') return {body:protectionPage(await incidents(env,s))}
+ if (path === '/app/threats') return { body: threatsPage(await consoleView(env, s)) }
 
  if (parts[1] === 'signatures' && parts[2]) return { body: await signaturePage(env, s, await who(env, s), parts[2]) }
  if (path === '/app/storage') return { body: quotasPage(await quotaPolicyView(env, s)) }

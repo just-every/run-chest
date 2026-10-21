@@ -1,4 +1,5 @@
 import { decideItemField } from './item-fields'
+import { cleared } from '../threats/guard'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { roles } from '../access'
@@ -35,6 +36,7 @@ export async function readingExecute(env: Bindings, s: Session, method: string, 
   if (get_ && sub === 'reading') {
    if (url.searchParams.get('work') === '1') await advance(env)
    const v = item.payload.versions.find(v => v.id === (version || item.payload.current)); insist(v, 'version_not_found', 404)
+   await cleared(env, v.checksum, v.size)
    return { item: key, version: v.id, reading: summary((await extraction(env, v.checksum))?.payload ?? null, v.mediaType, false), versions: await itemReadings(env,key,item.payload,false) }
   }
   if (post && sub === 'reading') {

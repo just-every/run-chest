@@ -140,7 +140,7 @@ jobs:
           path: test-results/*.png
 
   extra:
-    # Signatures: HTTP journeys against the built Worker, then their browser journeys at 1440 and 390.
+    # Signatures and content threats: HTTP journeys against the built Worker, then their browser journeys at 1440 and 390.
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:

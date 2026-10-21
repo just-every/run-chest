@@ -46,7 +46,7 @@ export async function completeRequestUpload(env:Bindings,r:Row<RequestPolicy>,ct
  if(!await env.BLOBS.head(u.key))await env.BLOBS.resumeMultipartUpload(u.key,u.multipart).complete(received.map(p=>({partNumber:p.payload.n,etag:p.payload.etag})))
  const {checksum,size}=await streamDigest(env,u.key);insist(size===u.size,'size_mismatch');insist(!u.checksum||u.checksum===checksum,'checksum_mismatch')
  const head=await env.BLOBS.get(u.key,{range:{offset:0,length:1024}});insist(head,'blob_missing',503);const bytes=new Uint8Array(await head.arrayBuffer()),reasons=inspectRequestContent(u.name,bytes),kind=signature(bytes)??{mediaType:'application/octet-stream',preview:'unsupported'}
- validateFile(r.payload,u.name,size);await custody(env,u.key,checksum,size,kind.mediaType)
+ validateFile(r.payload,u.name,size);await custody(env,u.key,checksum,size,kind.mediaType,`request:${r.id}`)
  const version:FileVersion={id:id(),filename:u.name,checksum,size,...kind,text:'',parser:'chest:signature-only:1',at:now(),actor:'request visitor',arrival:'upload',name:''}
  const result=await publishSubmission(env,r,ctx,v,{name:u.nameOfSubmitter,email:u.email,checklist:u.checklist,replace:u.replace,filing:u.filing},[{version,reasons}],(submission:Row<RequestSubmission>)=>[{row:next(row,{...u,state:'complete',receipt:submission.id}),previous:row},...received.map(p=>({row:p,previous:p,remove:true}))])
  await env.BLOBS.delete(u.key);return result
