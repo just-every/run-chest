@@ -79,7 +79,7 @@ public-door tests; their status matches the CONTRACT.md Status cell.
 
 | External-sharing, trusted-domain and member/editor policy with recipient confirmation and reversible grant suspension | POLICY-001 | partial | `src/chest/files/sharing-policy.ts`; `src/chest/files/policy-suspensions.ts`; `src/chest/files/link-policy.ts`; `src/chest/files/ui-link-policy.ts`; `tests/chest/link-policy.mjs`; `tests/chest/browser-sharing-policy.mjs` |
 
-| Independent encrypted S3/R2 backups, retention, status and upgrade recovery | RECOVER-002 | done | `scripts/backup/hosted.mjs`; `scripts/hosted/s3.mjs`; `tests/chest/backup-archive.mjs`; `tests/chest/browser-backups.mjs`; `tests/chest/backup-sandbox.mjs`; `tests/chest/upgrade.mjs` |
+| Independent encrypted S3/R2 backups, retention, status and upgrade recovery | RECOVER-002 | partial | `scripts/backup/hosted.mjs`; `scripts/hosted/s3.mjs`; `tests/chest/backup-archive.mjs`; `tests/chest/browser-backups.mjs`; `tests/chest/backup-sandbox.mjs`; `tests/chest/upgrade.mjs` |
 
 SHARE-003 was selected because sending originals and distinguishing delivery from
 human receipt is central to browser file exchange. Signed sync/mobile clients
@@ -108,7 +108,7 @@ also requires the same acceptance in provider connectors that have not shipped.
 Signed native clients and direct provider migrations remain skipped for signing
 credentials and provider developer applications respectively.
 
-RECOVER-002 is done. The owner schedules and inspects independent encrypted
+RECOVER-002 is partial pending final recovery-page HTTP and record assertions. The owner schedules and inspects independent encrypted
 backups in Administration. The CLI supports Amazon S3, Cloudflare R2 and custom
 S3-compatible HTTPS endpoints, including multipart archives and temporary
 credentials. `tests/chest/backup-archive.mjs` exercises the complete recovery,

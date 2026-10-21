@@ -31,7 +31,13 @@ try {
    const context=await browser.newContext({viewport:{width,height:950}});
    try{
     await context.addCookies(cookie.split('; ').map(c=>{const i=c.indexOf('=');return {name:c.slice(0,i),value:c.slice(i+1),url:origin}}));const page=await context.newPage();
-    for(const [name,path] of screens){await page.goto(origin+path);assert.equal(new URL(page.url()).pathname,path);await page.evaluate(()=>document.fonts.ready);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:`test-results/${width}-${prefix}-${name}.png`,fullPage:true})}
+    for(const [name,path] of screens){
+     if(path===null){const [response]=await Promise.all([page.waitForNavigation(),page.getByRole('link',{name:'Library',exact:true}).click()]);assert.equal(response.status(),200,'the prior release Library link opens its actual public route')}
+     else{const response=await page.goto(origin+path);assert.equal(response.status(),200,`public ${name} page succeeds`);assert.equal(new URL(page.url()).pathname,path)}
+     if(name==='library')await page.locator(`a[href="/app/documents/${documents[0].id}"]`).first().waitFor({state:'visible'});
+     else await page.getByRole('heading',{name:name==='document'?'Harbor agreement':'Harbor upgraded project',exact:true}).waitFor({state:'visible'});
+     await page.evaluate(()=>document.fonts.ready);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:`test-results/${width}-${prefix}-${name}.png`,fullPage:true});
+    }
    }finally{await context.close()}
   }
  };
@@ -88,7 +94,7 @@ try {
  // Browser process keeps the real HOME; only installer children use the private installer home.
  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
  await mkdir('test-results',{recursive:true});
- await screenshots(recoveredOwner,[['library','/app/library'],['document',`/app/documents/${documents[0].id}`]],'upgrade-recovered');
+ await screenshots(recoveredOwner,[['document',`/app/documents/${documents[0].id}`],['library',null]],'upgrade-recovered');
  assert.ok(hash(await readFile(backupPath))===backupHash,'the private pre-upgrade archive remains byte-for-byte unchanged');
  await server.stop();server=null;
  console.log('RECOVER-002 upgrade recovery passed: interrupted upgrade recovered into the genuine previous revision; complete portable graph/originals, settings, identities and review history reconciled; old sessions refused.');
