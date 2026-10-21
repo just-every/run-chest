@@ -21,7 +21,7 @@ async function api(method,path,body){
  const data=await response.json();if(!response.ok||!data.success)throw Error(`Sandbox provider refused ${method} (${response.status}).`);return data.result;
 }
 const sql=(id,query)=>api('POST',`/d1/database/${id}/query`,{sql:query});
-async function cli(entry,args,{restore=false,refuse=false}={}){
+async function cli(entry,args,{refuse=false}={}){
  const child=spawn(process.execPath,[`scripts/backup/${entry}.mjs`,...args],{env:{...process.env,...backupEnv},stdio:['ignore','pipe','pipe']});
  let output='';child.stdout.on('data',chunk=>output+=chunk);child.stderr.resume();
  const code=await new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',resolve)});
@@ -29,6 +29,7 @@ async function cli(entry,args,{restore=false,refuse=false}={}){
  return refuse?null:JSON.parse(output);
 }
 let backupEnv;
+console.log('Live sandbox group: '+environment);
 try{
  const parent=await api('GET','/tokens/verify');
  for(const name of buckets){await api('POST','/r2/buckets',{name});createdBuckets.push(name)}
