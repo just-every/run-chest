@@ -7,7 +7,7 @@ import {harness} from './harness.mjs';
 const h=await harness();let browser;
 const press=(p,name)=>Promise.all([p.waitForNavigation(),p.getByRole('button',{name,exact:true}).click()]);
 async function shot(p,width,state){assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${state} fits ${width}`);await p.screenshot({path:`test-results/${width}-bulk-${state}.png`,fullPage:true})}
-async function settled(p){await p.waitForFunction(()=>!document.querySelector('[data-bulk-pending="true"]'),null,{timeout:60000})}
+async function settled(p){await p.locator('[data-bulk-job][data-bulk-pending="false"]').waitFor({state:'visible',timeout:60000})}
 try{
  await mkdir('test-results',{recursive:true});await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const cookie=await h.signIn(h.vars.OWNER_EMAIL);
  await h.fetch('/setup',{method:'POST',headers:{cookie,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});const space=(await h.api('/files',cookie)).personal;

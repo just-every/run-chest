@@ -4073,7 +4073,7 @@
       "executable": false
     },
     "tests/chest/browser-bulk.mjs": {
-      "sha256": "0333bb09f8bc9ca352d4c09e1d667691cbb9b033bb7e3caab7f6eb239b36f49e",
+      "sha256": "7a3622f83efe6e47ca78b5e8dc8601e6ad80e98c9f7999beff298f40fe9de799",
       "executable": false
     },
     "tests/chest/browser-collection.mjs": {
