@@ -111,7 +111,7 @@ const bar = (crumbs: Bar['crumbs'], creation: any, target: { space?: string; par
 export async function filesPage(env: Bindings, request: Request, s: Session, url: URL): Promise<{ body: string, bar?: Bar } | { redirect: string } | null> {
  const bulk=await bulkPage(env,s,url);if(bulk)return {body:bulk}
  const path = url.pathname, parts = path.split('/').filter(Boolean)
- if (parts[0] === 's' && parts[1]) return { redirect: `/app/items/${(await openLink(env, s, parts[1])).item}` }
+ if (parts[0] === 's' && parts[1]){try{return {redirect:`/app/items/${(await openLink(env,s,parts[1])).item}`}}catch(e){if(e instanceof ChestError&&e.code==='link_password_required'){const {card,form,hidden,field}=await import('../ui-shared');return {body:card('Enter the link password',form('/links/open',hidden('token',parts[1])+field('Link password','password','','password'),'Open organization link',url.pathname))}}throw e}}
  if (parts[0] !== 'app' || !['upload-protection', 'transfers', 'templates', 'files', 'ownership', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in', 'signatures'].includes(parts[1])) return null
  if (path === '/app/upload-protection') return {body:protectionPage(await incidents(env,s))+await contentCard(env,s)}
 

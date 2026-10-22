@@ -1,3 +1,4 @@
+import { memberProjection } from './member-link-controls'
 import { contentReadable, assertContent } from '../content-security/scan'
 import { protect, guardDownload } from '../upload-protection/guard'
 import type { Bindings } from '../../auth.server'
@@ -110,7 +111,7 @@ export async function itemSettings(env: Bindings, s: Session, w: Who, key: strin
 export async function children(env: Bindings, w: Who, ctx: Ctx, parent: string | null) {
  const entries=(await spaceItems(env, ctx.space.id)).filter(r => r.payload.parent === parent && !r.payload.trash).map(r => ({ row: r, state: descend(ctx.state, r, w, ctx.links) })).filter(c => c.state.role).sort((a, b) => (a.row.payload.type === b.row.payload.type ? 0 : a.row.payload.type === 'folder' ? -1 : 1) || a.row.payload.name.localeCompare(b.row.payload.name))
  const {hiddenMerged}=await import('../filing/duplicate-view'), hidden=await hiddenMerged(env,w,entries.map(e=>({...e,space:ctx.space})))
- const result=[];for(const e of entries)if(!hidden.has(e.row.id)&&await contentReadable(env,e.row.payload.versions,w.email))result.push(e);return result
+ const result=[];for(const e of entries){const p=memberProjection(ctx.space,[...ctx.chain,e.row],ctx.links,w,descend(ctx.directState??ctx.state,e.row,w,[]),e.state);if(p.state.role&&!hidden.has(e.row.id)&&await contentReadable(env,p.row.payload.versions,w.email))result.push(p)}return result
 }
 // Original bytes: download needs download rights (the no-download setting refuses viewers and commenters); their
 // preview is limited to extracted text. Access is checked again after reading, before the bytes leave.

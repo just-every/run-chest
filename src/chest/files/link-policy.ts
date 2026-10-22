@@ -50,6 +50,8 @@ export async function permittedLinks(env: Bindings, links: Row<Link>[], itemSpac
  const groups = await list<Group>(env, 'group'), records = await list<LinkPolicy>(env, 'link-policy')
  const kept: Row<Link>[] = [], policies = new Map<string, LinkPolicy>()
  for (const link of links) {
+  if(link.payload.limit!=null&&(link.payload.downloads??0)>=link.payload.limit)continue
+  if(link.payload.password&&!viewer?.linkSessions?.some(r=>r.payload.link===link.id&&r.payload.passwordHash===link.payload.password?.hash))continue
   if (link.payload.audience !== 'organisation' || link.payload.expires && Date.parse(link.payload.expires)<=Date.now()) continue
   const space = itemSpaces.get(link.payload.item);if(!space)continue
   const cacheKey = `${link.payload.createdBy}:${space}`

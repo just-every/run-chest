@@ -33,7 +33,7 @@ export async function linksView(env: Bindings, s: Session, w: Who) {
  for (const l of [...pub.filter(l => l.state !== 'revoked'), ...org]) {
   const why = reasons(l); if (!why.length) continue
   const entry = flagged.get(l.item) ?? { item: l.item, name: l.name, path: l.path, type: l.type, manage: l.manage, links: [] }
-  entry.links.push({ id: l.id, audience: l.audience, summary: 'summary' in l ? l.summary : `${l.role} · ${l.discoverable ? 'discoverable' : 'not discoverable'}`, reasons: why, ...('summary' in l ? { link: l } : {}) }); flagged.set(l.item, entry)
+  entry.links.push({ id: l.id, audience: l.audience, summary:l.summary, reasons: why, ...(l.audience==='public'||l.audience==='guests'||l.audience==='domain'?{link:l}:{}) }); flagged.set(l.item, entry)
  }
  return { wide: [...flagged.values()], public: pub.sort((a, b) => b.at.localeCompare(a.at)), organisation: org.sort((a, b) => b.at.localeCompare(a.at)), requests: requests.sort((a, b) => b.at.localeCompare(a.at)) }
 }

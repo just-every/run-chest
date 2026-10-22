@@ -25,7 +25,7 @@ export function linkDate(value: unknown, zone?: unknown) {
  insist(typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value), 'invalid_expiry')
  const at = dayEnd(value, zone); insist(Number.isFinite(Date.parse(at)) && Date.parse(at) > Date.now(), 'invalid_expiry'); return at
 }
-function limitOf(value: unknown) {
+export function limitOf(value: unknown) {
  if (value === undefined || value === null || value === '') return null
  const n = typeof value === 'string' ? Number(value) : value; insist(Number.isInteger(n) && (n as number) >= 1 && (n as number) <= 100_000, 'invalid_download_limit'); return n as number
 }
@@ -92,11 +92,11 @@ export async function resolveLinkRecord(env:Bindings,link:Row<PublicLink>):Promi
  state.noDownload ||= link.payload.download === false
  return { link, root: ctx.chain.at(-1)!, state, fences: [link, ...ctx.fences, ...policy.fences] }
 }
-// Files a folder link reaches: below the linked folder, never through a restricted or trashed folder, at most 500.
+// A folder link reaches only live, unrestricted descendants. Above the declared bound it refuses explicitly.
 export async function reachable(env: Bindings, r: Resolved) {
  if (r.root.payload.type === 'file') return [{ row: r.root, path: '' }]
  const rows = (await spaceItems(env, r.root.payload.space)).filter(x => !x.payload.trash && !x.payload.restricted), out: { row: Row<Item>; path: string }[] = []
- const walk = (parent: string, path: string) => { for (const x of rows.filter(x => x.payload.parent === parent).sort((a, b) => a.payload.name.localeCompare(b.payload.name))) { if (out.length >= 500) return; if (x.payload.type === 'folder') walk(x.id, `${path}${x.payload.name} / `); else out.push({ row: x, path }) } }
+ const walk = (parent: string, path: string) => { for (const x of rows.filter(x => x.payload.parent === parent).sort((a, b) => a.payload.name.localeCompare(b.payload.name))) { insist(out.length<5000,'folder_link_too_large',413); if (x.payload.type === 'folder') walk(x.id, `${path}${x.payload.name} / `); else out.push({ row: x, path }) } }
  walk(r.root.id, ''); const safe=[];for(const file of out)if(await contentReadable(env,file.row.payload.versions,'',true))safe.push(file);if(!r.link.payload.snapshot)return safe
  const current=new Map(safe.map(f=>[f.row.id,f]));return r.link.payload.snapshot.flatMap(f=>{const live=current.get(f.item);return live && publicVersion(live.row,r.link.payload)?[{row:{...live.row,payload:{...live.row.payload,name:f.name}},path:f.path}]:[]})
 }

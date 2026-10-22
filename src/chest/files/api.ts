@@ -129,7 +129,7 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
  if (post && head === 'public-links' && key && sub === 'revoke') return revokePublicLink(env, s, w, key)
  if (post && head === 'file-requests' && key && sub === 'submissions' && version) return reviewRequestSubmission(env,s,w,key,version,input)
  if (post && head === 'file-requests' && key && sub === 'close') return closeFileRequest(env, s, w, key)
- if (post && head === 'links' && key === 'open') return openLink(env, s, String(input.token ?? ''))
+ if (post && head === 'links' && key === 'open') return openLink(env, s, String(input.token ?? ''),input)
  if (post && head === 'links' && key) return changeLink(env, s, w, key, input)
  if (head === 'devices') {
   if (get && !key) return devices(env, s)

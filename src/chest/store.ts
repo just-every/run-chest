@@ -1,3 +1,4 @@
+import { consumeMemberLink } from './files/member-link-controls'
 import { activity } from './content-security/activity'
 import { erasurePublication } from './erasure/publication'
 import type { Bindings } from '../auth.server'
@@ -26,6 +27,7 @@ export async function write(env: Bindings, session: Session, row: Row, action: s
 }
 export function changed<T>(row:Row<T>,payload:T):Row<T>{return {...row,payload,revision:id()}}
 export async function recordAccess(env:Bindings,session:Session,row:Row,action:string,version?:string,chargedBytes?:number){
+ if(/download|hydrate/.test(action)&&row.kind==='item'&&version)await consumeMemberLink(env,session,row.id,version)
  if(/download|hydrate/.test(action)){const v=(row.payload as any).versions?.find((v:any)=>v.id===version);await activity(env,session,'download',chargedBytes??v?.size??0)}
  const p=sessionPredicate(session),redact=await (await import('./audit/privacy')).identityRedactor(env)
  await env.DB.batch([

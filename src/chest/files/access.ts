@@ -1,3 +1,4 @@
+import { memberProjection } from './member-link-controls'
 import { contentReadable } from '../content-security/scan'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -10,11 +11,15 @@ import { rank, live, type Item, type Link, type Role, type Space } from './model
 // Current access, computed on every request from the space, each folder on the path and the person's live groups.
 // Inherited roles accumulate down the tree; a restricted folder or file stops inheritance except for space managers.
 // Expired grants, removed links and trashed ancestors take effect on the next request through every door.
-export type Who = { email: string; principals: string[]; groups: Row<Group>[]; opened: string[]; guest?: {root:string;role:Role;download:boolean;fences:Row[]} }
+export type Who = { email: string; principals: string[]; groups: Row<Group>[]; opened: string[]; linkSessions?:Row[]; guest?: {root:string;role:Role;download:boolean;fences:Row[]} }
 export type State = { role: Role | null; manager: boolean; noDownload: boolean; trash: Row<Item> | null; memberOnlyRefused?: boolean; externalDownloadOff?: boolean }
-export type Ctx = { space: Row<Space>; chain: Row<Item>[]; state: State; links: Row<Link>[]; fences: Row[] }
+export type Ctx = { space: Row<Space>; chain: Row<Item>[]; state: State; links: Row<Link>[]; fences: Row[]; directState?:State; memberLinks?:Row<Link>[] }
 // Organization links a person has opened come from the durable audit, never from a grant.
-export const who = (env: Bindings, s: Session):Promise<Who> => (s as any).guestWho?Promise.resolve((s as any).guestWho):whoFor(env, s.operator.email)
+export async function who(env:Bindings,s:Session):Promise<Who>{
+ if((s as any).guestWho)return (s as any).guestWho
+ const w=await whoFor(env,s.operator.email),{digest}=await import('../blobs'),fingerprint=await digest(new TextEncoder().encode(s.id)),{where}=await import('./repo')
+ return {...w,linkSessions:(await where(env,'member-link-session','$.sessionHash',fingerprint)).filter(r=>r.payload.email===s.operator.email&&r.payload.expires>Date.now())}
+}
 export async function whoFor(env: Bindings, email: string): Promise<Who> {
  const groups = (await list<Group>(env, 'group')).filter(g => g.payload.members.includes(email))
  const auditActor=await (await (await import('../audit/privacy')).identityRedactor(env))(email)
@@ -62,10 +67,11 @@ export async function context(env: Bindings, w: Who, key: string, checkSecurity=
  }
  const { space, chain: nodes } = await chain(env, key), links = await permittedLinks(env, await list<Link>(env, 'link'), new Map(nodes.map(n => [n.id,n.payload.space])),w)
  const filtered=await policyItems(env,w,[space],nodes)
- let state = start(space.payload, w)
- for (const node of filtered.items) state = descend(state, node, w, links)
+ let state = start(space.payload, w),directState=start(space.payload,w)
+ for (const node of filtered.items){state=descend(state,node,w,links);directState=descend(directState,node,w,[])}
  if(checkSecurity&&!await contentReadable(env,nodes.at(-1)!.payload.versions,w.email))state={...state,role:null}
- return { space, chain: nodes, state, links, fences: [space, ...nodes, ...w.groups, ...links,...filtered.fences] }
+ const projected=memberProjection(space,nodes,links,w,directState,state)
+ return { space, chain: [...nodes.slice(0,-1),projected.row], state:projected.state, directState,memberLinks:projected.memberLinks,links,fences:[space,...nodes,...w.groups,...links,...filtered.fences,...w.linkSessions??[]] }
 }
 export const level = (s: State) => s.role ? rank[s.role] : 0
 export type Action = 'view' | 'download' | 'comment' | 'contribute' | 'manage' | 'share' | 'administer'
@@ -87,16 +93,17 @@ export function demand(ctx: Ctx, action: Action) {
 }
 export const isAdmin = (s: Session) => s.operator.role === 'owner' || s.operator.role === 'admin'
 // Every item with the person's current state, computed once per request for search, Shared with me, recent and trash.
-export type Entry = { row: Row<Item>; space: Row<Space>; state: State }
+export type Entry = { row: Row<Item>; space: Row<Space>; state: State; directState?:State }
 export async function everything(env: Bindings, w: Who): Promise<Map<string, Entry>> {
  const spaces = new Map((await list<Space>(env, 'space')).map(r => [r.id, r])), original=await list<Item>(env,'item'),filtered=await policyItems(env,w,[...spaces.values()],original), rows = new Map(filtered.items.map(r => [r.id, r])), links = await permittedLinks(env, await list<Link>(env, 'link'), new Map([...rows.values()].map(r => [r.id,r.payload.space])),w), memo = new Map<string, Entry>()
  const visit = (key: string, depth = 0): Entry | undefined => {
   const known = memo.get(key); if (known) return known
   const row = rows.get(key), space = row && spaces.get(row.payload.space); if (!row || !space || depth > 200) return undefined
   const parent = row.payload.parent ? visit(row.payload.parent, depth + 1) : undefined; if (row.payload.parent && !parent) return undefined
-  const entry = { row, space, state: descend(parent ? parent.state : start(space.payload, w), row, w, links) }; memo.set(key, entry); return entry
+  const entry = { row, space, state: descend(parent ? parent.state : start(space.payload, w), row, w, links),directState:descend(parent?.directState??start(space.payload,w),row,w,[]) }; memo.set(key, entry); return entry
  }
  for (const key of rows.keys()) visit(key)
+ for(const entry of memo.values()){const nodes:Row<Item>[]=[];for(let row:Row<Item>|undefined=entry.row;row;row=row.payload.parent?rows.get(row.payload.parent):undefined)nodes.unshift(row);const p=memberProjection(entry.space,nodes,links,w,entry.directState??entry.state,entry.state);entry.row=p.row;entry.state=p.state}
  for(const entry of memo.values())if(!await contentReadable(env,entry.row.payload.versions,w.email))entry.state={...entry.state,role:null}
  return memo
 }

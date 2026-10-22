@@ -15,7 +15,7 @@ export async function folderSnapshot(env: Bindings, root: Row<Item>) {
   for(const row of (children.get(parent)??[]).sort((a,b)=>a.payload.name.localeCompare(b.payload.name))){
    if(row.payload.trash || row.payload.restricted)continue
    insist(!seen.has(row.id),'tree_corrupt',503);seen.add(row.id)
-   insist(seen.size<=500,'folder_snapshot_too_large',413);fences.push(row)
+   insist(seen.size<=5000,'folder_snapshot_too_large',413);fences.push(row)
    if(row.payload.type==='folder')walk(row.id,path+row.payload.name+' / ',depth+1)
    else {const version=linkedVersion(row.payload,{});if(version)files.push({item:row.id,version:version.id,name:row.payload.name,path})}
   }

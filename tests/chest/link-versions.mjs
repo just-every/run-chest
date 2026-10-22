@@ -133,3 +133,8 @@ try{
   await closed(base(current),file.id,404);
  });
 }finally{await h.close()}
+
+// SHARE-001's organization controls share the same exact-version contract.
+const {organizationLinkControlsFlow,largeFolderSnapshotFlow}=await import('./organization-link-controls-flow.mjs');
+await organizationLinkControlsFlow();
+await largeFolderSnapshotFlow();
