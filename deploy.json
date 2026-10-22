@@ -43,6 +43,11 @@
       "binding": "CONTENT_SCANNER_TOKEN",
       "environment": "CONTENT_SCANNER_TOKEN",
       "optional": true
+    },
+    {
+      "binding": "COLLABORA_URL",
+      "environment": "COLLABORA_URL",
+      "optional": true
     }
   ],
   "r2": [

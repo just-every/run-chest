@@ -77,6 +77,9 @@ export type Refusal = { refused: 'not_found' | 'revoked' | 'expired' | 'limit' |
 export async function resolveLink(env: Bindings, secret: string): Promise<Resolved | Refusal> {
  if (!tokenShape(publicPrefix).test(secret)) return { refused: 'not_found' }
  const [link] = await where<PublicLink>(env, 'public-link', '$.tokenHash', await tokenHash(secret)); if (!link) return { refused: 'not_found' }
+ return resolveLinkRecord(env,link)
+}
+export async function resolveLinkRecord(env:Bindings,link:Row<PublicLink>):Promise<Resolved|Refusal>{
  if (link.payload.custodyRevokedAt && !link.payload.revokedAt) return { refused: 'unavailable' }
  if(link.payload.audience==='guests'&&await guestExpiry(env,link.payload)<=Date.now())return {refused:'expired'}
  const s = linkState(link.payload); if (s !== 'active') return { refused: s === 'revoked' ? 'revoked' : s === 'expired' ? 'expired' : 'limit' }

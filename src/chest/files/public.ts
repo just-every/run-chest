@@ -1,3 +1,5 @@
+import { openCollabora } from '../office/wopi'
+import { guestAuthority } from './guest-mutations'
 import { guestTools, guestPage, guestChange, guestVersion } from './guest-mutations'
 import { activity } from '../content-security/activity'
 import { transferPublic } from '../transfers/public'
@@ -35,8 +37,9 @@ export async function publicResponse(request: Request, original: Bindings): Prom
    insist(request.method==='POST','method_not_allowed',405)
    return await guestVerification(env,request,r,base,sub==='confirm',sub==='pin')
   }
-  if(door==='l'&&(sub==='guest'||sub==='v')&&key){
+  if(door==='l'&&(sub==='guest'||sub==='v'||sub==='editor')&&key){
    const r=await resolveLink(env,secret);if('refused' in r)return refusedLink(r.refused)
+   if(sub==='editor'&&request.method==='POST'){const {s}=await guestAuthority(env,request,r);return await openCollabora(env,s,key)}
    if(sub==='v'&&request.method==='GET')return await guestVersion(env,request,r,key)
    if(sub==='guest'&&request.method==='POST')return await guestChange(env,request,r,`/l/${secret}`,key)
    if(sub==='guest'&&request.method==='GET')return await guestPage(env,request,r,`/l/${secret}`,key)

@@ -63,3 +63,6 @@ try {
  assert.equal((await h.api(`/items/${files.xlsx.id}`,owner)).versions.length,2);
  console.log('Office core flow passed: previews, Word/Excel saves, merged/conflicting edits, versions/restore, presence, comment email and permission gates');
 } finally {await h.close()}
+
+// SHARE-005's external editor transport uses the same stable file and current authority.
+await (await import('./wopi-flow.mjs')).wopiFlow();

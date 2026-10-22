@@ -21,6 +21,7 @@ export interface Bindings {
  RER_DEPLOY_SOURCE?: string
  RER_DEPLOY_FINGERPRINT?: string
  RER_VERSION?: { id: string }
+ COLLABORA_URL?: string
  CONTENT_SCANNER_URL?: string
  CONTENT_SCANNER_TOKEN?: string
  BLOBS: R2Bucket

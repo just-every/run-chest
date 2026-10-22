@@ -35,6 +35,9 @@ export async function guestIdentity(env:Bindings,request:Request,r:Resolved):Pro
  const value=(request.headers.get('cookie')??'').split(/;\s*/).find(v=>v.startsWith('chest_guest='))?.slice(12)??''
  if(!tokenShape('chest_guest_session_').test(value))return null
  const [row]=await where<GuestSession>(env,'guest-session','$.tokenHash',await tokenHash(value))
+ return guestIdentityForSession(env,r,row)
+}
+export async function guestIdentityForSession(env:Bindings,r:Resolved,row:import('../model').Row<GuestSession>|undefined){
  if(!row||row.payload.link!==r.link.id||(['editor','contributor'].includes(r.link.payload.role??'')&&row.payload.method!=='pin')||!admitted(r.link.payload,row.payload.email))return null
  const policy=await guestPolicy(env),until=Math.min(Date.parse(row.payload.expiresAt),Date.parse(row.payload.verifiedAt)+policy.reverifyDays*86400000,await guestExpiry(env,r.link.payload))
  return until>Date.now()?{email:row.payload.email,verifiedAt:row.payload.verifiedAt,until,session:row}:null

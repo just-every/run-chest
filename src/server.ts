@@ -1,3 +1,4 @@
+import { wopiResponse } from './chest/office/wopi'
 import { integrationsResponse } from './chest/integrations/http'
 import { sweepIntegrations } from './chest/integrations/webhooks'
 import { sweepBackups } from './chest/backups/service'
@@ -45,6 +46,7 @@ export default withDemo({
     if(new URL(request.url).pathname.startsWith('/app') || new URL(request.url).pathname.startsWith('/api/chest'))execution.waitUntil(Promise.all([sweepBackups(env),collectionSweep(env),sweepLinkRepairs(env),sweepAgents(env),sweepSignatures(env)]))
     const publicPage = await setupStateResponse(request, env) ?? await lobbyResponse(request, env, identity)
     if (publicPage) return documentResponse(publicPage)
+    const wopi = await wopiResponse(request,env);if(wopi)return documentResponse(wopi)
     const signing = await signResponse(request, env)
     if (signing) return documentResponse(signing)
     const shared = await publicAttempt(env, request, ()=>publicResponse(request, env))

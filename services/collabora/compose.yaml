@@ -1,0 +1,9 @@
+services:
+  collabora:
+    image: collabora/code@sha256:bb8f3c9c5c9016045f25fccb5f0649be94469ebc7c7cc379f3576e470cccf33d
+    restart: unless-stopped
+    cap_add: [MKNOD]
+    ports: ["127.0.0.1:9980:9980"]
+    environment:
+      aliasgroup1: ${CHEST_ORIGIN:?Set the exact HTTPS Chest origin}
+      extra_params: --o:ssl.enable=false --o:ssl.termination=true --o:logging.level=warning
