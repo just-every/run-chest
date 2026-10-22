@@ -7,7 +7,7 @@ import { requireAdmin, requireAdminGroup } from '../administration/roles'
 
 export type ActivityRule = { files: number; bytes: number; deletions: number; pause: boolean }
 export type ContentPolicy = { enabled: boolean; sensitiveGroups: string[]; consentAt?: string }
-export const defaults: ActivityRule = { files: 500, bytes: 5 * 1024 ** 3, deletions: 200, pause: false }
+export const defaults: ActivityRule = { files: 500, bytes: 5_000_000_000, deletions: 200, pause: false }
 export const policyKey = 'content-security:policy'
 export async function ownerOnly(env: Bindings, s: Session) {
  insist(await env.DB.prepare("SELECT 1 FROM oa_operators WHERE id=? AND email=? AND role='owner' AND status='active'").bind(s.operator.id,s.operator.email).first(), 'owner_required', 403)
