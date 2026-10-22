@@ -72,6 +72,8 @@ export async function wopiResponse(request:Request,env:Bindings):Promise<Respons
    insist(['LOCK','REFRESH_LOCK','UNLOCK'].includes(override),'wopi_operation_unsupported',501);insist(provided.length>0&&provided.length<=1024,'invalid_wopi_lock')
    if(active&&active.payload.lock!==provided&&!(override==='LOCK'&&request.headers.get('X-WOPI-OldLock')===active.payload.lock))return conflict(active.payload.lock)
    if(!active&&override!=='LOCK')return conflict('')
+   // Refreshing a lock must not adopt an externally restored version on behalf of an editor still holding old bytes.
+   if(active&&override!=='UNLOCK'&&active.payload.version!==current.id)return conflict(active.payload.lock)
    const updated=lock?next(lock,{item,lock:provided,version:current.id,expires:Date.now()+30*60000}):fresh<Lock>('wopi-lock',{item,lock:provided,version:current.id,expires:Date.now()+30*60000},lockKey(item))
    await commit(env,a.s,[{row:override==='UNLOCK'?lock!:updated,previous:lock??undefined,...(override==='UNLOCK'?{remove:true}:{})}],{fences:a.ctx.fences});return new Response(null,{status:200})
   }
