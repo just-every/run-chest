@@ -12,7 +12,7 @@ export async function securityView(env:Bindings,s:Session) {
  const all=(await env.DB.prepare('SELECT * FROM chest_activity_alerts ORDER BY at DESC LIMIT 500').all<any>()).results,alerts=[],pauses=[]
  for(const a of all)if(await canAdmin(env,s,'sharing-security',a.actor))alerts.push({...a,detail:JSON.parse(a.detail)})
  for(const a of (await env.DB.prepare('SELECT * FROM chest_activity_pauses ORDER BY at DESC').all<any>()).results)if(await canAdmin(env,s,'sharing-security',a.actor))pauses.push(a)
- if(owner)scans.push(...await list<Scan>(env,'content-scan'))
+ if(owner){const {context,demand,who}=await import('../files/access'),w=await who(env,s),items=await list(env,'item'),docs=await list(env,'document');for(const r of await list<Scan>(env,'content-scan')){let named=r.payload.actor===s.operator.email;for(const item of items.filter(i=>i.payload.versions.some((v:any)=>v.checksum===r.payload.checksum))){try{demand(await context(env,w,item.id,false),'view');named=true}catch{}}if(docs.some(d=>d.payload.versions.some((v:any)=>v.checksum===r.payload.checksum)))named=true;scans.push({...r,payload:{...r.payload,filename:named?r.payload.filename:'Restricted original'}})}}
  else insist(alerts.length||pauses.length||await canAdmin(env,s,'sharing-security'),'admin_required',403)
  return {owner,policy:owner?await policy(env):null,configured:owner?!!(env.CONTENT_SCANNER_URL&&env.CONTENT_SCANNER_TOKEN):false,rules:await rules(env,s.operator.email),scans,alerts,pauses}
 }

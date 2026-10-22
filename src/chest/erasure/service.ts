@@ -65,6 +65,8 @@ async function continueErasure(env:Bindings,s:Session,receipt:Row<ErasureReceipt
  let changed=true;while(changed){changed=false;for(const row of plan.records){if(protectedKinds.has(row.kind)||['item','document','space','person','schema','collection','group'].includes(row.kind)||removed.has(row.id))continue
   if(refers(row.payload,related)){removed.set(row.id,row);related.add(row.id);changed=true}
  }}
+ // A scanner receipt is custody metadata, not an independent reason to keep an erased original.
+ for(const row of plan.records.filter(r=>r.kind==='content-scan'&&p.checksums.includes(r.payload.checksum))){if(!plan.records.some(other=>['item','document'].includes(other.kind)&&!removed.has(other.id)&&(other.payload.versions??[]).some((v:any)=>v.checksum===row.payload.checksum)))removed.set(row.id,row)}
  for(const row of plan.personal)removed.set(row.id,row)
  if(plan.person){const row=plan.records.find(r=>r.kind==='person'&&r.id===plan.email);if(row)removed.set(row.id,row)}
  const stageKeys=[...removed.values()].filter(r=>['upload','request-upload'].includes(r.kind)&&r.payload.key).map(r=>r.payload.key as string)

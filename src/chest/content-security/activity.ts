@@ -17,7 +17,7 @@ export async function activity(env:Bindings,s:Session|null,kind:'download'|'dele
  const statements=predicates.map(p=>prepare(`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${p.sql}) THEN 1 ELSE 0 END`,...p.params))
  // Insert only when no subject is already paused. D1 serializes admission, alert creation and the pause.
  const active=`NOT EXISTS(SELECT 1 FROM chest_activity_pauses WHERE subject IN (SELECT value FROM json_each(?)))`
- statements.push(prepare(`INSERT INTO chest_activity_events(id,actor,source,kind,bytes,at) SELECT ?,?,?,?,?,? WHERE ${active}`,batch,actor,source,kind,size,at,JSON.stringify(subjects)))
+ statements.push(prepare(`INSERT INTO chest_activity_events(id,actor,source,kind,bytes,at) SELECT ?,?,?,?,?,? WHERE ${kind==='download'?active:'1'}`,batch,actor,source,kind,size,at,...(kind==='download'?[JSON.stringify(subjects)]:[])))
  for(const subject of subjects){
   const condition=subject.startsWith('account:')?'actor=?':'source=?',identity=subject.startsWith('account:')?actor:source
   for(const config of configs){

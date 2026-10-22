@@ -35,6 +35,7 @@ export function sanitizeRecord(kind, payload) {
   if (kind === 'item' && payload.filing?.fields) value.filing.fields = structuredClone(payload.filing.fields);
   if (['link', 'public-link'].includes(kind)) { value.tokenHash = ''; value.password = null; value.revokedAt ??= inertAt; value.expires = inertAt; }
   if (kind === 'file-request') { value.tokenHash = ''; value.closedAt ??= inertAt; }
+  if (kind === 'content-policy') value.enabled = false;
   if (kind === 'collection-checklist') value.sendReminders = false;
   if (kind === 'backup-settings') { value.enabled = false; value.requestedAt = null; value.lastClaim = null; }
   if (kind === 'backup-run') { if (['pending','running'].includes(value.state)) value.state = 'interrupted'; value.notifiedAt ??= inertAt; }

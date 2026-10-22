@@ -12,18 +12,18 @@ export async function scanUpload(env:Bindings,v:{checksum:string;size:number;fil
  let row=await scanRecord(env,v.checksum)
  if(row?.payload.state==='clean'||row?.payload.released)return
  // Persist pending before network work. A timeout, refusal or crash can never leave a readable original.
- if(!row){row=fresh<Scan>('content-scan',{...v,state:'pending',sensitive:false,reason:'Waiting for the configured content scanner',engine:'',at:now()},key(v.checksum));await commit(env,null,[{row}],{by:v.actor,audits:[{action:'security.content.pending',object:row.id}]})}
+ if(!row){row=fresh<Scan>('content-scan',{...v,state:'pending',sensitive:true,reason:'Waiting for the configured content scanner',engine:'',at:now()},key(v.checksum));await commit(env,null,[{row}],{by:v.actor,audits:[{action:'security.content.pending',object:row.id}]})}
  if(row.payload.state==='infected')throw new ChestError('content_quarantined',423)
  let result:Pick<Scan,'state'|'sensitive'|'reason'|'engine'>
  try {
-  const endpoint=new URL(env.CONTENT_SCANNER_URL!);insist(endpoint.protocol==='https:'||env.AUTH_LOCAL==='true'&&['localhost','127.0.0.1'].includes(endpoint.hostname),'scanner_requires_https',503)
+  const endpoint=new URL(env.CONTENT_SCANNER_URL!);insist(!endpoint.username&&!endpoint.password&&!endpoint.search&&!endpoint.hash,'invalid_scanner_endpoint',503);insist(endpoint.protocol==='https:'||env.AUTH_LOCAL==='true'&&['localhost','127.0.0.1'].includes(endpoint.hostname),'scanner_requires_https',503)
   const blob=await env.BLOBS.get(`sha256/${v.checksum}`);insist(blob&&blob.size===v.size,'blob_missing',503)
   const response=await fetch(endpoint,{method:'POST',redirect:'error',headers:{authorization:`Bearer ${env.CONTENT_SCANNER_TOKEN}`,'content-type':'application/octet-stream','content-length':String(v.size),'x-content-sha256':v.checksum},body:blob.body,signal:AbortSignal.timeout(120_000)})
   insist(response.ok,'scanner_unavailable',503)
   const r=await response.json() as any
   insist(r.checksum===v.checksum&&r.size===v.size&&['clean','infected'].includes(r.state)&&typeof r.sensitive==='boolean'&&typeof r.engine==='string'&&r.engine.length>0&&r.engine.length<=200&&typeof r.reason==='string'&&r.reason.length<=500,'invalid_scanner_receipt',503)
   result={state:r.state,sensitive:r.sensitive,engine:r.engine,reason:r.reason}
- } catch {result={state:'failed',sensitive:false,engine:'',reason:'The content scanner did not return a verified verdict. Original retained; retry scanning.'}}
+ } catch {result={state:'failed',sensitive:true,engine:'',reason:'The content scanner did not return a verified verdict. Original retained; retry scanning.'}}
  const updated=next(row,{...row.payload,...result,at:now()})
  await commit(env,null,[{row:updated,previous:row}],{by:v.actor,audits:[{action:'security.content.verdict',object:row.id,detail:{state:result.state,sensitive:result.sensitive,engine:result.engine}}]})
  if(result.state!=='clean')throw new ChestError('content_quarantined',423)
