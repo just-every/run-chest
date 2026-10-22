@@ -1,3 +1,4 @@
+import { guestTools, guestPage, guestChange, guestVersion } from './guest-mutations'
 import { activity } from '../content-security/activity'
 import { transferPublic } from '../transfers/public'
 import { runtimeBindings, type Bindings } from '../../auth.server'
@@ -34,6 +35,13 @@ export async function publicResponse(request: Request, original: Bindings): Prom
    insist(request.method==='POST','method_not_allowed',405)
    return await guestVerification(env,request,r,base,sub==='confirm',sub==='pin')
   }
+  if(door==='l'&&(sub==='guest'||sub==='v')&&key){
+   const r=await resolveLink(env,secret);if('refused' in r)return refusedLink(r.refused)
+   if(sub==='v'&&request.method==='GET')return guestVersion(env,request,r,key)
+   if(sub==='guest'&&request.method==='POST')return guestChange(env,request,r,`/l/${secret}`,key)
+   if(sub==='guest'&&request.method==='GET')return guestPage(env,request,r,`/l/${secret}`,key)
+   insist(false,'method_not_allowed',405)
+  }
   if(door==='l' && sub==='comments' && key && request.method==='POST')return await externalComment(env,request,secret,key)
   if (door === 'l' && !sub) return await (request.method === 'POST' ? unlock(env, request, secret) : open(env, request, secret))
   if (door === 'l' && sub === 'p' && key && request.method === 'GET') return await preview(env, request, secret, key)
@@ -49,7 +57,7 @@ async function open(env: Bindings, request: Request, secret: string) {
  if (await locked(env, request, r)) return passwordPage(base)
  const files = (await reachable(env, r)).flatMap(({ row, path }) => { const v = publicVersion(row,r.link.payload); return v ? [{ id: row.id, path, name: row.payload.name, size: v.size, mediaType: v.mediaType, canPreview: v.size <= 8_000_000 && (isOffice(v.filename) || v.preview === 'text') }] : [] })
  await commit(env, null, [], { by: actor, audits: [{ action: 'link.view', object: r.root.id, detail: { link: r.link.id } }] })
- return linkPage(base, r.link.payload, r.root.payload, files, !r.state.noDownload,await externalComments(env,r,base))
+ return linkPage(base, r.link.payload, r.root.payload, files, !r.state.noDownload,await externalComments(env,r,base)+await guestTools(env,request,r,base))
 }
 async function preview(env: Bindings, request: Request, secret: string, key: string) {
  const r = await resolveLink(env, secret); if ('refused' in r) return refusedLink(r.refused)

@@ -1,3 +1,4 @@
+import { guestPolicyCard } from './guest-policy'
 import { contentCard } from '../content-security/ui'
 import { signatureInput } from '../signatures/ui'
 import { signaturePage } from '../signatures/page'
@@ -46,9 +47,10 @@ import { listTemplates } from '../office/create-templates'
 import { creationSettings } from '../office/create-settings'
 import { templatesPage } from '../office/new-ui'
 // Server-rendered files pages and the form-post adaptations they need; every action runs the same API function.
-export const filesPath = (path: string) => /^\/(content-security|quota-policy|bulk|upload-protection|sync-repair|transfers|space-policy|space-requests|new-files|templates|creation-settings|signatures|items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
+export const filesPath = (path: string) => /^\/(guest-policy|content-security|quota-policy|bulk|upload-protection|sync-repair|transfers|space-policy|space-requests|new-files|templates|creation-settings|signatures|items|spaces|links|public-links|file-requests|link-policy|ownership|requests|notices|devices|rewind|uploads)(\/|$)/.test(path)
 export function filesInput(input: any) {
- if(input.path.startsWith('/content-security')){for(const k of ['enabled','confirm','pause'])if(typeof input[k]==='string')input[k]=input[k]==='true';if(typeof input.sensitiveGroups==='string')input.sensitiveGroups=input.sensitiveGroups.split(',').map((g:string)=>g.trim()).filter(Boolean)}
+ if(input.path==='/guest-policy')input.confirm=input.confirm===true||input.confirm==='true'
+ if(input.path.startsWith('/content-security')){for(const k of ['enabled','confirm','pause'])if(typeof input[k]==='string')input[k]=input[k]==='true';if(typeof input.sensitiveGroups==='string')input.sensitiveGroups=input.sensitiveGroups.split(',').map((g:string)=>g.trim()).filter(Boolean);if(input.path==='/content-security/policy'&&input.sensitiveGroups===undefined)input.sensitiveGroups=Object.keys(input).filter(k=>k.startsWith('reader:')&&input[k]==='true').map(k=>k.slice(7))}
  if(input.path.startsWith('/bulk'))bulkInput(input)
  if(input.path.startsWith('/signatures'))signatureInput(input)
  if(input.path==='/link-policy' && input.domainRestriction==='false')input.trustedDomains=null
@@ -138,7 +140,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (path === '/app/requests') return { body: requestsPage(await filesExecute(env, request, s, 'GET', ['requests'], {}, url)) }
  if (parts[1] === 'requests' && parts[2]) return { body: requestPage(await requestView(env, s, w, parts[2])) }
  if (path === '/app/notices') return { body: noticesPage(await notices(env, w)) }
- if (path === '/app/links') return { body: linksPage({ ...await linksView(env, s, w), repairs: await repairView(env,s), policy: ['owner','admin'].includes(s.operator.role) ? await linkPolicies(env,s) : null, policyScope: url.searchParams.get('policyScope') ?? 'organisation' }) }
+ if (path === '/app/links') return { body: linksPage({ ...await linksView(env, s, w), repairs: await repairView(env,s), policy: ['owner','admin'].includes(s.operator.role) ? await linkPolicies(env,s) : null, policyScope: url.searchParams.get('policyScope') ?? 'organisation' })+await guestPolicyCard(env,s) }
  if (path === '/app/devices') return { body: devicesPage(await devices(env, s),await repairs(env,s)) }
  if (path === '/app/move-in') { await personal(env, s); return { body: moveInPage(await destinations(env, w), s.operator.role === 'owner') } }
  throw new ChestError('not_found', 404)

@@ -31,13 +31,13 @@ async function signature(env:Bindings,value:string) {
  return Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,encoder.encode(value))),b=>b.toString(16).padStart(2,'0')).join('')
 }
 export type GuestSession={link:string;email:string;tokenHash:string;verifiedAt:string;expiresAt:string;method:'pin'|'email-link'}
-export async function guestIdentity(env:Bindings,request:Request,r:Resolved):Promise<{email:string;verifiedAt:string;until:number}|null>{
+export async function guestIdentity(env:Bindings,request:Request,r:Resolved):Promise<{email:string;verifiedAt:string;until:number;session:import('../model').Row<GuestSession>}|null>{
  const value=(request.headers.get('cookie')??'').split(/;\s*/).find(v=>v.startsWith('chest_guest='))?.slice(12)??''
  if(!tokenShape('chest_guest_session_').test(value))return null
  const [row]=await where<GuestSession>(env,'guest-session','$.tokenHash',await tokenHash(value))
- if(!row||row.payload.link!==r.link.id||!admitted(r.link.payload,row.payload.email))return null
+ if(!row||row.payload.link!==r.link.id||(['editor','contributor'].includes(r.link.payload.role??'')&&row.payload.method!=='pin')||!admitted(r.link.payload,row.payload.email))return null
  const policy=await guestPolicy(env),until=Math.min(Date.parse(row.payload.expiresAt),Date.parse(row.payload.verifiedAt)+policy.reverifyDays*86400000,await guestExpiry(env,r.link.payload))
- return until>Date.now()?{email:row.payload.email,verifiedAt:row.payload.verifiedAt,until}:null
+ return until>Date.now()?{email:row.payload.email,verifiedAt:row.payload.verifiedAt,until,session:row}:null
 }
 export async function guestEmail(env:Bindings,request:Request,r:Resolved):Promise<string|null> {
  if(!r.link.payload.audience||r.link.payload.audience==='public')return 'anyone with the link'
@@ -58,7 +58,8 @@ export async function guestVerification(env:Bindings,request:Request,r:Resolved,
   const row=await maybe<Challenge>(env,'guest-challenge',String(form.get('challenge')??'')),email=String(form.get('email')??'').trim().toLowerCase(),code=String(form.get('pin')??'')
   if(!row||row.payload.link!==r.link.id||row.payload.email!==email||row.payload.used||!row.payload.pinHash||Date.parse(row.payload.expires)<=Date.now()||(row.payload.attempts??0)>=5||!admitted(r.link.payload,email))return verifyPage(base,'This PIN expired or is not valid. Request a new one.',403)
   const expected=await signature(env,`pin:${row.id}:${email}:${code}`)
-  if(!/^\d{6}$/.test(code)||expected!==row.payload.pinHash){await commit(env,null,[{row:next(row,{...row.payload,attempts:(row.payload.attempts??0)+1}),previous:row}],{fences:r.fences});return verifyPage(base,'That PIN is not correct.',403,row.id,email)}
+  let difference=expected.length^row.payload.pinHash.length;for(let i=0;i<expected.length;i++)difference|=expected.charCodeAt(i)^(row.payload.pinHash.charCodeAt(i)||0)
+  if(!/^\d{6}$/.test(code)||difference!==0){await commit(env,null,[{row:next(row,{...row.payload,attempts:(row.payload.attempts??0)+1}),previous:row}],{fences:r.fences});return verifyPage(base,'That PIN is not correct.',403,row.id,email)}
   return verified(env,r,base,email,row,'pin')
  }
  if(confirm){

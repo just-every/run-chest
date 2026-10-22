@@ -1,3 +1,4 @@
+import { guestExpiry, newGuestExpiry } from './guest-policy'
 import { contentReadable } from '../content-security/scan'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -33,11 +34,14 @@ export async function createPublicLink(env: Bindings, s: Session, w: Who, key: s
  insist(await contentReadable(env,ctx.chain.at(-1)!.payload.versions,w.email,true),'classification_external_sharing_refused',403)
  const audience=externalAudience(input),policy=await sharePolicy(env,w,ctx,audience.guests??(audience.domain?[audience.domain]:['Anyone with this link']),input,audience.audience)
  insist(input.download === undefined || typeof input.download === 'boolean','invalid_download')
- insist(input.role === undefined || input.role === 'viewer' || input.role === 'commenter','invalid_external_link_role')
+ insist(input.role===undefined||['viewer','commenter','editor','contributor'].includes(input.role),'invalid_external_link_role')
+ if(input.role==='editor'||input.role==='contributor'){insist(audience.audience==='guests','named_guests_required');insist(!input.versionMode||input.versionMode==='current','writable_links_require_current_versions');insist(input.role!=='contributor'||ctx.chain.at(-1)!.payload.type==='folder','contributor_requires_folder')}
+ insist(input.noReshare!==false,'guest_resharing_not_available')
  const choice=normalizeLinkVersion(ctx.chain.at(-1)!.payload,input)
  const snapshot=ctx.chain.at(-1)!.payload.type==='folder' && choice.versionMode==='pinned'?await folderSnapshot(env,ctx.chain.at(-1)!):null
  const password = input.password === undefined || input.password === '' ? null : await hashPassword(input.password)
- const secret = randomToken(publicPrefix), row = fresh<PublicLink>('public-link', { ...audience, ...choice, role:input.role ?? 'viewer', ...(snapshot?{snapshot:snapshot.files}:{}), download: input.download ?? true, item: key, tokenHash: await tokenHash(secret), password, expires: linkDate(input.expires, input.zone), limit: limitOf(input.limit), downloads: 0, createdBy: s.operator.email, at: now() })
+ const expiry=linkDate(input.expires,input.zone),expires=audience.audience==='guests'?await newGuestExpiry(env,expiry):expiry
+ const secret = randomToken(publicPrefix), row = fresh<PublicLink>('public-link', { ...audience, ...choice, role:input.role ?? 'viewer', noReshare:true, ...(snapshot?{snapshot:snapshot.files}:{}), download: input.download ?? true, item: key, tokenHash: await tokenHash(secret), password, expires, limit: limitOf(input.limit), downloads: 0, createdBy: s.operator.email, at: now() })
  await commit(env, s, [{ row }], { fences: [...ctx.fences,...policy.fences,...(snapshot?.fences??[])], changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.create', object: key, detail: { link: row.id, audience: audience.audience, role:row.payload.role, versionMode: choice.versionMode, version: choice.version, download: row.payload.download, password: !!password, expires: row.payload.expires, limit: row.payload.limit } }] })
  return { link: describe(row), url: `${env.AUTH_ORIGIN}/l/${secret}` }
 }
@@ -74,6 +78,7 @@ export async function resolveLink(env: Bindings, secret: string): Promise<Resolv
  if (!tokenShape(publicPrefix).test(secret)) return { refused: 'not_found' }
  const [link] = await where<PublicLink>(env, 'public-link', '$.tokenHash', await tokenHash(secret)); if (!link) return { refused: 'not_found' }
  if (link.payload.custodyRevokedAt && !link.payload.revokedAt) return { refused: 'unavailable' }
+ if(link.payload.audience==='guests'&&await guestExpiry(env,link.payload)<=Date.now())return {refused:'expired'}
  const s = linkState(link.payload); if (s !== 'active') return { refused: s === 'revoked' ? 'revoked' : s === 'expired' ? 'expired' : 'limit' }
  const ctx = await stillSharing(env, link.payload.custodian ?? link.payload.createdBy, link.payload.item); if (!ctx) return { refused: 'unavailable' }
  const policy=await creatorLinkPolicy(env,link.payload.custodian ?? link.payload.createdBy,ctx.space.id);if(publicPolicyReason(policy.rules,link.payload))return {refused:'policy'}

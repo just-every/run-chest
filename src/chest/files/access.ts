@@ -10,11 +10,11 @@ import { rank, live, type Item, type Link, type Role, type Space } from './model
 // Current access, computed on every request from the space, each folder on the path and the person's live groups.
 // Inherited roles accumulate down the tree; a restricted folder or file stops inheritance except for space managers.
 // Expired grants, removed links and trashed ancestors take effect on the next request through every door.
-export type Who = { email: string; principals: string[]; groups: Row<Group>[]; opened: string[] }
-export type State = { role: Role | null; manager: boolean; noDownload: boolean; trash: Row<Item> | null; memberOnlyRefused?: boolean }
+export type Who = { email: string; principals: string[]; groups: Row<Group>[]; opened: string[]; guest?: {root:string;role:Role;download:boolean;fences:Row[]} }
+export type State = { role: Role | null; manager: boolean; noDownload: boolean; trash: Row<Item> | null; memberOnlyRefused?: boolean; externalDownloadOff?: boolean }
 export type Ctx = { space: Row<Space>; chain: Row<Item>[]; state: State; links: Row<Link>[]; fences: Row[] }
 // Organization links a person has opened come from the durable audit, never from a grant.
-export const who = (env: Bindings, s: Session) => whoFor(env, s.operator.email)
+export const who = (env: Bindings, s: Session):Promise<Who> => (s as any).guestWho?Promise.resolve((s as any).guestWho):whoFor(env, s.operator.email)
 export async function whoFor(env: Bindings, email: string): Promise<Who> {
  const groups = (await list<Group>(env, 'group')).filter(g => g.payload.members.includes(email))
  const auditActor=await (await (await import('../audit/privacy')).identityRedactor(env))(email)
@@ -49,6 +49,17 @@ export async function chain(env: Bindings, key: string): Promise<{ space: Row<Sp
  return { space: await get<Space>(env, 'space', nodes[0].payload.space), chain: nodes }
 }
 export async function context(env: Bindings, w: Who, key: string, checkSecurity=true): Promise<Ctx> {
+ if(w.guest){
+  const {space,chain:nodes}=await chain(env,key),root=nodes.findIndex(n=>n.id===w.guest!.root),nobody:Who={email:'',principals:[],groups:[],opened:[]}
+  let state=start(space.payload,nobody);state={...state,role:null,manager:false,externalDownloadOff:!w.guest.download}
+  for(const [i,node] of nodes.entries()){
+   if(i===root)state={...state,role:w.guest.role,trash:state.trash??(node.payload.trash?node:null),noDownload:state.noDownload||node.payload.noDownload}
+   else if(i>root&&root>=0)state={...descend(state,node,nobody,[]),externalDownloadOff:!w.guest.download}
+   else state={...state,trash:state.trash??(node.payload.trash?node:null)}
+  }
+  if(root<0||checkSecurity&&!await contentReadable(env,nodes.at(-1)!.payload.versions,w.email,true))state={...state,role:null}
+  return {space,chain:nodes,state,links:[],fences:[space,...nodes,...w.guest.fences]}
+ }
  const { space, chain: nodes } = await chain(env, key), links = await permittedLinks(env, await list<Link>(env, 'link'), new Map(nodes.map(n => [n.id,n.payload.space])),w)
  const filtered=await policyItems(env,w,[space],nodes)
  let state = start(space.payload, w)
@@ -61,7 +72,7 @@ export type Action = 'view' | 'download' | 'comment' | 'contribute' | 'manage' |
 export function allowed(ctx: { space: Row<Space>; state: State; chain?: Row<Item>[] }, action: Action) {
  const r = level(ctx.state)
  if (action === 'view') return r >= 1
- if (action === 'download') return r >= 1 && !(ctx.state.noDownload && r < 3)
+ if (action === 'download') return r >= 1 && !ctx.state.externalDownloadOff && !(ctx.state.noDownload && r < 3)
  if (action === 'comment') return r >= 2
  if (action === 'contribute') return r >= 3
  if (action === 'manage') return r >= 4

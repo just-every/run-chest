@@ -1,3 +1,4 @@
+import { guestPolicy, saveGuestPolicy } from './guest-policy'
 import { contentExecute } from '../content-security/service'
 import { signaturesExecute } from '../signatures/api'
 import { bulkExecute } from '../bulk/api'
@@ -45,6 +46,7 @@ import type { AccessRequest } from './model'
 // posts reach the same functions through execute().
 const roots = new Set(['quota-policy', 'transfers', 'space-policy', 'space-requests', 'link-repairs', 'new-files', 'templates', 'creation-settings', 'link-policy', 'uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search', 'signatures'])
 export async function filesExecute(env: Bindings, request: Request, s: Session, method: string, parts: string[], input: any, url: URL): Promise<unknown> {
+ if(parts[0]==='guest-policy')return method==='GET'?guestPolicy(env):saveGuestPolicy(env,s,input)
  const content=await contentExecute(env,s,method,parts,input);if(content!==undefined)return content
  const bulk=await bulkExecute(env,request,s,method,parts,input,url);if(bulk!==undefined)return bulk
  if(parts[0]==='upload-protection')return protectionExecute(env,s,method,parts,input)

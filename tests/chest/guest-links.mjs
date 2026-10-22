@@ -28,3 +28,6 @@ try {
  assert.equal((await h.fetch(new URL(active.url).pathname)).status,410,'policy change stops existing external audiences');
  console.log('SHARE-001 named guests/domain verification, one-time mail, scoped cookies, password, restricted descendants, revoke and policy passed');
 }finally{await h.close()}
+
+// SHARE-005: guest write authority and history are independent of staff sessions.
+await (await import('./guest-editing-flow.mjs')).guestEditingFlow();

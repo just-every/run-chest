@@ -15,3 +15,9 @@ export async function saveGuestPolicy(env:Bindings,s:Session,input:any){
 }
 export async function guestExpiry(env:Bindings,link:Pick<PublicLink,'at'|'expires'>){const p=await guestPolicy(env);return Math.min(link.expires?Date.parse(link.expires):Infinity,Date.parse(link.at)+p.maxDays*86400000)}
 export async function newGuestExpiry(env:Bindings,expires:string|null){const max=Date.now()+(await guestPolicy(env)).maxDays*86400000;insist(!expires||Date.parse(expires)<=max,'guest_expiry_above_maximum');return expires??new Date(max).toISOString()}
+
+export async function guestPolicyCard(env:Bindings,s:Session){
+ if(s.operator.role!=='owner')return ''
+ const {card,form,field,select}=await import('../ui-shared'),p=await guestPolicy(env)
+ return card('External guest verification',`<p>Guests verify again every ${p.reverifyDays} days. Grants expire within ${p.maxDays} days of creation. Current limits apply on every request. Only the owner changes this conservative policy while contract approval is pending.</p>${form('/guest-policy',field('Re-verification interval (1–30 days)','reverifyDays',String(p.reverifyDays),'number')+field('Maximum grant lifetime (days)','maxDays',String(p.maxDays),'number')+select('Confirm guest policy','confirm',[{id:'false',label:'Choose confirmation'},{id:'true',label:'I confirm this guest verification and expiry policy'}]),'Save guest policy','/app/links')}`)
+}
