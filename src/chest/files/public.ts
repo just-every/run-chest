@@ -26,13 +26,13 @@ export async function publicResponse(request: Request, original: Bindings): Prom
   if (request.method === 'POST') insist(request.headers.get('origin') === env.AUTH_ORIGIN && request.headers.get('sec-fetch-site') !== 'cross-site', 'invalid_origin', 403)
   else insist(request.method === 'GET' || request.method === 'HEAD', 'method_not_allowed', 405)
   if (door === 'l') { const transfer=await transferPublic(env,request,secret,sub,key);if(transfer)return transfer }
-  if (door === 'l' && (sub === 'verify' || sub === 'confirm')) {
+  if (door === 'l' && (sub === 'verify' || sub === 'confirm' || sub === 'pin')) {
    const r=await resolveLink(env,secret);if('refused' in r)return refusedLink(r.refused)
    insist(r.link.payload.audience==='guests' || r.link.payload.audience==='domain','not_found',404)
    const base=`/l/${secret}`
    if(request.method==='GET' && sub==='verify')return confirmGuest(base,url.searchParams.get('token')??'')
    insist(request.method==='POST','method_not_allowed',405)
-   return await guestVerification(env,request,r,base,sub==='confirm')
+   return await guestVerification(env,request,r,base,sub==='confirm',sub==='pin')
   }
   if(door==='l' && sub==='comments' && key && request.method==='POST')return await externalComment(env,request,secret,key)
   if (door === 'l' && !sub) return await (request.method === 'POST' ? unlock(env, request, secret) : open(env, request, secret))

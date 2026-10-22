@@ -73,7 +73,7 @@ async function bytes(env:Bindings,request:Request,r:Resolved,pkg:any,actor:strin
 }
 export async function transferPublic(env:Bindings,request:Request,secret:string,sub?:string,key?:string):Promise<Response|null> {
  // Verification/password posts remain owned by the existing verified-link doors.
- if(sub==='verify'||sub==='confirm'||!sub&&request.method==='POST')return null
+ if(sub==='verify'||sub==='confirm'||sub==='pin'||!sub&&request.method==='POST')return null
  const resolved=await resolveLink(env,secret);if('refused' in resolved)return null
  const [pkg]=await where<Package>(env,'transfer-package','$.link',resolved.link.id);if(!pkg)return null
  const actor=await guestEmail(env,request,resolved),base=`/l/${secret}`
