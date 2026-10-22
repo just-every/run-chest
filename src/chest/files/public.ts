@@ -37,9 +37,9 @@ export async function publicResponse(request: Request, original: Bindings): Prom
   }
   if(door==='l'&&(sub==='guest'||sub==='v')&&key){
    const r=await resolveLink(env,secret);if('refused' in r)return refusedLink(r.refused)
-   if(sub==='v'&&request.method==='GET')return guestVersion(env,request,r,key)
-   if(sub==='guest'&&request.method==='POST')return guestChange(env,request,r,`/l/${secret}`,key)
-   if(sub==='guest'&&request.method==='GET')return guestPage(env,request,r,`/l/${secret}`,key)
+   if(sub==='v'&&request.method==='GET')return await guestVersion(env,request,r,key)
+   if(sub==='guest'&&request.method==='POST')return await guestChange(env,request,r,`/l/${secret}`,key)
+   if(sub==='guest'&&request.method==='GET')return await guestPage(env,request,r,`/l/${secret}`,key)
    insist(false,'method_not_allowed',405)
   }
   if(door==='l' && sub==='comments' && key && request.method==='POST')return await externalComment(env,request,secret,key)
