@@ -1,3 +1,4 @@
+import { policy as contentPolicy } from '../content-security/policy'
 import { memberProjection } from './member-link-controls'
 import { contentReadable } from '../content-security/scan'
 import type { Bindings } from '../../auth.server'
@@ -104,6 +105,7 @@ export async function everything(env: Bindings, w: Who): Promise<Map<string, Ent
  }
  for (const key of rows.keys()) visit(key)
  for(const entry of memo.values()){const nodes:Row<Item>[]=[];for(let row:Row<Item>|undefined=entry.row;row;row=row.payload.parent?rows.get(row.payload.parent):undefined)nodes.unshift(row);const p=memberProjection(entry.space,nodes,links,w,entry.directState??entry.state,entry.state);entry.row=p.row;entry.state=p.state}
- for(const entry of memo.values())if(!await contentReadable(env,entry.row.payload.versions,w.email))entry.state={...entry.state,role:null}
+ const security=await contentPolicy(env)
+ for(const entry of memo.values())if(!await contentReadable(env,entry.row.payload.versions,w.email,false,security))entry.state={...entry.state,role:null}
  return memo
 }

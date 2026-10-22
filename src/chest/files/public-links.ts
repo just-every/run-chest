@@ -1,3 +1,4 @@
+import { policy as contentPolicy } from '../content-security/policy'
 import { guestExpiry, newGuestExpiry } from './guest-policy'
 import { contentReadable } from '../content-security/scan'
 import type { Bindings } from '../../auth.server'
@@ -99,7 +100,7 @@ export async function reachable(env: Bindings, r: Resolved) {
  const seen=new Set<string>(),children=new Map<string,Row<Item>[]>()
  for(const row of rows){if(row.payload.parent){const list=children.get(row.payload.parent)??[];list.push(row);children.set(row.payload.parent,list)}}
  const walk = (parent: string, path: string,depth=0) => { insist(depth<=100,'folder_link_too_deep',413);for (const x of (children.get(parent)??[]).sort((a, b) => a.payload.name.localeCompare(b.payload.name))) { insist(!seen.has(x.id),'tree_corrupt',503);seen.add(x.id);insist(seen.size<=5000,'folder_link_too_large',413); if (x.payload.type === 'folder') walk(x.id, `${path}${x.payload.name} / `,depth+1); else out.push({ row: x, path }) } }
- walk(r.root.id, ''); const safe=[];for(const file of out)if(await contentReadable(env,file.row.payload.versions,'',true))safe.push(file);if(!r.link.payload.snapshot)return safe
+ walk(r.root.id, ''); const safe=[],security=await contentPolicy(env);for(const file of out)if(await contentReadable(env,file.row.payload.versions,'',true,security))safe.push(file);if(!r.link.payload.snapshot)return safe
  const current=new Map(safe.map(f=>[f.row.id,f]));return r.link.payload.snapshot.flatMap(f=>{const live=current.get(f.item);return live && publicVersion(live.row,r.link.payload)?[{row:{...live.row,payload:{...live.row.payload,name:f.name}},path:f.path}]:[]})
 }
 // One file through the link: in the linked tree, with no restricted, trashed or no-download step on the way down.

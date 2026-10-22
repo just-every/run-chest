@@ -1,5 +1,3 @@
-# Guest collaboration
-
 Create a **Named external guests** link from a file or folder. Choose Editor on a file or Contributor on a folder, invited emails, and an expiry. Write roles require current versions and a PIN sent to the invited email. A forwarded invitation creates no staff account, grant outside its root, or library/search access. Sharing onward is unavailable in this conservative first delivery; links cannot enable it.
 
 A guest opens the shared page, requests their PIN, enters it, and opens **Versions and replacement**. They can replace a file, name a retained version, download it within the link's download permission, and restore it. Restoration creates a new attributed version while keeping earlier ones. In a reviewed folder it is a new submission: the approved pointer does not move. Folder contributors also upload files into their granted folder. This direct guest form accepts originals up to 8 MB; larger resumable guest uploads are not delivered here.

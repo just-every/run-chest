@@ -4,7 +4,7 @@ import type { Session } from '../../modules/operator-auth/index.mjs'
 import { ChestError, insist, now, type Row, type Group } from '../model'
 import { list } from '../store'
 import { commit, fresh, maybe, next } from '../files/repo'
-import { ownerOnly, policy } from './policy'
+import { ownerOnly, policy, type ContentPolicy } from './policy'
 export type Scan = { checksum:string; size:number; filename:string; actor:string; state:'pending'|'clean'|'infected'|'failed'; sensitive:boolean; reason:string; engine:string; at:string; released?:{by:string;at:string;reason:string} }
 const key=(checksum:string)=>`content-scan:${checksum}`
 export const scanRecord=(env:Bindings,checksum:string)=>maybe<Scan>(env,'content-scan',key(checksum))
@@ -37,8 +37,8 @@ export async function assertContent(env:Bindings,checksum:string) {
  if(!row&&!p.enabled)return
  insist(row&&(row.payload.state==='clean'||row.payload.released),'content_quarantined',423)
 }
-export async function contentReadable(env:Bindings,versions:{checksum:string}[],email:string,external=false) {
- const p=await policy(env);if(!p.consentAt)return true
+export async function contentReadable(env:Bindings,versions:{checksum:string}[],email:string,external=false,decision?:ContentPolicy) {
+ const p=decision??await policy(env);if(!p.consentAt)return true
  for(const v of versions){const r=await scanRecord(env,v.checksum);if(!r){if(p.enabled)return false;continue}if(r.payload.state!=='clean'&&!r.payload.released)return false
   if(r.payload.sensitive){
    if(external)return false
