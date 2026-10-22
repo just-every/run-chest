@@ -1,3 +1,4 @@
+import { activity } from '../content-security/activity'
 import { assertContent, contentReadable } from '../content-security/scan'
 import { operatorAuth, runtimeBindings, type Bindings } from '../../auth.server'
 import { failure } from '../api'
@@ -38,8 +39,8 @@ export async function signResponse(request: Request, original: Bindings): Promis
   if (verified.pending) return signer.staff ? staffSignIn(base, signer.email, verified.wrong) : pinPage(row.payload.name, requester, signer, base, !!verified.sent)
   const p = row.payload
   if (verified.method === 'sign-in' && !signer.verified) await mutate(env, row.id, async r => r.payload.signers.find(s => s.id === signer.id)?.verified ? null : { payload: { ...r.payload, signers: r.payload.signers.map(s => s.id === signer.id ? { ...s, verified: { method: 'sign-in', at: now() } } : s), events: [...r.payload.events, event('verified', from, { signer: signer.id, email: signer.email, method: 'sign-in' })] } })
-  if (sub === 'signed' || sub === 'certificate') { insist(p.status === 'completed' && p[sub === 'signed' ? 'signed' : 'certificate'], 'not_found', 404); return await file(env, p, sub) }
-  if (sub === 'document') { insist(p.status === 'pending' && (signer.state === 'invited' || signer.state === 'viewed'), 'not_found', 404); return pdf(await documentBytes(env, p), `${p.name.replace(/\.(pdf|docx)$/i, '')}.pdf`) }
+  if (sub === 'signed' || sub === 'certificate') { insist(p.status === 'completed' && p[sub === 'signed' ? 'signed' : 'certificate'], 'not_found', 404); await activity(env,null,'download',p[sub==='signed'?'signed':'certificate']!.size,{actor:signer.email,source:`signature:${row.id}`,fences:[row]});return await file(env,p,sub) }
+  if (sub === 'document') { insist(p.status === 'pending' && (signer.state === 'invited' || signer.state === 'viewed'), 'not_found', 404); await activity(env,null,'download',p.document.size,{actor:signer.email,source:`signature:${row.id}`,fences:[row]});return pdf(await documentBytes(env, p), `${p.name.replace(/\.(pdf|docx)$/i, '')}.pdf`) }
   if (request.method === 'POST' && ['consent', 'sign', 'decline'].includes(sub ?? '') && (p.status === 'declined' || p.status === 'voided' || p.status === 'expired')) return outcomePage(p, signer)
   if (request.method === 'POST' && sub === 'consent') return await consent(env, row.id, signer, base, from)
   if (request.method === 'POST' && sub === 'sign') return await sign(env, request, row.id, signer, base, from, requester)

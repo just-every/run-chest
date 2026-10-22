@@ -11,7 +11,7 @@ import { isAdmin } from './access'
 // unrevoked and its person still active, and every device write carries that check into its D1 batch.
 export type Device = { owner: string; name: string; platform: string; createdAt: string; revokedAt: string | null; revokedBy: string | null }
 const secret = () => 'chest_dev_' + btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-const credential = "EXISTS(SELECT 1 FROM chest_device_credentials c JOIN oa_operators o ON o.email=c.email WHERE c.token_hash=? AND c.revoked_at IS NULL AND o.status='active')"
+const credential = "EXISTS(SELECT 1 FROM chest_device_credentials c JOIN oa_operators o ON o.email=c.email WHERE c.token_hash=? AND c.revoked_at IS NULL AND o.status='active' AND NOT EXISTS(SELECT 1 FROM chest_activity_pauses WHERE subject='device:'||c.device))"
 export async function enrol(env: Bindings, s: Session, input: any) {
  insist(!(s as any).device, 'device_cannot_enrol', 403)
  const platform = text(input.platform, 'platform', 40); insist(['macos', 'windows', 'ios', 'android', 'linux', 'other'].includes(platform), 'invalid_platform')
@@ -35,6 +35,7 @@ export async function deviceSession(env: Bindings, request: Request): Promise<Se
  const hash = await digest(new TextEncoder().encode(m[1]))
  const r: any = await env.DB.prepare("SELECT c.device, c.created_at AS device_created, o.id, o.email, o.display_name, o.role, o.version, o.created_at FROM chest_device_credentials c JOIN oa_operators o ON o.email=c.email WHERE c.token_hash=? AND c.revoked_at IS NULL AND o.status='active'").bind(hash).first()
  if (!r) throw new ChestError('authentication_required', 401)
+ insist(!await env.DB.prepare('SELECT 1 FROM chest_activity_pauses WHERE subject=?').bind(`device:${r.device}`).first(),'activity_device_paused',423)
  await env.DB.prepare('UPDATE chest_device_credentials SET last_seen=? WHERE token_hash=?').bind(now(), hash).run()
  const session={ id: `device:${r.device}`, kind: 'device', operatorId: r.id, operator: { id: r.id, email: r.email, displayName: r.display_name, role: r.role, status: 'active', version: r.version, createdAt: r.created_at }, createdAt: Date.parse(r.device_created), expiresAt: 0, predicate: { sql: credential, params: [hash] }, device: r.device } as unknown as Session
  await requireMfa(env,session);return session

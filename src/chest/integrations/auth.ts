@@ -22,7 +22,9 @@ export async function credentialSession(env: Bindings,request: Request,tokenId: 
  const operator=await env.DB.prepare("SELECT * FROM oa_operators WHERE id=? AND email=? AND status='active' AND version=?").bind(g.operator,g.user,saved.value.operatorVersion).first<any>();insist(operator&&operator.version===g.operatorVersion,'oauth_identity_changed',401)
  const state=await policyState(env),reason=policyReason(state,g.user,g.client,g.actions);insist(!reason,reason??'app_policy_refused',403)
  const session={id:`integration:${grant.id}`,kind:'integration',operatorId:operator.id,operator:{id:operator.id,email:operator.email,displayName:operator.display_name,role:operator.role,status:'active',version:operator.version,createdAt:operator.created_at},createdAt:Date.parse(g.at),expiresAt:Date.parse(g.expires),predicate:{sql:"EXISTS(SELECT 1 FROM oa_operators WHERE id=? AND email=? AND status='active' AND version=?) AND EXISTS(SELECT 1 FROM chest_integration_secrets WHERE id=? AND value=?)",params:[operator.id,operator.email,operator.version,tokenId,saved.sealed]}} as unknown as Session
- ;(session as any).contentToken=tokenId
+ insist(!await env.DB.prepare('SELECT 1 FROM chest_activity_pauses WHERE subject=?').bind(tokenId).first(),'activity_token_paused',423)
+ const liveCredential=(session as any).predicate;(session as any).predicate={sql:`(${liveCredential.sql}) AND NOT EXISTS(SELECT 1 FROM chest_activity_pauses WHERE subject=?)`,params:[...liveCredential.params,tokenId]}
+ ;(session as any).contentToken=tokenId.replace(/^token:/,'')
  const authority={...grant.payload} as any;delete authority.used;delete authority.lastUse
  attach(session,{sql:"EXISTS(SELECT 1 FROM chest_records WHERE id=? AND kind='integration-grant' AND json_remove(payload,'$.used','$.lastUse')=?)",params:[grant.id,JSON.stringify(authority)]});attach(session,snapshot(client));attach(session,policyPredicate(state));await requireMfa(env,session)
  return {session,grant,client,credential:saved.sealed,tokenId,request}

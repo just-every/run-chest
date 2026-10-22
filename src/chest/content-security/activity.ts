@@ -8,7 +8,8 @@ import { principalCanAdmin, requireAdmin } from '../administration/roles'
 import { rules } from './policy'
 const windowMs=10*60_000
 // Account totals span all sessions. Devices and OAuth tokens additionally have independent pause identities.
-export async function activity(env:Bindings,s:Session|null,kind:'download'|'delete',size=0,external?:{actor:string;source:string;fences?:any[]}) {
+export async function activity(env:Bindings,s:Session|null,kind:'download'|'delete',size=0,external?:{actor:string;source:string;fences?:any[]},weight=1) {
+ insist(Number.isSafeInteger(weight)&&weight>0,'invalid_activity_weight')
  const fingerprint=s?Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s.id))),b=>b.toString(16).padStart(2,'0')).join(''):''
  const actor=s?.operator.email??external!.actor,source=s?(String((s as any).device?`device:${(s as any).device}`:(s as any).contentToken?`token:${(s as any).contentToken}`:`session:${fingerprint}`)):external!.source
  const subjects=[`account:${actor}`,...(source.startsWith('device:')||source.startsWith('token:')||!s?[source]:[])],configs=await rules(env,actor)
@@ -17,15 +18,15 @@ export async function activity(env:Bindings,s:Session|null,kind:'download'|'dele
  const statements=predicates.map(p=>prepare(`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${p.sql}) THEN 1 ELSE 0 END`,...p.params))
  // Insert only when no subject is already paused. D1 serializes admission, alert creation and the pause.
  const active=`NOT EXISTS(SELECT 1 FROM chest_activity_pauses WHERE subject IN (SELECT value FROM json_each(?)))`
- statements.push(prepare(`INSERT INTO chest_activity_events(id,actor,source,kind,bytes,at) SELECT ?,?,?,?,?,? WHERE ${kind==='download'?active:'1'}`,batch,actor,source,kind,size,at,...(kind==='download'?[JSON.stringify(subjects)]:[])))
+ statements.push(prepare(`INSERT INTO chest_activity_events(id,actor,source,kind,bytes,at,items) SELECT ?,?,?,?,?,?,? WHERE ${kind==='download'?active:'1'}`,batch,actor,source,kind,size,at,weight,...(kind==='download'?[JSON.stringify(subjects)]:[])))
  for(const subject of subjects){
   const condition=subject.startsWith('account:')?'actor=?':'source=?',identity=subject.startsWith('account:')?actor:source
   for(const config of configs){
-   const count=`(SELECT COUNT(*) FROM chest_activity_events WHERE ${condition} AND kind=? AND at>?)`,bytes=`(SELECT COALESCE(SUM(bytes),0) FROM chest_activity_events WHERE ${condition} AND kind='download' AND at>?)`
+   const count=`(SELECT COALESCE(SUM(items),0) FROM chest_activity_events WHERE ${condition} AND kind=? AND at>?)`,bytes=`(SELECT COALESCE(SUM(bytes),0) FROM chest_activity_events WHERE ${condition} AND kind='download' AND at>?)`
    const limit=kind==='download'?config.files:config.deletions
    const detail=JSON.stringify({rule:config.id,name:config.name,kind,limit,byteLimit:kind==='download'?config.bytes:null,windowMinutes:10,pause:config.pause})
    statements.push(prepare(`INSERT INTO chest_activity_alerts(id,batch,subject,actor,rule,kind,detail,at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM chest_activity_events WHERE id=?) AND (${count}>? ${kind==='download'?`OR ${bytes}>?`:''}) AND NOT EXISTS(SELECT 1 FROM chest_activity_alerts WHERE subject=? AND rule=? AND kind=? AND at>?)`,id(),batch,subject,actor,config.id,kind,detail,at,batch,identity,kind,since,limit,...(kind==='download'?[identity,since,config.bytes]:[]),subject,config.id,kind,since))
-   if(config.pause&&kind==='download')statements.push(prepare(`INSERT OR IGNORE INTO chest_activity_pauses(subject,actor,rule,at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM chest_activity_events WHERE id=?) AND (${count}>? OR ${bytes}>?)`,subject,actor,config.id,at,batch,identity,kind,since,limit,identity,since,config.bytes))
+   if(config.pause)statements.push(prepare(`INSERT OR IGNORE INTO chest_activity_pauses(subject,actor,rule,at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM chest_activity_events WHERE id=?) AND (${count}>? ${kind==='download'?`OR ${bytes}>?`:''})`,subject,actor,config.id,at,batch,identity,kind,since,limit,...(kind==='download'?[identity,since,config.bytes]:[])))
   }
  }
  statements.push(prepare("INSERT INTO chest_audit SELECT id,actor,'security.activity.alert',subject,detail,? FROM chest_activity_alerts WHERE batch=?",now(),batch),prepare('DELETE FROM chest_activity_events WHERE at<=?',since),prepare('DELETE FROM chest_assert'),prepare('SELECT * FROM chest_activity_alerts WHERE batch=?',batch),prepare('SELECT * FROM chest_activity_pauses WHERE subject IN (SELECT value FROM json_each(?))',JSON.stringify(subjects)))
@@ -38,7 +39,7 @@ export async function activity(env:Bindings,s:Session|null,kind:'download'|'dele
 }
 export async function activityAudits(env:Bindings,s:Session|null,audits:Audit[]) {
  if(!s)return
- for(const a of audits)if(['item.trash','item.erase','document.trash','document.erase'].includes(a.action))await activity(env,s,'delete')
+ for(const a of audits)if(['item.trash','item.erase','document.trash','document.erase'].includes(a.action))await activity(env,s,'delete',0,undefined,Number(a.detail?.items??1))
 }
 export async function resumeActivity(env:Bindings,s:Session,subject:string,input:any) {
  const row=await env.DB.prepare('SELECT * FROM chest_activity_pauses WHERE subject=?').bind(subject).first<any>();insist(row,'not_found',404)

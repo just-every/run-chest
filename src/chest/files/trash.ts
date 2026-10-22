@@ -11,7 +11,8 @@ import { eraseReading } from '../read/jobs'
 // opening content. Trashed originals and history stay until a manager (or a personal area's owner) erases them.
 export async function trash(env: Bindings, s: Session, w: Who, key: string) {
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'manage')
- await commit(env, s, [{ row: next(item, { ...item.payload, trash: { by: s.operator.email, at: now(), role: ctx.state.role! } }), previous: item }], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'trash' }], audits: [{ action: 'item.trash', object: key, detail: { outcome: 'trashed', role: ctx.state.role } }] })
+ const rows=await spaceItems(env,item.payload.space),seen=new Set<string>();let affected=1;const count=(parent:string)=>{for(const row of rows)if(row.payload.parent===parent&&!row.payload.trash&&!seen.has(row.id)){seen.add(row.id);affected++;if(row.payload.type==='folder')count(row.id)}};if(item.payload.type==='folder')count(item.id)
+ await commit(env, s, [{ row: next(item, { ...item.payload, trash: { by: s.operator.email, at: now(), role: ctx.state.role! } }), previous: item }], { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'trash' }], audits: [{ action: 'item.trash', object: key, detail: { outcome: 'trashed', role: ctx.state.role,items:affected } }] })
  return get<Item>(env, 'item', key)
 }
 // The person's state on a trashed item as if it were not trashed: roles still come from the space and the path.
