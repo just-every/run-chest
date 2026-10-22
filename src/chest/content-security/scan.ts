@@ -1,3 +1,4 @@
+import { canAdmin, requireAdmin } from '../administration/roles'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { ChestError, insist, now, type Row, type Group } from '../model'
@@ -47,9 +48,15 @@ export async function contentReadable(env:Bindings,versions:{checksum:string}[],
  }
  return true
 }
+export async function canReleaseScan(env:Bindings,s:Session,scan:Scan){
+ if(s.operator.role==='owner')return canAdmin(env,s,'sharing-security')
+ const p=await policy(env),groups=await list<Group>(env,'group')
+ return groups.some(g=>(p.releaseGroups??[]).includes(g.id)&&g.payload.members.includes(s.operator.email))&&await canAdmin(env,s,'sharing-security',scan.actor)
+}
 export async function releaseScan(env:Bindings,s:Session,checksum:string,input:any) {
- await ownerOnly(env,s);const row=await scanRecord(env,checksum);insist(row,'not_found',404)
+ const row=await scanRecord(env,checksum);insist(row,'not_found',404)
+ const p=await maybe(env,'content-policy','content-security:policy');if(s.operator.role==='owner')await ownerOnly(env,s);else{insist(await canReleaseScan(env,s,row.payload),'release_reviewer_required',403);await requireAdmin(env,s,'sharing-security',row.payload.actor)}
  insist(input.confirm===true&&typeof input.reason==='string'&&input.reason.trim().length>=5&&input.reason.length<=1000,'release_reason_and_confirmation_required')
  const after=next(row,{...row.payload,released:{by:s.operator.email,at:now(),reason:input.reason.trim()}})
- await commit(env,s,[{row:after,previous:row}],{audits:[{action:'security.content.release',object:row.id,detail:{checksum,verdict:row.payload.state,reason:input.reason.trim()}}]});return after
+ await commit(env,s,[{row:after,previous:row}],{fences:p?[p]:[],audits:[{action:'security.content.release',object:row.id,detail:{checksum,verdict:row.payload.state,reason:input.reason.trim()}}]});return after
 }

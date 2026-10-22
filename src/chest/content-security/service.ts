@@ -4,7 +4,7 @@ import { insist, type Row } from '../model'
 import { list } from '../store'
 import { requireAdmin, canAdmin, canAdminGroup } from '../administration/roles'
 import { policy, rules, savePolicy, saveRule, ownerOnly } from './policy'
-import { scanUpload, releaseScan, type Scan } from './scan'
+import { scanUpload, releaseScan, canReleaseScan, type Scan } from './scan'
 import { resumeActivity } from './activity'
 export async function securityView(env:Bindings,s:Session) {
  const owner=!!await env.DB.prepare("SELECT 1 FROM oa_operators WHERE id=? AND role='owner' AND status='active'").bind(s.operator.id).first(),scans:Row<Scan>[]=[]
@@ -13,8 +13,8 @@ export async function securityView(env:Bindings,s:Session) {
  const all=(await env.DB.prepare('SELECT * FROM chest_activity_alerts ORDER BY at DESC LIMIT 500').all<any>()).results,alerts=[],pauses=[]
  for(const a of all)if(await canAdmin(env,s,'sharing-security',a.actor))alerts.push({...a,detail:JSON.parse(a.detail)})
  for(const a of (await env.DB.prepare('SELECT * FROM chest_activity_pauses ORDER BY at DESC').all<any>()).results)if(await canAdmin(env,s,'sharing-security',a.actor))pauses.push(a)
- if(owner){const {context,demand,who}=await import('../files/access'),w=await who(env,s),items=await list(env,'item'),docs=await list(env,'document');for(const r of await list<Scan>(env,'content-scan')){let named=r.payload.actor===s.operator.email;for(const item of items.filter(i=>i.payload.versions.some((v:any)=>v.checksum===r.payload.checksum))){try{demand(await context(env,w,item.id,false),'view');named=true}catch{}}if(docs.some(d=>d.payload.versions.some((v:any)=>v.checksum===r.payload.checksum)))named=true;scans.push({...r,payload:{...r.payload,filename:named?r.payload.filename:'Restricted original'}})}}
- else insist(alerts.length||pauses.length||scopes.length,'admin_required',403)
+ {const {context,demand,who}=await import('../files/access'),w=await who(env,s),items=await list(env,'item'),docs=owner?await list(env,'document'):await (await import('../access')).documents(env,s);for(const r of await list<Scan>(env,'content-scan')){if(!owner&&!await canReleaseScan(env,s,r.payload))continue;let named=r.payload.actor===s.operator.email;for(const item of items.filter(i=>i.payload.versions.some((v:any)=>v.checksum===r.payload.checksum))){try{demand(await context(env,w,item.id,false),'view');named=true}catch{}}if(docs.some(d=>d.payload.versions.some((v:any)=>v.checksum===r.payload.checksum)))named=true;scans.push({...r,payload:{...r.payload,filename:named?r.payload.filename:'Restricted original'}})}}
+ if(!owner)insist(alerts.length||pauses.length||scopes.length||scans.length,'admin_required',403)
  return {owner,groups:owner?groups.map(g=>({id:g.id,name:g.payload.name})):[],scopes,policy:owner?await policy(env):null,configured:owner?!!(env.CONTENT_SCANNER_URL&&env.CONTENT_SCANNER_TOKEN):false,rules:await rules(env,s.operator.email),scans,alerts,pauses}
 }
 export async function contentExecute(env:Bindings,s:Session,method:string,parts:string[],input:any) {

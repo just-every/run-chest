@@ -6,7 +6,7 @@ import { commit, fresh, maybe, next } from '../files/repo'
 import { requireAdmin, requireAdminGroup } from '../administration/roles'
 
 export type ActivityRule = { files: number; bytes: number; deletions: number; pause: boolean }
-export type ContentPolicy = { enabled: boolean; sensitiveGroups: string[]; consentAt?: string }
+export type ContentPolicy = { enabled: boolean; sensitiveGroups: string[]; releaseGroups?:string[]; consentAt?: string }
 export const defaults: ActivityRule = { files: 500, bytes: 5_000_000_000, deletions: 200, pause: false }
 export const policyKey = 'content-security:policy'
 export async function ownerOnly(env: Bindings, s: Session) {
@@ -22,11 +22,11 @@ export async function savePolicy(env: Bindings,s: Session,input:any) {
  await ownerOnly(env,s)
  const previous=await maybe<ContentPolicy>(env,'content-policy',policyKey), before=await policy(env)
  insist(typeof input.enabled==='boolean' && Array.isArray(input.sensitiveGroups) && input.sensitiveGroups.every((g:unknown)=>typeof g==='string'),'invalid_content_policy')
- const groups=await list<Group>(env,'group');insist(input.sensitiveGroups.every((g:string)=>groups.some(r=>r.id===g)),'invalid_groups')
+ const groups=await list<Group>(env,'group'),releaseGroups=input.releaseGroups??before.releaseGroups??[];insist(Array.isArray(releaseGroups)&&releaseGroups.every((g:unknown)=>typeof g==='string'&&groups.some(r=>r.id===g))&&input.sensitiveGroups.every((g:string)=>groups.some(r=>r.id===g)),'invalid_groups')
  // Enabling transmits originals to the installation's own configured processor. It requires deliberate consent.
  insist(input.confirm===true,'explicit_content_policy_confirmation_required')
  if(input.enabled)insist(env.CONTENT_SCANNER_URL && env.CONTENT_SCANNER_TOKEN,'content_scanner_not_configured',503)
- const after:ContentPolicy={enabled:input.enabled,sensitiveGroups:[...new Set<string>(input.sensitiveGroups)],consentAt:new Date().toISOString()}
+ const after:ContentPolicy={enabled:input.enabled,sensitiveGroups:[...new Set<string>(input.sensitiveGroups)],releaseGroups:[...new Set<string>(releaseGroups)],consentAt:new Date().toISOString()}
  const row=previous?next(previous,after):fresh('content-policy',after,policyKey)
  await commit(env,s,[{row,previous:previous??undefined}],{audits:[{action:'security.content.policy',object:policyKey,detail:{before,after}}]});return after
 }
