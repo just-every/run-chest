@@ -39,8 +39,19 @@ Chest sends `POST <address>` with `Authorization: Bearer <token>`, `Content-Type
 { "verdict": "clean" | "infected", "signature": "<name when infected>", "engine": "<engine and version>", "definitions": "<database version>" }
 ```
 
-Anything else counts as a failed attempt. The reference deployment is a ClamAV daemon behind a small HTTP adapter on
-a host reachable over HTTPS; Chest itself runs no scanning engine.
+Anything else counts as a failed attempt. Chest itself runs no scanning engine.
+
+The reference scanner is `scripts/scanner/server.mjs`: it streams each original to a ClamAV daemon (clamd `INSTREAM`)
+and answers with the verdict, the signature name, the engine version and the signature database version.
+
+```sh
+SCANNER_TOKEN=<a long random secret> CLAMD_SOCKET=/var/run/clamav/clamd.ctl PORT=8080 node scripts/scanner/server.mjs
+```
+
+Run it next to `clamd` (kept current by `freshclam`), publish it over HTTPS, set clamd's `StreamMaxLength` to the
+largest file your installation accepts, and connect Chest to its address with the same token. The Scanner workflow
+(`.github/workflows/scanner.yml`) runs Chest against this adapter and a real ClamAV daemon with its official
+signatures, on demand and nightly.
 
 ## Mass downloads and deletions
 
@@ -78,7 +89,7 @@ creates a link or grant by itself.
 
 ## Limits today
 
-- The scanner is a separate service you deploy; Chest ships its protocol, not an engine.
+- The scanner is a separate service you deploy; Chest ships its protocol and the ClamAV adapter, not an engine.
 - Sensitive content is recognised by the label or marking a document carries; Chest does not infer sensitivity from
   the text itself.
 - Labels are read from originals up to 8 MB.

@@ -1,0 +1,40 @@
+name: Scanner
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '47 16 * * *'
+permissions:
+  contents: read
+jobs:
+  # SECURITY-002's live receipt: the reference scanner adapter over a real ClamAV daemon with its official
+  # signatures. It downloads those signatures from ClamAV's CDN, so it runs on demand and nightly, never gating a push.
+  clamav:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.20.0'
+      - run: npm install --global pnpm@10.12.4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - name: Install ClamAV and its official signatures
+        run: |
+          set -euo pipefail
+          sudo apt-get update -q
+          sudo apt-get install -y -q clamav-daemon clamav-freshclam netcat-openbsd
+          sudo systemctl stop clamav-freshclam || true
+          sudo freshclam --stdout
+          sudo systemctl restart clamav-daemon
+          for attempt in $(seq 1 90); do
+            if [ -S /var/run/clamav/clamd.ctl ] && printf 'zPING\0' | nc -U -w 5 /var/run/clamav/clamd.ctl | grep -q PONG; then break; fi
+            sleep 2
+          done
+          printf 'zVERSION\0' | nc -U -w 5 /var/run/clamav/clamd.ctl
+      - run: node tests/chest/scanner-live.mjs
+        env:
+          CLAMD_SOCKET: /var/run/clamav/clamd.ctl
