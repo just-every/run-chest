@@ -22,9 +22,10 @@ async function processor(){
  // A test-only ClamAV signature database proves the engine path without depending on today's signature download.
  // This is not a production signature set; production startup requires maintained ClamAV definitions.
  const signature=createHash('md5').update(specimen).digest('hex')+':'+specimen.length+':Synthetic.Chest.Eicar\n';await writeFile(join(dir,'test.hdb'),signature);
- const child=spawn('python3',['services/content-scan/server.py','--port','0','--clamscan',process.env.CHEST_CLAMSCAN,'--database',dir],{env:{...process.env,CONTENT_SCANNER_TOKEN:'synthetic-chest-1'},stdio:['ignore','pipe','pipe']});let stderr='';child.stderr.on('data',b=>stderr+=b);let line='';
+ const database=process.env.CHEST_CLAMAV_DATABASE??dir;
+ const child=spawn('python3',['services/content-scan/server.py','--port','0','--clamscan',process.env.CHEST_CLAMSCAN,'--database',database],{env:{...process.env,CONTENT_SCANNER_TOKEN:'synthetic-chest-1'},stdio:['ignore','pipe','pipe']});let stderr='';child.stderr.on('data',b=>stderr+=b);let line='';
  const port=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>{child.kill('SIGTERM');reject(Error('processor did not start: '+stderr))},20000);child.once('exit',()=>{clearTimeout(timer);reject(Error('processor exited: '+stderr))});child.stdout.on('data',b=>{line+=b;const m=/CHEST_SCANNER_READY (\d+)/.exec(line);if(m){clearTimeout(timer);resolve(Number(m[1]))}})});
- return {url:`http://127.0.0.1:${port}/scan`,async close(){child.kill('SIGTERM');await once(child,'exit');await rm(dir,{recursive:true,force:true})}};
+ return {url:`http://127.0.0.1:${port}/scan`,maintained:!!process.env.CHEST_CLAMAV_DATABASE,async close(){child.kill('SIGTERM');await once(child,'exit');await rm(dir,{recursive:true,force:true})}};
 }
 export async function contentSecurityFlow(){
  const real=await processor();let offline=false,wrongReceipt=false,browser;
@@ -83,7 +84,7 @@ export async function contentSecurityFlow(){
   const released=await h.api(`/items/${file.id}/versions`,owner,{base64:b64(specimen)});assert.equal(released.payload.versions.length,2);assert.equal(await (await h.raw(`/api/chest/items/${file.id}/bytes/${released.payload.current}?download=true`,owner)).text(),specimen.toString());
   await h.api('/content-security/policy',owner,{enabled:false,sensitiveGroups:[],confirm:true});assert.equal((await h.raw(`/api/chest/items/${sensitive.id}`,member)).status,403,'disabling processing never expands sensitive access');
   const audit=await h.api('/audit?limit=200',owner);assert.ok(JSON.stringify(audit).includes('security.content.release'));
-  console.log('SECURITY-002 content quarantine: real Worker intake, pending/failed/invalid receipts, all read doors, classification, group revocation, owner-only explicit release, retained originals and restart at 1440/390; scanner='+ (real?'real ClamAV with test-only EICAR database':'network-edge fake'));
+  console.log('SECURITY-002 content quarantine: real Worker intake, pending/failed/invalid receipts, all read doors, classification, group revocation, owner-only explicit release, retained originals and restart at 1440/390; scanner='+ (real?(real.maintained?'real ClamAV with maintained vendor definitions':'real ClamAV with test-only EICAR database'):'network-edge fake'));
  }finally{await browser?.close();await h.close();await real?.close()}
 }
 export async function activitySecurityFlow(){
