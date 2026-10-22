@@ -13,7 +13,8 @@ try {
   const before=h.mails.length;await post(path+'/verify',{email:'outsider@other.test'});assert.equal(h.mails.length,before,'wrong email receives no challenge');
   await post(path+'/verify',{email:'vendor@acme.test'});const message=h.mails.at(-1),verify=new URL(message.text.match(/https?:\/\/[^\s]+/)[0]);assert.equal(message.to[0],'vendor@acme.test');
   assert.match(await (await h.fetch(verify.pathname+verify.search)).text(),/Confirm your email/);
-  const confirmed=await post(path+'/confirm',{token:verify.searchParams.get('token')}),cookie=confirmed.headers.getSetCookie()[0].split(';')[0];assert.equal(confirmed.status,303);
+  if(audience.audience==='domain')await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.at',?) WHERE id=?",new Date(Date.now()-40*86400000).toISOString(),link.link.id);
+  const confirmed=await post(path+'/confirm',{token:verify.searchParams.get('token')}),cookie=confirmed.headers.getSetCookie()[0].split(';')[0];assert.equal(confirmed.status,303);if(audience.audience==='domain')assert.ok(Number(confirmed.headers.getSetCookie()[0].match(/Max-Age=(\d+)/)[1])<=43200,'domain sessions keep their 12-hour lifetime even for old grants');
   const replay=await post(path+'/confirm',{token:verify.searchParams.get('token')});assert.equal(replay.status,403,'single use: '+await replay.text());
   assert.match(await (await h.fetch(path,{headers:{cookie}})).text(),/Enter the password/);
   const unlock=await post(path,{password:'delivery-secret'},cookie),both=cookie+'; '+unlock.headers.getSetCookie()[0].split(';')[0];

@@ -39,7 +39,7 @@ export async function guestIdentity(env:Bindings,request:Request,r:Resolved):Pro
 }
 export async function guestIdentityForSession(env:Bindings,r:Resolved,row:import('../model').Row<GuestSession>|undefined){
  if(!row||row.payload.link!==r.link.id||(['editor','contributor'].includes(r.link.payload.role??'')&&row.payload.method!=='pin')||!admitted(r.link.payload,row.payload.email))return null
- const policy=await guestPolicy(env),until=Math.min(Date.parse(row.payload.expiresAt),Date.parse(row.payload.verifiedAt)+policy.reverifyDays*86400000,await guestExpiry(env,r.link.payload))
+ const policy=await guestPolicy(env),domain=r.link.payload.audience==='domain',until=Math.min(Date.parse(row.payload.expiresAt),Date.parse(row.payload.verifiedAt)+(domain?12*3600000:policy.reverifyDays*86400000),domain?(r.link.payload.expires?Date.parse(r.link.payload.expires):Infinity):await guestExpiry(env,r.link.payload))
  return until>Date.now()?{email:row.payload.email,verifiedAt:row.payload.verifiedAt,until,session:row}:null
 }
 export async function guestEmail(env:Bindings,request:Request,r:Resolved):Promise<string|null> {
@@ -47,13 +47,13 @@ export async function guestEmail(env:Bindings,request:Request,r:Resolved):Promis
  return (await guestIdentity(env,request,r))?.email??null
 }
 async function verified(env:Bindings,r:Resolved,base:string,email:string,challenge:any,method:'pin'|'email-link'){
- const token=randomToken('chest_guest_session_'),at=now(),until=Math.min(Date.now()+(await guestPolicy(env)).reverifyDays*86400000,await guestExpiry(env,r.link.payload))
+ const token=randomToken('chest_guest_session_'),at=now(),domain=r.link.payload.audience==='domain',until=Math.min(Date.now()+(domain?12*3600000:(await guestPolicy(env)).reverifyDays*86400000),domain?(r.link.payload.expires?Date.parse(r.link.payload.expires):Infinity):await guestExpiry(env,r.link.payload))
  const session=fresh<GuestSession>('guest-session',{link:r.link.id,email,tokenHash:await tokenHash(token),verifiedAt:at,expiresAt:new Date(until).toISOString(),method})
  await commit(env,null,[{row:next(challenge,{...challenge.payload,used:at}),previous:challenge},{row:session}],{by:email,fences:r.fences,audits:[{action:'link.guest.verified',object:r.root.id,detail:{link:r.link.id,method}}]})
  return new Response(null,{status:303,headers:{location:base,'cache-control':'no-store','set-cookie':`chest_guest=${token}; Path=${base}; Max-Age=${Math.max(0,Math.floor((until-Date.now())/1000))}; HttpOnly; Secure; SameSite=Lax`}})
 }
 export function verifyPage(base:string,message='',status=200,challenge='',email='') {
- return publicPage('Verify your email',`<p>This link is limited to invited email addresses or the organization named by its owner. Verify your email to open it. This gives access only through this link.</p>${message?`<p role="status">${esc(message)}</p>`:''}<form method="post" action="${esc(base)}/verify"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required><button class="action">Email a verification link</button></form>${challenge?`<form method="post" action="${esc(base)}/pin"><input type="hidden" name="challenge" value="${esc(challenge)}"><input type="hidden" name="email" value="${esc(email)}"><label for="pin">One-time PIN</label><input id="pin" name="pin" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required><button class="action">Verify PIN</button></form>`:''}`,status)
+ return publicPage('Verify your email',`<p>This link is limited to invited email addresses or the organization named by its owner. Verify your email to open it. This gives access only through this link.</p>${message?`<p role="status">${esc(message)}</p>`:''}<form method="post" action="${esc(base)}/verify"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required><button class="action">Email a PIN</button></form>${challenge?`<form method="post" action="${esc(base)}/pin"><input type="hidden" name="challenge" value="${esc(challenge)}"><input type="hidden" name="email" value="${esc(email)}"><label for="pin">One-time PIN</label><input id="pin" name="pin" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required><button class="action">Verify PIN</button></form>`:''}`,status)
 }
 export async function guestVerification(env:Bindings,request:Request,r:Resolved,base:string,confirm:boolean,pin=false) {
  const form=await request.formData()
@@ -66,6 +66,7 @@ export async function guestVerification(env:Bindings,request:Request,r:Resolved,
   return verified(env,r,base,email,row,'pin')
  }
  if(confirm){
+  if(['editor','contributor'].includes(r.link.payload.role??''))return verifyPage(base,'Writer access requires the PIN sent to your invited address.',403)
   const token=String(form.get('token')??'');if(!tokenShape('chest_guest_').test(token))return verifyPage(base,'This verification link is invalid. Request a new one.',403)
   const [row]=await where<Challenge>(env,'guest-challenge','$.tokenHash',await tokenHash(token))
   if(!row||row.payload.link!==r.link.id||row.payload.used||!(Date.parse(row.payload.expires)>Date.now())||!admitted(r.link.payload,row.payload.email))return verifyPage(base,'This verification link expired or was already used. Request a new one.',403)
@@ -81,10 +82,11 @@ export async function guestVerification(env:Bindings,request:Request,r:Resolved,
   const token=randomToken('chest_guest_'),pin=String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,'0'),row=fresh<Challenge>('guest-challenge',{link:r.link.id,email,tokenHash:await tokenHash(token),pinHash:await signature(env,`pin:${challenge}:${email}:${pin}`),attempts:0,expires:new Date(Date.now()+10*60000).toISOString()},challenge)
   await commit(env,null,[{row}],{by:'link visitor',fences:r.fences})
   const url=`${env.AUTH_ORIGIN}${base}/verify?token=${encodeURIComponent(token)}`
-  const result=await sender.send({deliveryId:row.id,from:env.MAIL_FROM!,to:[email],subject:'Verify your email to open a Chest link',text:`Your one-time PIN is ${pin}. Enter it on the shared page within 10 minutes, or open this link and confirm your email.\n\n${url}`,html:`<p>Your one-time PIN is ${pin}. Enter it within 10 minutes, or confirm your email:</p><p><a href="${esc(url)}">Verify email</a></p>`,headers:{'Auto-Submitted':'auto-generated'}})
+  const writer=['editor','contributor'].includes(r.link.payload.role??'')
+  const result=await sender.send({deliveryId:row.id,from:env.MAIL_FROM!,to:[email],subject:'Verify your email to open a Chest link',text:`Your one-time PIN is ${pin}. Enter it on the shared page within 10 minutes.${writer?'':` Or open this link and confirm your email.\n\n${url}`}`,html:`<p>Your one-time PIN is ${pin}. Enter it within 10 minutes.</p>${writer?'':`<p><a href="${esc(url)}">Verify email</a></p>`}`,headers:{'Auto-Submitted':'auto-generated'}})
   insist(result.status==='accepted','verification_mail_failed',503)
  }
- return verifyPage(base,'If this email is allowed, a PIN and verification link have been sent. Use one within 10 minutes.',200,challenge,email)
+ return verifyPage(base,'If this email is allowed, a PIN has been sent. Enter it within 10 minutes.',200,challenge,email)
 }
 export function confirmGuest(base:string,token:string) {
  return publicPage('Confirm your email',`<p>Confirm to open the shared link in this browser.</p><form method="post" action="${esc(base)}/confirm"><input type="hidden" name="token" value="${esc(token)}"><button class="action">Confirm email</button></form>`)
