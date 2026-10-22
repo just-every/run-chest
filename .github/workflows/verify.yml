@@ -86,7 +86,7 @@ jobs:
           NODE
       - run: npm install --global pnpm@10.12.4
       - run: pnpm install --frozen-lockfile && pnpm exec rer install
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: node scripts/install-browser.mjs
       - run: pnpm run build
       - run: pnpm run test:browser:${{ matrix.suite }}
       - uses: actions/upload-artifact@v4
@@ -129,7 +129,7 @@ jobs:
           NODE
       - run: npm install --global pnpm@10.12.4
       - run: pnpm install --frozen-lockfile && pnpm exec rer install
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: node scripts/install-browser.mjs
       - run: pnpm run test:journey
         env:
           CHEST_TEST_CHECKOUT: '1'
@@ -153,7 +153,7 @@ jobs:
           node-version: '22.20.0'
       - run: npm install --global pnpm@10.12.4
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: node scripts/install-browser.mjs
       - run: pnpm run build
       - run: pnpm run test:chest:extra
       - run: pnpm run test:browser:extra
@@ -180,7 +180,7 @@ jobs:
           node-version: '22.20.0'
       - run: npm install --global pnpm@10.12.4
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: node scripts/install-browser.mjs
       - run: pnpm run build
       - run: pnpm install --frozen-lockfile && pnpm exec vite build
         working-directory: .test-auth
@@ -207,7 +207,7 @@ jobs:
           node-version: '22.20.0'
       - run: npm install --global pnpm@10.12.4
       - run: pnpm install --frozen-lockfile && pnpm exec rer install
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: node scripts/install-browser.mjs
       - run: pnpm run test:upgrade
       - uses: actions/upload-artifact@v4
         if: always()
