@@ -8,6 +8,8 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
+import {docx} from './office-fixtures.mjs';
+import {pdf} from './fixtures.mjs';
 const sha=b=>createHash('sha256').update(b).digest('hex'),b64=b=>Buffer.from(b).toString('base64');
 // The industry-standard harmless scanner specimen. Never executed, only submitted as original bytes.
 const specimen=Buffer.from('WDVPIVAlQEFQWzRcUFpYNTQoUF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNULUZJTEUhJEgrSCo=','base64');
@@ -40,14 +42,19 @@ export async function contentSecurityFlow(){
   await h.api('/people',owner,{action:'invite',email:'member@example.test',name:'Jordan Lee'});const member=await h.signIn('member@example.test',true);
   const folder=await h.api('/items',owner,{space,type:'folder',name:'Supplier exchange'}),file=await h.api('/items',owner,{parent:folder.id,name:'Terms.txt',base64:b64('synthetic-chest-2')});
   const link=await h.api(`/items/${folder.id}/links`,owner,{audience:'public'}),base=new URL(link.url).pathname,device=await h.api('/devices',owner,{name:'Synthetic companion',platform:'macos'});
+  const office=await h.api('/items',owner,{space,name:'Editor original.docx',base64:b64(docx())}),officePath=`/api/chest/items/${office.id}/office-preview/${office.payload.current}`;assert.equal((await h.raw(officePath,owner)).status,200,'the Office preview route works before quarantine');
+  const pack=await h.api('/transfers',owner,{item:file.id,title:'Retained terms'}),transfer=new URL(pack.url).pathname,started=await h.fetch(transfer+'/start',{method:'POST',headers:{origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:''}),transferCookie=started.headers.getSetCookie()[0].split(';')[0];assert.equal(started.status,303);assert.equal((await h.fetch(transfer+'/f/'+file.id,{headers:{cookie:transferCookie,range:'bytes=0-4'}})).status,206);
+  const source=await h.api('/items',owner,{space,name:'Signature original.pdf',base64:b64(pdf())}),request=await h.api('/signatures',owner,{item:source.id});await h.api(`/signatures/${request.id}/send`,owner,{signers:[{email:'signer@outside.test',name:'External signer'}],mode:'sequential',expiresDays:7,reminderDays:1,fields:[{signer:'signer@outside.test',type:'signature',page:1,x:.1,y:.1,w:.3,h:.05},{signer:'signer@outside.test',type:'date',page:1,x:.5,y:.1,w:.2,h:.05}]});const signPath=new URL(h.mails.findLast(m=>[m.to].flat().includes('signer@outside.test')).text.match(/https?:\/\/[^\s]+\/sign\/[^\s]+/)[0]).pathname;assert.equal((await h.fetch(signPath)).status,200);
+  assert.equal((await h.fetch(`${base}/f/${file.id}`)).status,200);assert.equal((await h.fetch(`${base}/p/${file.id}`)).status,200);assert.equal((await h.fetch(`/api/chest/sync/items/${file.id}/content?version=${file.payload.current}`,{headers:{authorization:`Bearer ${device.token}`}})).status,200);
   await h.api('/content-security/policy',member,{enabled:true,sensitiveGroups:[],confirm:true},403);
   await h.api('/content-security/policy',owner,{enabled:true,sensitiveGroups:[],confirm:false},400);
   await h.api('/content-security/policy',owner,{enabled:true,sensitiveGroups:[],confirm:true});
   // Previously retained, still-unscanned originals fail through every existing read door.
-  for(const path of [`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`,`/api/chest/items/${file.id}/bytes/${file.payload.current}`,`/api/chest/items/${file.id}/office-preview/${file.payload.current}`,`/api/chest/items/${file.id}/pages/${file.payload.current}/1`])assert.ok((await h.raw(path,owner)).status>=400,path);
+  for(const path of [`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`,`/api/chest/items/${file.id}/bytes/${file.payload.current}`,`/api/chest/items/${file.id}/office-preview/${file.payload.current}`,`/api/chest/items/${file.id}/pages/${file.payload.current}/1`])assert.ok((await h.raw(path,owner)).status===403,path);
   assert.ok((await h.fetch(`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`,{headers:{cookie:owner,range:'bytes=0-4'}})).status>=400);
-  for(const path of [`${base}/f/${file.id}`,`${base}/p/${file.id}`])assert.ok((await h.fetch(path)).status>=400,path);
+  for(const path of [`${base}/f/${file.id}`,`${base}/p/${file.id}`])assert.ok((await h.fetch(path)).status===403,path);
   assert.ok((await h.fetch(`/api/chest/sync/items/${file.id}/content?version=${file.payload.current}`,{headers:{authorization:`Bearer ${device.token}`}})).status>=400);
+  assert.equal((await h.raw(officePath,owner)).status,403,'an existing valid Office preview is quarantined');assert.equal((await h.fetch(signPath)).status,423,'an existing signing link cannot bypass quarantine');assert.ok([403,410,423].includes((await h.fetch(transfer+'/f/'+file.id,{headers:{cookie:transferCookie,range:'bytes=0-4'}})).status),'existing transfer range cannot bypass quarantine');
   await h.api('/content-security/scan',owner,{item:file.id});
   assert.equal(await (await h.raw(`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`,owner)).text(),'synthetic-chest-2');
   // Malware and failed receipts retain bytes without publishing a new file or replacing the original.
