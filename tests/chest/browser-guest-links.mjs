@@ -21,3 +21,5 @@ try{
  }
  console.log('SHARE-001 verified external audience browser at 1440 and 390 passed');
 }finally{await browser?.close();await h.close()}
+
+await (await import('./guest-editing-flow.mjs')).guestEditingFlow({browserProof:true});

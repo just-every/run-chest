@@ -45,3 +45,5 @@ try{
  }
  console.log('SHARE-001 and POLICY-001 browser links at 1440 and 390 passed');
 }finally{await browser?.close();await h.close()}
+
+await (await import('./organization-link-controls-flow.mjs')).organizationLinkControlsFlow({browserProof:true});

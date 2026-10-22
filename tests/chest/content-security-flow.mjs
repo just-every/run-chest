@@ -54,7 +54,7 @@ export async function contentSecurityFlow(){
   assert.ok((await h.fetch(`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`,{headers:{cookie:owner,range:'bytes=0-4'}})).status>=400);
   for(const path of [`${base}/f/${file.id}`,`${base}/p/${file.id}`])assert.equal((await h.fetch(path)).status,404,'quarantine hides an original and preview that were readable before');
   assert.ok((await h.fetch(`/api/chest/sync/items/${file.id}/content?version=${file.payload.current}`,{headers:{authorization:`Bearer ${device.token}`}})).status>=400);
-  assert.equal((await h.raw(officePath,owner)).status,403,'an existing valid Office preview is quarantined');assert.equal((await h.fetch(signPath)).status,423,'an existing signing link cannot bypass quarantine');assert.ok([403,410,423].includes((await h.fetch(transfer+'/f/'+file.id,{headers:{cookie:transferCookie,range:'bytes=0-4'}})).status),'existing transfer range cannot bypass quarantine');
+  assert.equal((await h.raw(officePath,owner)).status,403,'an existing valid Office preview is quarantined');assert.equal((await h.fetch(signPath)).status,423,'an existing signing link cannot bypass quarantine');assert.equal((await h.fetch(transfer+'/f/'+file.id,{headers:{cookie:transferCookie,range:'bytes=0-4'}})).status,404,'quarantine conceals the previously readable transfer original');
   await h.api('/content-security/scan',owner,{item:file.id});
   assert.equal(await (await h.raw(`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`,owner)).text(),'synthetic-chest-2');
   // Malware and failed receipts retain bytes without publishing a new file or replacing the original.
