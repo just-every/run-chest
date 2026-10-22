@@ -1,7 +1,7 @@
 // Real, account-free CODE journey. Run on the committed candidate outside push Verify.
 import assert from 'node:assert/strict';
-import {execFileSync} from 'node:child_process';
-import {mkdtemp,writeFile,readFile,mkdir,rm} from 'node:fs/promises';
+import {execFileSync,spawnSync} from 'node:child_process';
+import {mkdtemp,writeFile,readFile,mkdir,rm,chmod} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {request as httpRequest} from 'node:http';
@@ -19,6 +19,7 @@ const stage=m=>{stages.push(m);console.log('COLLABORA_LIVE '+m)};
 try{
  await mkdir('test-results',{recursive:true});openssl(['req','-x509','-newkey','rsa:2048','-nodes','-keyout','ca.key','-out','ca.pem','-days','1','-subj','/CN=Chest synthetic test CA','-addext','basicConstraints=critical,CA:TRUE']);
  openssl(['req','-new','-newkey','rsa:2048','-nodes','-keyout','server.key','-out','server.csr','-subj','/CN=localhost']);await writeFile(join(directory,'extensions'),'subjectAltName=DNS:localhost,IP:127.0.0.1\nbasicConstraints=CA:FALSE\nextendedKeyUsage=serverAuth\n');openssl(['x509','-req','-in','server.csr','-CA','ca.pem','-CAkey','ca.key','-CAcreateserial','-out','server.pem','-days','1','-extfile','extensions']);
+ await chmod(join(directory,'ca.pem'),0o644);
  h=await harness({tls:{key:await readFile(join(directory,'server.key'),'utf8'),cert:await readFile(join(directory,'server.pem'),'utf8')},bindings:{COLLABORA_URL:editor},edge:async r=>{if(r.url.startsWith(editor+'/')){const response=await http(r.url);return new Response(response.body,{status:response.status,headers:{'content-type':response.headers['content-type']??'application/octet-stream'}})}}});
  // Host networking connects only these two task-owned loopback components; no external destination or policy is bypassed.
  docker(['run','--detach','--name',container,'--network','host','--cap-add','MKNOD','--mount',`type=bind,src=${join(directory,'ca.pem')},dst=/tmp/chest-test-ca.pem,readonly`,image,'--port=39980','--o:ssl.enable=false','--o:ssl.termination=false','--o:ssl.ssl_verification=true','--o:ssl.ca_file_path=/tmp/chest-test-ca.pem','--o:storage.ssl.enable=true','--o:storage.ssl.as_scheme=true','--o:storage.ssl.ca_file_path=/tmp/chest-test-ca.pem','--o:logging.level=information',`--o:server_name=127.0.0.1:39980`,'--o:storage.wopi.alias_groups[@mode]=groups',`--o:storage.wopi.alias_groups.group[0].host=${h.origin}`,'--o:storage.wopi.alias_groups.group[0].host[@allow]=true']);started=true;
@@ -44,5 +45,5 @@ try{
   await guest.close();await staff.close();stage(width+' shared edits, attribution and revoke passed');
  }
  const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();console.log('COLLABORA_LIVE_RECEIPT '+JSON.stringify({head,image,widths:[1440,390],run:'sx-chest-c11-collabora-live',stages}));
-}catch(error){if(started){try{await writeFile('test-results/collabora-diagnostics.txt',redact(docker(['logs','--tail','300',container]))+'\nBrowser errors: '+redact(JSON.stringify(diagnostics)))}catch{}}console.error(String(error.stack??error).replace(/(access_token=)[^&\s"']+/gi,'$1[redacted]'));process.exitCode=1}
+}catch(error){if(started){try{await writeFile('test-results/collabora-diagnostics.txt',redact((()=>{const r=spawnSync('docker',['--host=unix:///var/run/docker.sock','logs','--tail','300',container],{env:dockerEnv,encoding:'utf8'});return r.stdout+r.stderr})())+'\nBrowser errors: '+redact(JSON.stringify(diagnostics)))}catch{}}console.error(String(error.stack??error).replace(/(access_token=)[^&\s"']+/gi,'$1[redacted]'));process.exitCode=1}
 finally{await browser?.close();if(started){try{docker(['stop','--time','10',container])}finally{docker(['rm',container])}}await h?.close();await rm(directory,{recursive:true,force:true})}
