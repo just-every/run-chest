@@ -1,8 +1,8 @@
 // SECURITY-002 through the built Worker. The malware scanner is a separately deployed service, faked here at its
 // network edge with the industry's harmless test file; quarantine, classification, alerts, pauses and rules run in Chest.
 import assert from 'node:assert/strict';
-import {createHash} from 'node:crypto';
-import {strToU8,zipSync} from 'fflate';
+import {createHash,randomBytes} from 'node:crypto';
+import {strFromU8,strToU8,unzipSync,zipSync} from 'fflate';
 import {harness} from './harness.mjs';
 export const specimen=Buffer.from(['X5O!P%@AP[4\\PZX54(P^)7CC)7}$','EICAR-STANDARD-ANTIVIRUS','-TEST-FILE!$H+H*'].join(''));
 export const SCANNER='https://scanner.example.test/scan';
@@ -64,6 +64,11 @@ if(process.argv[1]===new URL(import.meta.url).pathname){
   const link=await h.api(`/items/${specimenFile.id}/public-links`,owner,{audience:'public'}),secret=new URL(link.url).pathname.split('/')[2];
   for(const sub of ['f','p']){const r=await h.fetch(`/l/${secret}/${sub}/${specimenFile.id}`);assert.notEqual(r.status,200,`link ${sub}`);assert.ok(!(await r.text()).includes('EICAR'))}
   assert.equal((await h.api('/search?q=antivirus',owner)).count,0,'held text is neither matched nor quoted');
+  {const job=await h.api('/bulk',owner,{action:'download',items:[specimenFile.id]}),zip=await h.raw(`/api/chest/bulk/${job.id}/archive`,owner);assert.equal(zip.status,200);const files=unzipSync(new Uint8Array(await zip.arrayBuffer())),manifest=JSON.parse(strFromU8(files['chest-manifest.json']));assert.equal(manifest.included.length,0);assert.equal(manifest.excluded[0].reason,'quarantined');assert.ok(!Object.values(files).some(b=>Buffer.from(b).includes(specimen)),'the archive leaks nothing')}
+  assert.equal((await h.raw(`/api/chest/items/${specimenFile.id}/reading`,owner)).status,423,'readings are held too');
+  const packed=await h.api('/items',uma,{space:space.id,name:'Payload.docx',base64:Buffer.from(zipSync({'word/document.xml':new Uint8Array(specimen)},{level:0})).toString('base64')});await h.scheduled();
+  await until(async()=>{const r=await h.raw(`/api/chest/items/${packed.id}/office`,owner);return r.status===423&&(await r.json()).error==='quarantined'},'the editor refuses a quarantined Office file');
+  assert.equal((await h.raw(`/api/chest/items/${packed.id}/office-preview`,owner)).status,423);
   // Release is the reviewer's: not the uploader, not a viewer, not an admin scoped elsewhere; a reason is required.
   await h.api(`/threats/quarantine/${sv.checksum}/release`,uma,{reason:'mine'},403);await h.api(`/threats/quarantine/${sv.checksum}/release`,vic,{reason:'x'},403);await h.api(`/threats/quarantine/${sv.checksum}/release`,ray,{reason:'x'},403);await h.api(`/threats/quarantine/${sv.checksum}/release`,sam,{reason:''},400);
   const released=await h.api(`/threats/quarantine/${sv.checksum}/release`,sam,{reason:'Training file from the security awareness course.'});assert.equal(released.state,'released');assert.equal(released.release.by,'sam@example.test');
@@ -125,6 +130,12 @@ if(process.argv[1]===new URL(import.meta.url).pathname){
   const devPause=(await h.api('/threats',sam)).history.pauses.find(p=>p.subject.type==='device'&&!p.resumedAt);await h.api(`/threats/pauses/${devPause.id}/resume`,sam,{});assert.equal((await eveHydrate(visible[0])).status,200);
   await h.api('/threats/pauses',sam,{type:'device',id:eveDevice.device.id,reason:'Lost on site'});assert.equal((await eveHydrate(visible[0])).status,423);
   assert.equal((await h.api(`/items/${visible[0][0]}`,owner)).versions.length,1);
-  console.log('SECURITY-002 group threshold pause names the rule, device burst pause, scoped tuning, resume and audited changes passed');
+  // The byte half of the rule, scaled down: the owner lowers the organization threshold to 0.001 GB, audited before and after.
+  await h.api('/threats/policy',owner,{files:500,gigabytes:0.001,downloadAction:'alert',items:200,deletionAction:'alert'});
+  const orgChange=JSON.parse((await h.api('/audit',owner)).find(a=>a.action==='threats.policy'&&JSON.parse(a.detail).scope==='organization').detail);assert.equal(orgChange.before.downloads.bytes,5e9);assert.equal(orgChange.after.downloads.bytes,1e6);
+  const surveys=await Promise.all([1,2].map(n=>h.api('/items',owner,{space:space.id,name:`Survey ${n}.bin`,base64:randomBytes(600_000).toString('base64')})));
+  for(const f of surveys){const r=await bytesOf(f.id,f.payload.current,vic);assert.equal(r.status,200);await r.arrayBuffer()}
+  const vicAlert=(await alertsFor('vic@example.test')).find(a=>a.kind==='downloads');assert.ok(vicAlert,'two 600 KB files cross 0.001 GB');assert.equal(vicAlert.bytes,1_200_000);assert.match(vicAlert.rule,/More than 500 files or 0\.001 GB downloaded in 10 minutes \(organization; alert\)/);
+  console.log('SECURITY-002 group threshold pause names the rule, device burst pause, scoped tuning, byte threshold, resume and audited changes passed');
  }finally{await h.close()}
 }
