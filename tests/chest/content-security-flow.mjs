@@ -1,3 +1,4 @@
+import {request as httpRequest} from 'node:http';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {spawn,execFileSync} from 'node:child_process';
@@ -30,7 +31,7 @@ export async function contentSecurityFlow(){
   assert.equal(request.headers.get('authorization'),'Bearer synthetic-chest-1');const bytes=Buffer.from(await request.arrayBuffer());assert.equal(request.headers.get('x-content-sha256'),sha(bytes));
   if(offline)return new Response('processor unavailable',{status:503});
   let result;
-  if(real){const response=await fetch(real.url,{method:'POST',headers:{authorization:'Bearer synthetic-chest-1','content-length':String(bytes.length),'x-content-sha256':sha(bytes)},body:bytes});assert.equal(response.status,200,await response.clone().text());result=await response.json()}
+  if(real){result=await new Promise((resolve,reject)=>{const call=httpRequest(real.url,{method:'POST',headers:{authorization:'Bearer synthetic-chest-1','content-length':String(bytes.length),'x-content-sha256':sha(bytes)}},response=>{const chunks=[];response.on('data',b=>chunks.push(b));response.on('end',()=>{try{assert.equal(response.statusCode,200,Buffer.concat(chunks).toString());resolve(JSON.parse(Buffer.concat(chunks)))}catch(e){reject(e)}})});call.on('error',reject);call.end(bytes)})}
   else result={checksum:sha(bytes),size:bytes.length,state:bytes.equals(specimen)?'infected':'clean',sensitive:/Classification: Sensitive/i.test(bytes.toString()),reason:'Synthetic scanner-edge receipt',engine:'synthetic-chest-1'};
   if(wrongReceipt)result.checksum='0'.repeat(64);return Response.json(result);
  }});
