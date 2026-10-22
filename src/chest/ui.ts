@@ -83,7 +83,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   if(input.path==='/reading/settings/test')return page(testReceipt(result),me,'/app/admin')
   if(input.path==='/archive/preview')return page(mappingPage(input,result),me,'/app/archive')
   if(input.path.startsWith('/archive/')||input.action==='sessions')return page(receiptPage(input,result),me,returnTo)
-  const location=input.path==='/new-files'&&result?.kind==='item'?`/app/items/${result.id}${/\.(docx|xlsx)$/i.test(result.payload.name)?'?edit=1':''}`:result?.kind==='document'?`/app/documents/${result.id}`:result?.kind==='item'&&input.path==='/items'?`/app/items/${result.id}`:returnTo;return new Response(null,{status:303,headers:{...headers,location:location.startsWith('/app')?location:'/app'}})
+  const location=input.path==='/links/open'&&result?.item?`/app/items/${result.item}`:input.path==='/new-files'&&result?.kind==='item'?`/app/items/${result.id}${/\.(docx|xlsx)$/i.test(result.payload.name)?'?edit=1':''}`:result?.kind==='document'?`/app/documents/${result.id}`:result?.kind==='item'&&input.path==='/items'?`/app/items/${result.id}`:returnTo;return new Response(null,{status:303,headers:{...headers,location:location.startsWith('/app')?location:'/app'}})
  }
  if(url.pathname==='/app/erasure'){return page(erasurePage(await erasureView(env,s)),me,url.pathname)}
  const administrative=await administrationPage(env,s,url);if(administrative)return page(administrative,me,url.pathname)
