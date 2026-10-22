@@ -42,6 +42,12 @@ try {
     ['mapping','migration-source-map',{sourceId:'remote:42',targetId:'item',revision:'v1'}],
     ['link','public-link',{item:'item',tokenHash:'OLD_LINK_HASH',password:{hash:'OLD_PASSWORD_HASH',salt:'old'},expires:null,at}],
     ['request','file-request',{folder:'folder',tokenHash:'OLD_REQUEST_HASH',title:'Retain definition',at}],
+    ['guest-authority','guest-session',{tokenHash:'synthetic-chest-session',email:'guest@outside.test'}],
+    ['member-authority','member-link-session',{sessionHash:'synthetic-chest-session',email:'staff@example.test'}],
+    ['editor-authority','editor-session',{tokenHash:'synthetic-chest-editor'}],
+    ['editor-lock','wopi-lock',{item:'item',lock:'synthetic-chest-lock'}],
+    ['content-policy','content-policy',{enabled:true,consentAt:at,sensitiveGroups:[]}],
+    ['content-verdict','content-scan',{checksum:hash,size:bytes.length,state:'infected',sensitive:true,reason:'Synthetic retained verdict',at}],
     ['device','device',{owner:'owner@example.test',name:'Must not transfer'}],
     ['ticket','transfer-session',{transfer:'package',tokenHash:'OLD_TICKET_HASH'}],
     ['notice','notice',{item:'item',message:'History retained',email:'queued'}],
@@ -69,7 +75,7 @@ import {readFile,writeFile,rm} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 import {join} from 'node:path';
 const args=process.argv.slice(2),home=process.env.CHEST_BACKUP_TEST_HOME,file=join(home,process.env.CLOUDFLARE_ACCOUNT_ID==='recovery-account'?'target.sqlite':'source.sqlite');
-if(args.includes('export')){const result=spawnSync('/usr/bin/sqlite3',[file,'.dump'],{maxBuffer:32*1024*1024});if(result.status!==0)process.exit(1);await writeFile(args[args.indexOf('--output')+1],result.stdout);}
+if(args.includes('export')){const result=spawnSync('sqlite3',[file,'.dump'],{maxBuffer:32*1024*1024});if(result.status!==0)process.exit(1);await writeFile(args[args.indexOf('--output')+1],result.stdout);}
 else if(args.includes('execute')){const db=new DatabaseSync(file);try{db.exec(await readFile(args[args.indexOf('--file')+1],'utf8'));}finally{db.close();}}
 else process.exit(1);
 `); await chmod(join(bin,'npx'),0o700);
@@ -118,12 +124,13 @@ else process.exit(1);
   const recovered=await cli(['restore','--environment','recovery','--input',stored,'--acknowledge-offline-erasures'],{account:'recovery-account'});assert.equal(recovered.restored,true);assert.equal(recovered.providersNeedAuthorization,true);
   const restored=new DatabaseSync(target);
   assert.deepEqual({...restored.prepare('SELECT source_identity,import_job,applying FROM rer_portability_state WHERE id=1').get()},{source_identity:'independent-source',import_job:null,applying:0});
-  for(const [id,kind,payload] of records.filter(r=>['item','space','comment','mapping','future'].includes(r[0])))assert.deepEqual(JSON.parse(restored.prepare('SELECT payload FROM chest_records WHERE id=?').get(id).payload),payload);
+  for(const [id,kind,payload] of records.filter(r=>['item','space','comment','mapping','future','content-verdict'].includes(r[0])))assert.deepEqual(JSON.parse(restored.prepare('SELECT payload FROM chest_records WHERE id=?').get(id).payload),payload);
   for(const table of ['oa_sessions','chest_integration_secrets','chest_reader','chest_signing_key','chest_sso_config','rer_dependency_keys'])assert.equal(restored.prepare('SELECT COUNT(*) AS n FROM '+table).get().n,0,'restored target requires new authorization for '+table);
   assert.equal(restored.prepare('SELECT COUNT(*) AS n FROM chest_device_credentials').get().n,0);
-  assert.equal(restored.prepare("SELECT COUNT(*) AS n FROM chest_records WHERE kind IN ('device','transfer-session')").get().n,0);
+  assert.equal(restored.prepare("SELECT COUNT(*) AS n FROM chest_records WHERE kind IN ('device','transfer-session','guest-session','member-link-session','editor-session','wopi-lock')").get().n,0);
   const record=id=>JSON.parse(restored.prepare('SELECT payload FROM chest_records WHERE id=?').get(id).payload);
   assert.equal(record('link').tokenHash,'');assert.ok(record('link').revokedAt);assert.equal(record('job').state,'cancelled');assert.equal(record('notice').email,'suppressed:restored_archive');assert.equal(record('checklist').sendReminders,false);
+  assert.equal(record('content-policy').enabled,false,'restored policy never starts processing egress automatically');assert.equal(record('content-policy').consentAt,at,'quarantine policy history remains');
   assert.equal(record('schedule').enabled,false);assert.equal(record('schedule').requestedAt,null);assert.equal(record('backup-execution').state,'interrupted');assert.ok(record('backup-execution').notifiedAt);assert.equal(record('filing-authority').enabled,false);assert.equal(record('link-authority').automatic,false);assert.ok(record('expired-job').expiredAt);assert.equal(record('unfinished').state,'interrupted');
   assert.notEqual(restored.prepare('SELECT claim_id FROM oa_bootstrap').get().claim_id,'old-bootstrap-authority');restored.close();
   assert.deepEqual(await readFile(join(originalTarget,'sha256',hash)),bytes);
