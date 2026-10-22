@@ -3,117 +3,37 @@
     {
       "title": "Get started",
       "pages": [
-        {
-          "slug": "introduction",
-          "title": "What Chest is",
-          "file": "introduction.md",
-          "summary": "Your team's files in spaces and folders, shared, searchable and kept in every version, on a Chest you run."
-        },
-        {
-          "slug": "run",
-          "title": "Run Chest on your computer",
-          "file": "run.md",
-          "summary": "Get Chest and start it with one line, then finish first-run setup."
-        },
-        {
-          "slug": "set-up",
-          "title": "Set up Chest",
-          "file": "set-up.md",
-          "summary": "Invite your staff and make team spaces; add groups, and the Library's collections and types if you need sign-off."
-        }
+        { "slug": "introduction", "title": "What Chest is", "file": "introduction.md", "summary": "Your team's files in spaces and folders, shared, searchable and kept in every version, on a Chest you run." },
+        { "slug": "run", "title": "Run Chest on your computer", "file": "run.md", "summary": "Get Chest and start it with one line, then finish first-run setup." },
+        { "slug": "set-up", "title": "Set up Chest", "file": "set-up.md", "summary": "Invite your staff and make team spaces; add groups, and the Library's collections and types if you need sign-off." }
       ]
     },
     {
       "title": "Everyday files",
       "pages": [
-        {
-          "slug": "files",
-          "title": "Folders and files",
-          "file": "files.md",
-          "summary": "Team spaces and folders, uploads that resume, search, and going back to an earlier version or date."
-        },
-        {
-          "slug": "sharing",
-          "title": "Share files and folders",
-          "file": "sharing.md",
-          "summary": "Share with colleagues and groups, make a link for anyone with a password, expiry and download limit, or ask for files with a file request."
-        },
-        {
-          "slug": "reading",
-          "title": "Text inside files and scans",
-          "file": "reading.md",
-          "summary": "How Chest reads PDFs, Office files, scans and photos so search finds the words inside, and how values read from a scan are accepted."
-        },
-        {
-          "slug": "guest-collaboration",
-          "title": "Work with external guests",
-          "file": "guest-collaboration.md",
-          "summary": "PIN verification, uploads, retained versions and the Collabora editor for named guests."
-        }
+        { "slug": "files", "title": "Folders and files", "file": "files.md", "summary": "Team spaces and folders, uploads that resume, search, and going back to an earlier version or date." },
+        { "slug": "sharing", "title": "Share files and folders", "file": "sharing.md", "summary": "Share with colleagues and groups, make a link for anyone with a password, expiry and download limit, or ask for files with a file request." },
+        { "slug": "reading", "title": "Text inside files and scans", "file": "reading.md", "summary": "How Chest reads PDFs, Office files, scans and photos so search finds the words inside, and how values read from a scan are accepted." },
+        { "slug": "guest-collaboration", "title": "Work with external guests", "file": "guest-collaboration.md", "summary": "PIN verification, uploads, retained versions and the Collabora editor for named guests." }
       ]
     },
     {
       "title": "The Library: records with sign-off",
       "pages": [
-        {
-          "slug": "filing",
-          "title": "File and find documents",
-          "file": "filing.md",
-          "summary": "Upload a record to the Library, file it with a type, an owner and a relationship, then search, preview and download."
-        },
-        {
-          "slug": "versions",
-          "title": "Versions and approval",
-          "file": "versions.md",
-          "summary": "Submit a replacement, review the exact version, and see what stays current while you decide."
-        },
-        {
-          "slug": "access",
-          "title": "People and access",
-          "file": "access.md",
-          "summary": "Grant reader, editor and reviewer roles on Library records to people and groups, keep a record private, and remove access everywhere at once."
-        },
-        {
-          "slug": "dates",
-          "title": "Review and expiry dates",
-          "file": "dates.md",
-          "summary": "Schedule reviews and expiries, see what is due, and record who checked it with evidence."
-        },
-        {
-          "slug": "trash-and-audit",
-          "title": "Trash and the audit trail",
-          "file": "trash-and-audit.md",
-          "summary": "Move a record to reversible trash, restore it, and read every change in the audit trail."
-        }
+        { "slug": "filing", "title": "File and find documents", "file": "filing.md", "summary": "Upload a record to the Library, file it with a type, an owner and a relationship, then search, preview and download." },
+        { "slug": "versions", "title": "Versions and approval", "file": "versions.md", "summary": "Submit a replacement, review the exact version, and see what stays current while you decide." },
+        { "slug": "access", "title": "People and access", "file": "access.md", "summary": "Grant reader, editor and reviewer roles on Library records to people and groups, keep a record private, and remove access everywhere at once." },
+        { "slug": "dates", "title": "Review and expiry dates", "file": "dates.md", "summary": "Schedule reviews and expiries, see what is due, and record who checked it with evidence." },
+        { "slug": "trash-and-audit", "title": "Trash and the audit trail", "file": "trash-and-audit.md", "summary": "Move a record to reversible trash, restore it, and read every change in the audit trail." }
       ]
     },
     {
       "title": "Move in and keep it safe",
       "pages": [
-        {
-          "slug": "move-in",
-          "title": "Move in from Google Drive, Dropbox or Box",
-          "file": "move-in.md",
-          "summary": "Download your files from Google Drive, Dropbox or Box, or choose a folder, and bring them into Chest with their folders."
-        },
-        {
-          "slug": "backup-and-restore",
-          "title": "Backup and restore",
-          "file": "backup-and-restore.md",
-          "summary": "Export everything to one file and restore it into a fresh Chest."
-        },
-        {
-          "slug": "hosting",
-          "title": "Host Chest on Cloudflare",
-          "file": "hosting.md",
-          "summary": "Deploy to your own Cloudflare account, choose the mail provider and sender, sign in, back up, restore and remove."
-        },
-        {
-          "slug": "content-security",
-          "title": "Content security",
-          "file": "content-security.md",
-          "summary": "Run a content scanner, review quarantine and tune scoped mass-activity alerts."
-        }
+        { "slug": "move-in", "title": "Move in from Google Drive, Dropbox or Box", "file": "move-in.md", "summary": "Download your files from Google Drive, Dropbox or Box, or choose a folder, and bring them into Chest with their folders." },
+        { "slug": "backup-and-restore", "title": "Backup and restore", "file": "backup-and-restore.md", "summary": "Export everything to one file and restore it into a fresh Chest." },
+        { "slug": "content-security", "title": "Content security", "file": "content-security.md", "summary": "Quarantine, classification, separately deployed scanning and scoped mass-activity alerts." },
+        { "slug": "hosting", "title": "Host Chest on Cloudflare", "file": "hosting.md", "summary": "Deploy to your own Cloudflare account, choose the mail provider and sender, sign in, back up, restore and remove." }
       ]
     }
   ]

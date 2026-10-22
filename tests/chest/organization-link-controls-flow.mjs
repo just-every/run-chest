@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
@@ -37,6 +38,6 @@ export async function largeFolderSnapshotFlow(){
   const late=await h.api('/items',owner,{parent:folder.id,name:'Arrived later.txt',base64:b64('synthetic-chest-later')});await h.api(`/items/${files[500].id}/rename`,owner,{name:'Renamed later.txt'});await h.api(`/items/${files[500].id}/versions`,owner,{base64:b64('synthetic-chest-changed')});
   const page=await(await h.fetch(base)).text();assert.match(page,/501 files shared/);assert.match(page,/Original 500.txt/);assert.doesNotMatch(page,/Arrived later|Renamed later/);assert.equal(await(await h.fetch(`${base}/f/${files[500].id}`)).text(),'synthetic-chest-500');assert.equal((await h.fetch(`${base}/f/${late.id}`)).status,404);
   await h.api(`/items/${files[0].id}/settings`,owner,{restricted:true});assert.equal((await h.fetch(`${base}/f/${files[0].id}`)).status,404);await h.api(`/public-links/${link.link.id}/revoke`,owner,{});assert.equal((await h.fetch(`${base}/f/${files[500].id}`)).status,410);
-  console.log('SHARE-001 501-file snapshot membership, names, exact retained bytes, restriction and revoke passed; elapsedMs='+String(Date.now()-start));
+  console.log('SHARE-001 snapshot receipt '+JSON.stringify({head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),files:501,membership:true,names:true,exactOriginals:true,restriction:true,revoke:true,elapsedMs:Date.now()-start,run:process.env.CHEST_SNAPSHOT_RUN_ID??'local'}));
  }finally{await h.close()}
 }

@@ -56,3 +56,9 @@ with the reason and **Make private**.
 
 [Text inside files and scans](/docs/reading): how search finds the words in
 your files.
+
+## Organization link controls
+
+An organization link can require a password, expiry and download limit, and select the current, pinned or approved original. A password admission belongs to the signed-in staff session for at most 12 hours; it never turns into a named grant. Removing or changing the link applies on the next request. People who already hold an independent named or group role retain those rights. Without those independent rights, viewer/commenter search, history, comments and activity follow the selected versions and cannot expose pending replacements. Editing requires current versions and original download permission.
+
+Downloads charge the oldest applicable organization link first when several grants permit the same original. Each successful admission updates the count atomically. Range requests and retries each count once. The item and Links views show expiry and used downloads; Revoke needs one click. Pinned folder snapshots retain membership, paths, names and exact originals, up to 5,000 descendants and 100 levels; larger snapshots are refused explicitly. Later restrictions, moves out of the root, trash and revocation still apply.
