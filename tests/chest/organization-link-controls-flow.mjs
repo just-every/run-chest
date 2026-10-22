@@ -12,7 +12,8 @@ export async function organizationLinkControlsFlow(){
   const link=await h.api(`/items/${file.id}/links`,owner,{audience:'organisation',role:'commenter',password:'synthetic-chest-50',versionMode:'pinned',version:first,limit:10,expires:'2026-11-30'}),token=new URL(link.url).pathname.split('/s/')[1];
   assert.equal(link.link.password,true);assert.ok(!JSON.stringify(link).includes('salt'));
   assert.equal((await h.api('/search?q=Pinned',colleague)).count,0);await h.api('/links/open',colleague,{token,password:'wrong'},401);await h.api('/links/open',colleague,{token,password:'synthetic-chest-50'});
-  const view=await h.api(`/items/${file.id}`,colleague);assert.equal(view.item.current,first);assert.equal(view.versions.length,1);assert.equal(view.versions[0].id,first);
+  const pending=(await h.api(`/items/${file.id}`,owner)).item.current;await h.api(`/items/${file.id}/comments`,owner,{message:'synthetic-chest-pending-comment',version:pending});
+  const view=await h.api(`/items/${file.id}`,colleague);assert.equal(view.item.current,first);assert.equal(view.versions.length,1);assert.equal(view.versions[0].id,first);assert.ok(!JSON.stringify(view.comments).includes('synthetic-chest-pending-comment'));assert.ok(!JSON.stringify(view.activity).includes(pending),'activity obeys pinned scope');assert.ok(!JSON.stringify(await h.api('/audit?object='+file.id,colleague)).includes(pending),'audit API obeys pinned scope');
   assert.equal((await h.raw(`/api/chest/items/${file.id}/bytes/${(await h.api(`/items/${file.id}`,owner)).item.current}?download=true`,colleague)).status,404,'pinned organization role never exposes the replacement');
   for(let n=0;n<3;n++)assert.equal(await(await h.raw(`/api/chest/items/${file.id}/bytes/${first}?download=true`,colleague)).text(),'synthetic-chest-original');
   assert.match((await h.api(`/items/${file.id}`,owner)).links.find(l=>l.id===link.link.id).summary,/Expires Nov 30 · 3 of 10 downloads/);

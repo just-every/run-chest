@@ -19,6 +19,8 @@ export async function history(env: Bindings, s: Session, params: URLSearchParams
   if (!filters.has(key)) filters.set(key, await viewFilter(env, editor, manager))
   const filtered = filters.get(key)!(row); if (!filtered) return null
   let detail: any; try { detail = safeDetail(JSON.parse(filtered.detail)) } catch { detail = {} }
+  // A version-scoped organization viewer cannot learn about excluded replacements through the audit/export door.
+  if(!owner&&item&&!item.directState?.role&&detail.version&&!item.row.payload.versions.some(v=>v.id===detail.version))return null
   return JSON.parse(await redact(JSON.stringify({ ...filtered, detail: JSON.stringify(detail) }))) as Event
  }
  let cursor: { at: string; id: string } | null = null

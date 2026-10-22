@@ -27,7 +27,7 @@ export async function consumeMemberLink(env:Bindings,s:Session,item:string,versi
  if((s as any).guestWho)return
  const {context,who}=await import('./access'),ctx=await context(env,await who(env,s),item)
  if(ctx.directState?.role)return
- const links=(ctx.memberLinks??[]).filter(l=>!l.payload.snapshot||l.payload.snapshot.some(f=>f.item===item&&f.version===version)).sort((a,b)=>a.payload.at.localeCompare(b.payload.at)||a.id.localeCompare(b.id))
+ const links=(ctx.memberLinks??[]).filter(l=>{const selected=l.payload.snapshot?.find(f=>f.item===item);if(l.payload.snapshot)return selected?.version===version;return !l.payload.versionMode||l.payload.role==='editor'||linkedVersion(ctx.chain.at(-1)!.payload,l.payload)?.id===version}).sort((a,b)=>a.payload.at.localeCompare(b.payload.at)||a.id.localeCompare(b.id))
  if(!links.length)return
  const link=links[0],limit=link.payload.limit??null,downloads=link.payload.downloads??0
  insist(limit===null||downloads<limit,'link_download_limit_reached',410)

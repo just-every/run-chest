@@ -63,7 +63,7 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
   fileRequests: sharer && item.payload.type === 'folder' ? await requestsOn(env, key) : [],
   requests: sharer ? (await pending(env, w, key)).map(r => ({ id: r.id, requester: r.payload.requester, role: r.payload.role, message: r.payload.message, at: r.payload.at })) : [],
   activity: (await history(env,s,new URLSearchParams({object:key,limit:'100'}))).rows.map(r=>({...r,detail:JSON.parse(r.detail)})),
-  comments: (await comments(env, key)).map(c => ({ id: c.id, ...c.payload })).sort((a, b) => a.at.localeCompare(b.at)),
+  comments: (await comments(env, key)).filter(c => c.payload.version===null||lineage.versions.some(v=>v.sourceItem===key&&v.id===c.payload.version)).map(c => ({ id: c.id, ...c.payload })).sort((a, b) => a.at.localeCompare(b.at)),
   starred: prefs.starred.includes(key), shortcut: prefs.shortcuts.includes(key),
   uploads: allowed(ctx, 'contribute') ? await unfinished(env, w, item.payload.type === 'folder' ? { parent: key } : { item: key }) : [],
   rewinds: item.payload.type === 'folder' && allowed(ctx, 'contribute') ? await rewinds(env, `folder:${key}`) : [],
