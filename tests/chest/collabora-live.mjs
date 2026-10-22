@@ -1,0 +1,48 @@
+// Real, account-free CODE journey. Run on the committed candidate outside push Verify.
+import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+import {mkdtemp,writeFile,readFile,mkdir,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {request as httpRequest} from 'node:http';
+import {unzipSync,strFromU8} from 'fflate';
+import {chromium} from '@playwright/test';
+import {harness} from './harness.mjs';
+import {docx} from './office-fixtures.mjs';
+const image='collabora/code@sha256:bb8f3c9c5c9016045f25fccb5f0649be94469ebc7c7cc379f3576e470cccf33d',container='sx-chest-c11-collabora-live',editor='http://127.0.0.1:39980',directory=await mkdtemp(join(tmpdir(),'chest-collabora-'));
+const dockerEnv={...process.env};for(const k of ['DOCKER_HOST','DOCKER_CONTEXT','DOCKER_TLS','DOCKER_TLS_VERIFY','DOCKER_CERT_PATH'])delete dockerEnv[k];
+const docker=(args)=>execFileSync('docker',['--host=unix:///var/run/docker.sock',...args],{env:dockerEnv,encoding:'utf8',stdio:['ignore','pipe','pipe']});
+const openssl=args=>execFileSync('openssl',args,{cwd:directory,stdio:'ignore'});
+const http=(url)=>new Promise((resolve,reject)=>{httpRequest(url,r=>{const chunks=[];r.on('data',b=>chunks.push(b));r.on('end',()=>resolve({status:r.statusCode,headers:r.headers,body:Buffer.concat(chunks)}))}).on('error',reject).end()});
+let h,browser,started=false;const stages=[];
+const stage=m=>{stages.push(m);console.log('COLLABORA_LIVE '+m)};
+try{
+ await mkdir('test-results',{recursive:true});openssl(['req','-x509','-newkey','rsa:2048','-nodes','-keyout','ca.key','-out','ca.pem','-days','1','-subj','/CN=Chest synthetic test CA','-addext','basicConstraints=critical,CA:TRUE']);
+ openssl(['req','-new','-newkey','rsa:2048','-nodes','-keyout','server.key','-out','server.csr','-subj','/CN=localhost']);await writeFile(join(directory,'extensions'),'subjectAltName=DNS:localhost,IP:127.0.0.1\nbasicConstraints=CA:FALSE\nextendedKeyUsage=serverAuth\n');openssl(['x509','-req','-in','server.csr','-CA','ca.pem','-CAkey','ca.key','-CAcreateserial','-out','server.pem','-days','1','-extfile','extensions']);
+ h=await harness({tls:{key:await readFile(join(directory,'server.key'),'utf8'),cert:await readFile(join(directory,'server.pem'),'utf8')},bindings:{COLLABORA_URL:editor},edge:async r=>{if(r.url.startsWith(editor+'/')){const response=await http(r.url);return new Response(response.body,{status:response.status,headers:{'content-type':response.headers['content-type']??'application/octet-stream'}})}}});
+ // Host networking connects only these two task-owned loopback components; no external destination or policy is bypassed.
+ docker(['run','--detach','--name',container,'--network','host','--cap-add','MKNOD','--mount',`type=bind,src=${join(directory,'ca.pem')},dst=/tmp/chest-test-ca.pem,readonly`,image,'--port=39980','--o:ssl.enable=false','--o:ssl.termination=false','--o:ssl.ssl_verification=true','--o:ssl.ca_file_path=/tmp/chest-test-ca.pem','--o:logging.level=warning',`--o:server_name=127.0.0.1:39980`,'--o:storage.wopi.alias_groups[@mode]=groups',`--o:storage.wopi.alias_groups.group[0].host=${h.origin}`,'--o:storage.wopi.alias_groups.group[0].host[@allow]=true']);started=true;
+ let ready=false;for(let n=0;n<60;n++){try{if((await http(editor+'/hosting/discovery')).status===200){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,1000))}assert.ok(ready,'CODE becomes ready with TLS validation enabled');stage('real editor ready');
+ await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const owner=await h.signIn(h.vars.OWNER_EMAIL),space=(await h.api('/files',owner)).personal;await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
+ const post=(path,data,cookie)=>h.fetch(path,{method:'POST',headers:{origin:h.origin,'content-type':'application/x-www-form-urlencoded',...(cookie?{cookie}:{})},body:new URLSearchParams(data).toString()});
+ browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+ for(const width of [1440,390]){
+  const file=await h.api('/items',owner,{space,name:`Shared agreement ${width}.docx`,base64:Buffer.from(docx()).toString('base64')}),link=await h.api(`/items/${file.id}/links`,owner,{audience:'guests',guests:['guest@outside.test'],role:'editor',expires:new Date(Date.now()+3*86400000).toISOString().slice(0,10)}),base=new URL(link.url).pathname;
+  const response=await post(base+'/verify',{email:'guest@outside.test'}),challenge=(await response.text()).match(/name="challenge" value="([^"]+)"/)[1],pin=h.mails.at(-1).text.match(/PIN is (\d{6})/)[1],verified=await post(base+'/pin',{email:'guest@outside.test',challenge,pin}),guestCookie=verified.headers.getSetCookie()[0].split(';')[0];assert.equal(verified.status,303);
+  const staff=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true}),guest=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});for(const[context,cookie,path]of [[staff,owner,'/'],[guest,guestCookie,base]])await context.addCookies(cookie.split('; ').map(c=>{const i=c.indexOf('=');return{name:c.slice(0,i),value:c.slice(i+1),domain:'127.0.0.1',path,secure:true,httpOnly:true,sameSite:'Lax'}}));
+  const a=await staff.newPage(),b=await guest.newPage();await a.goto(h.origin+'/app/items/'+file.id);await a.screenshot({path:`test-results/${width}-collabora-file-page.png`,fullPage:true});await Promise.all([a.waitForNavigation(),a.getByRole('button',{name:'Open in Collabora Online',exact:true}).click()]);await a.screenshot({path:`test-results/${width}-collabora-launch.png`,fullPage:true});await Promise.all([a.waitForNavigation(),a.getByRole('button',{name:'Continue to Collabora',exact:true}).click()]);stage(width+' staff editor opened');
+  await a.locator('#document-container').waitFor({timeout:60000});await a.screenshot({path:`test-results/${width}-collabora-staff-loaded.png`,fullPage:true});
+  await b.goto(h.origin+base+'/guest/'+file.id);await Promise.all([b.waitForNavigation(),b.getByRole('button',{name:'Open in Collabora Online',exact:true}).click()]);await Promise.all([b.waitForNavigation(),b.getByRole('button',{name:'Continue to Collabora',exact:true}).click()]);await b.locator('#document-container').waitFor({timeout:60000});stage(width+' verified guest editor opened');
+  // CODE's document canvas receives genuine keyboard input, not a forged save callback.
+  await a.locator('#document-container').click({position:{x:Math.min(250,width-40),y:220}});await a.keyboard.press('Control+Home');await a.keyboard.type(`Staff contribution ${width}. `);await a.keyboard.press('Control+s');
+  await b.locator('#document-container').click({position:{x:Math.min(250,width-40),y:240}});await b.keyboard.press('Control+End');await b.keyboard.type(`Guest contribution ${width}. `);await b.keyboard.press('Control+s');
+  await a.screenshot({path:`test-results/${width}-collabora-coedit-staff.png`,fullPage:true});await b.screenshot({path:`test-results/${width}-collabora-coedit-guest.png`,fullPage:true});
+  let result;for(let n=0;n<60;n++){result=await h.api(`/items/${file.id}`,owner);if(result.versions.some(v=>v.actor==='guest@outside.test')&&result.versions.length>=3)break;await new Promise(r=>setTimeout(r,1000))}
+  assert.ok(result.versions.some(v=>v.actor==='guest@outside.test'),'real CODE save is attributed to verified guest');assert.ok(result.versions.length>=3,'both real editor saves become retained versions');
+  const original=await h.raw(`/api/chest/items/${file.id}/bytes/${result.item.current}?download=true`,owner),xml=strFromU8(unzipSync(new Uint8Array(await original.arrayBuffer()))['word/document.xml']);assert.ok(xml.includes(`Staff contribution ${width}`)&&xml.includes(`Guest contribution ${width}`),'both edits survive in one original');
+  await h.api(`/public-links/${link.link.id}/revoke`,owner,{});const before=result.versions.length;await b.keyboard.type('Revoked edit must not save.');await b.keyboard.press('Control+s');await new Promise(r=>setTimeout(r,3000));assert.equal((await h.api(`/items/${file.id}`,owner)).versions.length,before,'revoked open guest editor publishes no save');
+  await guest.close();await staff.close();stage(width+' shared edits, attribution and revoke passed');
+ }
+ const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();console.log('COLLABORA_LIVE_RECEIPT '+JSON.stringify({head,image,widths:[1440,390],run:'sx-chest-c11-collabora-live',stages}));
+}catch(error){console.error(String(error.stack??error).replace(/(access_token=)[^&\s"']+/gi,'$1[redacted]'));process.exitCode=1}
+finally{await browser?.close();if(started){try{docker(['stop','--time','10',container])}finally{docker(['rm',container])}}await h?.close();await rm(directory,{recursive:true,force:true})}
