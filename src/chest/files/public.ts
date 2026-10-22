@@ -1,3 +1,4 @@
+import { activity } from '../content-security/activity'
 import { transferPublic } from '../transfers/public'
 import { runtimeBindings, type Bindings } from '../../auth.server'
 import { publicVersion } from './link-snapshots'
@@ -84,6 +85,7 @@ async function download(env: Bindings, request: Request, secret: string, key: st
  if (await locked(env, request, r)) return passwordPage(`/l/${secret}`, false, 401)
   const file = await fileThrough(env, r, key); if (!file) return refusedLink(r.state.noDownload ? 'download_off' : 'not_found')
   const v = publicVersion(file.row,r.link.payload); insist(v, 'version_not_found', 404)
+  await activity(env,null,'download',v.size,{actor,source:`link:${r.link.id}`,fences:file.fences})
   const response = await serve(env, v as unknown as Version, true), link = r.link.payload
   try { await commit(env, null, [{ row: next(r.link, { ...link, downloads: link.downloads + 1 }), previous: r.link }], { by: actor, fences: file.fences, audits: [{ action: 'link.download', object: file.row.id, detail: { link: r.link.id, version: v.id, downloads: link.downloads + 1, limit: link.limit } }] }); return response }
   catch (e) { if (!String((e as Error)?.message).includes('CHECK constraint failed')) throw e }

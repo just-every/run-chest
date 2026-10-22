@@ -40,3 +40,8 @@ try{
  const fresh=await signIn();await h.sql('UPDATE oa_sessions SET created_at=created_at-3600001 WHERE id=(SELECT id FROM oa_sessions ORDER BY created_at DESC LIMIT 1)');assert.equal((await h.raw('/api/chest/library',fresh)).status,403);
  console.log('ADMIN-004 passed: two-factor boundary, TOTP/recovery replay, WebAuthn enrollment and sign-in, key-only admins, reset notification and policy at 1440/390.');
 }finally{await browser?.close();await h.close()}
+
+// SECURITY-002: independent public-door threat and activity behaviors, folded into this security journey.
+const {contentSecurityFlow,activitySecurityFlow}=await import('./content-security-flow.mjs');
+await contentSecurityFlow();
+await activitySecurityFlow();

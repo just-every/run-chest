@@ -1,3 +1,4 @@
+import { assertContent, contentReadable } from '../content-security/scan'
 import { operatorAuth, runtimeBindings, type Bindings } from '../../auth.server'
 import { failure } from '../api'
 import { ChestError, insist, now } from '../model'
@@ -28,6 +29,7 @@ export async function signResponse(request: Request, original: Bindings): Promis
   if (!found) return publicPage('Signing link not found', '<p>This signing link does not exist or was replaced. Ask the person who sent it for a new one.</p>', 404)
   const row = await settle(env, found.row.id), signer = row.payload.signers.find(s => s.id === found.signer.id)!, base = `/sign/${secret}`, from = origin(request)
   if (row.payload.signers.find(s => s.id === signer.id)?.tokenHash !== found.signer.tokenHash) return publicPage('Signing link not found', '<p>This signing link was replaced. Ask the person who sent it for a new one.</p>', 404)
+  insist(await contentReadable(env,[{checksum:row.payload.sourceChecksum}],'',true),'content_quarantined',423)
   const requester = personName((await maybe<Person>(env, 'person', row.payload.createdBy))?.payload.name, row.payload.createdBy)
   if (request.method === 'POST' && sub === 'pin') return await sendPin(env, row.payload, row.id, signer, base, requester)
   const verified = await admitted(env, request, row.payload, row.id, signer)
@@ -55,6 +57,7 @@ export async function signResponse(request: Request, original: Bindings): Promis
 }
 const pdf = (bytes: Uint8Array, name: string) => new Response(bytes as unknown as BodyInit, { headers: { 'content-type': 'application/pdf', 'content-disposition': `inline; filename="${name.replace(/[^\w.-]+/g, '_')}"`, 'content-length': String(bytes.length), 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } })
 async function file(env: Bindings, p: SignRequest, kind: 'signed' | 'certificate') {
+ await assertContent(env,p.sourceChecksum)
  const stored = p[kind]!, object = await env.BLOBS.get(`sha256/${stored.checksum}`); insist(object, 'blob_missing', 503)
  return pdf(new Uint8Array(await object.arrayBuffer()), `${p.name.replace(/\.(pdf|docx)$/i, '')}-${kind}.pdf`)
 }

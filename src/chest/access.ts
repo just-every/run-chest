@@ -1,3 +1,4 @@
+import { contentReadable } from './content-security/scan'
 import type { Bindings } from '../auth.server'
 import type { Session } from '../modules/operator-auth/index.mjs'
 import { get,list } from './store'
@@ -5,6 +6,7 @@ import { insist, type Collection, type Document, type Group, type Row } from './
 export const isOwner=(s:Session)=>s.operator.role==='owner'
 export function owner(s:Session){insist(isOwner(s),'owner_required',403)}
 export async function roles(env:Bindings,s:Session,doc:Document):Promise<{roles:string[]; fences:Row[]}> {
+ if(!await contentReadable(env,doc.versions,s.operator.email))return {roles:[],fences:[]}
  if(doc.trash&&!isOwner(s))return {roles:[],fences:[]}
  if(isOwner(s))return {roles:['reader','editor','reviewer'],fences:[]}
  const collection=await get<Collection>(env,'collection',doc.collection),groups=await list<Group>(env,'group')

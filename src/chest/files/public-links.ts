@@ -1,3 +1,4 @@
+import { contentReadable } from '../content-security/scan'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get } from '../store'
@@ -29,6 +30,7 @@ function limitOf(value: unknown) {
 }
 export async function createPublicLink(env: Bindings, s: Session, w: Who, key: string, input: any) {
  const ctx = await context(env, w, key); demand(ctx, 'share'); insist(!ctx.state.noDownload || input.download === false, 'download_restricted', 403)
+ insist(await contentReadable(env,ctx.chain.at(-1)!.payload.versions,w.email,true),'classification_external_sharing_refused',403)
  const audience=externalAudience(input),policy=await sharePolicy(env,w,ctx,audience.guests??(audience.domain?[audience.domain]:['Anyone with this link']),input,audience.audience)
  insist(input.download === undefined || typeof input.download === 'boolean','invalid_download')
  insist(input.role === undefined || input.role === 'viewer' || input.role === 'commenter','invalid_external_link_role')
@@ -75,6 +77,7 @@ export async function resolveLink(env: Bindings, secret: string): Promise<Resolv
  const s = linkState(link.payload); if (s !== 'active') return { refused: s === 'revoked' ? 'revoked' : s === 'expired' ? 'expired' : 'limit' }
  const ctx = await stillSharing(env, link.payload.custodian ?? link.payload.createdBy, link.payload.item); if (!ctx) return { refused: 'unavailable' }
  const policy=await creatorLinkPolicy(env,link.payload.custodian ?? link.payload.createdBy,ctx.space.id);if(publicPolicyReason(policy.rules,link.payload))return {refused:'policy'}
+ if(!await contentReadable(env,ctx.chain.at(-1)!.payload.versions,'',true))return {refused:'policy'}
  if(ctx.chain.at(-1)!.payload.type==='file' && !linkedVersion(ctx.chain.at(-1)!.payload,link.payload))return {refused:'unavailable'}
  let state = start(ctx.space.payload, nobody); for (const node of ctx.chain) state = descend(state, node, nobody, [])
  if (state.trash) return { refused: 'unavailable' }
@@ -86,11 +89,12 @@ export async function reachable(env: Bindings, r: Resolved) {
  if (r.root.payload.type === 'file') return [{ row: r.root, path: '' }]
  const rows = (await spaceItems(env, r.root.payload.space)).filter(x => !x.payload.trash && !x.payload.restricted), out: { row: Row<Item>; path: string }[] = []
  const walk = (parent: string, path: string) => { for (const x of rows.filter(x => x.payload.parent === parent).sort((a, b) => a.payload.name.localeCompare(b.payload.name))) { if (out.length >= 500) return; if (x.payload.type === 'folder') walk(x.id, `${path}${x.payload.name} / `); else out.push({ row: x, path }) } }
- walk(r.root.id, ''); if(!r.link.payload.snapshot)return out
- const current=new Map(out.map(f=>[f.row.id,f]));return r.link.payload.snapshot.flatMap(f=>{const live=current.get(f.item);return live && publicVersion(live.row,r.link.payload)?[{row:{...live.row,payload:{...live.row.payload,name:f.name}},path:f.path}]:[]})
+ walk(r.root.id, ''); const safe=[];for(const file of out)if(await contentReadable(env,file.row.payload.versions,'',true))safe.push(file);if(!r.link.payload.snapshot)return safe
+ const current=new Map(safe.map(f=>[f.row.id,f]));return r.link.payload.snapshot.flatMap(f=>{const live=current.get(f.item);return live && publicVersion(live.row,r.link.payload)?[{row:{...live.row,payload:{...live.row.payload,name:f.name}},path:f.path}]:[]})
 }
 // One file through the link: in the linked tree, with no restricted, trashed or no-download step on the way down.
 export async function fileThrough(env: Bindings, r: Resolved, key: string, preview = false) {
+ const candidate=await maybe<Item>(env,'item',key);if(!candidate||!await contentReadable(env,candidate.payload.versions,'',true))return null
  if(r.link.payload.snapshot && !r.link.payload.snapshot.some(f=>f.item===key))return null
  if (key === r.root.id) return r.root.payload.type === 'file' && (preview || !r.state.noDownload) ? { row: r.root, fences: r.fences } : null
  const { chain: nodes } = await chain(env, key), at = nodes.findIndex(n => n.id === r.root.id)

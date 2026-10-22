@@ -33,6 +33,16 @@
     {
       "binding": "MAIL_API_KEY",
       "environment": "MAIL_API_KEY"
+    },
+    {
+      "binding": "CONTENT_SCANNER_URL",
+      "environment": "CONTENT_SCANNER_URL",
+      "optional": true
+    },
+    {
+      "binding": "CONTENT_SCANNER_TOKEN",
+      "environment": "CONTENT_SCANNER_TOKEN",
+      "optional": true
     }
   ],
   "r2": [

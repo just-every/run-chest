@@ -1,3 +1,4 @@
+import { assertContent } from '../content-security/scan'
 import type { Item } from '../files/model'
 import { attempt } from '../audit/journal'
 import { waitUntil } from 'cloudflare:workers'
@@ -63,6 +64,7 @@ async function nextUnit(env: Bindings): Promise<Row<any> | null> {
 }
 async function original(env: Bindings, checksum: string, size: number) {
  if (size > MAX_BYTES) return null
+ await assertContent(env,checksum)
  const blob = await env.BLOBS.get(`sha256/${checksum}`); if (!blob) return null
  return new Uint8Array(await blob.arrayBuffer())
 }

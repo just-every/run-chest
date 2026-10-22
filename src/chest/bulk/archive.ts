@@ -1,3 +1,4 @@
+import { activity } from '../content-security/activity'
 import { guardDownload } from '../upload-protection/guard'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -39,6 +40,7 @@ export async function archive(env: Bindings, s: Session, key: string) {
     }
     const version = item.payload.versions.find(v=>v.id===entry.version); insist(version,'version_not_found',404)
     insist(!paths.has(path),'archive_path_collision',409)
+    await activity(env,s,'download',version.size)
     source = await env.BLOBS.get(`sha256/${version.checksum}`); insist(source && source.size === version.size,'blob_missing',503)
     await authority(env,s,key,entry)
     const body = source.body, size = version.size

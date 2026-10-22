@@ -13,6 +13,7 @@ export const MAIL_MANAGED_LINE = 'Not available yet on RER Managed hosting: emai
 // `from` is the sender's name, or their address before they set one.
 function compose(env: Bindings, n: Notice, from: string) {
  const base = env.AUTH_ORIGIN, open = n.item ? `${base}/app/items/${n.item}` : `${base}/app/files`
+ if (n.type === 'security.activity') return {subject:'Chest mass activity alert',text:`${n.message}\n\nReview: ${base}/app/upload-protection`}
  if (n.type === 'security.incident') return {subject:'Chest paused suspect uploads',text:`${n.message}\n\nReview: ${base}/app/upload-protection`}
  if (n.type.startsWith('ownership')) return { subject: n.type === 'ownership.request' ? `${from} offered you ownership` : 'Ownership request updated', text: `${n.message}\n\nOpen the ownership request: ${base}/app/ownership/${n.request}` }
  if(n.type==='filing')return {subject:'Chest filed a file',text:`${n.message}\n\nReview the evidence and Undo in Chest: ${base}/app/filing`}

@@ -1,3 +1,4 @@
+import { assertContent } from '../content-security/scan'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { digest } from '../blobs'
@@ -10,6 +11,7 @@ import { versionPublication } from '../files/governance'
 
 export const isOffice = (name: string) => /\.(docx|xlsx|pptx)$/i.test(name)
 async function original(env: Bindings, version: { size: number; checksum: string }) {
+ await assertContent(env,version.checksum)
  insist(version.size <= 8_000_000, 'office_file_too_large', 413)
  const blob = await env.BLOBS.get(`sha256/${version.checksum}`); insist(blob, 'blob_missing', 503)
  const bytes = new Uint8Array(await blob.arrayBuffer())

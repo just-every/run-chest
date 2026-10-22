@@ -1,3 +1,5 @@
+import { assertContent } from '../content-security/scan'
+import { activity } from '../content-security/activity'
 import type { Bindings } from '../../auth.server'
 import { insist, now } from '../model'
 import { commit, fresh, maybe, next, where } from '../files/repo'
@@ -62,6 +64,8 @@ async function bytes(env:Bindings,request:Request,r:Resolved,pkg:any,actor:strin
  const rangeHeader=request.headers.get('range'),range=rangeOf(rangeHeader,v.size)
  if(!range)return new Response(null,{status:416,headers:{'content-range':`bytes */${v.size}`,'cache-control':'no-store'}})
  const etag=`"${v.checksum}"`;if(request.headers.has('if-range')&&request.headers.get('if-range')!==etag)return new Response(null,{status:412,headers:{etag}})
+ await assertContent(env,v.checksum)
+ await activity(env,null,'download',range[1]-range[0]+1,{actor,source:`link:${r.link.id}`,fences:file.fences})
  const blob=await env.BLOBS.get(`sha256/${v.checksum}`,{range:{offset:range[0],length:range[1]-range[0]+1}});insist(blob,'blob_missing',503)
  const reader=blob.body.getReader();let sent=0
  const body=new ReadableStream<Uint8Array>({async pull(controller){try{const part=await reader.read();if(part.done){insist(sent===range[1]-range[0]+1,'incomplete_transfer',503);await completed(env,r,pkg.id,session.id,actor,key,v.id,v.size,range);controller.close()}else {sent+=part.value.length;controller.enqueue(part.value)}}catch(e){controller.error(e);await reader.cancel(e)}},async cancel(reason){await reader.cancel(reason)}})

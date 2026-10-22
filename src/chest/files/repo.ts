@@ -1,3 +1,4 @@
+import { activityAudits } from '../content-security/activity'
 import { integrationEventOps, integrationEventStatements } from '../integrations/events'
 import { erasurePublication } from '../erasure/publication'
 import type { Bindings } from '../../auth.server'
@@ -26,6 +27,7 @@ export async function where<T = any>(env: Bindings, kind: string, path: string, 
 export const spaceItems = (env: Bindings, space: string) => where<Item>(env, 'item', '$.space', space)
 // Without a session (a public link or file request) `by` names the audit actor.
 export async function commit(env: Bindings, actor: Session | null, ops: Op[], { fences = [], changes = [], audits = [], preconditions = [], statements = [], by = 'chest:system' }: { fences?: Row[]; changes?: Change[]; audits?: Audit[]; preconditions?: { sql: string; params: unknown[] }[]; statements?: { sql: string; params: unknown[] }[]; by?: string } = {}) {
+ await activityAudits(env,actor,audits)
  const attachment = actor && attachments.get(actor)
  if (attachment && (!attachment.accept || attachment.accept(ops))) {
   attachments.delete(actor)

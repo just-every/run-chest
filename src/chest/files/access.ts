@@ -1,3 +1,4 @@
+import { contentReadable } from '../content-security/scan'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get, list } from '../store'
@@ -47,11 +48,12 @@ export async function chain(env: Bindings, key: string): Promise<{ space: Row<Sp
  for (let at: string | null = key; at; ) { const node: Row<Item> = await get<Item>(env, 'item', at); insist(nodes.length < 200 && !nodes.some(n => n.id === node.id), 'tree_corrupt', 503); nodes.unshift(node); at = node.payload.parent }
  return { space: await get<Space>(env, 'space', nodes[0].payload.space), chain: nodes }
 }
-export async function context(env: Bindings, w: Who, key: string): Promise<Ctx> {
+export async function context(env: Bindings, w: Who, key: string, checkSecurity=true): Promise<Ctx> {
  const { space, chain: nodes } = await chain(env, key), links = await permittedLinks(env, await list<Link>(env, 'link'), new Map(nodes.map(n => [n.id,n.payload.space])),w)
  const filtered=await policyItems(env,w,[space],nodes)
  let state = start(space.payload, w)
  for (const node of filtered.items) state = descend(state, node, w, links)
+ if(checkSecurity&&!await contentReadable(env,nodes.at(-1)!.payload.versions,w.email))state={...state,role:null}
  return { space, chain: nodes, state, links, fences: [space, ...nodes, ...w.groups, ...links,...filtered.fences] }
 }
 export const level = (s: State) => s.role ? rank[s.role] : 0
@@ -84,5 +86,6 @@ export async function everything(env: Bindings, w: Who): Promise<Map<string, Ent
   const entry = { row, space, state: descend(parent ? parent.state : start(space.payload, w), row, w, links) }; memo.set(key, entry); return entry
  }
  for (const key of rows.keys()) visit(key)
+ for(const entry of memo.values())if(!await contentReadable(env,entry.row.payload.versions,w.email))entry.state={...entry.state,role:null}
  return memo
 }

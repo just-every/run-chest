@@ -1,3 +1,4 @@
+import { contentExecute } from '../content-security/service'
 import { signaturesExecute } from '../signatures/api'
 import { bulkExecute } from '../bulk/api'
 import { protectionExecute } from '../upload-protection/service'
@@ -44,6 +45,7 @@ import type { AccessRequest } from './model'
 // posts reach the same functions through execute().
 const roots = new Set(['quota-policy', 'transfers', 'space-policy', 'space-requests', 'link-repairs', 'new-files', 'templates', 'creation-settings', 'link-policy', 'uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search', 'signatures'])
 export async function filesExecute(env: Bindings, request: Request, s: Session, method: string, parts: string[], input: any, url: URL): Promise<unknown> {
+ const content=await contentExecute(env,s,method,parts,input);if(content!==undefined)return content
  const bulk=await bulkExecute(env,request,s,method,parts,input,url);if(bulk!==undefined)return bulk
  if(parts[0]==='upload-protection')return protectionExecute(env,s,method,parts,input)
  if(parts[0]==='sync-repair') { if(method==='GET'&&!parts[1])return repairs(env,s);if(method==='POST'&&parts[1]==='resume')return authorizeResume(env,s,input);insist(false,'not_found',404) }

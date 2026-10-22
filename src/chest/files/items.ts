@@ -1,3 +1,4 @@
+import { contentReadable, assertContent } from '../content-security/scan'
 import { protect, guardDownload } from '../upload-protection/guard'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -109,7 +110,7 @@ export async function itemSettings(env: Bindings, s: Session, w: Who, key: strin
 export async function children(env: Bindings, w: Who, ctx: Ctx, parent: string | null) {
  const entries=(await spaceItems(env, ctx.space.id)).filter(r => r.payload.parent === parent && !r.payload.trash).map(r => ({ row: r, state: descend(ctx.state, r, w, ctx.links) })).filter(c => c.state.role).sort((a, b) => (a.row.payload.type === b.row.payload.type ? 0 : a.row.payload.type === 'folder' ? -1 : 1) || a.row.payload.name.localeCompare(b.row.payload.name))
  const {hiddenMerged}=await import('../filing/duplicate-view'), hidden=await hiddenMerged(env,w,entries.map(e=>({...e,space:ctx.space})))
- return entries.filter(e=>!hidden.has(e.row.id))
+ const result=[];for(const e of entries)if(!hidden.has(e.row.id)&&await contentReadable(env,e.row.payload.versions,w.email))result.push(e);return result
 }
 // Original bytes: download needs download rights (the no-download setting refuses viewers and commenters); their
 // preview is limited to extracted text. Access is checked again after reading, before the bytes leave.
@@ -118,9 +119,10 @@ export async function bytes(env: Bindings, s: Session, w: Who, key: string, vers
  await guardDownload(env,s,item)
  const v = item.payload.versions.find(v => v.id === versionId); insist(v, 'version_not_found', 404)
  if (download || (!allowed(ctx, 'download') && v.preview !== 'text')) demand(ctx, 'download')
+ await assertContent(env,v.checksum)
  const response = range ? await ranged(env, v, range) : await serve(env, v as unknown as Version, download)
  demand(await context(env, w, key), download || range ? 'download' : 'view')
- await recordAccess(env, s, item, action ?? (download || range ? 'version.download' : 'version.preview'), v.id)
+ await recordAccess(env, s, item, action ?? (download || range ? 'version.download' : 'version.preview'), v.id,range?Number(response.headers.get('content-length')):v.size)
  return response
 }
 async function ranged(env: Bindings, v: FileVersion, range: string) {

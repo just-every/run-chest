@@ -1,3 +1,4 @@
+import { assertContent } from '../content-security/scan'
 import { decideItemField } from './item-fields'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -19,6 +20,7 @@ export function summary(x: Extraction | null, mediaType: string, withText = true
  return { state: x.state, pages: x.pages.map(p => ({ n: p.n, source: p.source, state: p.state, chars: p.chars, language: p.language ?? null, confidence: p.confidence ?? null, image: !!p.image, width: p.image?.width ?? null, height: p.image?.height ?? null, problem: p.problem ?? null })), chars: x.text.replaceAll('\f', '').length, method, problem: x.problem, truncatedAt: x.truncatedAt, model: x.model, excerpt: withText ? x.text.slice(0, 20_000).replaceAll('\f', '\n\n') : '' }
 }
 async function pageCopy(env: Bindings, checksum: string, n: number) {
+ await assertContent(env,checksum)
  const copy = await pageImageOf(env, checksum, n); if (!copy) throw new ChestError('not_found', 404)
  return new Response(copy.body, { headers: { 'content-type': copy.mediaType, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'content-security-policy': "sandbox; default-src 'none'" } })
 }

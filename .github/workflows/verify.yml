@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [files, other]
+        suite: [files, other, security]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:

@@ -1,3 +1,4 @@
+import { activity } from './content-security/activity'
 import { erasurePublication } from './erasure/publication'
 import type { Bindings } from '../auth.server'
 import type { Session } from '../modules/operator-auth/index.mjs'
@@ -11,6 +12,7 @@ export function sessionPredicate(session: Session): {sql:string,params:unknown[]
 export function ownerPredicate(session: Session) { const p=sessionPredicate(session); return {sql:`(${p.sql}) AND EXISTS(SELECT 1 FROM oa_operators WHERE id=? AND role='owner' AND status='active')`,params:[...p.params,session.operator.id]} }
 export function snapshot(row: Row) { return {sql:'EXISTS(SELECT 1 FROM chest_records WHERE id=? AND kind=? AND payload=? AND revision=?)',params:[row.id,row.kind,JSON.stringify(row.payload),row.revision]} }
 export async function write(env: Bindings, session: Session, row: Row, action: string, previous?: Row, fences: Row[] = []) {
+ if(action==='document.trash'||action==='document.erase')await activity(env,session,'delete')
  const redact=await (await import('./audit/privacy')).identityRedactor(env)
  const predicates=[sessionPredicate(session),...fences.map(snapshot),...(previous?[snapshot(previous)]:[{sql:'NOT EXISTS(SELECT 1 FROM chest_records WHERE id=?)',params:[row.id]}])]
  const statement=(sql:string,params:unknown[]=[])=>env.DB.prepare(sql).bind(...params)
@@ -23,7 +25,8 @@ export async function write(env: Bindings, session: Session, row: Row, action: s
  return row
 }
 export function changed<T>(row:Row<T>,payload:T):Row<T>{return {...row,payload,revision:id()}}
-export async function recordAccess(env:Bindings,session:Session,row:Row,action:string,version?:string){
+export async function recordAccess(env:Bindings,session:Session,row:Row,action:string,version?:string,chargedBytes?:number){
+ if(/download|hydrate/.test(action)){const v=(row.payload as any).versions?.find((v:any)=>v.id===version);await activity(env,session,'download',chargedBytes??v?.size??0)}
  const p=sessionPredicate(session),redact=await (await import('./audit/privacy')).identityRedactor(env)
  await env.DB.batch([
   env.DB.prepare(`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${p.sql}) THEN 1 ELSE 0 END`).bind(...p.params),
