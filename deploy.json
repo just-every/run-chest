@@ -45,6 +45,16 @@
       "optional": true
     },
     {
+      "binding": "SIGNING_KEY_SECRET",
+      "environment": "SIGNING_KEY_SECRET",
+      "optional": true
+    },
+    {
+      "binding": "SIGNING_KEY_PREVIOUS_SECRET",
+      "environment": "SIGNING_KEY_PREVIOUS_SECRET",
+      "optional": true
+    },
+    {
       "binding": "COLLABORA_URL",
       "environment": "COLLABORA_URL",
       "optional": true

@@ -13,7 +13,7 @@ const {Miniflare,convertV4MiniflareOptions}=createRequire(require.resolve('wrang
 export async function harness({edge,bindings={},hostname='127.0.0.1',tls}={}){
  let port=0,origin=`https://${hostname}`;
  const directory=await mkdtemp(join(tmpdir(),'chest-http-')),secret=()=>randomBytes(32).toString('base64url'),mails=[];
- const vars={AUTH_LOCAL:'false',AUTH_ORIGIN:origin,OWNER_EMAIL:'owner@example.test',SESSION_SECRET:secret(),SETUP_TOKEN:secret(),MAIL_PROVIDER:'resend',MAIL_API_KEY:'test-only-mail-provider-key',MAIL_FROM:'Chest <auth@example.test>',...bindings};
+ const vars={AUTH_LOCAL:'false',AUTH_ORIGIN:origin,OWNER_EMAIL:'owner@example.test',SESSION_SECRET:secret(),SIGNING_KEY_SECRET:secret(),SETUP_TOKEN:secret(),MAIL_PROVIDER:'resend',MAIL_API_KEY:'test-only-mail-provider-key',MAIL_FROM:'Chest <auth@example.test>',...bindings};
  const {compatibilityDate,compatibilityFlags,assets,d1Databases,r2Buckets}=workerOptions('dist/server/wrangler.json').workerOptions,root=join(process.cwd(),'dist/server');
  const modules=['index.js',...(await readdir(join(root,'assets'))).map(f=>`assets/${f}`)].map(f=>({type:f.endsWith('.wasm')?'CompiledWasm':'ESModule',path:join(root,f)}));
  const options={modulesRoot:root,modules,compatibilityDate,compatibilityFlags,assets,d1Databases,r2Buckets};

@@ -39,8 +39,24 @@ fails it; OpenSSL (`openssl cms -verify`) verifies the same bytes.
 
 ## Key custody and retention
 
-The signing key is generated on first use, sealed under `SESSION_SECRET` in `chest_signing_key` and never in archives,
-logs, served assets or prompts. A restored Chest makes a new key; earlier signed PDFs still validate from their embedded
-certificate. Key rotation and recovery procedures belong to SECURITY-001. Signed records stay with the file until an
+The signing key is generated on first use and sealed in `chest_signing_key` using a dedicated
+`SIGNING_KEY_SECRET`, with HKDF-SHA-256 info `chest-document-signing-custody-v2` and AES-GCM.
+This managed setup secret must differ from `SESSION_SECRET`. Neither secret nor the private key appears in archives,
+logs, served assets or prompts. Session-secret rotation does not change the signing-key wrapping key.
+A restored Chest makes a new key; earlier signed PDFs still validate from their embedded certificate.
+
+To rotate custody, retain the old wrapping secret privately as `SIGNING_KEY_PREVIOUS_SECRET` and configure a fresh
+`SIGNING_KEY_SECRET` using the install's secret-management door. Until re-sealing succeeds, new signing fails closed;
+existing signed originals remain downloadable and verifiable. With an ordinary current owner session, POST
+`{"confirm":true}` to `/api/chest/signatures/rotate-key` on the installation's own origin. The operation re-seals the same
+private key and certificate, records the certificate fingerprint in the audit, and atomically refuses a stale session or
+concurrent rotation. It never returns key material. Remove `SIGNING_KEY_PREVIOUS_SECRET` after success. Other users,
+cross-origin requests and missing confirmation are refused. The previous secret is never used to sign.
+
+For an installation upgrading from session-sealed v1 custody, first configure `SIGNING_KEY_SECRET`, retain the old
+`SESSION_SECRET` until the same owner-confirmed rotation call has migrated the key, and only then rotate the session
+secret. A missing or wrong old key fails without generating a replacement signing identity. Preserve the custody
+secrets in the owner's private recovery system; they do not travel in a product backup. `SECURITY-001` retains the
+remaining installation-wide rotation and recovery obligations. Signed records stay with the file until an
 authorized erasure (ERASE-001), which also removes the file's requests and signer links. Reminders and expiry are
 processed by the scheduled sweep and on requests; they stop on completion, decline, void and expiry.

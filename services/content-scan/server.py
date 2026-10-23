@@ -14,13 +14,17 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import zipfile
 
 LABEL = re.compile(rb"\bclassification\s*:\s*(?:confidential|restricted|sensitive)\b", re.I)
-CAP = 32 * 1024 * 1024
+CAP = 1024 * 1024 * 1024
+EXPANSION_CAP = 128 * 1024 * 1024
 
 def sensitive(path):
     # Explicit textual labels, including labels split across Office XML runs. No probabilistic inference.
     with open(path, "rb") as stream:
-        if LABEL.search(stream.read(CAP)):
-            return True
+        tail = b""
+        while block := stream.read(65536):
+            if LABEL.search(tail + block):
+                return True
+            tail = block[-256:]
     if zipfile.is_zipfile(path):
         with zipfile.ZipFile(path) as archive:
             total = 0
@@ -28,7 +32,7 @@ def sensitive(path):
                 if not member.filename.endswith(".xml"):
                     continue
                 total += member.file_size
-                if total > CAP:
+                if total > EXPANSION_CAP:
                     raise ValueError("classification expansion limit")
                 content = archive.read(member)
                 if LABEL.search(re.sub(rb"<[^>]*>", b"", content)):
@@ -39,7 +43,7 @@ def serve(args):
     token = os.environ.get("CONTENT_SCANNER_TOKEN", "")
     if not token or "\n" in token or "\r" in token:
         raise SystemExit("CONTENT_SCANNER_TOKEN is required")
-    command = [args.clamscan, "--no-summary", "--stdout", "--max-filesize=32M", "--max-scansize=64M", "--max-recursion=20", "--alert-exceeds-max=yes"]
+    command = [args.clamscan, "--no-summary", "--stdout", "--max-filesize=1024M", "--max-scansize=2048M", "--max-recursion=20", "--alert-exceeds-max=yes"]
     if args.database:
         command += ["--database", args.database]
     # Refuse to serve when definitions are missing. A missing engine is never a clean verdict.

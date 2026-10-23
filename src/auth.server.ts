@@ -35,6 +35,8 @@ export interface Bindings {
  RER_INSTALLATION_ID?: string
  RER_MANAGEMENT_ORIGIN?: string
  OWNER_EMAIL: string
+ SIGNING_KEY_SECRET?: string
+ SIGNING_KEY_PREVIOUS_SECRET?: string
  SESSION_SECRET: string
  SETUP_TOKEN?: string
  MAIL_PROVIDER?: 'development' | 'resend' | 'sendgrid' | 'cloudflare'

@@ -1,3 +1,4 @@
+import {tooltips} from './tooltip-proof.mjs';
 import {request as httpRequest} from 'node:http';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
@@ -17,6 +18,7 @@ const cookies=(cookie,url)=>cookie.split('; ').map(c=>{const i=c.indexOf('=');re
 async function bootstrap(h){await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const owner=await h.signIn(h.vars.OWNER_EMAIL);await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});return owner}
 // Optional real processor run: same public-door journey, real ClamAV and service, transport forwarded only at the network edge.
 async function processor(){
+ if(process.env.CHEST_CONTENT_SCANNER_URL)return {url:process.env.CHEST_CONTENT_SCANNER_URL,maintained:true,async close(){}};
  if(!process.env.CHEST_CLAMSCAN)return null;
  const dir=await mkdtemp(join(tmpdir(),'chest-clamav-'));
  // A test-only ClamAV signature database proves the engine path without depending on today's signature download.
@@ -35,7 +37,7 @@ export async function contentSecurityFlow(){
   if(offline)return new Response('processor unavailable',{status:503});
   let result;
   if(real){result=await new Promise((resolve,reject)=>{const call=httpRequest(real.url,{method:'POST',headers:{authorization:'Bearer synthetic-chest-1','content-length':String(bytes.length),'x-content-sha256':sha(bytes)}},response=>{const chunks=[];response.on('data',b=>chunks.push(b));response.on('end',()=>{try{assert.equal(response.statusCode,200,Buffer.concat(chunks).toString());resolve(JSON.parse(Buffer.concat(chunks)))}catch(e){reject(e)}})});call.on('error',reject);call.end(bytes)})}
-  else result={checksum:sha(bytes),size:bytes.length,state:bytes.equals(specimen)?'infected':'clean',sensitive:/Classification: Sensitive/i.test(bytes.toString()),reason:'Synthetic scanner-edge receipt',engine:'synthetic-chest-1'};
+  else result={checksum:sha(bytes),size:bytes.length,state:bytes.includes(specimen)?'infected':'clean',sensitive:/Classification: Sensitive/i.test(bytes.toString()),reason:'Synthetic scanner-edge receipt',engine:'synthetic-chest-1'};
   if(wrongReceipt)result.checksum='0'.repeat(64);return Response.json(result);
  }});
  try{
@@ -58,6 +60,21 @@ export async function contentSecurityFlow(){
   assert.equal((await h.raw(officePath,owner)).status,403,'an existing valid Office preview is quarantined');assert.equal((await h.fetch(signPath)).status,423,'an existing signing link cannot bypass quarantine');assert.equal((await h.fetch(transfer+'/f/'+file.id,{headers:{cookie:transferCookie,range:'bytes=0-4'}})).status,404,'quarantine conceals the previously readable transfer original');
   await h.api('/content-security/scan',owner,{item:file.id});
   assert.equal(await (await h.raw(`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`,owner)).text(),'synthetic-chest-2');
+  // A real resumable original above the former 32 MiB bound is streamed in full, including its tail label.
+  const large=Buffer.alloc(40*1024**2,0);Buffer.from('Classification: Sensitive\nsynthetic-chest-80').copy(large,large.length-128);
+  const upload=await h.api('/uploads',owner,{parent:folder.id,name:'Large classified original.bin',size:large.length,checksum:sha(large)});
+  for(let i=0;i<Math.ceil(large.length/upload.partSize);i++){
+   const part=large.subarray(i*upload.partSize,(i+1)*upload.partSize),r=await h.fetch(`/api/chest/uploads/${upload.id}/parts/${i+1}`,{method:'PUT',headers:{cookie:owner,origin:h.origin,'content-length':String(part.length)},body:part});assert.equal(r.status,200,await r.text());
+   if(i===0){await h.stop();await h.start()}
+  }
+  offline=true;await h.api(`/uploads/${upload.id}/complete`,owner,{},423);offline=false;
+  assert.ok(!(await h.api(`/items/${folder.id}`,owner)).children.some(c=>c.name==='Large classified original.bin'),'failed scanning never publishes the multipart original');
+  const largeDone=await h.api(`/uploads/${upload.id}/complete`,owner,{}),largeItem=await h.api(`/items/${largeDone.result.item}`,owner),largeVersion=largeItem.versions.find(v=>v.id===largeDone.result.version);
+  assert.equal(largeVersion.checksum,sha(large));const largeScan=(await h.api('/content-security',owner)).scans.find(r=>r.payload.checksum===sha(large));
+  assert.equal(largeScan.payload.state,'clean');assert.equal(largeScan.payload.sensitive,true,'the label beyond 32 MiB is classified');assert.equal(largeScan.payload.actor,h.vars.OWNER_EMAIL);assert.equal(largeScan.payload.filename,'Large classified original.bin');
+  const exact=await h.raw(`/api/chest/items/${largeDone.result.item}/bytes/${largeDone.result.version}?download=true`,owner);assert.equal(exact.status,200);assert.equal(sha(Buffer.from(await exact.arrayBuffer())),sha(large));
+  await h.api(`/items/${largeDone.result.item}/shares`,owner,{principal:'member@example.test',role:'viewer'});assert.equal((await h.raw(`/api/chest/items/${largeDone.result.item}`,member)).status,403);
+  console.log('SECURITY-002 streamed multipart receipt '+JSON.stringify({head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),size:large.length,restarted:true,failedRetry:true,tailClassification:true,exactHash:true,run:process.env.CHEST_CONTENT_RUN_ID??'local-content-security',scanner:real?'real ClamAV':'network-edge fake'}));
   // Malware and failed receipts retain bytes without publishing a new file or replacing the original.
   await h.api(`/items/${file.id}/versions`,owner,{base64:b64(specimen)},423);assert.equal((await h.api(`/items/${file.id}`,owner)).item.current,file.payload.current);
   let review=await h.api('/content-security',owner);const held=review.scans.find(r=>r.payload.checksum===sha(specimen));assert.equal(held.payload.state,'infected');assert.ok(held.payload.engine);
@@ -88,7 +105,7 @@ export async function contentSecurityFlow(){
   await h.stop();await h.start();review=await h.api('/content-security',owner);assert.equal(review.scans.find(r=>r.payload.checksum===sha(specimen)).payload.state,'infected','quarantine survives restart');
   browser??=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});await mkdir('test-results',{recursive:true});
   for(const width of [1440,390]){
-   const context=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});await context.addCookies(cookies(owner,h.origin));const page=await context.newPage();await page.goto(h.origin+'/app/upload-protection');await page.getByRole('heading',{name:'Content quarantine',exact:true}).waitFor();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:`test-results/${width}-content-quarantine.png`,fullPage:true});
+   const context=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});await context.addCookies(cookies(owner,h.origin));const page=await context.newPage();await page.goto(h.origin+'/app/upload-protection');await page.getByRole('heading',{name:'Content quarantine',exact:true}).waitFor();await tooltips(page,width,'content-quarantine');assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:`test-results/${width}-content-quarantine.png`,fullPage:true});
    if(width===1440){const panel=page.locator('li').filter({has:page.getByText('SHA-256 '+sha(specimen),{exact:true})});await panel.getByLabel('Reason for false-positive release').fill('Reviewed harmless EICAR false positive for this exact retained original');await Promise.all([page.waitForNavigation(),panel.getByRole('button',{name:'Release false positive'}).click()]);await page.getByText(/Released by owner@example.test/).waitFor()}
    await context.close();
   }

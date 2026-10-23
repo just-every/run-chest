@@ -1,6 +1,6 @@
 // SIGN-001 through the built Worker: HTTP doors for requesters and signers; mail is received at the provider edge.
 import assert from 'node:assert/strict';
-import {createHash} from 'node:crypto';
+import {createHash,webcrypto} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {mkdtempSync,readFileSync,rmSync,writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -122,7 +122,24 @@ try{
  for(let i=0;i<5;i++)await post(guardPath+'/verify',{pin:pin==='123456'?'654321':'123456'});assert.equal((await post(guardPath+'/verify',{pin})).status,403,'five wrong PINs burn it');
  const resent=await h.api(`/signatures/${guarded}/remind`,owner,{signer:(await h.api(`/signatures/${guarded}`,owner)).signers[0].id});assert.match(resent.mail,/accepted|suppressed/);const fresh=link(mailsTo('ext@outside.test').at(-1));assert.notEqual(fresh,guardPath);assert.equal((await h.fetch(guardPath)).status,404);assert.match(await text(await h.fetch(fresh)),/Verify your email/);
  // Custody and retention: the key is sealed, no view carries a link hash or PIN credential, and erasing the file erases its requests and signed copies.
- const key=(await h.sql('SELECT key_sealed,certificate FROM chest_signing_key')).results[0];assert.match(key.key_sealed,/^v1\./);const view=JSON.stringify(await h.api(`/signatures/${draft.id}`,owner));assert.doesNotMatch(view,/tokenHash|credential|chest_sign_/);
+ const key=(await h.sql('SELECT key_sealed,certificate FROM chest_signing_key')).results[0];assert.match(key.key_sealed,/^v2\.v1\./);const view=JSON.stringify(await h.api(`/signatures/${draft.id}`,owner));assert.doesNotMatch(view,/tokenHash|credential|chest_sign_/);
+ // Re-sealing is explicit and owner-only, preserves the signing identity and cannot use session authority.
+ const fingerprint=(await h.sql('SELECT fingerprint FROM chest_signing_key')).results[0].fingerprint,oldRoot=h.vars.SIGNING_KEY_SECRET;
+ await h.api('/signatures/rotate-key',viewer,{confirm:true},403);await h.api('/signatures/rotate-key',owner,{confirm:false},400);
+ h.vars.SIGNING_KEY_SECRET='synthetic-chest-rotation-81';await h.stop();await h.start();await h.api('/signatures/rotate-key',owner,{confirm:true},503);
+ h.vars.SIGNING_KEY_PREVIOUS_SECRET=oldRoot;await h.stop();await h.start();
+ assert.equal((await h.raw('/api/chest/signatures/rotate-key',null,{confirm:true})).status,401);
+ assert.equal((await h.fetch('/api/chest/signatures/rotate-key',{method:'POST',headers:{cookie:owner,origin:'https://outside.test','content-type':'application/json'},body:JSON.stringify({confirm:true})})).status,403);
+ const rotation=await h.api('/signatures/rotate-key',owner,{confirm:true});assert.equal(rotation.fingerprint,fingerprint);
+ const resealed=(await h.sql('SELECT key_sealed FROM chest_signing_key')).results[0].key_sealed;assert.notEqual(resealed,key.key_sealed);
+ const unwrap=async(root,sealed,purpose)=>{const [,v,iv,data]=sealed.split('.');assert.equal(v,'v1');const material=await webcrypto.subtle.importKey('raw',Buffer.from(root),'HKDF',false,['deriveKey']);const k=await webcrypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:Buffer.from('chest-seal-v1'),info:Buffer.from(purpose)},material,{name:'AES-GCM',length:256},false,['decrypt']);return Buffer.from(await webcrypto.subtle.decrypt({name:'AES-GCM',iv:Buffer.from(iv,'base64')},k,Buffer.from(data,'base64'))).toString()};
+ const label='chest-document-signing-custody-v2';assert.equal(await unwrap(oldRoot,key.key_sealed,label),await unwrap(h.vars.SIGNING_KEY_SECRET,resealed,label),'the exact same private key is retained');
+ await assert.rejects(unwrap(oldRoot,resealed,label));await assert.rejects(unwrap(h.vars.SESSION_SECRET,resealed,label));await assert.rejects(unwrap(h.vars.SIGNING_KEY_SECRET,resealed,'signing-key'),'the legacy KDF purpose cannot open it');
+ delete h.vars.SIGNING_KEY_PREVIOUS_SECRET;await h.stop();await h.start();
+ const rotRequest=await open(['colleague@example.test']),rotPath=link(mailsTo('colleague@example.test').at(-1));await post(rotPath+'/consent',{},colleague);assert.equal((await post(rotPath+'/sign',{adopt:'Jordan Lee',intent:'true'},colleague)).status,303);
+ const rotRecord=await h.api('/signatures/'+rotRequest,owner);assert.equal(rotRecord.status,'completed');assert.equal((await h.api('/signatures/validate',owner,{item:file.id,version:rotRecord.signed.version})).issuedByThisInstallation,true);
+ assert.equal((await h.api('/signatures/validate',owner,{item:file.id,version:signedV.id})).valid,true,'earlier signatures still validate after rotation');
+ assert.ok((await h.api('/audit?object=signing-key',owner)).some(e=>e.action==='signature.custody.rotate'));console.log('SIGN-001 dedicated KDF custody, explicit rotation, old-key refusal, retained identity and post-rotation signing passed');
  await h.api(`/items/${file.id}/trash`,owner,{});const receipt=await h.api('/erasure',owner,{item:file.id});assert.equal(receipt.payload.state,'complete');
  assert.equal((await h.raw(`/api/chest/signatures/${draft.id}`,owner)).status,404);assert.equal((await h.fetch(ext)).status,404,'the signer link stops with the file');assert.equal((await h.fetch(ext+'/signed',{headers:{cookie}})).status,404);
  assert.equal((await h.sql("SELECT COUNT(*) n FROM chest_records WHERE kind='signature' AND json_extract(payload,'$.item')=?",file.id)).results[0].n,0);

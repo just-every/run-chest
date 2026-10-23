@@ -49,6 +49,16 @@
       "group": "owner"
     },
     {
+      "name": "SIGNING_KEY_SECRET",
+      "label": "Signing key custody secret",
+      "kind": "secret",
+      "required": true,
+      "ownerVisible": false,
+      "input": "managed",
+      "generate": "hex",
+      "group": "owner"
+    },
+    {
       "name": "SETUP_TOKEN",
       "label": "Setup token",
       "kind": "secret",

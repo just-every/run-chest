@@ -91,3 +91,7 @@
 .link-discussion label { display: block; margin: 20px 0 8px; font-weight: 600; }
 .link-discussion textarea { display: block; width: 100%; min-height: 100px; box-sizing: border-box; padding: 12px; border: 1px solid var(--chest-line-strong); border-radius: 8px; font: inherit; resize: vertical; }
 .link-discussion .action { margin-top: 12px; }
+
+/* One shared tooltip stays inside the viewport even beside the rail or a clipped panel. */
+.chest-tooltip { position: fixed; z-index: 10000; max-width: calc(100vw - 16px); padding: 6px 9px; border-radius: 6px; background: var(--chest-ink); color: var(--chest-surface); font-size: 12px; line-height: 1.4; pointer-events: none; }
+.chest-tooltip[hidden] { display: none; }

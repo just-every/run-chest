@@ -1,3 +1,4 @@
+import {tooltips} from './tooltip-proof.mjs';
 // SIGN-001 in a browser at 1440 and 390: request and place fields, the external signer's PIN, consent and signing,
 // the staff signer, the filed versions, and the DOCX fidelity report before sending.
 import assert from 'node:assert/strict';
@@ -19,7 +20,7 @@ try{
   const file=await h.api('/items',owner,{space,name:`Services agreement ${width}.pdf`,base64:(await contract()).toString('base64')}),memo=await h.api('/items',owner,{space,name:`Memo ${width}.docx`,base64:(await readFile(new URL('./memo.docx',import.meta.url))).toString('base64')});
   const asOwner=await browser.newContext({viewport,ignoreHTTPSErrors:true});await asOwner.addCookies(cookies(owner));const p=await asOwner.newPage();
   // The requester: a file page card, the compose page, field placement and the send.
-  await p.goto(h.origin+`/app/items/${file.id}`);await fit(p,'file');await go(p,'Request signatures');assert.match(p.url(),/\/app\/signatures\//);const compose=p.url();await fit(p,'compose');
+  await p.goto(h.origin+`/app/items/${file.id}`);await tooltips(p,width,'signature-file');await fit(p,'file');await go(p,'Request signatures');assert.match(p.url(),/\/app\/signatures\//);const compose=p.url();await fit(p,'compose');
   await p.locator('input[name="signerEmail:1"]').fill('ellis@outside.test');await p.locator('input[name="signerName:1"]').fill('Ellis Outside');await p.locator('input[name="signerEmail:2"]').fill('colleague@example.test');
   const sheet=p.locator('.sheet[data-sheet="1"]');await sheet.scrollIntoViewIfNeeded();
   await p.locator('[data-field-signer]').selectOption('ellis@outside.test');await sheet.click({position:{x:Math.round(width===1440?120:60),y:Math.round(width===1440?330:150)}});

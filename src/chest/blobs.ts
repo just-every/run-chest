@@ -33,13 +33,13 @@ export async function streamDigest(env:Bindings,key:string) {
  const hash=digester();await blob.body.pipeTo(hash)
  return {checksum:hex(await hash.digest),size:blob.size}
 }
-export async function custody(env:Bindings,staging:string,checksum:string,size:number,mediaType:string) {
+export async function custody(env:Bindings,staging:string,checksum:string,size:number,mediaType:string,source:{filename:string;actor:string}) {
  if(!await env.BLOBS.head(`sha256/${checksum}`)){
   const blob=await env.BLOBS.get(staging);insist(blob&&blob.size===size,'storage_verification_failed',503)
   const fixed=new FixedLengthStream(size);await Promise.all([blob.body.pipeTo(fixed.writable),env.BLOBS.put(`sha256/${checksum}`,fixed.readable,{sha256:checksum,httpMetadata:{contentType:mediaType}})])
  }
  const stored=await env.BLOBS.head(`sha256/${checksum}`);insist(stored&&stored.size===size,'storage_verification_failed',503)
- await scanUpload(env,{checksum,size,filename:'Multipart original',actor:'chest:upload'})
+ await scanUpload(env,{checksum,size,...source})
 }
 const served=(v:Version,download:boolean)=>({'content-type':v.mediaType,'content-disposition':`${download?'attachment':'inline'}; filename*=UTF-8''${encodeURIComponent(v.filename)}`,'content-security-policy':"sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; base-uri 'none'",'x-content-type-options':'nosniff','cache-control':'no-store'})
 export async function serve(env:Bindings,v:Version,download:boolean) {

@@ -77,7 +77,7 @@ export async function complete(env: Bindings, s: Session, w: Who, key: string) {
   const { checksum, size } = await streamDigest(env, u.key); insist(size === u.size, 'size_mismatch'); insist(!u.checksum || u.checksum === checksum, 'checksum_mismatch')
   const head = await env.BLOBS.get(u.key, { range: { offset: 0, length: 1024 } }); insist(head, 'blob_missing', 503)
   const kind = signature(new Uint8Array(await head.arrayBuffer())) ?? { mediaType: 'application/octet-stream', preview: 'unsupported' }
-  await custody(env, u.key, checksum, size, kind.mediaType)
+  await custody(env, u.key, checksum, size, kind.mediaType, {filename:u.name,actor:w.email})
   version = { id: id(), filename: u.name, checksum, size, ...kind, text: '', parser: 'chest:signature-only:1', at: now(), actor: s.operator.email, arrival: 'upload', name: '' }
  }
  const input = { ...(u.filing ? { schema:u.filing.schema, fields:u.filing.fields, owner:u.filing.owner } : {}), checksum: u.checksum ?? undefined, size: u.size }
