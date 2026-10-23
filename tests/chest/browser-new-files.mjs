@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
 import { harness } from './harness.mjs';
-import { officeRestoreJourney } from './office-restore-flow.mjs';
+import { officeRestoreJourney, migrationArrivalJourney } from './office-restore-flow.mjs';
 const h=await harness();let browser;
 const press=async(p,name)=>{const page=p.page?p.page():p;await Promise.all([page.waitForNavigation(),p.getByRole('button',{name,exact:true}).click()])};
 const fit=async(p,name,width,locator)=>{await p.waitForLoadState('load');await p.evaluate(()=>document.fonts.ready);assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),name+' fits '+width);await (locator??p).screenshot({path:`test-results/${width}-new-${name}.png`,...(locator?{}:{fullPage:true})})};
@@ -21,6 +21,7 @@ try {
   await go(`/app/items/${folder.id}?manage`);await fit(p,'folder-review-page',width);const governance=p.locator('form').filter({has:p.getByRole('button',{name:'Require version review',exact:true})});await governance.getByLabel('Reviewer').selectOption(h.vars.OWNER_EMAIL);await fit(p,'folder-review',width,p.locator('.side-card').filter({has:p.getByRole('heading',{name:'Version review',exact:true})}));await press(governance,'Require version review');
   const item=await h.api('/items',owner,{parent:folder.id,name:`Signed payment terms ${width}.txt`,base64:Buffer.from('Payment due thirty days after delivery.').toString('base64')});await go(`/app/items/${item.id}`);await fit(p,'pending-review',width);await press(p,'Approve this version');await fit(p,'approved-review',width);
   await officeRestoreJourney(h,context,owner,width);
+  await migrationArrivalJourney(h,context,owner,width);
   await context.close();
  }
  console.log('SPACE-001 EDIT-004 browser at 1440 and 390 passed');

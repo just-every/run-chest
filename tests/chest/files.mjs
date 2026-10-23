@@ -330,7 +330,10 @@ try{
   assert.equal((await h.api('/trash',people.ana)).find(t=>t.id===created.item).trashedBy,'ana@example.test');
   const benDevice=await h.api('/devices',people.ben,{name:'Ben phone',platform:'ios'});assert.equal((await h.fetch(`/api/chest/sync/items?parent=${space.contracts}&name=no.txt`,{method:'POST',headers:{authorization:`Bearer ${benDevice.token}`},body:'x'})).status,403);
   assert.ok((await h.api('/devices',people.owner)).some(d=>d.id===device.device.id&&d.lastSeen));await h.api(`/devices/${device.device.id}/revoke`,people.ben,{},404);
+  const replacement=await h.api('/devices',people.ana,{name:'Ana replacement desktop',platform:'windows'});assert.ok(replacement.token!==device.token);
   await h.api(`/devices/${device.device.id}/revoke`,people.ana,{});assert.equal((await sync('/sync/tree')).status,401);
+  const renewed=await h.fetch('/api/chest/sync/tree',{headers:{authorization:`Bearer ${replacement.token}`}});assert.equal(renewed.status,200);assert.ok((await renewed.json()).items.some(i=>i.id===space.terms),'replacement device retains current permitted originals');
+  const credentials=JSON.stringify((await h.sql('SELECT * FROM chest_device_credentials')).results);assert.ok(!credentials.includes(device.token)&&!credentials.includes(replacement.token),'device custody stores no reusable bearer');
   await h.api('/people',people.owner,{action:'deactivate',email:'ben@example.test'});assert.equal((await h.fetch('/api/chest/sync/tree',{headers:{authorization:`Bearer ${benDevice.token}`}})).status,401);
  });
 }finally{await h.close()}
