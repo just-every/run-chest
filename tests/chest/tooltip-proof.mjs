@@ -14,7 +14,7 @@ export async function tooltips(page,width,label){
   await page.mouse.move(0,0);await control.hover();assert.equal(await page.getByRole('tooltip').isVisible(),false,'hover starts with a delay');
   await expect(page.getByRole('tooltip')).toBeVisible();await expect(page.getByRole('tooltip')).toHaveText(name);
   assert.ok(await page.getByRole('tooltip').evaluate(e=>{const b=e.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth}));
-  await page.screenshot({path:`test-results/${width}-${label}-tooltip-${i}.png`,fullPage:true});
+  await page.screenshot({path:`test-results/${width}-${label}-tooltip-${i}.png`,fullPage:false});
   await page.mouse.move(0,0);await expect(page.getByRole('tooltip')).toBeHidden();proved++;
  }
  assert.ok(proved>=2,'shared rail icon controls have tooltips');if(opened)await menu.locator('summary').first().click();
