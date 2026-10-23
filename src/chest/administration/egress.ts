@@ -7,7 +7,7 @@ import { eventCondition, reportScope } from './report-scope'
 import { csvCell, eventFilters } from './reports'
 import type { CostRates } from './costs'
 
-const basis = 'Original response bytes emitted by instrumented file, device, shared-link and delivery-package doors. Repeated and overlapping ranges count again. Cancellation records the emitted prefix; refused requests emit no original bytes. This is server stream evidence, not proof of client receipt or a provider invoice. Historical requests before metering, rendered previews, archives, signing and provider traffic are not covered. Unknown rates remain unknown.'
+const basis = 'Original response bytes emitted by instrumented file, device, shared-link and delivery-package doors. Repeated and overlapping ranges count again. Cancellation records the emitted prefix; refused requests emit no original bytes. This is server stream evidence, not proof of client receipt or a provider invoice. Historical requests before metering, rendered previews, archives, signing and provider traffic are not covered. Unknown rates remain unknown. A process crash can lose an unfinished stream receipt; this report does not claim complete billed egress.'
 // Snapshot the confirmed quote before streaming so a later rate edit never reprices history.
 export async function meterOriginal(env: Bindings, response: Response, item: string, actor: string, door: string) {
  if (!response.ok || !response.body) return response
@@ -17,7 +17,7 @@ export async function meterOriginal(env: Bindings, response: Response, item: str
   if (recorded) return
   recorded = true
   await commit(env, null, [], { by: actor, audits: [{ action: 'transfer.egress', object: item, detail: {
-   at, door, bytes, outcome, provider: rates?.provider ?? null, quote: rates?.quote ?? null,
+   startedAt: at, door, bytes, outcome, provider: rates?.provider ?? null, quote: rates?.quote ?? null,
    rateAt: rates?.updatedAt ?? null, usdPerGb: rates?.egressUsdPerGb ?? null,
    usd: rates ? Number((bytes / 1e9 * rates.egressUsdPerGb).toFixed(9)) : null,
   } }] })
@@ -37,7 +37,7 @@ export async function administrativeEgress(env: Bindings, s: Session, params: UR
  const dates = new URLSearchParams(); for (const key of ['from','to']) if (params.get(key)) dates.set(key,params.get(key)!)
  const filter = eventFilters(dates), visible = await viewFilter(env,true,true)
  const result = await env.DB.prepare(`SELECT actor,object_id,at,action,detail FROM chest_audit a WHERE action='transfer.egress' AND ${fence.sql}${filter.conditions.length ? ' AND '+filter.conditions.join(' AND ') : ''} ORDER BY at,id`).bind(...fence.params,...filter.values).all<{actor:string;object_id:string;at:string;action:string;detail:string}>()
- const rows = result.results.filter(r=>visible(r)).map(r=>({item:r.object_id,...JSON.parse(r.detail)}))
+ const rows = result.results.filter(r=>visible(r)).map(r=>({item:r.object_id,...JSON.parse(r.detail),at:r.at}))
  const bytes = rows.reduce((n,r)=>n+r.bytes,0), unknownBytes = rows.filter(r=>r.usd===null).reduce((n,r)=>n+r.bytes,0)
  const estimatedUsd = Number(rows.reduce((n,r)=>n+(r.usd??0),0).toFixed(9))
  await commit(env,s,[],{audits:[{action:'admin.egress.read',object:'administration',detail:{count:rows.length}}]})

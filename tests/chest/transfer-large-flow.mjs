@@ -17,6 +17,7 @@ export async function largeTransferJourney(h,owner,space){
  assert.equal(file.versions[0].size,size);assert.equal(file.versions[0].checksum,checksum);
  const post=(path,cookie,body={})=>h.fetch(path,{method:'POST',headers:{origin:h.origin,...(cookie?{cookie}:{})},body:new URLSearchParams(body)});
  for(const invited of [false,true]){
+  const before=(await h.api('/administration/egress',owner)).rows.filter(r=>r.item===finished.result.item).reduce((n,r)=>n+r.bytes,0);
   const recipient='production.vendor@example.test';
   const pack=await h.api('/transfers',owner,{item:finished.result.item,title:'Harbor production originals',limit:1,receipt:true,sendTo:recipient,...(invited?{audience:'guests',guests:[recipient]}:{})});
   const base=new URL(pack.url).pathname;
@@ -51,9 +52,11 @@ export async function largeTransferJourney(h,owner,space){
   assert.equal(interrupted.status,206);const reader=interrupted.body.getReader();
   assert.ok((await reader.read()).value.length>0);await reader.cancel('recipient connection interrupted');
   assert.ok(!(await h.api(`/transfers/${pack.id}`,owner)).events.some(e=>e.kind==='bytes_completed'));
+  const interruptedUsage=(await h.api('/administration/egress',owner)).rows.filter(r=>r.item===finished.result.item).at(-1);assert.equal(interruptedUsage.outcome,'cancelled');assert.ok(interruptedUsage.bytes>0&&interruptedUsage.bytes<size-split,'cancelled streams retain emitted prefix only');
   await h.stop();await h.start();
   await consume(await h.fetch(base+'/f/'+finished.result.item,{headers:{cookie,range:`bytes=${split}-`,'if-range':`"${checksum}"`}}),size-split);
   assert.equal(downloaded.digest('hex'),checksum);
+  const emitted=(await h.api('/administration/egress',owner)).rows.filter(r=>r.item===finished.result.item).reduce((n,r)=>n+r.bytes,0);assert.equal(emitted-before,size+interruptedUsage.bytes,'restarted resume counts bytes again without claiming client receipt');
   view=await h.api(`/transfers/${pack.id}`,owner);
   const completed=view.events.filter(e=>e.kind==='bytes_completed');
   assert.equal(completed.length,1);assert.equal(completed[0].bytes,size);
