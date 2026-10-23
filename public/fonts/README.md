@@ -15,7 +15,9 @@ its license beside it. The WOFF2 files come from Fontsource's distributions
   notes and the filled-in fields of a scan. Upstream:
   https://github.com/googlefonts/caveat.
 
-`fonts.css` declares every face once. `public/rer-theme.css` imports it, so any
-page that links the theme (the app, sign-in, setup, the Lobby and the run site)
-gets the faces; `src/base/font-head.ts` and the run site preload the Latin Inter
-file.
+`fonts.css` holds Chest's look beyond its theme: its own tokens and the rules
+that dress Base's pages. Every face is declared once in `public/rer-theme.css`,
+beside the theme tokens: rer's theme reader takes only those two, and the
+installer serves the files the faces name. Every page that links the theme (the
+app, sign-in, setup, the Lobby and the run site) links `fonts.css` too;
+`src/base/font-head.ts` and the run site preload the Latin Inter file.

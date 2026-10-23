@@ -1,6 +1,6 @@
 /* The app's shell and pages in the owner-picked look: the 240 px left rail, the top bar, page heads, cards, forms,
    lists, the record and version cards, settings, move-in, audit and reading. Components come from chest.css, the
-   folder browser from chest-files.css, tokens from rer-theme.css. */
+   folder browser from chest-files.css, tokens from fonts/fonts.css. */
 *, *::before, *::after { box-sizing: border-box; }
 body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: var(--chest-ink); font: 400 14px/1.5 var(--chest-font-ui); font-feature-settings: 'cv11', 'ss03'; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 :where(.app) :where(h1, h2, h3, h4, p, ul, ol, dl, dd, figure, blockquote) { margin: 0; }

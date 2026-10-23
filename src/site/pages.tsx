@@ -36,6 +36,7 @@ export function sitePages({ styles, contract }: SiteContext): SiteBuild {
         <meta name="twitter:card" content="summary_large_image" />
         {iconLinks.map(link => <link key={link.href} {...link} />)}
         <link rel="preload" href="/fonts/inter/inter-latin-opsz-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        {identity.fonts && <link rel="stylesheet" href={identity.fonts} />}
         <link rel="stylesheet" href={identity.theme} />
         {styles.map(href => <link key={href} rel="stylesheet" href={href} />)}
       </head>

@@ -1,60 +1,173 @@
-/* Chest's faces, all SIL Open Font License 1.1, self-hosted: the page makes no third-party request.
-   Inter (variable weight and optical size) for the run site, the brand and the app: display cuts at headline
-   sizes, text cuts below; IBM Plex Mono for exact facts and the terminal; Caveat for handwriting (sticky notes,
-   filled-in scans). Licenses sit beside each face. */
-@font-face {
-  font-family: Inter;
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url('/fonts/inter/inter-latin-opsz-normal.woff2') format('woff2-variations');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+/* Chest's look beyond its theme. /rer-theme.css holds only what rer's theme reader takes (the --rer-* theme tokens
+   and the faces), so everything else Chest's pages wear is here: Chest's own --chest-* tokens, Base's other --rer-*
+   names and the rules that dress Base's pages. The app, the root document and /setup (src/base/font-head.ts), the
+   Lobby and Base's Run, contract and not-found pages (the edition identity's fonts) and the run site's own pages
+   (src/site/pages.tsx) link this file before the theme; the sign-in pages (src/auth.server.ts) and the development
+   sign-in and hand-off pages (src/server.dev.ts) add it after their own style. It declares no face (the theme
+   does): rer's demo host inlines this path and the theme into the hosted demo's gate, and no other file.
+   Visual authority: the run site follows the owner-approved homepage (desk-chest, 16 Oct 2026); the app follows
+   the owner-picked app look (desk-chest app, option A, 17 Oct 2026): crisp white paper, near-black ink, hairline
+   borders, soft layered cards, one violet accent for selection, links and the agent, and small status colours. */
+:root {
+  /* App colour. White paper with a faint cool tint; hairlines, not outlines; violet is the one accent. */
+  --chest-paper: #fafbff;
+  --chest-surface: #ffffff;
+  --chest-ink: #090d30;
+  --chest-body: #414b70;
+  --chest-muted: #727c9f;
+  --chest-line: #e9edf8;
+  --chest-line-strong: #d3d6e2;
+  --chest-hover: #f5f6fb;
+  --chest-selected: #eeefff;
+  --chest-action: #5035ff;
+  --chest-action-hover: #4a2ee6;
+  --chest-action-soft: #efecff;
+  --chest-action-ink: #321bff;
+  --chest-chevron: #4b5064;
+  --chest-ok: #009b59;
+  --chest-ok-soft: #d4f6df;
+  --chest-warn: #e8a10f;
+  --chest-warn-ink: #7a5000;
+  --chest-warn-soft: #fff6e2;
+  --chest-warn-line: #ffd787;
+  --chest-alert: #c93232;
+  --chest-alert-soft: #fdebeb;
+  /* Avatars: one soft tone per person, picked from their email. */
+  --chest-tone-1: #ebe6ff; --chest-tone-1-ink: #5b3ff6;
+  --chest-tone-2: #e2f3e7; --chest-tone-2-ink: #2e7d48;
+  --chest-tone-3: #e3efff; --chest-tone-3-ink: #1f63d8;
+  --chest-tone-4: #ffeadf; --chest-tone-4-ink: #b4501d;
+  --chest-tone-5: #fff1d1; --chest-tone-5-ink: #8a5a00;
+
+  /* Type. Inter everywhere: the homepage's heavy tight cut for page titles only, a clean UI weight elsewhere,
+     tabular figures for sizes and dates; IBM Plex Mono for exact facts (hashes, IDs, receipts); Caveat only for
+     the run site's hand-inked callouts. */
+  --chest-font-ui: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --chest-font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --chest-font-hand: Caveat, 'Bradley Hand', cursive;
+  --chest-font-doc: 'Times New Roman', Tinos, Times, serif;
+  --chest-font-type: 'Courier New', Courier, monospace;
+
+  /* Shape and depth. */
+  --chest-radius: 10px;
+  --chest-radius-sm: 8px;
+  --chest-card-radius: 14px;
+  --chest-shadow: 0 1px 2px rgba(22, 2, 82, 0.04), 0 8px 24px -16px rgba(38, 28, 110, 0.22);
+  --chest-shadow-pop: 0 1px 2px rgba(22, 2, 82, 0.05), 0 22px 44px -22px rgba(38, 28, 110, 0.32);
+  --chest-focus-ring: 0 0 0 3px rgba(91, 63, 246, 0.22);
+  /* A <select>'s chevron (Base #247, foundation/runtime/select-style.ts): two 6 px gradient strokes in the chevron
+     ink, 20 and 14 px in from the right edge. */
+  --chest-chevron-image: linear-gradient(to top right, transparent calc(50% - 1.1px), var(--chest-chevron) calc(50% - .55px), var(--chest-chevron) calc(50% + .55px), transparent calc(50% + 1.1px)), linear-gradient(to top left, transparent calc(50% - 1.1px), var(--chest-chevron) calc(50% - .55px), var(--chest-chevron) calc(50% + .55px), transparent calc(50% + 1.1px));
+
+  /* Brand and run site (desk-chest). The violet, indigo, lilac and file blue are sampled from the approved
+     mark; the gradient from the hero's "where it should be."; the grid line from its paper. */
+  --chest-site-paper: #fcfcff;
+  --chest-site-grid: #e5e7fa;
+  --chest-site-ink: #0b0b12;
+  --chest-site-body: #434857;
+  --chest-site-muted: #6d7284;
+  --chest-site-line: #e7e8f2;
+  --chest-site-card: #ffffff;
+  --chest-violet: #7c48fd;
+  --chest-violet-deep: #5a2ce8;
+  --chest-indigo: #160252;
+  --chest-lilac: #ae82fc;
+  --chest-lilac-soft: #eeeaff;
+  --chest-file-blue: #3c9cfd;
+  --chest-blue: #0a6cff;
+  --chest-gradient: linear-gradient(104deg, #7b2cfb 0%, #6d33fc 34%, #5a41f6 56%, #1f63fe 74%, #006efe 100%);
+  --chest-card-shadow: 0 1px 2px rgba(22, 2, 82, 0.05), 0 22px 44px -22px rgba(38, 28, 110, 0.28);
+
+  /* Base's other --rer-* names, which Base reads beside the theme's tokens: the mono stack, the pill buttons, the
+     dark code card and the wordmark. */
+  --rer-font-mono: var(--chest-font-mono);
+  --rer-button-radius: 999px;
+  --rer-code-background: #15141c;
+  --rer-code-text: #f4f3fb;
+  --rer-wordmark-weight: 750;
+  --rer-wordmark-tracking: -0.035em;
 }
-@font-face {
-  font-family: Inter;
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url('/fonts/inter/inter-latin-ext-opsz-normal.woff2') format('woff2-variations');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+
+
+
+/* Base's Run and not-found pages on the run site (src/base/run-site.ts): the landing's grid paper, lockup,
+   heavy Inter heading, white step cards, violet step numbers and the dark terminal code card. The :has()
+   prefix outranks the page's own <style>, which follows this stylesheet. */
+body:has(> header.bar) { background: url('/site/grid.svg') top center / 1536px auto repeat, var(--chest-site-paper); }
+body:has(> header.bar) > .bar { max-width: 1536px; padding: 22px clamp(16px, 5.73vw, 88px) 0; }
+body:has(> header.bar) > .bar .brand { gap: 12px; font-size: 28px; font-weight: 750; letter-spacing: -0.035em; }
+body:has(> header.bar) > .bar nav a { color: #3a3e4c; font-size: 18px; font-weight: 450; }
+body:has(> header.bar) h1 { font-weight: 860; letter-spacing: -0.05em; word-spacing: 0.06em; line-height: 1.02; }
+body:has(> header.bar) .intro h1 { font-size: 64px; }
+body:has(> header.bar) .intro h1::after { content: ""; display: block; width: 92px; height: 6px; margin: 22px auto 0; border-radius: 6px; background: var(--chest-gradient); }
+body:has(> header.bar) .sub { color: #4f5464; }
+body:has(> header.bar) .step { background: #fff; border-color: #e6e7f1; border-radius: 22px; box-shadow: var(--chest-card-shadow); backdrop-filter: none; }
+body:has(> header.bar) .num { background: linear-gradient(140deg, #7b2cfb, #3b54f6); color: #fff; font-weight: 750; box-shadow: 0 10px 20px -10px rgba(90, 44, 232, 0.7); }
+body:has(> header.bar) .step h2 { font-weight: 750; letter-spacing: -0.03em; }
+body:has(> header.bar) .code { background: #1a191f; color: #f1f0f6; border-radius: 14px; box-shadow: 0 22px 40px -26px rgba(20, 12, 60, 0.6); }
+body:has(> header.bar) .code pre { font-size: 15.5px; }
+body:has(> header.bar) .copy { border-color: rgba(174, 130, 252, 0.5); color: #e5dcff; }
+body:has(> header.bar) .copy:hover { background: rgba(124, 72, 253, 0.25); }
+body:has(> header.bar) .note code, body:has(> header.bar) .alt code { padding: 2px 6px; border-radius: 6px; background: var(--chest-lilac-soft); color: #2b1b8f; }
+body:has(> header.bar) .facts a, body:has(> header.bar) .link { text-decoration-color: rgba(90, 44, 232, 0.45); }
+@media (max-width: 760px) {
+  body:has(> header.bar) { background-size: 960px auto, auto; }
+  body:has(> header.bar) > .bar .brand { font-size: 23px; }
+  body:has(> header.bar) .intro h1 { font-size: 40px; }
+  body:has(> header.bar) .code pre { font-size: 13px; }
 }
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/fonts/plex-mono/ibm-plex-mono-latin-400-normal.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/fonts/plex-mono/ibm-plex-mono-latin-ext-400-normal.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('/fonts/plex-mono/ibm-plex-mono-latin-500-normal.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('/fonts/plex-mono/ibm-plex-mono-latin-ext-500-normal.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-@font-face {
-  font-family: Caveat;
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url('/fonts/caveat/caveat-latin-wght-normal.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+
+
+/* Sign-in and first-run setup (Base frames, html.rer-themed), in the app's look: the lockup above one white card
+   with a hairline border and a soft shadow on faint grid paper, a heavy tight heading, hairline inputs with a
+   violet focus ring and the violet action. html.rer-themed outranks the frames' own .rer-themed rules. */
+html.rer-themed { background: var(--chest-paper); }
+html.rer-themed body { display: block; min-height: 100vh; margin: 0; padding: 24px 20px 64px; background: linear-gradient(rgba(251, 251, 254, .55), rgba(251, 251, 254, .55)), url('/site/grid.svg') top center / 1536px auto repeat, var(--chest-paper); color: var(--chest-ink); font: 400 15px/1.5 var(--chest-font-ui); -webkit-font-smoothing: antialiased; }
+html.rer-themed main { position: relative; box-sizing: border-box; width: 100%; max-width: 460px; margin: 120px auto 0; padding: 32px 36px 36px; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: 16px; box-shadow: var(--chest-shadow-pop); }
+html.rer-themed main > .brand,
+html.rer-themed main > .rer-brand { position: absolute; left: 0; right: 0; top: -82px; display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0; color: var(--chest-ink); font: 800 34px/1 var(--chest-font-ui); letter-spacing: -0.04em; }
+/* The lockup: the violet chest mark (--rer-logo) beside the name. */
+html.rer-themed main > .brand::before,
+html.rer-themed main > .rer-brand::before { width: 40px; height: 40px; }
+html.rer-themed .mark { display: none; }
+html.rer-themed main { overflow-wrap: anywhere; }
+html.rer-themed :where(pre, code) { white-space: pre-wrap; overflow-wrap: anywhere; }
+html.rer-themed h1 { margin: 0 0 12px; color: var(--chest-ink); font: 800 30px/1.1 var(--chest-font-ui); letter-spacing: -0.035em; text-wrap: balance; }
+html.rer-themed h2 { margin: 28px 0 10px; padding-top: 22px; border-top: 1px solid var(--chest-line); color: var(--chest-ink); font: 700 18px/1.25 var(--chest-font-ui); letter-spacing: -0.015em; }
+html.rer-themed p { margin: 0 0 18px; color: var(--chest-body); font-size: 15px; }
+html.rer-themed .notice { padding: 10px 14px; border: 1px solid var(--chest-line); border-left: 3px solid var(--chest-action); border-radius: var(--chest-radius-sm); background: var(--chest-action-soft); color: var(--chest-ink); }
+html.rer-themed .secondary-link { margin: 18px 0 0; text-align: center; font-size: 14px; }
+html.rer-themed .divider::before,
+html.rer-themed .divider::after { border-color: var(--chest-line); }
+html.rer-themed label { margin: 0 0 6px; color: var(--chest-ink); font-size: 14px; font-weight: 500; }
+html.rer-themed input:not([type=checkbox]):not([type=hidden]) { box-sizing: border-box; width: 100%; min-height: 44px; margin: 0 0 16px; padding: 10px 12px; background: var(--chest-surface); border: 1px solid var(--chest-line-strong); border-radius: var(--chest-radius-sm); box-shadow: none; color: var(--chest-ink); font: 400 15px/1.4 var(--chest-font-ui); }
+html.rer-themed input:not([type=checkbox]):not([type=hidden]):focus { border-color: var(--chest-action); box-shadow: var(--chest-focus-ring); outline: none; }
+html.rer-themed input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--chest-action); }
+html.rer-themed label:has(input[type=checkbox]) { display: flex; gap: 10px; align-items: flex-start; margin: 0; font-weight: 400; }
+html.rer-themed button,
+html.rer-themed .action { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 44px; padding: 10px 18px; background: var(--chest-action); border: 1px solid var(--chest-action); border-radius: var(--chest-radius); box-shadow: 0 1px 2px rgba(22, 2, 82, 0.12); color: #fff; font: 600 15px/1.2 var(--chest-font-ui); text-decoration: none; cursor: pointer; }
+html.rer-themed button:hover,
+html.rer-themed .action:hover { background: var(--chest-action-hover); border-color: var(--chest-action-hover); }
+html.rer-themed button.secondary { background: var(--chest-surface); color: var(--chest-ink); border-color: var(--chest-line-strong); box-shadow: none; }
+html.rer-themed button.secondary:hover { background: var(--chest-hover); }
+html.rer-themed a { color: var(--chest-action-ink); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+html.rer-themed a:hover { text-decoration-thickness: 2px; }
+/* Not on a secondary link: Base's sign-in pages add this file after their own style, whose 3px ring there won this
+   tie when the rule sat in the theme. :where() keeps the specificity it had; on Chest's own pages chest.css draws
+   this same ring on those links. */
+html.rer-themed :focus-visible:not(:where(.secondary-link a)),
+html.rer-themed button:focus-visible { outline: 2px solid var(--chest-action); outline-offset: 2px; }
+/* First-run setup: the owner facts between hairlines. */
+html.rer-themed dl { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px 16px; margin: 0 0 22px; padding: 16px 0; border-top: 1px solid var(--chest-line); border-bottom: 1px solid var(--chest-line); }
+html.rer-themed dt { color: var(--chest-muted); font-size: 14px; }
+html.rer-themed dd { margin: 0; color: var(--chest-ink); font: 500 14px/1.5 var(--chest-font-ui); overflow-wrap: anywhere; }
+html.rer-themed form p { margin: 0 0 4px; color: var(--chest-ink); }
+@media (max-width: 480px) {
+  html.rer-themed body { padding: 16px 16px 40px; background-size: 960px auto, auto; }
+  html.rer-themed main { margin-top: 92px; padding: 24px 20px; }
+  html.rer-themed main > .brand,
+  html.rer-themed main > .rer-brand { top: -70px; font-size: 30px; }
+  html.rer-themed main > .brand::before,
+  html.rer-themed main > .rer-brand::before { width: 34px; height: 34px; }
+  html.rer-themed h1 { font-size: 26px; }
 }

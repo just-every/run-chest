@@ -1,5 +1,5 @@
 /* Chest's shared app components: buttons, links, focus, form controls, chips, avatars, file tiles, progress meters
-   and icons. Tokens come from rer-theme.css. Visual authority: the owner-picked app look (desk-chest app, option A,
+   and icons. Tokens come from fonts/fonts.css. Visual authority: the owner-picked app look (desk-chest app, option A,
    17 Oct 2026): hairlines instead of outlines, one violet action, soft chips, tabular figures. */
 
 /* Buttons: the violet action; outline buttons are white with a hairline; quiet buttons are text. */

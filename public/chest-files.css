@@ -1,7 +1,7 @@
 /* The folder browser of the owner-picked app look (desk-chest app, option A): the heavy folder title with the open
    folder in violet, the Chest agent strip, the amber sync-conflict banner, the dense file table and the 340 px
    details panel; also the Files home's space cards and tools. Markup: src/chest/files/ui-folder.ts, ui-table.ts,
-   ui-panel.ts. Tokens come from rer-theme.css. */
+   ui-panel.ts. Tokens come from fonts/fonts.css. */
 
 /* The page: the work column and the details panel, which runs flush to the right edge under the top bar. */
 .browse { display: grid; grid-template-columns: minmax(0, 1fr) 340px; margin: -24px -24px -72px 0; min-height: calc(100vh - 64px); }

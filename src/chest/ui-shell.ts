@@ -7,7 +7,7 @@ import { rail, type Rail } from './ui-rail'
 import { icons } from '../ui/icons'
 // The app's own documents: its scripts (/chest-upload.js, uploads with progress and resume; /chest-read.js, reading
 // progress; chest-bulk.js, the selection; chest-time.js, local times; chest-office.js), styles only from this origin
-// (rer-theme.css tokens, chest.css components, chest-app.css shell and pages, chest-files.css the folder browser, chest-tools.css page-specific tools).
+// (fonts/fonts.css and rer-theme.css tokens, chest.css components, chest-app.css shell and pages, chest-files.css the folder browser, chest-tools.css page-specific tools).
 // The picked app look: a 240 px left rail (the lockup, the files nav, the team spaces, the workspace pages, sync,
 // storage and who is signed in) and a top bar (breadcrumb, search, New, Upload and Share). At phone width the rail
 // sits behind one "Menu".
@@ -32,7 +32,7 @@ export function page(body:string,me:Me,path='/app',bar:Bar={}){
  const top=`<div class="topbar">${crumbs(bar.crumbs??[{label:heading||titles[current]}])}<form class="bar-search" method="get" action="/app/files/search" role="search"><label><span class="bar-search-icon" aria-hidden="true">${icons.search}</span><span class="sr-only">Search file names and the words inside files</span><input name="q" type="search" placeholder="Search names and text inside files"></label></form>${actions(bar,me)}</div>`
  return new Response(`<!doctype html><html lang="en"><head>${head(`${titles[current]} · Chest`)}</head><body class="app"><div class="shell"><header class="rail"><a class="wordmark" href="/app/files"><img class="wordmark-mark" src="/brand/mark.svg" alt="" width="30" height="30"><span data-rer-name>Chest</span></a><details class="app-menu"><summary>${icons.menu}<span>Menu</span></summary><div class="app-menu-panel">${me.rail?rail(me.rail,me,current,path):''}</div></details></header><div class="work">${top}<main class="app-main">${body}</main></div></div></body></html>`,{headers:{...headers,'content-type':'text/html; charset=utf-8','content-security-policy':policy}})
 }
-// A refused action reads like sign-in: the wordmark above one card (styled by rer-theme.css), and the way back.
+// A refused action reads like sign-in: the wordmark above one card (styled by fonts/fonts.css's html.rer-themed rules), and the way back.
 export function refusedPage(data:{error?:string,message?:string},status:number,back='/app/files'){
  return new Response(`<!doctype html><html lang="en" class="rer-themed"><head>${head('Not done · Chest')}</head><body><main><p class="brand"><span data-rer-name>Chest</span></p><h1>That was not done</h1><p>${esc(data.message??problemWords(data.error))}</p><a class="action" href="${esc(back.startsWith('/app')?back:'/app/files')}">Go back</a><p class="quiet mono">Code: ${esc(data.error)}</p></main></body></html>`,{status,headers:{...headers,'content-type':'text/html; charset=utf-8'}})
 }

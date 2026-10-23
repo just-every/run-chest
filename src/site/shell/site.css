@@ -1,5 +1,5 @@
 /* The run site's frame, shared by the landing and the docs: white grid paper, the header and footer, the
-   pill button and underlined links. Tokens come from public/rer-theme.css (--chest-site-*, --chest-violet…).
+   pill button and underlined links. Tokens come from public/fonts/fonts.css (--chest-site-*, --chest-violet…).
    Desk scale: the homepage was drawn at 1536 px wide; the frame keeps its 88 px gutters there. */
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
