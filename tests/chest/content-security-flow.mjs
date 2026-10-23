@@ -37,7 +37,7 @@ export async function contentSecurityFlow(){
   if(offline)return new Response('processor unavailable',{status:503});
   let result;
   if(real){result=await new Promise((resolve,reject)=>{const call=httpRequest(real.url,{method:'POST',headers:{authorization:'Bearer synthetic-chest-1','content-length':String(bytes.length),'x-content-sha256':sha(bytes)}},response=>{const chunks=[];response.on('data',b=>chunks.push(b));response.on('end',()=>{try{assert.equal(response.statusCode,200,Buffer.concat(chunks).toString());resolve(JSON.parse(Buffer.concat(chunks)))}catch(e){reject(e)}})});call.on('error',reject);call.end(bytes)})}
-  else result={checksum:sha(bytes),size:bytes.length,state:bytes.includes(specimen)?'infected':'clean',sensitive:/Classification: Sensitive/i.test(bytes.toString()),reason:'Synthetic scanner-edge receipt',engine:'synthetic-chest-1'};
+  else result={checksum:sha(bytes),size:bytes.length,state:bytes.includes(specimen)?'infected':'clean',sensitive:/\bclassification\s*:\s*(?:sensitive|confidential|restricted)\b/i.test(bytes.toString()),reason:'Synthetic scanner-edge receipt',engine:'synthetic-chest-1'};
   if(wrongReceipt)result.checksum='0'.repeat(64);return Response.json(result);
  }});
  try{
@@ -61,7 +61,7 @@ export async function contentSecurityFlow(){
   await h.api('/content-security/scan',owner,{item:file.id});
   assert.equal(await (await h.raw(`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`,owner)).text(),'synthetic-chest-2');
   // A real resumable original above the former 32 MiB bound is streamed in full, including its tail label.
-  const large=Buffer.alloc(40*1024**2,0);Buffer.from('Classification: Sensitive\nsynthetic-chest-80').copy(large,large.length-128);
+  const large=Buffer.alloc(40*1024**2,0);Buffer.from('Classification'+' '.repeat(70000)+': Sensitive\nsynthetic-chest-80').copy(large,large.length-2*65536-7);
   const upload=await h.api('/uploads',owner,{parent:folder.id,name:'Large classified original.bin',size:large.length,checksum:sha(large)});
   for(let i=0;i<Math.ceil(large.length/upload.partSize);i++){
    const part=large.subarray(i*upload.partSize,(i+1)*upload.partSize),r=await h.fetch(`/api/chest/uploads/${upload.id}/parts/${i+1}`,{method:'PUT',headers:{cookie:owner,origin:h.origin,'content-length':String(part.length)},body:part});assert.equal(r.status,200,await r.text());

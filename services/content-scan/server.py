@@ -22,9 +22,12 @@ def sensitive(path):
     with open(path, "rb") as stream:
         tail = b""
         while block := stream.read(65536):
-            if LABEL.search(tail + block):
+            # Collapse whitespace before carrying the suffix: a label may span chunks with an
+            # arbitrarily long whitespace run. Dropping that run must never drop its prefix.
+            combined = re.sub(rb"\s+", b" ", tail + block)
+            if LABEL.search(combined):
                 return True
-            tail = block[-256:]
+            tail = combined[-256:]
     if zipfile.is_zipfile(path):
         with zipfile.ZipFile(path) as archive:
             total = 0

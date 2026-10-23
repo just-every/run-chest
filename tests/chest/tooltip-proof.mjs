@@ -12,7 +12,9 @@ export async function tooltips(page,width,label){
  assert.deepEqual(unlabeled,[],'every visible icon-only control on this screen has a tooltip');
  const controls=page.locator('[data-tooltip]');let proved=0;
  for(let i=0;i<await controls.count();i++){
-  const control=controls.nth(i);if(!await control.isVisible())continue;
+  const control=controls.nth(i);
+  if(width===390){const inMenu=await control.evaluate(e=>!!e.closest('details.app-menu'));if(await menu.evaluate(e=>e.open)!==inMenu)await menu.locator('summary').first().click()}
+  if(!await control.isVisible())continue;
   const name=await control.getAttribute('data-tooltip');await control.scrollIntoViewIfNeeded();
   await control.focus();assert.equal(await page.getByRole('tooltip').isVisible(),true,'keyboard focus shows the tooltip immediately');await expect(page.getByRole('tooltip')).toHaveText(name);await expect(page.getByRole('tooltip')).toBeVisible();
   assert.match(await control.getAttribute('aria-describedby'),/chest-tooltip/);
@@ -23,5 +25,5 @@ export async function tooltips(page,width,label){
   await page.screenshot({path:`test-results/${width}-${label}-tooltip-${i}.png`,fullPage:false});
   await page.mouse.move(0,0);await expect(page.getByRole('tooltip')).toBeHidden();proved++;
  }
- assert.ok(proved>=2,'shared rail icon controls have tooltips');if(opened)await menu.locator('summary').first().click();
+ assert.ok(proved>=2,'shared rail icon controls have tooltips');if(width===390&&await menu.evaluate(e=>e.open))await menu.locator('summary').first().click();
 }
