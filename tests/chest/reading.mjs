@@ -6,14 +6,14 @@ import {readFile} from 'node:fs/promises';
 import jpegJs from 'jpeg-js';
 import {harness} from './harness.mjs';
 import {pdf as textPdf} from './fixtures.mjs';
-const calls=[];
+const calls=[];let activeKey='test-only-model-key',providerFailure=false,providerRequests=0;
 // The provider's side of the Messages API: it answers the schema Chest asks for. A transcription echoes the page Chest
 // names in its request, so each page's text shows it was read; a field reading reads every field it is asked for
 // except the last, which it reports as unreadable.
 async function anthropic(request){
  if(request.url!=='https://api.anthropic.com/v1/messages')return;
- const body=await request.json(),content=body.messages[0].content,images=content.filter(p=>p.type==='image'),ask=content.filter(p=>p.type==='text').map(p=>p.text).join('\n');
- assert.equal(request.headers.get('x-api-key'),'test-only-model-key');assert.equal(body.model,'claude-sonnet-5-5');assert.ok(images.length>0&&images.every(p=>p.source.type==='base64'&&['image/jpeg','image/png'].includes(p.source.media_type)),'every page goes as an image');
+ providerRequests++;const body=await request.json(),content=body.messages[0].content,images=content.filter(p=>p.type==='image'),ask=content.filter(p=>p.type==='text').map(p=>p.text).join('\n');
+ assert.ok(request.headers.get('x-api-key')===activeKey,'provider receives only the current configured key');assert.ok(!JSON.stringify(body).includes(activeKey),'the credential is absent from every model prompt');if(providerFailure)return Response.json({error:{message:'Reflected private request credential '+activeKey}},{status:429});assert.equal(body.model,'claude-sonnet-5-5');assert.ok(images.length>0&&images.every(p=>p.source.type==='base64'&&['image/jpeg','image/png'].includes(p.source.media_type)),'every page goes as an image');
  calls.push({schema:Object.keys(body.output_config.format.schema.properties),ask,images:images.map(p=>p.source.media_type)});
  const reply=value=>Response.json({type:'message',role:'assistant',stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify(value)}],usage:{input_tokens:1200,output_tokens:80}});
  if('text' in body.output_config.format.schema.properties)return reply({readable:true,language:'en',confidence:0.94,text:`Bluebell kiln schedule — ${ask.match(/Transcribe (.*)\./)[1]}`});
@@ -109,5 +109,45 @@ try{
   assert.ok(calls.some(c=>c.schema.includes('fields')&&c.ask.includes('- Effective date (date)')));
   // The record page shows the scan with the boxes drawn on it.
   const html=await (await h.raw(`/app/documents/${record.id}`,people.ana)).text();assert.match(html,/Fields read from this scan/);assert.match(html,new RegExp(`<image href="/api/chest/documents/${record.id}/pages/${version}/1"`));assert.match(html,/<rect x="/);
+ });
+
+ await check('SECURITY-001 provider key custody',async()=>{
+  providerFailure=true;
+  const canaries=['synthetic-chest-101','synthetic-chest-102'];let previousCiphertext='';
+  for(const canary of canaries){
+   activeKey=canary;
+   const configuration={provider:'anthropic',model:'claude-sonnet-5-5',key:canary};
+   await h.api('/reading/settings',people.ana,configuration,403);
+   const cross=await h.fetch('/api/chest/reading/settings',{method:'POST',headers:{cookie:people.owner,origin:'https://synthetic-chest-origin.test','content-type':'application/json'},body:JSON.stringify(configuration)});assert.equal(cross.status,403);
+   assert.equal((await h.raw('/api/chest/reading/settings',null,configuration)).status,401);
+   const saved=await h.api('/reading/settings',people.owner,configuration);
+   assert.ok(!JSON.stringify(saved).includes(canary),'save response contains no credential');
+   const stored=(await h.sql('SELECT key_sealed FROM chest_reader WHERE id=1')).results[0].key_sealed;
+   assert.ok(stored!==previousCiphertext&&!stored.includes(canary),'replacement credential has distinct sealed custody');previousCiphertext=stored;
+   const result=await h.api('/reading/settings/test',people.owner,{});
+   assert.equal(result.ok,false);assert.match(result.message,/429/);
+   for(const secret of canaries)assert.ok(!JSON.stringify(result).includes(secret),'a provider cannot reflect a credential into public diagnostics');
+   const exposed=JSON.stringify([await h.api('/reading/settings',people.owner),await h.api('/audit',people.owner)])+await(await h.fetch('/app/admin',{headers:{cookie:people.owner}})).text();
+   for(const secret of canaries)assert.ok(!exposed.includes(secret),'settings, served page and durable audit omit credentials');
+  }
+  if(process.env.CHEST_SECURITY_BROWSER_PROOF==='1'){
+   const {chromium}=await import('@playwright/test'),{mkdir}=await import('node:fs/promises'),{tooltips}=await import('./tooltip-proof.mjs');
+   const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});await mkdir('test-results',{recursive:true});
+   try{for(const width of [1440,390]){
+    const context=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});
+    await context.addCookies(people.owner.split('; ').map(value=>{const i=value.indexOf('=');return{name:value.slice(0,i),value:value.slice(i+1),url:h.origin}}));
+    const page=await context.newPage();await page.goto(h.origin+'/app/admin#reading');await tooltips(page,width,'provider-custody-settings');
+    await page.locator('#reading').scrollIntoViewIfNeeded();await page.screenshot({path:`test-results/${width}-provider-custody-settings.png`,fullPage:true});
+    await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Test the key',exact:true}).click()]);
+    await page.getByRole('heading',{name:'The key did not work',exact:true}).waitFor();assert.ok((await page.locator('main').innerText()).includes('429'));
+    for(const secret of canaries)assert.ok(!(await page.content()).includes(secret),'browser diagnostic contains no credential');
+    await tooltips(page,width,'provider-custody-diagnostic');assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await page.screenshot({path:`test-results/${width}-provider-custody-diagnostic.png`,fullPage:true});await context.close();
+   }}finally{await browser.close()}
+  }
+  await h.api('/reading/settings/remove',people.owner,{});
+  const requestsBeforeRemoval=providerRequests,removed=await h.api('/reading/settings/test',people.owner,{});assert.equal(removed.ok,false);assert.match(removed.message,/need an AI model key/);assert.equal(providerRequests,requestsBeforeRemoval,'removed provider authority makes no outbound request');
+  assert.equal((await h.sql('SELECT id FROM chest_reader')).results.length,0,'revocation removes saved provider authority');
+  assert.equal((await h.api('/search?q=Bluebell',people.ana)).results.length>0,true,'provider rotation and revocation preserve authorized searchable originals');
  });
 }finally{await h.close()}

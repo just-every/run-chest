@@ -26,7 +26,7 @@ export async function previewArchive(env:Bindings,s:Session,input:any){
   if(item.skip===true)rejection='owner marked skip'
   if(!rejection){try{
     const values=await filing(env,{title:item.title||v.filename,schema:input.schema,fields:item.fields||{},owner:input.owner,reviewer:input.reviewer,reference:item.reference||null,reviewDate:item.reviewDate,expiryDate:item.expiryDate})
-    v.id=sha256(`${artifactHash}:${i}:version`);v.at='';v.events=[]
+    v.id=sha256(`${artifactHash}:${i}:version`);v.at='';v.events=[];v.arrival='migration';v.migration={archive:archive.source,path:item.path,sourceId:typeof item.sourceId==='string'?item.sourceId:null,timestamp:typeof item.timestamp==='string'?item.timestamp:null}
     if(item.principals?.length)gaps.push('Source people and permissions are retained as unresolved history; no access granted.')
     if(item.decisions?.length)gaps.push('Source decisions are retained history; no Chest approval granted.')
     doc={...values,collection:input.collection,approved:null,versions:[v],private:true,grants:[],trash:false,completions:[],source:{archive:archive.source,path:item.path,sourceId:item.sourceId||null,format:item.format||null,timestamp:item.timestamp||null,principals:item.principals||[],decisions:item.decisions||[],gaps}}
