@@ -10,7 +10,7 @@ export async function upload(env:Bindings,s:Session,input:any,existing?:Row<Docu
  let fences:Row[]=[];let doc:Document
  if(existing){insist(!existing.payload.trash,'document_trashed',409);fences=await access(env,s,existing.payload,'editor');doc=structuredClone(existing.payload);const schema=await get<Schema>(env,'schema',doc.schema);validateFields(schema.payload,doc.fields);fences.push(schema)}
  else {const collection=await get<Collection>(env,'collection',input.collection);const values=await filing(env,input,fences);doc={...values,collection:collection.id,approved:null,versions:[],private:false,grants:[],trash:false,completions:[]};fences.push(collection,...await access(env,s,doc,'editor'))}
- const bytes=fromBase64(input.base64),v=await inspect(bytes,text(input.filename,'filename',240),s.operator.email,doc.reviewer)
+ const bytes=fromBase64(input.base64),v=await inspect(bytes,text(input.filename,'filename',240),s.operator.email,doc.reviewer);v.arrival='upload'
  insist(!input.checksum||input.checksum===v.checksum,'checksum_mismatch');insist(input.size===undefined||input.size===v.size,'size_mismatch')
  // All metadata/authority/bytes are validated before custody; D1 publication is last.
  await retain(env,bytes,v);doc.versions.push(v)
@@ -30,7 +30,7 @@ export async function lifecycle(env:Bindings,s:Session,row:Row<Document>,input:a
 export async function restoreVersion(env:Bindings,s:Session,row:Row<Document>,versionId:string){
  insist(!row.payload.trash,'document_trashed',409);const fences=await access(env,s,row.payload,'editor');const doc=structuredClone(row.payload),source=doc.versions.find(v=>v.id===versionId);insist(source,'version_not_found',404)
  insist(await env.BLOBS.head(`sha256/${source.checksum}`),'blob_missing',503)
- doc.versions.push({...source,id:id(),at:now(),actor:s.operator.email,reviewer:doc.reviewer,state:'submitted',events:[],name:'',restoredFrom:source.id})
+ doc.versions.push({...source,id:id(),at:now(),actor:s.operator.email,reviewer:doc.reviewer,state:'submitted',events:[],name:'',arrival:'restore',restoredFrom:source.id})
  return write(env,s,changed(row,doc),'version.restore',row,fences)
 }
 export async function nameVersion(env:Bindings,s:Session,row:Row<Document>,versionId:string,input:any){

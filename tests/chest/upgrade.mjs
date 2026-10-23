@@ -8,12 +8,14 @@ import {createHash} from 'node:crypto';
 import {chromium} from '@playwright/test';
 import {localVariables} from '@runeditrun/rer/local/environment';
 import {command,currentRer,runtimeEnvironment,serve,snapshot,preserved,interruptUpgrade,archiveSnapshot} from './upgrade-local.mjs';
-const scratch=await mkdtemp(join(tmpdir(),'chest-upgrade-')),root=join(scratch,'chest'),recovery=join(scratch,'recovery'),home=join(scratch,'installer-home'),env=runtimeEnvironment(home),setupEnv=runtimeEnvironment(home,true),candidate=process.cwd(),answers='.rer/local/upgrade-answers.json';
+const scratch=await mkdtemp(join(tmpdir(),'chest-upgrade-')),root=join(scratch,'chest'),recovery=join(scratch,'recovery'),home=join(scratch,'installer-home'),env=runtimeEnvironment(home),setupEnv=runtimeEnvironment(home,true),candidate=process.cwd(),answers='.rer/local/upgrade-answers.json',fleetEmail=['fleet','runeditrun.com'].join('@');
 let server,browser;
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 try {
  await mkdir(home,{recursive:true});
  await command(scratch,['git','clone','--depth','1','--filter=blob:none','--branch','v0.1.0','https://github.com/just-every/run-chest.git',root],env);
+ await command(root,['git','config','user.name','Run Edit Run fleet'],env);
+ await command(root,['git','config','user.email',fleetEmail],env);
  await command(root,[process.execPath,currentRer,'install'],setupEnv);
  assert.equal((await command(root,['git','status','--porcelain','--untracked-files=no'],env)).trim(),'','install leaves the tagged application source unchanged');
  console.log('Installed genuine tagged application; preparing the owner.');
@@ -66,6 +68,8 @@ try {
  // Follow the documented rollback: leave the changed schema alone, install the
  // previous revision into a fresh target and import its own pre-upgrade backup.
  await command(scratch,['git','clone','--no-local','--depth','1','--branch','v0.1.0',root,recovery],env);
+ await command(recovery,['git','config','user.name','Run Edit Run fleet'],env);
+ await command(recovery,['git','config','user.email',fleetEmail],env);
  await command(recovery,[process.execPath,currentRer,'install'],setupEnv);
  await mkdir(join(recovery,'exports'),{mode:0o700});
  await copyFile(backupPath,join(recovery,'exports/pre-upgrade.rer'));await chmod(join(recovery,'exports/pre-upgrade.rer'),0o600);
@@ -100,9 +104,16 @@ try {
  console.log('RECOVER-002 upgrade recovery passed: interrupted upgrade recovered into the genuine previous revision; complete portable graph/originals, settings, identities and review history reconciled; old sessions refused.');
  server=await serve(root,port,env);await server.stop();server=null;
  const after=await snapshot(root);preserved(before,after);
- assert.ok(await readFile(join(root,'.dev.vars'),'utf8')===settingsBefore,'successful upgrade preserves private configuration');
+ const upgradedSettings=localVariables(await readFile(join(root,'.dev.vars'),'utf8'));
+ for(const [name,value] of Object.entries(priorSettings))assert.ok(upgradedSettings[name]===value,`successful upgrade preserves configured ${name}`);
+ assert.deepEqual(Object.keys(upgradedSettings).filter(name=>!(name in priorSettings)).sort(),['SIGNING_KEY_SECRET'],'upgrade adds only the newly declared managed signing secret');
+ assert.ok(upgradedSettings.SIGNING_KEY_SECRET&&upgradedSettings.SIGNING_KEY_SECRET!==upgradedSettings.SESSION_SECRET,'upgrade creates independent signing custody material');
+ const upgradedConfiguration=await readFile(join(root,'.dev.vars'),'utf8');
+ await command(root,[process.execPath,currentRer,'export','--output','exports/upgraded.rer'],env);
+ const upgradedArchive=await readFile(join(root,'exports/upgraded.rer'),'utf8');
+ for(const name of ['SESSION_SECRET','SIGNING_KEY_SECRET','SETUP_TOKEN'])assert.ok(!upgradedArchive.includes(upgradedSettings[name]),`product archive excludes ${name}`);
  assert.equal(await readFile(join(root,'src/branding.json'),'utf8'),brandingBefore,'successful upgrade preserves owner-selected application settings');
- server=await serve(root,port,env);assert.equal((await fetch(origin+'/api/chest/administration',{headers:{cookie:legacyAdmin}})).status,401,'the legacy administrator must sign in afresh after authority migration');const upgradedOwner=await session('owner'),upgradedAdmin=await session('admin');const adminResponse=await fetch(origin+'/api/chest/administration',{headers:{cookie:upgradedAdmin}});assert.equal(adminResponse.status,200,'the migrated administrator still opens delegated administration after fresh sign-in');
+ server=await serve(root,port,env);assert.ok(await readFile(join(root,'.dev.vars'),'utf8')===upgradedConfiguration,'restart preserves every upgraded setting and does not rotate signing custody');assert.equal((await fetch(origin+'/api/chest/administration',{headers:{cookie:legacyAdmin}})).status,401,'the legacy administrator must sign in afresh after authority migration');const upgradedOwner=await session('owner'),upgradedAdmin=await session('admin');const adminResponse=await fetch(origin+'/api/chest/administration',{headers:{cookie:upgradedAdmin}});assert.equal(adminResponse.status,200,'the migrated administrator still opens delegated administration after fresh sign-in');
  for(const document of documents)for(const version of document.payload.versions){const r=await fetch(`${origin}/api/chest/documents/${document.id}/bytes/${version.id}?download=true`,{headers:{cookie:upgradedOwner}});assert.equal(r.status,200);assert.equal(hash(new Uint8Array(await r.arrayBuffer())),version.checksum)}
  const post=await fetch(origin+'/api/chest/spaces',{method:'POST',headers:{cookie:upgradedOwner,origin,'content-type':'application/json'},body:JSON.stringify({name:'Harbor upgraded project'})});assert.equal(post.status,200);const space=await post.json();
  await screenshots(upgradedOwner,[['library','/app/library'],['document',`/app/documents/${documents[0].id}`],['files',`/app/spaces/${space.id}`]],'upgrade');
