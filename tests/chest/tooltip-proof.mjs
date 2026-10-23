@@ -3,7 +3,7 @@ import {expect} from '@playwright/test';
 // Folded into each affected clause's own browser journey, at both viewport widths.
 export async function tooltips(page,width,label){
  const menu=page.locator('details.app-menu');const opened=width===390&&!await menu.evaluate(e=>e.open);
- if(opened)await menu.locator('summary').click();
+ if(opened)await menu.locator('summary').first().click();
  const controls=page.locator('[data-tooltip]');let proved=0;
  for(let i=0;i<await controls.count();i++){
   const control=controls.nth(i);if(!await control.isVisible())continue;
@@ -17,5 +17,5 @@ export async function tooltips(page,width,label){
   await page.screenshot({path:`test-results/${width}-${label}-tooltip-${i}.png`,fullPage:true});
   await page.mouse.move(0,0);await expect(page.getByRole('tooltip')).toBeHidden();proved++;
  }
- assert.ok(proved>=2,'shared rail icon controls have tooltips');if(opened)await menu.locator('summary').click();
+ assert.ok(proved>=2,'shared rail icon controls have tooltips');if(opened)await menu.locator('summary').first().click();
 }
