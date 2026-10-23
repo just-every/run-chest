@@ -1,3 +1,4 @@
+import { meterOriginal } from './administration/egress'
 import { offboardingView, saveOffboarding } from './organisation/offboarding'
 import { groupReviewView, decideGroupReview } from './organisation/group-review'
 import { domainView, saveDomainPolicy } from './organisation/domains'
@@ -82,7 +83,7 @@ async function dispatch(env:Bindings,request:Request,s:Session,method:string,pat
   const row=await get<Document>(env,'document',parts[1]);if(!(method==='POST'&&parts[2]==='lifecycle'))await access(env,s,row.payload)
   if(method==='GET'&&parts.length===2){await recordAccess(env,s,row,'document.read');const schema=await get<Schema>(env,'schema',row.payload.schema);return {...row,fieldIssues:fieldIssues(schema.payload,row.payload.fields)}}
   if(method==='GET'&&parts[2]==='readers'){owner(s);const people=await list<Person>(env,'person'),readers=[];for(const p of people){if(p.payload.status==='inactive'||!await env.DB.prepare("SELECT id FROM oa_operators WHERE email=? AND status='active'").bind(p.id).first())continue;const r=await roles(env,{...s,operator:{...s.operator,email:p.id,role:p.payload.role as any}},row.payload);if(r.roles.length)readers.push({email:p.id,name:p.payload.name,roles:r.roles})}return readers}
-  if(method==='GET'&&parts[2]==='bytes'){const version=row.payload.versions.find(v=>v.id===parts[3]);insist(version,'version_not_found',404);const download=url.searchParams.get('download')==='true';const response=await serve(env,version,download);await access(env,s,(await get<Document>(env,'document',row.id)).payload);await recordAccess(env,s,row,download?'version.download':'version.preview',version.id);return response}
+  if(method==='GET'&&parts[2]==='bytes'){const version=row.payload.versions.find(v=>v.id===parts[3]);insist(version,'version_not_found',404);const download=url.searchParams.get('download')==='true';const response=await serve(env,version,download);await access(env,s,(await get<Document>(env,'document',row.id)).payload);await recordAccess(env,s,row,download?'version.download':'version.preview',version.id);return meterOriginal(env,response,row.id,s.operator.email,download?'library download':'library preview')}
   if(method==='POST'&&parts[2]==='versions')return upload(env,s,input,row)
   if(method==='POST'&&parts[2]==='filing')return updateFiling(env,s,row,input)
   if(method==='POST'&&parts[2]==='grants')return grants(env,s,'document',row.id,input)

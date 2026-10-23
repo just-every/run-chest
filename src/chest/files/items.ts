@@ -1,3 +1,4 @@
+import { meterOriginal } from '../administration/egress'
 import { policy as contentPolicy } from '../content-security/policy'
 import { memberProjection } from './member-link-controls'
 import { contentReadable, assertContent } from '../content-security/scan'
@@ -125,7 +126,7 @@ export async function bytes(env: Bindings, s: Session, w: Who, key: string, vers
  const response = range ? await ranged(env, v, range) : await serve(env, v as unknown as Version, download)
  demand(await context(env, w, key), download || range ? 'download' : 'view')
  await recordAccess(env, s, item, action ?? (download || range ? 'version.download' : 'version.preview'), v.id,range?Number(response.headers.get('content-length')):v.size)
- return response
+ return meterOriginal(env,response,key,s.operator.email,action??(download||range?'file download':'original preview'))
 }
 async function ranged(env: Bindings, v: FileVersion, range: string) {
  const m = /^bytes=(\d+)-(\d*)$/.exec(range); if (!m) throw new ChestError('invalid_range', 416)

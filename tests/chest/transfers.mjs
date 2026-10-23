@@ -22,6 +22,7 @@ try {
  view=await h.api('/transfers/'+pack.id,owner);assert.equal(view.events.filter(e=>e.kind==='bytes_completed'&&e.version===version).length,1);assert.ok(!view.events.some(e=>e.kind==='confirmed'));
  const invalid=await h.fetch(base+'/f/'+file.id,{headers:{cookie,range:'bytes=999999-'}});assert.equal(invalid.status,416);
  await h.fetch(base+'/f/'+file.id,{headers:{cookie,range:'bytes=0-11'}}).then(r=>r.arrayBuffer());assert.equal((await h.api('/transfers/'+pack.id,owner)).events.filter(e=>e.kind==='bytes_completed').length,1);
+ const metered=await h.api('/administration/egress',owner);const deliveryRows=metered.rows.filter(r=>r.item===file.id);assert.equal(deliveryRows.reduce((n,r)=>n+r.bytes,0),bytes.length+12,'resume plus repeated range is actual emitted usage');assert.ok(deliveryRows.every(r=>r.door==='delivery package'));
  const bad=await h.fetch(base+'/received',{method:'POST',headers:{cookie},body:new URLSearchParams({received:'yes'})});assert.equal(bad.status,403,'CSRF confirmation refused');
  assert.equal((await post(base+'/received',cookie,{})).status,400);
  assert.equal((await post(base+'/received',cookie,{received:'yes'})).status,303);assert.equal((await post(base+'/received',cookie,{received:'yes'})).status,303);

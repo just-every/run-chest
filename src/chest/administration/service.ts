@@ -1,3 +1,4 @@
+import { administrativeEgress, administrativeEgressCsv } from './egress'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { list } from '../store'
@@ -37,6 +38,7 @@ export async function administrationExecute(env:Bindings,request:Request,s:Sessi
   if(post&&key)return applyRecovery(env,s,key,input)
  }
  if(section==='costs')return post?saveCostSettings(env,s,input):costSettings(env,s)
+ if(get&&section==='egress')return key==='export'?administrativeEgressCsv(env,s,url.searchParams):administrativeEgress(env,s,url.searchParams)
  if(get&&section==='guests')return key==='export'?administrativeGuestsCsv(env,s,url.searchParams):administrativeGuests(env,s,url.searchParams)
  if(get&&section==='storage')return key==='export'?administrativeStorageCsv(env,s,url.searchParams):administrativeStorage(env,s,url.searchParams)
  if(get&&section==='audit')return key==='export'?administrativeAuditCsv(env,s,url.searchParams):administrativeAudit(env,s,url.searchParams)

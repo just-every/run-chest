@@ -1,3 +1,4 @@
+import {tooltips} from './tooltip-proof.mjs';
 // ADMIN-002 reporting slice, exercised from the existing administrative public journey.
 import assert from 'node:assert/strict';
 import {guestInventoryJourney} from './administration-guest-flow.mjs';
@@ -46,6 +47,8 @@ export async function reportingJourney(h,browser,owner){
  const exported=csvRows(await response.text());assert.equal(exported.length,source.rows.length+sourceTail.rows.length);
  assert.equal(exported.length,305);assert.ok(exported.every(r=>r[1]===email&&r[2]==='version.download'&&r[3]===file.id));
  const guestEvents=await api('/administration/audit?category=guests',admin);assert.ok(guestEvents.rows.some(r=>r.action==='link.download'&&r.object_id===file.id),'in-scope guest activity follows content custody');
+ const emitted=await api('/administration/egress',admin);assert.equal(emitted.bytes,Buffer.byteLength(original)*306);assert.equal(emitted.unknownBytes,emitted.bytes);assert.ok(!JSON.stringify(emitted).includes(secret.id));
+ await api('/administration/egress?group='+otherGroup.id,admin,undefined,403);await api('/administration/egress?from=bad-date',admin,undefined,400);await api('/administration/egress',staff,undefined,403);
  const scoped=await api('/administration/storage',admin),area=scoped.rows.find(r=>r.id===space.id);
  assert.equal(area.currentBytes,Buffer.byteLength(original));assert.equal(area.previousBytes,Buffer.byteLength(previous));assert.equal(area.trashBytes,Buffer.byteLength(trash));
  assert.equal(area.retainedBytes,Buffer.byteLength(original+previous+trash));
@@ -70,7 +73,7 @@ export async function reportingJourney(h,browser,owner){
  assert.equal((await api('/administration/costs',owner)).rates,null);
  // An in-scope reader hiding view activity keeps that choice at the administrative door too.
  await api('/audit/privacy',staff,{hidden:true});
- assert.equal((await api('/administration/audit?'+filter,admin)).rows.length,0);
+ assert.equal((await api('/administration/audit?'+filter,admin)).rows.length,0);assert.equal((await api('/administration/egress',admin)).bytes,Buffer.byteLength(original));
  await api('/audit/privacy',staff,{hidden:false});
  await guestInventoryJourney(h,browser,{owner,staff,admin,outside,file,folder,secret,group,otherGroup});
  const contexts=[];
@@ -87,6 +90,9 @@ export async function reportingJourney(h,browser,owner){
    await page.screenshot({path:`test-results/${width}-report-cost-confirmation.png`,fullPage:true});
    await form.getByRole('checkbox').check();await Promise.all([page.waitForNavigation(),form.getByRole('button',{name:'Save estimate rates',exact:true}).click()]);
    await page.getByText('Independent storage provider',{exact:true}).waitFor();
+   const sample=await h.fetch(`/api/chest/items/${file.id}/bytes/${current}?download=true`,{headers:{cookie:staff,range:'bytes=0-7'}});assert.equal(sample.status,206);assert.equal((await sample.arrayBuffer()).byteLength,8);
+   const usage=await api('/administration/egress?group='+group.id,owner),measured=usage.rows.filter(r=>r.usd!==null);assert.equal(measured.at(-1).bytes,8);assert.equal(measured.at(-1).usd,Number((8/1e9*rates.egressUsdPerGb).toFixed(9)));assert.equal(measured.at(-1).provider,rates.provider);assert.ok(measured.at(-1).rateAt);
+   await api('/administration/costs',owner,{...rates,confirm:true,egressUsdPerGb:10});const retained=await api('/administration/egress?group='+group.id,owner);assert.deepEqual(retained.rows,usage.rows,'rate edits never reprice prior requests');await api('/administration/costs',owner,{...rates,confirm:true});
    await page.screenshot({path:`test-results/${width}-report-cost-saved.png`,fullPage:true});
    await page.goto(h.origin+'/app/administration/storage?group='+group.id);
    await page.getByRole('heading',{name:'Estimated storage cost',exact:true}).waitFor();
@@ -101,6 +107,9 @@ export async function reportingJourney(h,browser,owner){
    const download=page.waitForEvent('download');await page.getByRole('link',{name:'Export CSV',exact:true}).click();await(await download).path();
    assert.equal(await page.getByText('Executive acquisition target.txt',{exact:true}).count(),0);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   await page.getByRole('heading',{name:'Measured original egress',exact:true}).waitFor();await tooltips(page,width,'administrative-egress');
+   const egressDownload=page.waitForEvent('download');await page.getByRole('link',{name:'Export egress CSV',exact:true}).click();const egressFile=await(await egressDownload).path();assert.ok(egressFile);
+   const allEgress=await h.raw('/api/chest/administration/egress/export?group='+group.id,admin);assert.equal(allEgress.status,200);assert.equal(csvRows(await allEgress.text()).length,(await api('/administration/egress?group='+group.id,admin)).rows.length);
    await page.screenshot({path:`test-results/${width}-report-activity-filtered.png`,fullPage:true});
    await page.screenshot({path:`test-results/${width}-report-activity-viewport.png`});
    await Promise.all([page.waitForNavigation(),page.getByRole('link',{name:'Next page',exact:true}).click()]);
@@ -115,6 +124,7 @@ export async function reportingJourney(h,browser,owner){
  await api('/administration/roles',owner,{action:'revoke',id:grant.id});
  await api('/administration/audit?cursor='+encodeURIComponent(report.next),admin,undefined,403);
  await api('/administration/storage',admin,undefined,403);
+ await api('/administration/egress',admin,undefined,403);assert.equal((await h.raw('/api/chest/administration/egress/export',admin)).status,403);
  await api('/administration/guests',admin,undefined,403);
  assert.equal((await h.raw('/api/chest/administration/guests/export',admin)).status,403);
  assert.equal((await h.raw('/api/chest/administration/audit/export',admin)).status,403);

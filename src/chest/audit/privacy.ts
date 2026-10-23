@@ -5,7 +5,7 @@ import { insist, type Group } from '../model'
 import { list } from '../store'
 import { commit, fresh, maybe, next } from '../files/repo'
 import { digest } from '../blobs'
-export const viewActions = new Set(['item.read','document.read','version.download','version.preview','sync.hydrate','link.view','link.preview','link.download','link.password.refused','link.guest.verified'])
+export const viewActions = new Set(['transfer.egress','item.read','document.read','version.download','version.preview','sync.hydrate','link.view','link.preview','link.download','link.password.refused','link.guest.verified'])
 const viewAction = (action: string) => viewActions.has(action) || action.startsWith('public.') || /^get\.(items|documents)\./.test(action)
 export type ViewPolicy = { enabled: boolean; groups: string[] }
 export async function privacy(env: Bindings, email: string) {

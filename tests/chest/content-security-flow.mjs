@@ -61,7 +61,7 @@ export async function contentSecurityFlow(){
   await h.api('/content-security/scan',owner,{item:file.id});
   assert.equal(await (await h.raw(`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`,owner)).text(),'synthetic-chest-2');
   // A real resumable original above the former 32 MiB bound is streamed in full, including its tail label.
-  const large=Buffer.alloc(40*1024**2,0);Buffer.from('Classification'+' '.repeat(70000)+': Sensitive\nsynthetic-chest-80').copy(large,large.length-2*65536-7);
+  const large=Buffer.alloc(64*1024**2,0);Buffer.from('Classification'+' '.repeat(70000)+': Sensitive\nsynthetic-chest-80').copy(large,large.length-2*65536-7);
   const upload=await h.api('/uploads',owner,{parent:folder.id,name:'Large classified original.bin',size:large.length,checksum:sha(large)});
   for(let i=0;i<Math.ceil(large.length/upload.partSize);i++){
    const part=large.subarray(i*upload.partSize,(i+1)*upload.partSize),r=await h.fetch(`/api/chest/uploads/${upload.id}/parts/${i+1}`,{method:'PUT',headers:{cookie:owner,origin:h.origin,'content-length':String(part.length)},body:part});assert.equal(r.status,200,await r.text());
@@ -71,10 +71,10 @@ export async function contentSecurityFlow(){
   assert.ok(!(await h.api(`/items/${folder.id}`,owner)).children.some(c=>c.name==='Large classified original.bin'),'failed scanning never publishes the multipart original');
   const largeDone=await h.api(`/uploads/${upload.id}/complete`,owner,{}),largeItem=await h.api(`/items/${largeDone.result.item}`,owner),largeVersion=largeItem.versions.find(v=>v.id===largeDone.result.version);
   assert.equal(largeVersion.checksum,sha(large));const largeScan=(await h.api('/content-security',owner)).scans.find(r=>r.payload.checksum===sha(large));
-  assert.equal(largeScan.payload.state,'clean');assert.equal(largeScan.payload.sensitive,true,'the label beyond 32 MiB is classified');assert.equal(largeScan.payload.actor,h.vars.OWNER_EMAIL);assert.equal(largeScan.payload.filename,'Large classified original.bin');
+  assert.equal(largeScan.payload.state,'clean');assert.equal(largeScan.payload.sensitive,true,'the label beyond 40 MiB is classified');assert.equal(largeScan.payload.actor,h.vars.OWNER_EMAIL);assert.equal(largeScan.payload.filename,'Large classified original.bin');
   const exact=await h.raw(`/api/chest/items/${largeDone.result.item}/bytes/${largeDone.result.version}?download=true`,owner);assert.equal(exact.status,200);assert.equal(sha(Buffer.from(await exact.arrayBuffer())),sha(large));
   await h.api(`/items/${largeDone.result.item}/shares`,owner,{principal:'member@example.test',role:'viewer'});assert.equal((await h.raw(`/api/chest/items/${largeDone.result.item}`,member)).status,403);
-  console.log('SECURITY-002 streamed multipart receipt '+JSON.stringify({head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),size:large.length,restarted:true,failedRetry:true,tailClassification:true,exactHash:true,run:process.env.CHEST_CONTENT_RUN_ID??'local-content-security',scanner:real?'real ClamAV':'network-edge fake'}));
+  console.log('SECURITY-002 streamed multipart receipt '+JSON.stringify({head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),size:large.length,restarted:true,failedRetry:true,tailClassification:true,exactHash:true,run:process.env.CHEST_CONTENT_RUN_ID??'local-content-security',scanner:real?'real ClamAV':'network-edge fake',maintainedDefinitions:real?.maintained??false}));
   // Malware and failed receipts retain bytes without publishing a new file or replacing the original.
   await h.api(`/items/${file.id}/versions`,owner,{base64:b64(specimen)},423);assert.equal((await h.api(`/items/${file.id}`,owner)).item.current,file.payload.current);
   let review=await h.api('/content-security',owner);const held=review.scans.find(r=>r.payload.checksum===sha(specimen));assert.equal(held.payload.state,'infected');assert.ok(held.payload.engine);
