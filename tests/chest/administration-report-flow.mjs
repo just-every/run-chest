@@ -47,7 +47,8 @@ export async function reportingJourney(h,browser,owner){
  const exported=csvRows(await response.text());assert.equal(exported.length,source.rows.length+sourceTail.rows.length);
  assert.equal(exported.length,305);assert.ok(exported.every(r=>r[1]===email&&r[2]==='version.download'&&r[3]===file.id));
  const guestEvents=await api('/administration/audit?category=guests',admin);assert.ok(guestEvents.rows.some(r=>r.action==='link.download'&&r.object_id===file.id),'in-scope guest activity follows content custody');
- const emitted=await api('/administration/egress',admin);assert.equal(emitted.bytes,Buffer.byteLength(original)*306);assert.equal(emitted.unknownBytes,emitted.bytes);assert.ok(!JSON.stringify(emitted).includes(secret.id));
+ const emitted=await api('/administration/egress',admin);assert.equal(emitted.bytes,Buffer.byteLength(original)*306);assert.equal(emitted.unknownBytes,emitted.bytes);assert.ok(!JSON.stringify(emitted).includes(secret.id));assert.ok(emitted.rows.every(r=>!('authority' in r)&&!('actor' in r)));
+ const dated=await api('/administration/egress?'+new URLSearchParams({from:emitted.rows[0].at,to:emitted.rows[0].at}),admin);assert.ok(dated.rows.length>0);assert.ok(dated.rows.every(r=>r.at===emitted.rows[0].at),'dates include both exact UTC bounds');
  await api('/administration/egress?group='+otherGroup.id,admin,undefined,403);await api('/administration/egress?from=bad-date',admin,undefined,400);await api('/administration/egress',staff,undefined,403);
  const scoped=await api('/administration/storage',admin),area=scoped.rows.find(r=>r.id===space.id);
  assert.equal(area.currentBytes,Buffer.byteLength(original));assert.equal(area.previousBytes,Buffer.byteLength(previous));assert.equal(area.trashBytes,Buffer.byteLength(trash));
@@ -109,7 +110,7 @@ export async function reportingJourney(h,browser,owner){
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    await page.getByRole('heading',{name:'Measured original egress',exact:true}).waitFor();await tooltips(page,width,'administrative-egress');
    const egressDownload=page.waitForEvent('download');await page.getByRole('link',{name:'Export egress CSV',exact:true}).click();const egressFile=await(await egressDownload).path();assert.ok(egressFile);
-   const allEgress=await h.raw('/api/chest/administration/egress/export?group='+group.id,admin);assert.equal(allEgress.status,200);assert.equal(csvRows(await allEgress.text()).length,(await api('/administration/egress?group='+group.id,admin)).rows.length);
+   const allEgress=await h.raw('/api/chest/administration/egress/export?group='+group.id,admin);assert.equal(allEgress.status,200);assert.ok((await api('/administration/egress?group='+group.id,admin)).rows.every(r=>r.quote===null&&r.usd===null),'group roles cannot read organization pricing');assert.equal(csvRows(await allEgress.text()).length,(await api('/administration/egress?group='+group.id,admin)).rows.length);
    await page.screenshot({path:`test-results/${width}-report-activity-filtered.png`,fullPage:true});
    await page.screenshot({path:`test-results/${width}-report-activity-viewport.png`});
    await Promise.all([page.waitForNavigation(),page.getByRole('link',{name:'Next page',exact:true}).click()]);

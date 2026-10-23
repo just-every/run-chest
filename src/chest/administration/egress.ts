@@ -1,3 +1,4 @@
+import { canAdmin } from './roles'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { now } from '../model'
@@ -37,7 +38,8 @@ export async function administrativeEgress(env: Bindings, s: Session, params: UR
  const dates = new URLSearchParams(); for (const key of ['from','to']) if (params.get(key)) dates.set(key,params.get(key)!)
  const filter = eventFilters(dates), visible = await viewFilter(env,true,true)
  const result = await env.DB.prepare(`SELECT actor,object_id,at,action,detail FROM chest_audit a WHERE action='transfer.egress' AND ${fence.sql}${filter.conditions.length ? ' AND '+filter.conditions.join(' AND ') : ''} ORDER BY at,id`).bind(...fence.params,...filter.values).all<{actor:string;object_id:string;at:string;action:string;detail:string}>()
- const rows = result.results.filter(r=>visible(r)).map(r=>({item:r.object_id,...JSON.parse(r.detail),at:r.at}))
+ const showCosts = await canAdmin(env,s,'audit-reporting')
+ const rows = result.results.filter(r=>visible(r)).map(r=>{const d=JSON.parse(r.detail);return {item:r.object_id,at:r.at,startedAt:d.startedAt,door:d.door,bytes:d.bytes,outcome:d.outcome,provider:showCosts?d.provider:null,quote:showCosts?d.quote:null,rateAt:showCosts?d.rateAt:null,usdPerGb:showCosts?d.usdPerGb:null,usd:showCosts?d.usd:null}})
  const bytes = rows.reduce((n,r)=>n+r.bytes,0), unknownBytes = rows.filter(r=>r.usd===null).reduce((n,r)=>n+r.bytes,0)
  const estimatedUsd = Number(rows.reduce((n,r)=>n+(r.usd??0),0).toFixed(9))
  await commit(env,s,[],{audits:[{action:'admin.egress.read',object:'administration',detail:{count:rows.length}}]})
@@ -45,6 +47,6 @@ export async function administrativeEgress(env: Bindings, s: Session, params: UR
 }
 export async function administrativeEgressCsv(env: Bindings, s: Session, params: URLSearchParams) {
  const d=await administrativeEgress(env,s,params)
- const rows=d.rows.map(r=>[r.at,r.item,r.door,r.bytes,r.outcome,r.provider,r.quote,r.rateAt,r.usdPerGb,r.usd])
- return new Response(['At,Item ID,Door,Emitted bytes,Outcome,Provider,Quote,Rate recorded at,USD per decimal GB,Estimated USD',...rows.map(r=>r.map(csvCell).join(','))].join('\r\n')+'\r\n',{headers:{'content-type':'text/csv; charset=utf-8','content-disposition':'attachment; filename="chest-egress.csv"','cache-control':'no-store'}})
+ const rows=d.rows.map(r=>[r.at,r.startedAt,r.item,r.door,r.bytes,r.outcome,r.provider,r.quote,r.rateAt,r.usdPerGb,r.usd])
+ return new Response(['Completed at,Started at,Item ID,Door,Emitted bytes,Outcome,Provider,Quote,Rate recorded at,USD per decimal GB,Estimated USD',...rows.map(r=>r.map(csvCell).join(','))].join('\r\n')+'\r\n',{headers:{'content-type':'text/csv; charset=utf-8','content-disposition':'attachment; filename="chest-egress.csv"','cache-control':'no-store'}})
 }
