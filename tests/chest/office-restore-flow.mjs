@@ -1,5 +1,7 @@
 // VERSION-001: a colleague's restore reaches open delivered editors without losing unsaved work.
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {tooltips} from './tooltip-proof.mjs';
 import {docx,xlsx} from './office-fixtures.mjs';
 export async function officeRestoreJourney(h,context,owner,width){
  const space=await h.api('/spaces',owner,{name:`Remote restore ${width}`});
@@ -36,4 +38,25 @@ export async function officeRestoreJourney(h,context,owner,width){
   await clean.close();await dirty.close();
  }
  console.log(`VERSION-001 remote restore: DOCX/XLSX clean refresh, unsaved input and true base preserved, conflict refusal, no timer writes at ${width}`);
+}
+
+// The archive public door retains the source of an imported original on every restored version.
+export async function migrationArrivalJourney(h,context,owner,width){
+ const collection=await h.api('/collections',owner,{name:`Migration history ${width}`}),schema=await h.api('/schemas',owner,{name:`Imported record ${width}`,fields:[{name:'reference',type:'text',required:true}]});
+ const original=Buffer.from('synthetic-chest-1'),source=`synthetic-chest-${width}`,path='Supplier record.txt',timestamp='2026-10-01T12:00:00Z';
+ const archive=JSON.stringify({format:'chest-archive-1',source,items:[{path,sourceId:'synthetic-chest-2',timestamp,size:original.length,sha256:createHash('sha256').update(original).digest('hex'),base64:original.toString('base64'),fields:{reference:'synthetic-chest-3'}}]});
+ const input={archive,collection:collection.id,schema:schema.id,owner:h.vars.OWNER_EMAIL,reviewer:h.vars.OWNER_EMAIL},preview=await h.api('/archive/preview',owner,input);
+ assert.equal((await h.api('/archive/apply',owner,{...input,fingerprint:preview.fingerprint})).state,'completed');
+ const imported=(await h.api('/library',owner)).documents.find(row=>row.payload.source?.archive===source),version=imported.payload.versions[0];
+ assert.equal(version.arrival,'migration');assert.equal(imported.payload.approved,null);
+ await h.api(`/documents/${imported.id}/history/${version.id}/restore`,owner,{});
+ let reading;for(let attempt=0;attempt<100;attempt++){reading=await h.api(`/documents/${imported.id}/reading?work=1`,owner);if(reading.versions.every(v=>!v.reading||!['queued','reading'].includes(v.reading.state)))break;await new Promise(resolve=>setTimeout(resolve,100))}
+ assert.ok(reading.versions.every(v=>!v.reading||!['queued','reading'].includes(v.reading.state)),'source extraction settles before inspecting history controls');
+ const p=await context.newPage();await p.goto(`${h.origin}/app/documents/${imported.id}`);
+ const entries=p.locator('article.ver');assert.equal(await entries.count(),2);
+ for(const entry of await entries.all()){assert.ok((await entry.innerText()).includes(`Migration source: ${source}`));assert.ok((await entry.innerText()).includes('Source ID: synthetic-chest-2'));assert.ok((await entry.innerText()).includes(`Source time: ${timestamp}`))}
+ assert.ok((await entries.first().innerText()).includes('Restored by'));assert.ok((await entries.last().innerText()).includes('Imported by'));
+ await tooltips(p,width,'migration-history');assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ await p.screenshot({path:`test-results/${width}-migration-version-history.png`,fullPage:true});await p.close();
+ console.log(`VERSION-001 migration source and restored lineage shown at ${width}`);
 }

@@ -52,6 +52,14 @@ imports one original per record; version history requires explicit subsequent
 replacement uploads. Office export derivatives must describe their source format.
 Plain folder downloads supply no inferred historical rights or approvals.
 
+Each imported version records arrival `migration` with the archive source, path,
+source ID and source timestamp where provided. The version history displays this
+provenance beside the importing Chest actor. Restoring it creates arrival
+`restore`, preserves the source provenance and records the retained source version;
+it does not turn source decisions into a Chest approval. These fields describe
+the owner-created archive door only. Vendor migrations inherit the same provenance
+obligation under MIGRATE-002 through MIGRATE-006.
+
 ## Legacy RER backup recovery
 
 A full-installation `.rer` backup is separate from the `chest-archive-1` move-in

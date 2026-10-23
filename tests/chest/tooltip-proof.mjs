@@ -18,6 +18,7 @@ export async function tooltips(page,width,label){
   const name=await control.getAttribute('data-tooltip');await control.scrollIntoViewIfNeeded();
   await control.focus();assert.equal(await page.getByRole('tooltip').isVisible(),true,'keyboard focus shows the tooltip immediately');await expect(page.getByRole('tooltip')).toHaveText(name);await expect(page.getByRole('tooltip')).toBeVisible();
   assert.match(await control.getAttribute('aria-describedby'),/chest-tooltip/);
+  await page.evaluate(()=>document.dispatchEvent(new Event('scroll')));assert.equal(await page.getByRole('tooltip').isVisible(),true,'a focused label survives the scroll caused by keyboard navigation');
   await page.keyboard.press('Escape');await expect(page.getByRole('tooltip')).toBeHidden();await control.evaluate(e=>e.blur());
   await page.mouse.move(0,0);await control.hover();assert.equal(await page.getByRole('tooltip').isVisible(),false,'hover starts with a delay');
   await expect(page.getByRole('tooltip')).toBeVisible();await expect(page.getByRole('tooltip')).toHaveText(name);

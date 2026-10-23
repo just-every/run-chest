@@ -56,8 +56,8 @@ async function call(c: ReaderConfig, system: string, schema: object, name: strin
  finally { clearTimeout(timer) }
  const body: any = await response.json().catch(() => null)
  if (!response.ok) {
-  const said = String(body?.error?.message ?? body?.message ?? '').slice(0, 200)
-  throw new ReaderError(response.status === 401 || response.status === 403 ? `The AI provider refused the key (${response.status}). Check the key in Reading scans on People & settings.` : `The AI provider answered ${response.status}${said ? `: ${said}` : ''}.`)
+  // Provider diagnostics can echo credentials from request headers. Only the status crosses this boundary.
+  throw new ReaderError(response.status === 401 || response.status === 403 ? `The AI provider refused the key (${response.status}). Check the key in Reading scans on People & settings.` : `The AI provider answered ${response.status}. Check the provider status and Reading scans settings.`)
  }
  const answer = r.answer(body)
  if (!answer || typeof answer !== 'object') throw new ReaderError('The AI model gave no reading.')
