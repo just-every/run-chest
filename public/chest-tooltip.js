@@ -17,5 +17,7 @@
   control.addEventListener('blur', () => { focused = null; hide(); });
  }
  document.addEventListener('keydown', event => { if (event.key === 'Escape') hide(); });
- document.addEventListener('scroll', hide, true); window.addEventListener('resize', hide);
+ // Keyboard focus can scroll the page after the focus event. Keep its label positioned and visible.
+ const reposition = () => { if (active && focused === active && document.activeElement === focused) show(focused); else hide(); };
+ document.addEventListener('scroll', reposition, true); window.addEventListener('resize', reposition);
 })();
