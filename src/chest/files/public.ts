@@ -99,7 +99,7 @@ async function download(env: Bindings, request: Request, secret: string, key: st
   const v = publicVersion(file.row,r.link.payload); insist(v, 'version_not_found', 404)
   await activity(env,null,'download',v.size,{actor,source:`link:${r.link.id}`,fences:file.fences})
   const response = await serve(env, v as unknown as Version, true), link = r.link.payload
-  try { await commit(env, null, [{ row: next(r.link, { ...link, downloads: link.downloads + 1 }), previous: r.link }], { by: actor, fences: file.fences, audits: [{ action: 'link.download', object: file.row.id, detail: { link: r.link.id, version: v.id, downloads: link.downloads + 1, limit: link.limit } }] }); return meterOriginal(env,response,file.row.id,actor,'shared link') }
+  try { await commit(env, null, [{ row: next(r.link, { ...link, downloads: link.downloads + 1 }), previous: r.link }], { by: actor, fences: file.fences, audits: [{ action: 'link.download', object: file.row.id, detail: { link: r.link.id, version: v.id, downloads: link.downloads + 1, limit: link.limit } }] }); return meterOriginal(env,response,file.row.id,actor,'shared link',v.size) }
   catch (e) { if (!String((e as Error)?.message).includes('CHECK constraint failed')) throw e }
  }
  throw new ChestError('busy_try_again', 503)

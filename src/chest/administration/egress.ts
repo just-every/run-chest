@@ -1,7 +1,7 @@
 import { canAdmin } from './roles'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
-import { now } from '../model'
+import { insist, now } from '../model'
 import { commit, maybe } from '../files/repo'
 import { viewFilter } from '../audit/privacy'
 import { eventCondition, reportScope } from './report-scope'
@@ -10,7 +10,7 @@ import type { CostRates } from './costs'
 
 const basis = 'Original response bytes emitted by instrumented file, device, shared-link and delivery-package doors. Repeated and overlapping ranges count again. Cancellation records the emitted prefix; refused requests emit no original bytes. This is server stream evidence, not proof of client receipt or a provider invoice. Historical requests before metering, rendered previews, archives, signing and provider traffic are not covered. Unknown rates remain unknown. A process crash can lose an unfinished stream receipt; this report does not claim complete billed egress.'
 // Snapshot the confirmed quote before streaming so a later rate edit never reprices history.
-export async function meterOriginal(env: Bindings, response: Response, item: string, actor: string, door: string) {
+export async function meterOriginal(env: Bindings, response: Response, item: string, actor: string, door: string, expectedBytes: number) {
  if (!response.ok || !response.body) return response
  const rates = (await maybe<CostRates>(env, 'admin-cost-rates', 'admin-cost-rates'))?.payload ?? null
  const at = now(), reader = response.body.getReader(); let bytes = 0, recorded = false
@@ -25,8 +25,8 @@ export async function meterOriginal(env: Bindings, response: Response, item: str
  }
  const body = new ReadableStream<Uint8Array>({
   async pull(controller) {
-   try { const part = await reader.read(); if (part.done) { await record('complete'); controller.close() }
-    else { bytes += part.value.byteLength; controller.enqueue(part.value) }
+   try { const part = await reader.read(); if (part.done) { insist(bytes===expectedBytes,'incomplete_original',503); await record('complete'); controller.close() }
+    else { bytes += part.value.byteLength; controller.enqueue(part.value); if(bytes===expectedBytes){insist((await reader.read()).done,'original_size_mismatch',503);await record('complete');controller.close()} }
    } catch (error) { try { await record('failed') } finally { controller.error(error); await reader.cancel(error) } }
   },
   async cancel(reason) { try { await reader.cancel(reason) } finally { await record('cancelled') } },
