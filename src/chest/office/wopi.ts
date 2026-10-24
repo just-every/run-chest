@@ -18,7 +18,7 @@ import { esc } from '../ui-shared'
 import { publicPage } from '../files/ui-public'
 import { policy } from '../ui-shell'
 import { failure } from '../api'
-type Editor={item:string;email:string;tokenHash:string;expires:number;staff?:{session:string;kind:Session['kind']};guest?:{link:string;session:string}}
+type Editor={item:string;email:string;tokenHash:string;expires:number;staff?:{session:string;kind:Session['kind']};guest?:{link:string;session:string;admission?:string}}
 type Lock={item:string;lock:string;version:string;expires:number}
 const lockKey=(item:string)=>`wopi-lock:${item}`
 async function engine(env:Bindings,extension:string){
@@ -34,7 +34,7 @@ export async function openCollabora(env:Bindings,s:Session,item:string){
  const w=await who(env,s),ctx=await context(env,w,item);demand(ctx,'contribute');demand(ctx,'download');const row=ctx.chain.at(-1)!,current=row.payload.versions.at(-1)
  insist(current&&/\.(docx|xlsx|pptx)$/i.test(current.filename),'collabora_format_unavailable',415)
  const target=await engine(env,current.filename.split('.').at(-1)!.toLowerCase()),token=randomToken('chest_editor_'),guest=(s as any).guestWho as typeof w|undefined
- const payload:Editor={item,email:s.operator.email,tokenHash:await tokenHash(token),expires:Math.min(s.expiresAt,Date.now()+30*60000),...(guest?{guest:{link:guest.guest!.fences.find(r=>r.kind==='public-link')!.id,session:guest.guest!.fences.find(r=>r.kind==='guest-session')!.id}}:{staff:{session:s.id,kind:s.kind}})}
+ const payload:Editor={item,email:s.operator.email,tokenHash:await tokenHash(token),expires:Math.min(s.expiresAt,Date.now()+30*60000),...(guest?{guest:{admission:(s as any).guestAdmission,link:guest.guest!.fences.find(r=>r.kind==='public-link')!.id,session:guest.guest!.fences.find(r=>r.kind==='guest-session')!.id}}:{staff:{session:s.id,kind:s.kind}})}
  const session=fresh('editor-session',payload)
  await commit(env,s,[{row:session}],{fences:ctx.fences,audits:[{action:'office.collabora.open',object:item,detail:{session:session.id,version:current.id}}]})
  target.searchParams.set('WOPISrc',`${env.AUTH_ORIGIN}/wopi/files/${item}`)
@@ -48,7 +48,8 @@ async function editorAuthority(env:Bindings,request:Request,item:string){
  if(row.payload.guest){
   const link=await maybe<PublicLink>(env,'public-link',row.payload.guest.link);insist(link,'guest_grant_revoked',403);const r=await resolveLinkRecord(env,link);insist(!('refused' in r),'guest_grant_revoked',403)
   const guest=await maybe<GuestSession>(env,'guest-session',row.payload.guest.session),identity=await guestIdentityForSession(env,r,guest??undefined);insist(identity,'guest_pin_required',403)
-  s=(await guestAuthorityForIdentity(env,r,identity)).s
+  const admission=row.payload.guest.admission?await maybe(env,'member-link-session',row.payload.guest.admission):null
+  s=(await guestAuthorityForIdentity(env,r,identity,admission)).s
  }else{
   const auth=await env.DB.prepare("SELECT a.id AS session,a.operator_id,a.created_at,a.expires_at,a.kind,o.id,o.email,o.display_name,o.role,o.version,o.status FROM oa_sessions a JOIN oa_operators o ON o.id=a.operator_id WHERE a.id=? AND a.revoked_at IS NULL AND a.expires_at>? AND o.status='active' AND o.version=a.operator_version").bind(row.payload.staff!.session,Date.now()).first<any>();insist(auth&&auth.email===row.payload.email,'editor_identity_revoked',401)
   s={id:auth.session,operatorId:auth.id,kind:auth.kind,createdAt:auth.created_at,expiresAt:auth.expires_at,operator:{id:auth.id,email:auth.email,displayName:auth.display_name,role:auth.role,status:auth.status,version:auth.version}} as Session

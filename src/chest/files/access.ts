@@ -18,8 +18,9 @@ export type Ctx = { space: Row<Space>; chain: Row<Item>[]; state: State; links: 
 // Organization links a person has opened come from the durable audit, never from a grant.
 export async function who(env:Bindings,s:Session):Promise<Who>{
  if((s as any).guestWho)return (s as any).guestWho
+ const {mfaPolicy}=await import('../security/policy'),hours=Math.min(12,(await mfaPolicy(env)).sessionHours)
  const w=await whoFor(env,s.operator.email),{digest}=await import('../blobs'),fingerprint=await digest(new TextEncoder().encode(s.id)),{where}=await import('./repo')
- return {...w,linkSessions:(await where(env,'member-link-session','$.sessionHash',fingerprint)).filter(r=>r.payload.email===s.operator.email&&r.payload.expires>Date.now())}
+ return {...w,linkSessions:(await where(env,'member-link-session','$.sessionHash',fingerprint)).filter(r=>r.payload.email===s.operator.email&&Math.min(r.payload.expires,(r.payload.at??0)+hours*3600000)>Date.now())}
 }
 export async function whoFor(env: Bindings, email: string): Promise<Who> {
  const groups = (await list<Group>(env, 'group')).filter(g => g.payload.members.includes(email))

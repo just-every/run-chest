@@ -11,7 +11,7 @@ export const excludedTable = name =>
   name.startsWith('rer_dependency_') || name.startsWith('rer_portability_') && !['rer_portability_state', 'rer_portability_journal', 'rer_portability_epochs'].includes(name) ||
   name.startsWith('ik_door_') && !['ik_door_namespaces'].includes(name) ||
   /^(chest_(mfa_(?!policy)|sso_|saml_|scim_tokens$|scim_resources$|device_credentials$|integration_secrets$|reader$|signing_key$)|rer_mail_)/.test(name);
-const ephemeralKind = /^(device|guest-challenge|guest-session|member-link-session|request-visitor|request-challenge|transfer-session|office-presence|editor-session|wopi-lock|reader-config|backup-configuration|upload-part|request-upload-part)$/;
+const ephemeralKind = /^(device|guest-send-limit|guest-challenge|guest-session|member-link-session|request-visitor|request-challenge|transfer-session|office-presence|editor-session|wopi-lock|reader-config|backup-configuration|upload-part|request-upload-part)$/;
 const authorityKey = /^(?:token(?:_?hash)?|password|secret|client_?secret|api_?key|key_?sealed|private_?key|access_?token|refresh_?token|authorization|cookie|session(?:_?id)?|session_?fingerprint|credential(?:s)?|binding_?hash|signing_?key)$/i;
 const jobKind = /(?:send|mail|notification|dispatch|delivery)-job$/;
 const inertAt = '1970-01-01T00:00:00.000Z';

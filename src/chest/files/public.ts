@@ -15,7 +15,7 @@ import { officeDocument } from '../office/service'
 import { ChestError, insist, type Version } from '../model'
 import { failure } from '../api'
 import { commit, next } from './repo'
-import { passwordMatches, unlockCookie, unlocked } from './capability'
+import { passwordMatches, unlockCookie, unlocked, signOutLink } from './capability'
 import { fileThrough, reachable, resolveLink, type Resolved } from './public-links'
 import { requestResponse } from './request-public'
 import { linkPage, passwordPage, publicPage, refusedLink } from './ui-public'
@@ -30,6 +30,10 @@ export async function publicResponse(request: Request, original: Bindings): Prom
   if (request.method === 'POST') insist(request.headers.get('origin') === env.AUTH_ORIGIN && request.headers.get('sec-fetch-site') !== 'cross-site', 'invalid_origin', 403)
   else insist(request.method === 'GET' || request.method === 'HEAD', 'method_not_allowed', 405)
   if (door === 'l') { const transfer=await transferPublic(env,request,secret,sub,key);if(transfer)return transfer }
+  if(door==='l'&&sub==='sign-out'&&request.method==='POST'){
+   const r=await resolveLink(env,secret);if('refused' in r)return refusedLink(r.refused)
+   return signOutLink(env,request,r.link.id,`/l/${secret}`)
+  }
   if (door === 'l' && (sub === 'verify' || sub === 'confirm' || sub === 'pin')) {
    const r=await resolveLink(env,secret);if('refused' in r)return refusedLink(r.refused)
    insist(r.link.payload.audience==='guests' || r.link.payload.audience==='domain','not_found',404)
@@ -61,7 +65,7 @@ async function open(env: Bindings, request: Request, secret: string) {
  if (await locked(env, request, r)) return passwordPage(base)
  const files = (await reachable(env, r)).flatMap(({ row, path }) => { const v = publicVersion(row,r.link.payload); return v ? [{ id: row.id, path, name: row.payload.name, size: v.size, mediaType: v.mediaType, canPreview: v.size <= 8_000_000 && (isOffice(v.filename) || v.preview === 'text') }] : [] })
  await commit(env, null, [], { by: actor, audits: [{ action: 'link.view', object: r.root.id, detail: { link: r.link.id } }] })
- return linkPage(base, r.link.payload, r.root.payload, files, !r.state.noDownload,await externalComments(env,r,base)+await guestTools(env,request,r,base))
+ return linkPage(base, r.link.payload, r.root.payload, files, !r.state.noDownload,await externalComments(env,r,base)+await guestTools(env,request,r,base)+`<form method="post" action="${esc(base)}/sign-out"><button class="action">Sign out of link</button></form>`)
 }
 async function preview(env: Bindings, request: Request, secret: string, key: string) {
  const r = await resolveLink(env, secret); if ('refused' in r) return refusedLink(r.refused)

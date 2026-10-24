@@ -64,7 +64,8 @@ export async function openLink(env: Bindings, s: Session, secret: string,input:a
   const recent=await env.DB.prepare("SELECT COUNT(*) n FROM chest_audit WHERE action='link.password.refused' AND object_id=? AND actor=? AND at>?").bind(link.id,s.operator.email,new Date(Date.now()-15*60000).toISOString()).first<{n:number}>()
   insist((recent?.n??0)<10,'link_password_throttled',429)
   if(!await passwordMatches(link.payload.password,input.password)){if(input.password!==undefined)await commit(env,s,[],{audits:[{action:'link.password.refused',object:link.id}]});insist(false,'link_password_required',401)}
-  const session=fresh('member-link-session',{link:link.id,email:s.operator.email,sessionHash:await digest(new TextEncoder().encode(s.id)),passwordHash:link.payload.password.hash,expires:Math.min(Date.now()+12*3600000,link.payload.expires?Date.parse(link.payload.expires):Infinity)})
+  const {mfaPolicy}=await import('../security/policy'),hours=Math.min(12,(await mfaPolicy(env)).sessionHours)
+  const session=fresh('member-link-session',{link:link.id,email:s.operator.email,sessionHash:await digest(new TextEncoder().encode(s.id)),passwordHash:link.payload.password.hash,at:Date.now(),expires:Math.min(s.expiresAt,s.createdAt+hours*3600000,Date.now()+hours*3600000,link.payload.expires?Date.parse(link.payload.expires):Infinity)})
   await commit(env,s,[{row:session}],{fences:[link],audits:[{action:'link.password.verified',object:link.id}]});viewer=await who(env,s)
  }
  const policy=await creatorLinkPolicy(env,link.payload.createdBy,item.payload.space);demandLinkPolicy(policy.rules,link.payload.audience,link.payload.discoverable)

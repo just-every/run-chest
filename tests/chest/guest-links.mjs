@@ -13,7 +13,7 @@ try {
   const before=h.mails.length;await post(path+'/verify',{email:'outsider@other.test'});assert.equal(h.mails.length,before,'wrong email receives no challenge');
   await post(path+'/verify',{email:'vendor@acme.test'});const message=h.mails.at(-1),verify=new URL(message.text.match(/https?:\/\/[^\s]+/)[0]);assert.equal(message.to[0],'vendor@acme.test');
   assert.match(await (await h.fetch(verify.pathname+verify.search)).text(),/Confirm your email/);
-  if(audience.audience==='domain')await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.at',?) WHERE id=?",new Date(Date.now()-40*86400000).toISOString(),link.link.id);
+  if(audience.audience==='domain')await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.at',CAST(? AS INTEGER)) WHERE id=?",new Date(Date.now()-40*86400000).toISOString(),link.link.id);
   const confirmed=await post(path+'/confirm',{token:verify.searchParams.get('token')}),cookie=confirmed.headers.getSetCookie()[0].split(';')[0];assert.equal(confirmed.status,303);if(audience.audience==='domain')assert.ok(Number(confirmed.headers.getSetCookie()[0].match(/Max-Age=(\d+)/)[1])<=43200,'domain sessions keep their 12-hour lifetime even for old grants');
   const replay=await post(path+'/confirm',{token:verify.searchParams.get('token')});assert.equal(replay.status,403,'single use: '+await replay.text());
   assert.match(await (await h.fetch(path,{headers:{cookie}})).text(),/Enter the password/);
@@ -24,6 +24,10 @@ try {
   assert.equal(await (await h.fetch(path+'/f/'+file.id,{headers:{cookie:both}})).text(),'Thirty days after delivery.');
   await h.api(`/public-links/${link.link.id}/revoke`,owner,{});assert.equal((await h.fetch(path+'/f/'+file.id,{headers:{cookie:both}})).status,410);
  }
+ const publicLink=await h.api(`/items/${file.id}/links`,owner,{audience:'public',password:'synthetic-chest-60'}),pb=new URL(publicLink.url).pathname,admission=await post(pb,{password:'synthetic-chest-60'}),unlock=admission.headers.getSetCookie()[0].split(';')[0];assert.equal((await h.fetch(pb+'/f/'+file.id,{headers:{cookie:unlock}})).status,200);
+ assert.equal((await post(pb+'/sign-out',{},unlock)).status,303);assert.equal((await h.fetch(pb+'/f/'+file.id,{headers:{cookie:unlock}})).status,401,'sign-out revokes password admission even when the cookie is replayed');
+ const again=await post(pb,{password:'synthetic-chest-60'}),againCookie=again.headers.getSetCookie()[0].split(';')[0];await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.at',CAST(? AS INTEGER)) WHERE kind='member-link-session' AND json_extract(payload,'$.link')=?",Date.now()-13*3600000,publicLink.link.id);assert.equal((await h.fetch(pb+'/f/'+file.id,{headers:{cookie:againCookie}})).status,401,'password admission cannot exceed twelve hours');
+ const policy={enabled:false,groups:[],graceDays:0,resistantAdmins:false,sessionHours:1,idleMinutes:60,requireIdpMfa:false};await h.api('/security/policy',owner,policy);const shorter=await post(pb,{password:'synthetic-chest-60'}),shortCookie=shorter.headers.getSetCookie()[0].split(';')[0];assert.ok(Number(shorter.headers.getSetCookie()[0].match(/Max-Age=(\d+)/)[1])<=3600);await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.at',CAST(? AS INTEGER)) WHERE kind='member-link-session' AND json_extract(payload,'$.link')=?",Date.now()-2*3600000,publicLink.link.id);assert.equal((await h.fetch(pb+'/f/'+file.id,{headers:{cookie:shortCookie}})).status,401,'ADMIN-004 shortens password admission');await h.api('/security/policy',owner,{...policy,sessionHours:24});
  const active=await h.api(`/items/${file.id}/links`,owner,{audience:'domain',domain:'acme.test'});
  await h.api('/link-policy',owner,{scope:'organisation',allowExternal:false,allowPublic:false,allowOrganisation:true,allowDiscovery:true,defaultAudience:'organisation',defaultRole:'viewer'});
  assert.equal((await h.fetch(new URL(active.url).pathname)).status,410,'policy change stops existing external audiences');

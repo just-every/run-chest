@@ -7,7 +7,7 @@ import { commit, maybe, next } from './repo'
 import { context, demand, type Who } from './access'
 import { guestIdentity } from './guest-links'
 import { guestPolicy } from './guest-policy'
-import { unlocked } from './capability'
+import { passwordAdmission, admissionUntil } from './capability'
 import { addVersion, bytes, createItem, nameVersion, restoreVersion } from './items'
 import { type Resolved, reachable, fileThrough } from './public-links'
 import { esc, stamp } from '../ui-shared'
@@ -15,16 +15,17 @@ import { publicPage } from './ui-public'
 export async function guestAuthority(env:Bindings,request:Request,r:Resolved){
  insist(r.link.payload.audience==='guests'&&['editor','contributor'].includes(r.link.payload.role??''),'guest_write_refused',403)
  const identity=await guestIdentity(env,request,r);insist(identity,'guest_pin_required',403)
- insist(!r.link.payload.password||await unlocked(env,request,r.link.id,r.link.payload.password.hash),'password_required',401)
- return guestAuthorityForIdentity(env,r,identity)
+ const admission=r.link.payload.password?await passwordAdmission(env,request,r.link.id,r.link.payload.password.hash):null
+ return guestAuthorityForIdentity(env,r,identity,admission)
 }
-export async function guestAuthorityForIdentity(env:Bindings,r:Resolved,identity:NonNullable<Awaited<ReturnType<typeof guestIdentity>>>){
+export async function guestAuthorityForIdentity(env:Bindings,r:Resolved,identity:NonNullable<Awaited<ReturnType<typeof guestIdentity>>>,admission:import('../model').Row|null=null){
  insist(r.link.payload.audience==='guests'&&['editor','contributor'].includes(r.link.payload.role??''),'guest_write_refused',403)
- const p=await maybe(env,'guest-policy','guest-policy:organization'),predicates=[...r.fences,identity.session,...(p?[p]:[])].map(snapshot)
+ if(r.link.payload.password){insist(admission&&admission.payload.link===r.link.id&&admission.payload.passwordHash===r.link.payload.password.hash,'password_required',401);identity={...identity,until:Math.min(identity.until,await admissionUntil(env,admission))};insist(identity.until>Date.now(),'password_required',401)}
+ const p=await maybe(env,'guest-policy','guest-policy:organization'),predicates=[...r.fences,identity.session,...(admission?[admission]:[]),...(p?[p]:[])].map(snapshot)
  const predicate={sql:predicates.map(p=>`(${p.sql})`).join(' AND ')+` AND (julianday('now')-2440587.5)*86400000<?`+(!p?" AND NOT EXISTS(SELECT 1 FROM chest_records WHERE id='guest-policy:organization')":''),params:[...predicates.flatMap(p=>p.params),identity.until]}
- const w:Who={email:identity.email,principals:[],groups:[],opened:[],guest:{root:r.root.id,role:r.link.payload.role as 'editor'|'contributor',download:r.link.payload.download!==false,fences:[...r.fences,identity.session,...(p?[p]:[])]}}
+ const w:Who={email:identity.email,principals:[],groups:[],opened:[],guest:{root:r.root.id,role:r.link.payload.role as 'editor'|'contributor',download:r.link.payload.download!==false,fences:[...r.fences,identity.session,...(admission?[admission]:[]),...(p?[p]:[])]}}
  // A verified guest has no operator row, staff session, seat, group membership or ordinary API authority.
- const s={id:`guest:${identity.session.id}`,kind:'guest',operatorId:`guest:${identity.email}`,operator:{id:`guest:${identity.email}`,email:identity.email,displayName:identity.email,role:'member',status:'active',version:1},createdAt:Date.parse(identity.verifiedAt),expiresAt:identity.until,predicate,guestWho:w} as unknown as Session
+ const s={id:`guest:${identity.session.id}`,kind:'guest',operatorId:`guest:${identity.email}`,operator:{id:`guest:${identity.email}`,email:identity.email,displayName:identity.email,role:'member',status:'active',version:1},createdAt:Date.parse(identity.verifiedAt),expiresAt:identity.until,predicate,guestWho:w,guestAdmission:admission?.id} as unknown as Session
  return {s,w,identity}
 }
 const form=(base:string,item:string,action:string,body:string,label:string)=>`<form method="post" enctype="multipart/form-data" action="${esc(base)}/guest/${esc(item)}"><input type="hidden" name="action" value="${action}">${body}<button class="action">${esc(label)}</button></form>`

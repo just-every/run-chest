@@ -21,18 +21,30 @@ export async function hashPassword(password: unknown) {
 export async function passwordMatches(stored: { salt: string; hash: string; iterations: number }, password: unknown) {
  return typeof password === 'string' && password.length <= 200 && same(await pbkdf2(password, stored.salt, stored.iterations), stored.hash)
 }
-// After the right password, the browser holds a 12-hour unlock for that one link: an HMAC over the link and its
-// password hash, so changing or revoking the link invalidates it.
-async function sign(env: Bindings, value: string) {
- const key = await crypto.subtle.importKey('raw', encoder.encode(env.SESSION_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
- return hex(await crypto.subtle.sign('HMAC', key, encoder.encode(value)))
-}
+// Password admissions are revocable, link-scoped records. Only token hashes are stored.
 export async function unlockCookie(env: Bindings, path: string, link: string, passwordHash: string) {
- const until = Date.now() + 12 * 3_600_000, secure = env.AUTH_ORIGIN.startsWith('https:') ? '; Secure' : ''
- return `chest_unlock=${until}.${await sign(env, `${link}:${passwordHash}:${until}`)}; Path=${path}; Max-Age=43200; HttpOnly; SameSite=Lax${secure}`
+ const {mfaPolicy}=await import('../security/policy'),{commit,fresh}=await import('./repo')
+ const at=Date.now(),hours=Math.min(12,(await mfaPolicy(env)).sessionHours),token=randomToken('chest_unlock_'),secure=env.AUTH_ORIGIN.startsWith('https:')?'; Secure':''
+ await commit(env,null,[{row:fresh('member-link-session',{link,passwordHash,tokenHash:await tokenHash(token),at,expires:at+hours*3600000})}])
+ return `chest_unlock=${token}; Path=${path}; Max-Age=${hours*3600}; HttpOnly; SameSite=Lax${secure}`
 }
-export async function unlocked(env: Bindings, request: Request, link: string, passwordHash: string) {
- const value = (request.headers.get('cookie') ?? '').split(/;\s*/).find(c => c.startsWith('chest_unlock='))?.slice('chest_unlock='.length) ?? ''
- const [until, mac] = value.split('.')
- return !!mac && Number(until) > Date.now() && same(await sign(env, `${link}:${passwordHash}:${until}`), mac)
+export async function passwordAdmission(env: Bindings, request: Request, link: string, passwordHash: string) {
+ const value=(request.headers.get('cookie')??'').split(/;\s*/).find(c=>c.startsWith('chest_unlock='))?.slice('chest_unlock='.length)??''
+ if(!tokenShape('chest_unlock_').test(value))return null
+ const {where}=await import('./repo'),[row]=await where(env,'member-link-session','$.tokenHash',await tokenHash(value))
+ return row&&row.payload.link===link&&row.payload.passwordHash===passwordHash&&await admissionUntil(env,row)>Date.now()?row:null
+}
+export async function admissionUntil(env:Bindings,row:import('../model').Row){const {mfaPolicy}=await import('../security/policy');return Math.min(row.payload.expires,row.payload.at+Math.min(12,(await mfaPolicy(env)).sessionHours)*3600000)}
+export async function unlocked(env: Bindings, request: Request, link: string, passwordHash: string) {return !!await passwordAdmission(env,request,link,passwordHash)}
+export async function signOutLink(env:Bindings,request:Request,link:string,path:string){
+ const {where,commit}=await import('./repo'),ops=[]
+ for(const [name,prefix,kind] of [['chest_unlock','chest_unlock_','member-link-session'],['chest_guest','chest_guest_session_','guest-session']]){
+  const value=(request.headers.get('cookie')??'').split(/;\s*/).find(c=>c.startsWith(name+'='))?.slice(name.length+1)??''
+  if(!tokenShape(prefix).test(value))continue
+  for(const row of await where(env,kind,'$.tokenHash',await tokenHash(value)))if(row.payload.link===link)ops.push({row,previous:row,remove:true})
+ }
+ await commit(env,null,ops)
+ const headers=new Headers({location:path,'cache-control':'no-store'})
+ for(const name of ['chest_unlock','chest_guest'])headers.append('set-cookie',`${name}=; Path=${path}; Max-Age=0; HttpOnly; Secure; SameSite=Lax`)
+ return new Response(null,{status:303,headers})
 }

@@ -10,7 +10,7 @@ import { esc } from '../ui-shared'
 import { publicPage } from './ui-public'
 
 type Audience = { audience?: 'public'|'guests'|'domain'; guests?: string[]; domain?: string }
-type Challenge = { link: string; email: string; tokenHash: string; expires: string; used?: string; pinHash?:string; attempts?:number }
+type Challenge = { link: string; email: string; tokenHash: string; expires: string; used?: string; invalidated?:string; pinHash?:string; attempts?:number }
 export function externalAudience(input: any): Audience {
  const audience = input.audience ?? 'public'
  insist(['public','guests','domain'].includes(audience),'invalid_audience')
@@ -39,7 +39,7 @@ export async function guestIdentity(env:Bindings,request:Request,r:Resolved):Pro
 }
 export async function guestIdentityForSession(env:Bindings,r:Resolved,row:import('../model').Row<GuestSession>|undefined){
  if(!row||row.payload.link!==r.link.id||(['editor','contributor'].includes(r.link.payload.role??'')&&row.payload.method!=='pin')||!admitted(r.link.payload,row.payload.email))return null
- const policy=await guestPolicy(env),domain=r.link.payload.audience==='domain',until=Math.min(Date.parse(row.payload.expiresAt),Date.parse(row.payload.verifiedAt)+(domain?12*3600000:policy.reverifyDays*86400000),domain?(r.link.payload.expires?Date.parse(r.link.payload.expires):Infinity):await guestExpiry(env,r.link.payload))
+ const {mfaPolicy}=await import('../security/policy'),policy=await guestPolicy(env),domain=r.link.payload.audience==='domain',until=Math.min(Date.parse(row.payload.expiresAt),Date.parse(row.payload.verifiedAt)+(await mfaPolicy(env)).sessionHours*3600000,Date.parse(row.payload.verifiedAt)+(domain?12*3600000:policy.reverifyDays*86400000),domain?(r.link.payload.expires?Date.parse(r.link.payload.expires):Infinity):await guestExpiry(env,r.link.payload))
  return until>Date.now()?{email:row.payload.email,verifiedAt:row.payload.verifiedAt,until,session:row}:null
 }
 export async function guestEmail(env:Bindings,request:Request,r:Resolved):Promise<string|null> {
@@ -47,7 +47,7 @@ export async function guestEmail(env:Bindings,request:Request,r:Resolved):Promis
  return (await guestIdentity(env,request,r))?.email??null
 }
 async function verified(env:Bindings,r:Resolved,base:string,email:string,challenge:any,method:'pin'|'email-link'){
- const token=randomToken('chest_guest_session_'),at=now(),domain=r.link.payload.audience==='domain',until=Math.min(Date.now()+(domain?12*3600000:(await guestPolicy(env)).reverifyDays*86400000),domain?(r.link.payload.expires?Date.parse(r.link.payload.expires):Infinity):await guestExpiry(env,r.link.payload))
+ const {mfaPolicy}=await import('../security/policy'),token=randomToken('chest_guest_session_'),at=now(),domain=r.link.payload.audience==='domain',until=Math.min(Date.now()+(await mfaPolicy(env)).sessionHours*3600000,Date.now()+(domain?12*3600000:(await guestPolicy(env)).reverifyDays*86400000),domain?(r.link.payload.expires?Date.parse(r.link.payload.expires):Infinity):await guestExpiry(env,r.link.payload))
  const session=fresh<GuestSession>('guest-session',{link:r.link.id,email,tokenHash:await tokenHash(token),verifiedAt:at,expiresAt:new Date(until).toISOString(),method})
  await commit(env,null,[{row:next(challenge,{...challenge.payload,used:at}),previous:challenge},{row:session}],{by:email,fences:r.fences,audits:[{action:'link.guest.verified',object:r.root.id,detail:{link:r.link.id,method}}]})
  return new Response(null,{status:303,headers:{location:base,'cache-control':'no-store','set-cookie':`chest_guest=${token}; Path=${base}; Max-Age=${Math.max(0,Math.floor((until-Date.now())/1000))}; HttpOnly; Secure; SameSite=Lax`}})
@@ -59,7 +59,7 @@ export async function guestVerification(env:Bindings,request:Request,r:Resolved,
  const form=await request.formData()
  if(pin){
   const row=await maybe<Challenge>(env,'guest-challenge',String(form.get('challenge')??'')),email=String(form.get('email')??'').trim().toLowerCase(),code=String(form.get('pin')??'')
-  if(!row||row.payload.link!==r.link.id||row.payload.email!==email||row.payload.used||!row.payload.pinHash||Date.parse(row.payload.expires)<=Date.now()||(row.payload.attempts??0)>=5||!admitted(r.link.payload,email))return verifyPage(base,'This PIN expired or is not valid. Request a new one.',403)
+  if(!row||row.payload.link!==r.link.id||row.payload.email!==email||(row.payload.used||row.payload.invalidated)||!row.payload.pinHash||Date.parse(row.payload.expires)<=Date.now()||(row.payload.attempts??0)>=5||!admitted(r.link.payload,email))return verifyPage(base,'This PIN expired or is not valid. Request a new one.',403)
   const expected=await signature(env,`pin:${row.id}:${email}:${code}`)
   let difference=expected.length^row.payload.pinHash.length;for(let i=0;i<expected.length;i++)difference|=expected.charCodeAt(i)^(row.payload.pinHash.charCodeAt(i)||0)
   if(!/^\d{6}$/.test(code)||difference!==0){await commit(env,null,[{row:next(row,{...row.payload,attempts:(row.payload.attempts??0)+1}),previous:row}],{fences:r.fences});return verifyPage(base,'That PIN is not correct.',403,row.id,email)}
@@ -69,18 +69,22 @@ export async function guestVerification(env:Bindings,request:Request,r:Resolved,
   if(['editor','contributor'].includes(r.link.payload.role??''))return verifyPage(base,'Writer access requires the PIN sent to your invited address.',403)
   const token=String(form.get('token')??'');if(!tokenShape('chest_guest_').test(token))return verifyPage(base,'This verification link is invalid. Request a new one.',403)
   const [row]=await where<Challenge>(env,'guest-challenge','$.tokenHash',await tokenHash(token))
-  if(!row||row.payload.link!==r.link.id||row.payload.used||!(Date.parse(row.payload.expires)>Date.now())||!admitted(r.link.payload,row.payload.email))return verifyPage(base,'This verification link expired or was already used. Request a new one.',403)
+  if(!row||row.payload.link!==r.link.id||(row.payload.used||row.payload.invalidated)||!(Date.parse(row.payload.expires)>Date.now())||!admitted(r.link.payload,row.payload.email))return verifyPage(base,'This verification link expired or was already used. Request a new one.',403)
   return verified(env,r,base,row.payload.email,row,'email-link')
  }
  const email=String(form.get('email')??'').trim().toLowerCase();insist(email.length<=254&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),'invalid_email')
- const recent=await env.DB.prepare("SELECT COUNT(*) n FROM chest_audit WHERE action='link.guest.challenge' AND object_id=? AND at>?").bind(r.link.id,new Date(Date.now()-15*60000).toISOString()).first<{n:number}>()
- if((recent?.n??0)>=10)return verifyPage(base,'Too many verification requests. Try again in 15 minutes.',429)
- await commit(env,null,[],{by:'link visitor',audits:[{action:'link.guest.challenge',object:r.link.id,detail:{}}]})
+ const recent=await env.DB.prepare("SELECT COUNT(*) n FROM chest_audit WHERE action='link.guest.challenge' AND object_id=? AND at>?").bind(r.link.id,new Date(Date.now()-3600000).toISOString()).first<{n:number}>()
+ if((recent?.n??0)>=5)return verifyPage(base,'Too many verification requests. Try again in one hour.',429)
+ const prior=await maybe<{sends:number[]}>(env,'guest-send-limit',r.link.id+':pin-sends'),sends=(prior?.payload.sends??[]).filter(at=>at>Date.now()-3600000)
+ if(sends.length>=5)return verifyPage(base,'Too many verification requests. Try again in one hour.',429)
+ const limit=prior?next(prior,{sends:[...sends,Date.now()]}):fresh('guest-send-limit',{sends:[Date.now()]},r.link.id+':pin-sends')
+ await commit(env,null,[{row:limit,previous:prior??undefined}],{fences:r.fences,by:'link visitor',audits:[{action:'link.guest.challenge',object:r.link.id,detail:{}}]})
  let challenge=crypto.randomUUID()
  if(admitted(r.link.payload,email)){
   const sender=operatorMail(env);insist(sender&&env.MAIL_FROM,'mail_not_configured',503)
   const token=randomToken('chest_guest_'),pin=String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,'0'),row=fresh<Challenge>('guest-challenge',{link:r.link.id,email,tokenHash:await tokenHash(token),pinHash:await signature(env,`pin:${challenge}:${email}:${pin}`),attempts:0,expires:new Date(Date.now()+10*60000).toISOString()},challenge)
-  await commit(env,null,[{row}],{by:'link visitor',fences:r.fences})
+  const older=(await where<Challenge>(env,'guest-challenge','$.link',r.link.id)).filter(c=>c.payload.email===email&&!c.payload.used&&!c.payload.invalidated)
+  await commit(env,null,[{row},...older.map(c=>({row:next(c,{...c.payload,invalidated:now()}),previous:c}))],{by:'link visitor',fences:[...r.fences,limit]})
   const url=`${env.AUTH_ORIGIN}${base}/verify?token=${encodeURIComponent(token)}`
   const writer=['editor','contributor'].includes(r.link.payload.role??'')
   const result=await sender.send({deliveryId:row.id,from:env.MAIL_FROM!,to:[email],subject:'Verify your email to open a Chest link',text:`Your one-time PIN is ${pin}. Enter it on the shared page within 10 minutes.${writer?'':` Or open this link and confirm your email.\n\n${url}`}`,html:`<p>Your one-time PIN is ${pin}. Enter it within 10 minutes.</p>${writer?'':`<p><a href="${esc(url)}">Verify email</a></p>`}`,headers:{'Auto-Submitted':'auto-generated'}})
