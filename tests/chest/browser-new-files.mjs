@@ -26,3 +26,5 @@ try {
  }
  console.log('SPACE-001 EDIT-004 browser at 1440 and 390 passed');
 } finally { await browser?.close();await h.close() }
+
+await (await import('./wopi-flow.mjs')).wopiFlow({browserProof:true});
