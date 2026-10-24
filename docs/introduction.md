@@ -58,4 +58,4 @@ the browser.
 
 ## Next
 
-[Run Chest on your computer](/docs/run), then [set it up](/docs/set-up).
+[Run Chest on your computer](/docs/getting-started), then [set it up](/docs/set-up).

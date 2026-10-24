@@ -5,16 +5,29 @@ import './move-in.css'
 
 const imported: [string, string][] = [['Files', '48,212'], ['Folders', '3,906'], ['Permissions', '1,104 kept'], ['Versions', '61,870'], ['Links inside files', '312 rewritten']]
 
+// The one start line every Run Edit Run page shows, and the alternative for people who already have Node.
+const START = 'curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-chest'
+const ALTERNATIVE = 'Already have Node 22 or later? npx -y @runeditrun/rer dev just-every/run-chest'
+
+/** A command that wraps only between words, keeping the installer's `install.sh | sh` together. */
+function words(line: string) {
+  return line.split(/(\S*install\.sh \| sh|\S+)/).map((part, index) => {
+    const pipe = /^(.*\/)(install\.sh \| sh)$/.exec(part)
+    if (pipe) return <span key={index}><span className="term-word">{pipe[1]}</span><wbr /><span className="term-word">{pipe[2]}</span></span>
+    return part.trim() ? <span key={index} className="term-word">{part}</span> : part
+  })
+}
+
 /** page-02: the weekend move from Dropbox, beside the one line that set Chest up. */
 export function MoveIn() {
   return (
     <Section id="move-in" copy={sectionCopy.moveIn} layout="left" className="move-in">
-      <figure className="movein-art" aria-label="rer setup reports Chest is ready; the import from Dropbox brought 48,212 files, 3,906 folders, 1,104 permissions, 61,870 versions and rewrote 312 links inside files, then renamed and retried 7 names too long for Windows.">
+      <figure className="movein-art" aria-label={`${START} installs and starts Chest (already have Node 22 or later? npx -y @runeditrun/rer dev just-every/run-chest does the same) and reports Chest is ready; the import from Dropbox brought 48,212 files, 3,906 folders, 1,104 permissions, 61,870 versions and rewrote 312 links inside files, then renamed and retried 7 names too long for Windows.`}>
         <div className="terminal">
           <p className="term-dots" aria-hidden="true"><i /><i /><i /></p>
-          <p className="f14"><span className="term-prompt">$</span> rer setup</p>
+          <p className="term-cmd"><span className="term-prompt">$</span> {words(START)}</p>
+          <p className="term-cmd term-comment"><span className="term-prompt">#</span> {words(ALTERNATIVE)}</p>
           <p className="f14 term-ok"><span aria-hidden="true">✓</span> Chest is ready</p>
-          <p className="f14"><span className="term-prompt">$</span> <span className="term-caret" aria-hidden="true" /></p>
         </div>
         <div className="card ledger">
           <div className="ledger-head">

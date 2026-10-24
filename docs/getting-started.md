@@ -1,16 +1,16 @@
 Chest runs on your own computer with **rer**, the Run Edit Run command. It runs
-on macOS, Linux or Windows with WSL2, with git and Node 22 or later (the installer form below brings its own Node), and rer brings pnpm.
+on macOS, Linux or Windows with WSL2. Git is required; rer brings Node and pnpm.
 
 ## Get Chest and start it
 
 ```sh
-npx -y @runeditrun/rer dev just-every/run-chest
+curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-chest
 ```
 
-No Node? `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-chest` does the same and brings its own Node; it changes no shell settings, so if it prints an `export PATH=…` line, run that line to use `rer` again later. To set Chest up without starting it, use `setup` in place of `dev`.
+Already have Node 22 or later? `npx -y @runeditrun/rer dev just-every/run-chest` does the same. The installer changes no shell settings, so if it prints an `export PATH=…` line, run that line to use `rer` again later. To set Chest up without starting it, use `setup` in place of `dev`.
 
-The line installs `rer`, clones Chest, install everything Chest needs, make you the owner and start the
-app. The first launch can take a few minutes and prints progress as it goes.
+The line installs `rer`, clones Chest into `run-chest`, installs everything Chest needs, makes you the owner and
+starts the app. The first launch can take a few minutes and prints progress as it goes.
 When it is ready it prints three lines:
 
 - `RER_READY`: the address of your Chest.

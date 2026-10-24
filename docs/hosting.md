@@ -6,7 +6,7 @@ provider. Everything below runs from the Chest folder on your computer.
 
 ## What you need
 
-- **Chest set up on your computer.** Follow [Run Chest on your computer](/docs/run)
+- **Chest set up on your computer.** Follow [Run Chest on your computer](/docs/getting-started)
   with `--owner-email` set to the mailbox you will sign in with. That address
   becomes the hosted owner.
 - **A Cloudflare account** with R2 turned on (Cloudflare dashboard, **R2**, then
