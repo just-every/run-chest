@@ -193,5 +193,11 @@
       "portability",
       "import-kit"
     ]
-  }
+  },
+  "replaces": [
+    "Google Drive",
+    "Dropbox Business",
+    "Box",
+    "Microsoft OneDrive"
+  ]
 }

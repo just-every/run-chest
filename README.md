@@ -123,7 +123,7 @@ file (`chmod 600 chest.env`):
 
 ```sh
 CLOUDFLARE_ACCOUNT_ID=your-account-id
-CLOUDFLARE_API_TOKEN=synthetic-chest-1
+CLOUDFLARE_API_TOKEN=             # fill in your Cloudflare token
 MAIL_PROVIDER=sendgrid            # or resend; optional when only one key is set
 MAIL_FROM=files@example.com   # a sender your provider has verified
 SENDGRID_API_KEY=SG.your-key      # or RESEND_API_KEY

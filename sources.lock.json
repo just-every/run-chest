@@ -837,7 +837,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "8123ca875933cb63bd1c994c6e56b32ffdaa28805be0d8ead3f8a9a333833fcb",
+      "sha256": "28439bb7a655bd2aa37a5753b7f9463ccbbff4ed68a9384b427a4e75f64c5daa",
       "executable": false
     },
     "release-history/0.2.0.json": {
@@ -845,7 +845,7 @@
       "executable": false
     },
     "RELEASE.json": {
-      "sha256": "a199af14ced6257de4c164b750b813fb016ac8ad9c892ff6dedc00bfdec3d584",
+      "sha256": "1c67eb6c6109ce1b0e36d93522b6ed12557a7fa7896ea2e38a95019237becde8",
       "executable": false
     },
     "rer-project.json": {
@@ -1153,7 +1153,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "34e698f8e4924a3c3c812f01a62e84e01ee711560b5615555c12785f6225aed3",
+      "sha256": "24df2b0bc31bcdb0a32096e076c6cc5fd55d4509dbcc1544a318135f6ecf36ad",
       "executable": false
     },
     "services/collabora/compose.yaml": {
