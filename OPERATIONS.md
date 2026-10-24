@@ -74,3 +74,18 @@ in the background after requests, a page at a time, and needs the Workers paid
 plan's CPU allowance for large PDFs and HEIC photos. On RER Managed hosting the
 card says reading scans is not available yet, because Managed has no outbound
 connection for AI providers.
+
+## Hosted installation package
+
+`packaging.json` declares Chest's existing build, verification, migration and
+recovery commands. After the real build, run `pnpm delivery:spec` to refresh
+`management/integration/deployment-spec.json`; `pnpm check:deployment-spec`
+refuses a stale projection. The delivery producer packages the Worker, assets
+and unchanged SQL with `node scripts/delivery/base/cli.mjs package --config
+packaging.json --output rer-package`. Generated package and artifact folders
+are disposable build output.
+
+Managed hosting supplies the RER mail relay and its private installation key.
+Assisted hosting asks for the selected provider, verified sender and provider
+key, plus the relay URL or Cloudflare account where required. Local development
+continues to suppress outbound email. Archive identity stays `documents/chest`.

@@ -39,8 +39,9 @@ export interface Bindings {
  SIGNING_KEY_PREVIOUS_SECRET?: string
  SESSION_SECRET: string
  SETUP_TOKEN?: string
- MAIL_PROVIDER?: 'development' | 'resend' | 'sendgrid' | 'cloudflare'
+ MAIL_PROVIDER?: 'development' | 'resend' | 'sendgrid' | 'cloudflare' | 'rer'
  MAIL_FROM?: string
+ MAIL_RELAY_URL?: string
  MAIL_API_KEY?: string
  MAIL_ACCOUNT_ID?: string
  /** A signed owner claim (RER Managed, or a hosted demo's front): its issuer, installation and public keys. */

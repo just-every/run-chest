@@ -19,3 +19,6 @@ test-results/
 .rer/demo-host/
 
 .test-auth/
+
+rer-package/
+delivery-artifact/

@@ -9,7 +9,6 @@ import { personName } from '../names'
 // In-app notices are records; each is also emailed through the installation's mail provider. The notice keeps the
 // provider's real outcome: accepted, suppressed (local runs), not configured, or the failure code.
 export const notice = (to: string, type: string, item: string | null, from: string, message: string, request?: string) => fresh<Notice>('notice', { to, type, item, from, message, at: now(), read: false, email: 'queued', ...(request ? { request } : {}) })
-export const MAIL_MANAGED_LINE = 'Not available yet on RER Managed hosting: email notifications need an outbound connection.'
 // `from` is the sender's name, or their address before they set one.
 function compose(env: Bindings, n: Notice, from: string) {
  const base = env.AUTH_ORIGIN, open = n.item ? `${base}/app/items/${n.item}` : `${base}/app/files`
@@ -28,9 +27,9 @@ function compose(env: Bindings, n: Notice, from: string) {
  return { subject: 'Chest notice', text: `${n.message}\n\n${open}` }
 }
 export async function deliver(env: Bindings, actor: Session | null, rows: Row<Notice>[]) {
- const managed = String(env.MAIL_PROVIDER) === 'rer', sender = managed ? undefined : operatorMail(env), updated: { row: Row<Notice>; previous: Row<Notice> }[] = []
+ const sender = operatorMail(env), updated: { row: Row<Notice>; previous: Row<Notice> }[] = []
  for (const row of rows) {
-  let outcome = managed ? MAIL_MANAGED_LINE : 'not_configured'
+  let outcome = 'not_configured'
   if (sender && env.MAIL_FROM) {
    try { const message = compose(env, row.payload, personName((await maybe<Person>(env, 'person', row.payload.from))?.payload.name, row.payload.from)), result = await attempt(env,actor?.operator.email ?? 'chest:notifications','provider.mail',row.payload.item ?? row.id,{authority:actor?`${actor.kind}:${actor.operator.role}`:'notice delivery',notice:row.id,provider:String(env.MAIL_PROVIDER)},()=>sender.send({ deliveryId: row.id, from: env.MAIL_FROM!, to: [row.payload.to], subject: message.subject, text: message.text, html: `<p>${message.text.replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`).replace(/\n/g, '<br>')}</p>`, headers: { 'Auto-Submitted': 'auto-generated' } })); outcome = result.status === 'development' ? 'suppressed' : `${result.status}${result.providerMessageId ? ':' + result.providerMessageId : ''}` }
    catch (e: any) { outcome = `failed:${typeof e?.code === 'string' ? e.code : 'send_error'}` }

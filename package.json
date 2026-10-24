@@ -1,6 +1,6 @@
 {
   "name": "@documents/chest",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "repository": "https://github.com/just-every/run-chest",
   "type": "module",
@@ -41,7 +41,9 @@
     "test:upgrade": "node tests/chest/upgrade.mjs",
     "test:browser:files": "node tests/chest/browser-files.mjs",
     "test:browser:other": "node tests/chest/browser-bulk.mjs && node tests/chest/browser-ownership.mjs && node tests/chest/browser-space-policy.mjs && node tests/chest/browser-search.mjs && node tests/chest/browser-scan-fields.mjs && node tests/chest/browser-links.mjs && node tests/chest/browser-sharing-policy.mjs && node tests/chest/browser-backups.mjs && node tests/chest/browser-new-files.mjs && node tests/chest/browser-governance.mjs && node tests/chest/browser-collection.mjs && node tests/chest/browser-transfers.mjs && node tests/chest/browser-guest-links.mjs && node tests/chest/browser-link-discussions.mjs && node tests/chest/browser-approved-links.mjs && node tests/chest/browser-audit.mjs && node tests/chest/browser-file-requests.mjs && node tests/chest/browser-link-repairs.mjs && node tests/chest/browser-duplicates.mjs && node tests/chest/browser-arrival-rules.mjs && node tests/chest/browser-agent-filing.mjs && node tests/chest/browser-sync-repair.mjs && node tests/chest/browser-upload-protection.mjs && node tests/chest/browser-erasure.mjs && node tests/chest/browser-integrations.mjs && node tests/chest/administration.mjs && node tests/chest/browser-quota.mjs",
-    "test:browser:security": "node tests/chest/security.mjs"
+    "test:browser:security": "node tests/chest/security.mjs",
+    "delivery:spec": "node scripts/build-deployment-spec.mjs",
+    "check:deployment-spec": "node scripts/build-deployment-spec.mjs --check"
   },
   "dependencies": {
     "@node-saml/node-saml": "5.1.0",
@@ -64,7 +66,7 @@
     "@cloudflare/vite-plugin": "1.54.5",
     "@cloudflare/workers-types": "5.20260908.1",
     "@playwright/test": "1.63.0",
-    "@runeditrun/rer": "0.2.72",
+    "@runeditrun/rer": "0.2.79",
     "@types/node": "^22.20.5",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",

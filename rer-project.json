@@ -3,5 +3,20 @@
   "projectId": "documents/chest",
   "name": "Chest",
   "sourceRepository": "https://github.com/just-every/run-chest",
-  "license": "MIT"
+  "license": "MIT",
+  "deployment": {
+    "target": "cloudflare-workers",
+    "artifactFile": "rer-worker-artifact.json"
+  },
+  "operations": {
+    "setup": "pnpm install --frozen-lockfile && pnpm exec rer install",
+    "build": "pnpm run build",
+    "verify": "pnpm exec rer check --profile first-party && pnpm check:deployment-spec && pnpm run verify",
+    "artifact": "node scripts/delivery/base/cli.mjs artifact --config packaging.json",
+    "recovery": "Follow ARCHIVE.md and OPERATIONS.md. Pause writes, retain exact source and private configuration, export the complete database and original objects, restore into fresh empty resources, reconfigure owner authentication, and compare the restored records and original bytes before routing traffic. Preserve applied migration names and bytes."
+  },
+  "setup": {
+    "path": "rer-setup.json",
+    "sha256": "e9805a65b71a7fe6e93c8547ed07f7dcd8d44063cc1484f0798eebc6b5d82978"
+  }
 }

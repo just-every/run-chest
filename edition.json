@@ -104,6 +104,30 @@
           ]
         }
       }
+    },
+    {
+      "id": "documents/chest-delivery",
+      "role": "module",
+      "source": {
+        "kind": "local",
+        "paths": [
+          "scripts/delivery/base/setup-manifest.mjs"
+        ],
+        "origin": {
+          "repository": "https://github.com/runeditrun/base.git",
+          "revision": "4280971d7c0295b8a88c3e1179048efcbbe14f30",
+          "path": "modules/delivery-producer",
+          "paths": [
+            "setup-manifest.mjs"
+          ]
+        },
+        "mappings": [
+          {
+            "path": "scripts/delivery/base/setup-manifest.mjs",
+            "originPath": "setup-manifest.mjs"
+          }
+        ]
+      }
     }
   ]
 }
