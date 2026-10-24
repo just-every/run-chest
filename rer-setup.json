@@ -76,7 +76,7 @@
       "label": "Mail provider",
       "kind": "select",
       "required": true,
-      "default": "rer",
+      "default": "development",
       "options": [
         {
           "value": "rer",
@@ -93,9 +93,14 @@
         {
           "value": "cloudflare",
           "label": "Cloudflare Email Sending"
+        },
+        {
+          "value": "development",
+          "label": "Local only (email off)"
         }
       ],
-      "group": "mail"
+      "group": "mail",
+      "help": "Choose Local only on your computer. Hosted installations require a configured email provider."
     },
     {
       "name": "MAIL_FROM",

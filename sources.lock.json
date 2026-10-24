@@ -849,11 +849,11 @@
       "executable": false
     },
     "rer-project.json": {
-      "sha256": "afcd2d438dcf205c6fe44c8a45c2b33d033113c9e71f3197b0515b25f25c3adb",
+      "sha256": "1c6af137e8f87eb62b6a206742c33528a95aea87e6a209f7d3b7e495bc4a4b41",
       "executable": false
     },
     "rer-setup.json": {
-      "sha256": "e9805a65b71a7fe6e93c8547ed07f7dcd8d44063cc1484f0798eebc6b5d82978",
+      "sha256": "28eb49096349680ca0465c97af795fa37e48b18d966a2a152e344613910afb65",
       "executable": false
     },
     "RUN-LOCALLY.md": {
