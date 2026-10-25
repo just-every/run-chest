@@ -1,11 +1,12 @@
-// Exact-version public links through the built Worker; only the mail-provider edge is faked by the harness.
+// Exact-version public links through the built Worker, with mail and rendering at their network edges.
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {strFromU8,strToU8,unzipSync,zipSync} from 'fflate';
 import {harness} from './harness.mjs';
 import {docx} from './office-fixtures.mjs';
+import {renderEdge} from './render-edge.mjs';
 
-const h=await harness(),people={},b64=v=>Buffer.from(v).toString('base64'),sha=v=>createHash('sha256').update(v).digest('hex');
+const renderer=await renderEdge(),h=await harness(renderer),people={},b64=v=>Buffer.from(v).toString('base64'),sha=v=>createHash('sha256').update(v).digest('hex');
 const check=async(name,fn)=>{await fn();console.log(`${name} passed`)};
 const original=docx(),parts=unzipSync(original);
 parts['word/document.xml']=strToU8(strFromU8(parts['word/document.xml']).replace('Payment within thirty days.','Payment within sixty days after delivery.'));
@@ -125,7 +126,8 @@ try{
   await h.api(`/items/${nested.id}/settings`,people.owner,{restricted:false});
   await download(`${base(pinned)}/f/${file.id}`,original);
   await h.api(`/items/${file.id}/settings`,people.owner,{noDownload:true});
-  assert.ok((await text(`${base(pinned)}/p/${file.id}`)).includes('Payment within thirty days.'));await text(`${base(pinned)}/f/${file.id}`,410);
+  const rendered=await text(`${base(pinned)}/p/${file.id}`);assert.ok(rendered.includes('data-restricted-preview'));assert.ok(!rendered.includes('Payment within thirty days.'));assert.deepEqual(renderer.inputs.at(-1),Buffer.from(original),'the restricted renderer receives the pinned original');
+  const page=await h.fetch(`${base(pinned)}/p/${file.id}?page=1`);assert.equal(page.status,200);assert.equal(page.headers.get('content-type'),'image/png');await text(`${base(pinned)}/f/${file.id}`,410);
   await h.api(`/items/${file.id}/settings`,people.owner,{noDownload:false});
   await h.api(`/public-links/${pinned.link.id}/revoke`,people.editor,{});
   await closed(base(pinned),file.id,410);
