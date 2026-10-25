@@ -48,7 +48,7 @@ export function projectReview(bytes:Uint8Array,decisions:Map<string,'accept'|'re
   const walk=(parent:Node,restoring=false)=>{for(const e of elements(parent)){
    const name=e.localName??'',ns=e.namespaceURI??''
    if(/wordprocessingml/.test(ns)&&['trackRevisions','revisionView','proofState','rsids'].includes(name)){parent.removeChild(e);continue}
-   for(const a of Array.from(e.attributes))if(/wordprocessingml/.test(a.namespaceURI??'')&&a.localName.startsWith('rsid'))e.removeAttributeNode(a)
+   for(const a of Array.from(e.attributes))if(/wordprocessingml/.test(a.namespaceURI??'')&&(a.localName??'').startsWith('rsid'))e.removeAttributeNode(a)
    if(mainNs.test(ns)&&['commentRangeStart','commentRangeEnd','commentReference','annotationRef'].includes(name)){parent.removeChild(e);continue}
    if(e.localName==='Relationship'&&/comments|commentAuthors|people/.test(attr(e,'Type'))||e.localName==='Override'&&removed.has(attr(e,'PartName').replace(/^\//,''))){parent.removeChild(e);continue}
    if(mainNs.test(ns)&&['ins','del'].includes(name)){
