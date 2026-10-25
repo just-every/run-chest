@@ -28,11 +28,14 @@ export async function egressReceipt(env: Bindings, item:string, actor:string, do
 export async function meterOriginal(env: Bindings, response: Response, item: string, actor: string, door: string, expectedBytes?: number, observe?: (state:EgressCheckpoint)=>Promise<void>) {
  if (!response.ok || !response.body) return response
  const reader=response.body.getReader(),receipt=await egressReceipt(env,item,actor,door)
- let bytes=0,reservedBytes=0,recorded=false,cancelled=false
- async function checkpoint(outcome:string){
+ let bytes=0,reservedBytes=0,recorded=false,cancelled=false,pending=Promise.resolve()
+ function checkpoint(outcome:string){
   const state={bytes,reservedBytes,outcome}
-  await observe?.(state)
-  await receipt(state)
+  const next=pending.then(async()=>{await observe?.(state);await receipt(state)})
+  // Cancellation may arrive while an observer is persisting member rows.
+  // Serialize writes so an earlier running checkpoint cannot replace its outcome.
+  pending=next.catch(()=>{})
+  return next
  }
  async function record(outcome:string) { if(recorded)return;recorded=true;await checkpoint(outcome) }
  const body = new ReadableStream<Uint8Array>({
