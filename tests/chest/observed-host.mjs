@@ -14,6 +14,7 @@ export async function observedHost(options){
    const match=/^\/wopi\/files\/([a-f0-9-]+)\/contents$/.exec(path);
    if(match&&request.method==='POST')await writeFile(`test-results/wopi-${match[1]}-sent-${sequence++}.docx`,body);
    const result=await h.fetch(request.url,{method:request.method,headers:request.headers,...(['GET','HEAD'].includes(request.method)?{}:{body})});
+   if(match&&request.method==='POST'&&!result.ok)console.error('WOPI_WRITE_REFUSED',result.status,result.headers.get('content-type')?.includes('application/json')?(await result.clone().json()).error:'non_json_response');
    if(match&&request.method==='GET'&&result.status===200)await writeFile(`test-results/wopi-${match[1]}-read-${sequence++}.docx`,Buffer.from(await result.clone().arrayBuffer()));
    const headers=Object.fromEntries(result.headers);if(result.headers.getSetCookie().length)headers['set-cookie']=result.headers.getSetCookie();
    response.writeHead(result.status,headers);if(result.body)await pipeline(Readable.fromWeb(result.body),response);else response.end();
