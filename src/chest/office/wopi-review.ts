@@ -2,7 +2,7 @@ import type { Bindings } from '../../auth.server'
 import type { FileVersion } from '../files/model'
 import { ChestError, insist, now } from '../model'
 import { SMALL } from '../blobs'
-import { packageSignature, projectReview, protectedPartsEqual, reviewRecords, retainOmittedParts, trackingEnabled } from './review-package'
+import { packageSignature, projectReview, protectedPartsEqual, reviewRecords, retainOmittedParts, trackingEnabled, type ReviewRecord } from './review-package'
 import { trackedSource } from './wopi-source'
 
 async function exported(env:Bindings,bytes:Uint8Array,extension:string){
@@ -27,12 +27,20 @@ async function same(env:Bindings,a:Uint8Array,b:Uint8Array,extension:string,repo
 }
 export async function validateWopiReview(env:Bindings,source:Uint8Array,content:Uint8Array,current:FileVersion,actor:{email:string;name:string},commenter:boolean):Promise<FileVersion['suggestion']>{
  const extension=current.filename.split('.').at(-1)!.toLowerCase(),before=reviewRecords(source),after=reviewRecords(content),previous=new Map(before.map(r=>[r.key,r])),allowedAuthors=new Set([actor.email,actor.name])
- for(const record of after){const prior=previous.get(record.key);if(!prior||prior.value!==record.value)insist(allowedAuthors.has(record.author),'author_mismatch',403)}
+ let engineRecords:Map<string,ReviewRecord>|undefined
+ const equivalent=async(prior:ReviewRecord,record:ReviewRecord)=>{
+  if(prior.author!==record.author)return false
+  if(prior.value===record.value)return true
+  // Reimport may change comment layout. Accept only the trusted engine's exact rewrite.
+  engineRecords??=new Map(reviewRecords(await exported(env,source,extension)).map(record=>[record.key,record]))
+  return engineRecords.get(record.key)?.value===record.value
+ }
+ for(const record of after){const prior=previous.get(record.key);if(prior)insist(prior.author===record.author,'author_mismatch',403);if(!allowedAuthors.has(record.author))insist(prior&&await equivalent(prior,record),'author_mismatch',403)}
  if(commenter){
   if(extension==='docx')suggestOnly(trackingEnabled(content)!==false,'tracking_disabled')
   else suggestOnly(after.every(record=>record.kind==='comment'),'comment_only')
   suggestOnly(protectedPartsEqual(source,content),'protected_parts_changed')
-  for(const record of before)if(!allowedAuthors.has(record.author))suggestOnly(after.some(r=>r.key===record.key&&r.value===record.value),'foreign_review_changed')
+  for(const record of before)if(!allowedAuthors.has(record.author)){const retained=after.find(r=>r.key===record.key);suggestOnly(!!retained&&await equivalent(record,retained),'foreign_review_changed')}
   const removed=before.filter(r=>r.kind!=='comment'&&!after.some(next=>next.key===r.key));suggestOnly(!removed.length,'tracked_change_removed')
   suggestOnly(await same(env,projectReview(source,new Map(),true),projectReview(content,new Map(),true),extension,true),'base_content_changed')
   const added=after.find(r=>r.kind!=='comment'&&(!previous.has(r.key)||previous.get(r.key)!.value!==r.value))

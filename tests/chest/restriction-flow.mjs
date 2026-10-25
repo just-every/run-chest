@@ -90,6 +90,18 @@ async function restrictedBrowser(h,owner,people,space,files){
  const {chromium}=await import('@playwright/test'),browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
  try{
   await h.api(`/spaces/${space.id}/settings`,owner,{noDownload:true});
+  const publicFile=files.find(file=>file.ext==='txt'),link=await h.api(`/items/${publicFile.id}/public-links`,owner,{download:false}),publicPath=new URL(link.url).pathname;
+  for(const width of [1440,390]){
+   const context=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});
+   try{
+    const page=await context.newPage();await page.goto(h.origin+`${publicPath}/p/${publicFile.id}`);await page.locator('[data-preview-page]').evaluate(image=>image.decode());
+    assert.ok(await page.locator('[data-preview-page]').evaluate(image=>image.naturalWidth>0));
+    assert.equal(await page.evaluate(()=>{const event=new Event('copy',{bubbles:true,cancelable:true});document.dispatchEvent(event);return event.defaultPrevented}),true);
+    await page.emulateMedia({media:'print'});assert.equal(await page.locator('main').evaluate(element=>getComputedStyle(element).display),'none');await page.emulateMedia({media:'screen'});
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:`test-results/${width}-restricted-public-preview.png`,fullPage:true});
+   }finally{await context.close()}
+  }
+  await h.api(`/public-links/${link.link.id}/revoke`,owner,{});
   for(const width of [1440,390])for(const role of ['viewer','commenter']){
    const context=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});
    try{

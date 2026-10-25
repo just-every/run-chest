@@ -58,7 +58,7 @@ export async function roleBrowserMatrix(h,browser,people,roles,space,width){
    // Copy, move, sharing, trash and recovery operate on both the folder and the file.
    for(const target of [file,folder]){
     const key=target.id,base=`/app/items/${key}`,manage=base+(target.payload.type==='folder'?'?manage':'');
-    const fillCopy=async()=>{await p.getByText('Move',{exact:true}).click();await p.getByLabel(/^Copy destination/).selectOption(`folder:${destination.id}`);await p.getByLabel('Copy name',{exact:true}).fill(`Copy of ${target.payload.name}`)};
+    const fillCopy=async()=>{await p.getByText('Move',{exact:true}).click();await p.getByLabel(/^Copy destination/).selectOption(`folder:${destination.id}`);await p.getByLabel('Copy name',{exact:true}).fill(`Copy of ${target.payload.name}`);if(role==='manager')await shot(p,`copy-${target.payload.type}`)};
     const fillMove=async()=>{await p.getByText('Move',{exact:true}).click();await p.getByLabel(/^Destination/).selectOption(`folder:${destination.id}`)};
     const fillShare=async()=>{await p.getByLabel(/^Person or group/).selectOption('outsider@example.test');await form(`/items/${key}/shares`).getByLabel(/^Role/).selectOption('viewer')};
     if(rank>=3){await go(manage);await fillCopy();await press(p,'Copy here');assert.ok((await h.api(`/items/${destination.id}`,manager)).children.some(c=>c.name===`Copy of ${target.payload.name}`));await go(manage);await fillShare();await press(form(`/items/${key}/shares`),'Share');assert.ok((await h.api(`/items/${key}`,manager)).grants.some(g=>g.principal==='outsider@example.test'));
