@@ -18,7 +18,9 @@ export async function preserveWopiParts(env:Bindings,source:Uint8Array,content:U
 }
 function suggestOnly(ok:boolean,reason:string){if(!ok)throw Object.assign(new ChestError('suggest_only',403),{reviewReason:reason})}
 async function same(env:Bindings,a:Uint8Array,b:Uint8Array,extension:string,report=false){
- const signatures=await Promise.all([normalized(env,a,extension),normalized(env,b,extension)])
+ // Incoming bytes have already passed through one editor export. Compare equal generations.
+ const engineSource=await exported(env,a,extension)
+ const signatures=await Promise.all([normalized(env,engineSource,extension),normalized(env,b,extension)])
  if(report&&signatures[0]!==signatures[1]){const left=new Map(JSON.parse(signatures[0]) as [string,unknown][]),right=new Map(JSON.parse(signatures[1]) as [string,unknown][]);const reviewParts=[...new Set([...left.keys(),...right.keys()])].filter(path=>JSON.stringify(left.get(path))!==JSON.stringify(right.get(path)));throw Object.assign(new ChestError('suggest_only',403),{reviewReason:'base_content_changed',reviewParts})}
  return signatures[0]===signatures[1]
 }

@@ -12,6 +12,7 @@ import { versionPublication } from '../files/governance'
 import { protect } from '../upload-protection/guard'
 import { assertContent } from '../content-security/scan'
 import { preserveWopiParts, validateWopiReview } from './wopi-review'
+import { trackedSource } from './wopi-source'
 import { guestIdentityForSession, type GuestSession } from '../files/guest-links'
 import { guestAuthorityForIdentity } from '../files/guest-mutations'
 import { resolveLinkRecord } from '../files/public-links'
@@ -73,7 +74,11 @@ export async function wopiResponse(request:Request,env:Bindings):Promise<Respons
   const lock=await maybe<Lock>(env,'wopi-lock',lockKey(item)),active=lock&&lock.payload.expires>Date.now()?lock:null,provided=request.headers.get('X-WOPI-Lock')??'',override=request.headers.get('X-WOPI-Override')??''
   const commenter=allowed(a.ctx,'comment')&&!allowed(a.ctx,'contribute'),readonly=!allowed(a.ctx,'comment'),document=/\.docx$/i.test(current.filename)
   if(request.method==='GET'&&!parts[3])return Response.json({PostMessageOrigin:new URL(env.AUTH_ORIGIN).origin,BaseFileName:file.payload.name,OwnerId:file.payload.createdBy,Size:current.size,UserId:await digest(new TextEncoder().encode(a.s.operator.email)),UserFriendlyName:a.s.operator.displayName||a.s.operator.email,Version:current.id,UserCanWrite:!readonly,ReadOnly:readonly,UserCanOnlyComment:commenter&&!document,...(commenter&&document?{DisableChangeTrackingRecord:false,HideChangeTrackingControls:true}:{}),IsAnonymousUser:false,SupportsLocks:!readonly,SupportsGetLock:true,SupportsUpdate:!readonly,SupportsRename:false,UserCanRename:false,UserCanNotWriteRelative:true,DisableExport:false,DisablePrint:false,LastModifiedTime:current.at},{headers:{'cache-control':'no-store'}})
-  if(request.method==='GET'&&parts[3]==='contents')return await bytes(env,a.s,a.w,item,current.id,true,null,'office.download')
+  if(request.method==='GET'&&parts[3]==='contents'){
+   const response=await bytes(env,a.s,a.w,item,current.id,true,null,'office.download')
+   if(!commenter||!document)return response
+   const content=trackedSource(new Uint8Array(await response.arrayBuffer())),headers=new Headers(response.headers);headers.set('content-length',String(content.length));return new Response(content as BodyInit,{headers})
+  }
   if(request.method==='POST'&&!parts[3]){
    if(override==='GET_LOCK')return new Response(null,{status:200,headers:{'X-WOPI-Lock':active?.payload.lock??'','cache-control':'no-store'}})
    demand(a.ctx,'comment')
