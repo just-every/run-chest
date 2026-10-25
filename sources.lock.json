@@ -4725,7 +4725,7 @@
       "executable": false
     },
     "tests/chest/guest-editing-flow.mjs": {
-      "sha256": "3135e5cab0725e158ae8e33a3076fae6db290b848d5de3f61972fdf44c473793",
+      "sha256": "e559317c81f89c6f1ebdef206d66ecc4d453e2d716edbcd47c0355caab3ad8c9",
       "executable": false
     },
     "tests/chest/guest-links.mjs": {
