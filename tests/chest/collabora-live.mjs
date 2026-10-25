@@ -10,8 +10,9 @@ import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
 import {docx} from './office-fixtures.mjs';
 import {liveCollaboraReviewJourney} from './wopi-flow.mjs';
-const editorPort=Number(process.env.CHEST_COLLABORA_PORT??29980);assert.ok(Number.isInteger(editorPort)&&editorPort>1024&&editorPort<65536,'valid dedicated editor port');
-const image='collabora/code@sha256:bb8f3c9c5c9016045f25fccb5f0649be94469ebc7c7cc379f3576e470cccf33d',container='sx-chest-c11-collabora-live',editor=`http://127.0.0.1:${editorPort}`,directory=await mkdtemp(join(tmpdir(),'chest-collabora-'));
+import {restrictionFlow} from './restriction-flow.mjs';
+const editorPort=Number(process.env.CHEST_COLLABORA_PORT??29984);assert.ok(Number.isInteger(editorPort)&&editorPort>1024&&editorPort<65536,'valid dedicated editor port');
+const image='collabora/code@sha256:bb8f3c9c5c9016045f25fccb5f0649be94469ebc7c7cc379f3576e470cccf33d',container=`sx-chest-c-next4-collabora-${process.pid}`,editor=`http://127.0.0.1:${editorPort}`,directory=await mkdtemp(join(tmpdir(),'chest-collabora-'));
 const dockerEnv={...process.env};for(const k of ['DOCKER_HOST','DOCKER_CONTEXT','DOCKER_TLS','DOCKER_TLS_VERIFY','DOCKER_CERT_PATH'])delete dockerEnv[k];
 const docker=(args)=>execFileSync('docker',['--host=unix:///var/run/docker.sock',...args],{env:dockerEnv,encoding:'utf8',stdio:['ignore','pipe','pipe']});
 const openssl=args=>execFileSync('openssl',args,{cwd:directory,stdio:'ignore'});
@@ -49,6 +50,7 @@ try{
   await guest.close();await staff.close();stage(width+' shared edits, attribution and revoke passed');
  }
  await liveCollaboraReviewJourney(h,owner,browser,{stage,diagnostics,redact});
- const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();console.log('COLLABORA_LIVE_RECEIPT '+JSON.stringify({head,image,widths:[1440,390],run:'sx-chest-c11-collabora-live',stages}));
+ await restrictionFlow({browserProof:true,collaboraUrl:editor});stage('real Collabora rendered restriction journey passed');
+ const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();console.log('COLLABORA_LIVE_RECEIPT '+JSON.stringify({head,image,widths:[1440,390],run:'sx-chest-c-next4-collabora-live',stages}));
 }catch(error){if(browser){let i=0;for(const c of browser.contexts())for(const p of c.pages()){try{await p.screenshot({path:`test-results/collabora-failure-${i++}.png`,fullPage:true});diagnostics.push(redact((await p.locator('body').innerText()).slice(0,3000)))}catch{}}}if(started){try{await writeFile('test-results/collabora-diagnostics.txt',redact((()=>{const r=spawnSync('docker',['--host=unix:///var/run/docker.sock','logs','--tail','300',container],{env:dockerEnv,encoding:'utf8'});return r.stdout+r.stderr})())+'\nBrowser errors: '+redact(JSON.stringify(diagnostics)))}catch{}}console.error(String(error.stack??error).replace(/(access_token=)[^&\s"']+/gi,'$1[redacted]'));process.exitCode=1}
 finally{await browser?.close();if(started){try{docker(['stop','--time','10',container])}finally{docker(['rm',container])}}await h?.close();await rm(directory,{recursive:true,force:true})}

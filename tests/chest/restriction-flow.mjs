@@ -15,7 +15,7 @@ export async function restrictionFlow({browserProof=false,collaboraUrl}={}){
   if(new URL(request.url).origin!==new URL(provider).origin)return;
   assert.match(new URL(request.url).pathname,/^\/cool\/convert-to\/(pdf|png)$/);
   conversions++;if(beforeConvert){const action=beforeConvert;beforeConvert=null;await action()}
-  if(collaboraUrl)return fetch(request);
+  if(collaboraUrl)return fetch(request.url,{method:request.method,headers:Object.fromEntries(request.headers),body:await request.arrayBuffer()});
   const data=(await request.formData()).get('data');assert.equal(typeof data.arrayBuffer,'function');
   if(request.url.endsWith('/png'))assert.equal((await PDFDocument.load(await data.arrayBuffer())).getPageCount(),1,'only one rendered PDF page reaches the raster converter');
   return new Response(request.url.endsWith('/png')?png:pdfBytes,{headers:{'content-type':request.url.endsWith('/png')?'image/png':'application/pdf'}});
