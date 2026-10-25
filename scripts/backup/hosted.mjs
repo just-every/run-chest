@@ -64,8 +64,8 @@ export async function hostedEdge(config) {
     enableAccounting: () => { accounting=true; },
     flushAccounting: () => journal.flush(),
     closeAccounting: () => journal.close(),
-    exportDatabase: output => exportDatabase(live,id,output,transport('Cloudflare D1')),
-    executeDatabase: file => importDatabase(live,id,file,transport('Cloudflare D1')),
+    exportDatabase: async output => exportDatabase(live,id,output,accounting?await journal.databaseTransfer():fetch),
+    executeDatabase: async file => importDatabase(live,id,file,accounting?await journal.databaseTransfer():fetch),
     query: sql => query(live,id,sql,transport('Cloudflare D1')),
     deleteArchive: key => archives.delete(key),
   };

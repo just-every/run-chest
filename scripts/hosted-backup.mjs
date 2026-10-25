@@ -23,7 +23,7 @@ const id = await databaseId(creds, n.database);
 const accounting=await accountingJournal(sql=>query(creds,id,sql),creds.account+':'+id,'legacy hosted backup');
 const migrations = (await query(creds,id,'SELECT name FROM d1_migrations ORDER BY id',accounting.transport('Cloudflare D1'))).map(r => r.name);
 console.log(`Backing up ${n.worker}: database ${n.database}, files in ${n.bucket}, into ${out}`);
-await exportDatabase(creds,id,join(out,'database.sql'),accounting.transport('Cloudflare D1'),true);
+await exportDatabase(creds,id,join(out,'database.sql'),await accounting.databaseTransfer(),true);
 await accounting.flush();
 chmodSync(join(out, 'database.sql'), 0o600);
 

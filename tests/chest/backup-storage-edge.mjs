@@ -5,7 +5,7 @@ import {spawnSync} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
 import {readFile,writeFile,mkdir,readdir,stat,rm} from 'node:fs/promises';
 import {join,dirname,relative} from 'node:path';
-const home=process.env.CHEST_BACKUP_TEST_HOME;let exportStarted=false,exportNoSchema=false,importBytes,importAccount;
+const home=process.env.CHEST_BACKUP_TEST_HOME;let exportStarted=false,exportNoSchema=false,importBytes,importAccount,databaseLocked=false;
 async function files(dir){const out=[];for(const entry of await readdir(dir,{withFileTypes:true}).catch(()=>[])){const p=join(dir,entry.name);if(entry.isDirectory())out.push(...await files(p));else out.push(p);}return out;}
 globalThis.fetch=async(input,init={})=>{
  const url=new URL(input),method=init.method??'GET';
@@ -24,11 +24,12 @@ globalThis.fetch=async(input,init={})=>{
   if(url.pathname.endsWith('/import')){
    const body=JSON.parse(init.body);
    if(body.action==='init'){importAccount=account;return json({upload_url:'https://synthetic-chest-import.test/upload',filename:'synthetic-chest-8'});}
+   if(body.action==='poll'){assert.equal(body.current_bookmark,'synthetic-chest-import-bookmark');assert.ok(databaseLocked);databaseLocked=false;return json({success:true,status:'complete'});}
    assert.equal(body.action,'ingest');assert.equal(importAccount,account);assert.equal(body.etag,createHash('md5').update(importBytes).digest('hex'));
-   const db=new DatabaseSync(file);try{db.exec('BEGIN;');db.exec(importBytes.toString('utf8'));db.exec('COMMIT;');}finally{db.close();}return json({success:true,status:'complete'});
+   const db=new DatabaseSync(file);try{db.exec('BEGIN;');db.exec(importBytes.toString('utf8'));db.exec('COMMIT;');}finally{db.close();}databaseLocked=true;return json({success:true,status:'active',at_bookmark:'synthetic-chest-import-bookmark'});
   }
-  if(url.pathname.endsWith('/export')){if(process.env.CHEST_BACKUP_TEST_DELAY_EXPORT==='yes'&&!exportStarted){await writeFile(join(home,'export-started'),'ready');await new Promise(resolve=>setTimeout(resolve,1500));}const body=JSON.parse(init.body);exportNoSchema=body.dump_options.no_schema;assert.deepEqual(body,{output_format:'polling',dump_options:{no_schema:exportNoSchema,no_data:false,tables:[]},...(exportStarted?{current_bookmark:'synthetic-chest-bookmark'}:{})});if(!exportStarted){exportStarted=true;return json({success:true,status:'active',at_bookmark:'synthetic-chest-bookmark'});}return json({success:true,status:'complete',result:{signed_url:process.env.CHEST_BACKUP_TEST_UNSAFE_EXPORT==='yes'?'http://synthetic-chest-database.test/download':'https://synthetic-chest-database.test/download'}});}
-  if(url.pathname.endsWith('/query')){const db=new DatabaseSync(file);try{return json([{results:db.prepare(JSON.parse(init.body).sql).all()}]);}finally{db.close();}}
+  if(url.pathname.endsWith('/export')){if(process.env.CHEST_BACKUP_TEST_DELAY_EXPORT==='yes'&&!exportStarted){await writeFile(join(home,'export-started'),'ready');await new Promise(resolve=>setTimeout(resolve,1500));}const body=JSON.parse(init.body);exportNoSchema=body.dump_options.no_schema;assert.deepEqual(body,{output_format:'polling',dump_options:{no_schema:exportNoSchema,no_data:false,tables:[]},...(exportStarted?{current_bookmark:'synthetic-chest-bookmark'}:{})});if(!exportStarted){exportStarted=true;databaseLocked=true;return json({success:true,status:'active',at_bookmark:'synthetic-chest-bookmark'});}databaseLocked=false;return json({success:true,status:'complete',result:{signed_url:process.env.CHEST_BACKUP_TEST_UNSAFE_EXPORT==='yes'?'http://synthetic-chest-database.test/download':'https://synthetic-chest-database.test/download'}});}
+  if(url.pathname.endsWith('/query')){assert.equal(databaseLocked,false,'D1 refuses queries while a database transfer is active');const db=new DatabaseSync(file);try{return json([{results:db.prepare(JSON.parse(init.body).sql).all()}]);}finally{db.close();}}
  }
  if(url.hostname.endsWith('.r2.cloudflarestorage.com')||url.hostname==='backup.example.test'||url.hostname==='s3.us-east-1.amazonaws.com'){
   const headers=new Headers(init.headers),auth=headers.get('authorization'),s3=!url.hostname.endsWith('.r2.cloudflarestorage.com');

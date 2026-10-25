@@ -23,6 +23,7 @@ assert.equal(inbox.status,200,'QA_INBOX_RECEIPT_TOKEN can read delivered mail');
 const environment='sx-i812-'+randomUUID().slice(0,8),resources=await cloudResources(environment);
 const directory=await mkdtemp(join(tmpdir(),'chest-hosted-lifecycle-'));await chmod(directory,0o700);
 const backup=join(directory,'backup'),env=deploymentEnvironment(ownerEmail),mails=[];
+env.CHEST_ACCOUNTING_DIR=join(directory,'accounting');
 let browser,owner,member,origin,expected,beforeOwner,beforeMember,passed=false,failure;
 await mkdir('test-results',{recursive:true});
 console.log(`Hosted lifecycle ${environment} on ${head}`);

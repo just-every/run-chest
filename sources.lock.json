@@ -877,7 +877,7 @@
       "executable": false
     },
     "scripts/backup/accounting-journal.mjs": {
-      "sha256": "e0f83525e41f248938ae5fa5f6aafa35e05271a461c4644bef00fb0444696e5b",
+      "sha256": "459a095fd76dd520de040752c1036ba2dbdaad2c8bcbc4fa8c1721dc84052449",
       "executable": false
     },
     "scripts/backup/accounting.mjs": {
@@ -909,7 +909,7 @@
       "executable": false
     },
     "scripts/backup/hosted.mjs": {
-      "sha256": "fa004e6381c0d365e9c98d92d2b3824737398a55126f30ea6d0fd4c1f0322ab1",
+      "sha256": "a7263f6a87fe727c732fdc50d953e4c137e01fea634bb33b0c80c174ce86e9fc",
       "executable": false
     },
     "scripts/backup/README.md": {
@@ -1121,11 +1121,11 @@
       "executable": false
     },
     "scripts/hosted-backup.mjs": {
-      "sha256": "1cec165f0cc4d01955a5f5997d2d1f855686b6c7d7060bebabf1fd2a8dc58bcf",
+      "sha256": "216729c0af909b767c6a7f59fc2f2fc1ccf1cafbdb9a011b438c0431d55e3684",
       "executable": false
     },
     "scripts/hosted-restore.mjs": {
-      "sha256": "f39f0fbfbff1370ad93311ff6adb5ff0b25c29bdc4da856af539d05e106faafc",
+      "sha256": "91efceee0b1180471f0b8e48f2ed9dcb983e121efc454413b658d930cbd70889",
       "executable": false
     },
     "scripts/hosted/account.mjs": {
@@ -4565,7 +4565,7 @@
       "executable": false
     },
     "tests/chest/backup-storage-edge.mjs": {
-      "sha256": "fafe19469371f5ec7971995b0152dde163c715a34f30b5f4a512f2471b1bb71f",
+      "sha256": "130d3e8840dbe85e72ecbb8e50f3b5298c25812290ff91f4a52201436c34c962",
       "executable": false
     },
     "tests/chest/browser-agent-filing.mjs": {
@@ -4781,7 +4781,7 @@
       "executable": false
     },
     "tests/chest/hosted-lifecycle.mjs": {
-      "sha256": "48032b7096c374dd2718aac4d3c6a683f421d8d2b134362734e091094c409ec5",
+      "sha256": "9f6ee484bb5042122636983cd890c07f7d990c9cb13c8967cb3323fb98151f35",
       "executable": false
     },
     "tests/chest/hosted-mail.mjs": {

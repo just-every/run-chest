@@ -31,12 +31,16 @@ export async function accountingJournal(query,identity,producer) {
  db.exec('CREATE TABLE IF NOT EXISTS chest_audit(id TEXT PRIMARY KEY,actor TEXT,action TEXT,object_id TEXT,detail TEXT,at TEXT);');
  const local=async sql=>{const stmt=db.prepare(sql);return stmt.columns().length?stmt.all():(stmt.run(),[])};
  const quote=v=>"'"+String(v).replaceAll("'","''")+"'";
+ const snapshotTransport=async provider=>{
+  const rates=await query("SELECT payload FROM chest_records WHERE id='admin-cost-rates' AND kind='admin-cost-rates'");
+  const snapshot=sql=>sql.startsWith('SELECT payload FROM chest_records')?Promise.resolve(rates):local(sql);
+  return providerTransport(snapshot,provider,producer);
+ };
  return {
-  transport:provider=>async(url,init)=>{
-   const rates=await query("SELECT payload FROM chest_records WHERE id='admin-cost-rates' AND kind='admin-cost-rates'");
-   const snapshot=sql=>sql.startsWith('SELECT payload FROM chest_records')?Promise.resolve(rates):local(sql);
-   return providerTransport(snapshot,provider,producer)(url,init);
-  },
+  transport:provider=>async(url,init)=>(await snapshotTransport(provider))(url,init),
+  // D1 blocks queries during a database transfer. Capture its immutable quote
+  // before starting; every control call and byte checkpoint stays in the journal.
+  databaseTransfer:()=>snapshotTransport('Cloudflare D1'),
   async flush(){
    for(const row of db.prepare('SELECT * FROM chest_audit').all()){
     // Lost completions remain uncertain; never infer a successful transfer.

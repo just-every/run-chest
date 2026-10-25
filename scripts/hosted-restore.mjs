@@ -93,7 +93,7 @@ const plan = join(opts.input, `restore-${Date.now()}.sql`);
 const triggers = await measuredQuery("SELECT name, sql FROM sqlite_master WHERE type='trigger' AND sql IS NOT NULL");
 writeFileSync(plan, ['PRAGMA defer_foreign_keys = TRUE;', ...triggers.map(t => `DROP TRIGGER "${t.name}";`), ...tables.map(t => `DELETE FROM "${t}";`), dump, ...deploymentBound.map(t => `DELETE FROM "${t}";`), ...triggers.map(t => `${t.sql};`)].join('\n') + '\n', { mode: 0o600 });
 console.log(`Replacing the database of ${n.worker} with the backup`);
-try { await importDatabase(creds,id,plan,accounting.transport('Cloudflare D1'));await accounting.flush(); } finally { rmSync(plan, { force: true }); }
+try { await importDatabase(creds,id,plan,await accounting.databaseTransfer());await accounting.flush(); } finally { rmSync(plan, { force: true }); }
 const restored = (await measuredQuery('SELECT COUNT(*) AS n FROM chest_records'))[0].n;
 await accounting.flush();accounting.close();
 console.log(`Restored ${restored} file and record entries and ${files.length} original file(s) into ${n.worker}. People sign in again by email; if you used company sign-in, enter your provider again under People & settings.`);
