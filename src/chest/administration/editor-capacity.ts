@@ -1,3 +1,4 @@
+import { editorObservation } from './editor-observation'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { ChestError, insist, now, text, type Row } from '../model'
@@ -14,7 +15,7 @@ export const codeNotice='Collabora positions CODE for development and home use, 
 export async function editorConfiguration(env:Bindings,s:Session){
  await requireAdmin(env,s,await canAdmin(env,s,'service-settings')?'service-settings':'audit-reporting')
  const row=await editorSettings(env)
- return {settings:row?.payload??null,notice:codeNotice,basis:'Owner-confirmed document and connection limits. A connection is an unexpired Chest editor session reservation, for at most 30 minutes. An acknowledged close releases the Chest reservation; a lost close waits for token expiry. This does not measure provider disconnection. Existing sessions continue after a lower limit or disabled new admissions.'}
+ return {settings:row?.payload??null,observation:(await editorObservation(env))?.payload??null,notice:codeNotice,basis:'Owner-confirmed document and connection limits. A connection is an unexpired Chest editor session reservation, for at most 30 minutes. An acknowledged close releases the Chest reservation; a lost close waits for token expiry. This does not measure provider disconnection. Existing sessions continue after a lower limit or disabled new admissions.'}
 }
 export async function saveEditorConfiguration(env:Bindings,s:Session,input:any){
  await requireAdmin(env,s,'service-settings');insist(input.confirm===true,'editor_confirmation_required')
@@ -52,9 +53,9 @@ export async function admitEditor(env:Bindings,s:Session,item:string,session:Row
 export async function administrativeEditorReport(env:Bindings,s:Session,p:URLSearchParams){
  const scope=await reportScope(env,s,p.get('group')),fence=eventCondition(scope),dates=new URLSearchParams();for(const k of ['from','to'])if(p.get(k))dates.set(k,p.get(k)!)
  const f=eventFilters(dates),global=await canAdmin(env,s,'audit-reporting')
- const result=await env.DB.prepare(`SELECT object_id,at,detail FROM chest_audit a WHERE action='office.capacity.refused' AND ${fence.sql}${f.conditions.length?' AND '+f.conditions.join(' AND '):''} ORDER BY at,id`).bind(...fence.params,...f.values).all<{object_id:string;at:string;detail:string}>()
- const rows=result.results.map(r=>{const d=JSON.parse(r.detail);return {item:r.object_id,at:r.at,limit:d.limit,currentUse:d.currentUse,maximum:d.maximum}})
+ const result=await env.DB.prepare(`SELECT object_id,at,detail FROM chest_audit a WHERE action IN ('office.capacity.refused','office.provider.refused') AND ${fence.sql}${f.conditions.length?' AND '+f.conditions.join(' AND '):''} ORDER BY at,id`).bind(...fence.params,...f.values).all<{object_id:string;at:string;detail:string}>()
+ const rows=result.results.map(r=>{const d=JSON.parse(r.detail);return {item:r.object_id,at:r.at,limit:d.limit,currentUse:d.currentUse,maximum:d.maximum??null,source:d.source??'Chest admission',code:d.code??'editor_capacity_reached'}})
  await commit(env,s,[],{audits:[{action:'admin.editor.read',object:'administration',detail:{count:rows.length}}]})
- return {rows,refusals:rows.length,usage:scope.global?await editorUsage(env):null,configuration:global?(await editorSettings(env))?.payload??null:null,basis:'Current unexpired Chest session reservations and every recorded capacity refusal in the selected date and custody scope. Provider connections after token expiry are not measured.'}
+ return {rows,refusals:rows.filter(r=>r.code==='editor_capacity_reached').length,providerRefusals:rows.filter(r=>r.source==='Browser-reported provider outcome').length,usage:scope.global?await editorUsage(env):null,configuration:global?(await editorSettings(env))?.payload??null:null,basis:'Current unexpired Chest session reservations and every recorded capacity refusal in the selected date and custody scope. Provider connections after token expiry are not measured.'}
 }
-export async function administrativeEditorCsv(env:Bindings,s:Session,p:URLSearchParams){const d=await administrativeEditorReport(env,s,p);return new Response(['At,Item ID,Limit,Current use,Maximum',...d.rows.map(r=>[r.at,r.item,r.limit,r.currentUse,r.maximum].map(csvCell).join(','))].join('\r\n')+'\r\n',{headers:{'content-type':'text/csv; charset=utf-8','cache-control':'no-store','content-disposition':'attachment; filename="chest-editor-capacity.csv"'}})}
+export async function administrativeEditorCsv(env:Bindings,s:Session,p:URLSearchParams){const d=await administrativeEditorReport(env,s,p);return new Response(['At,Item ID,Limit,Current use,Maximum,Source,Code',...d.rows.map(r=>[r.at,r.item,r.limit,r.currentUse,r.maximum,r.source,r.code].map(csvCell).join(','))].join('\r\n')+'\r\n',{headers:{'content-type':'text/csv; charset=utf-8','cache-control':'no-store','content-disposition':'attachment; filename="chest-editor-capacity.csv"'}})}

@@ -94,6 +94,11 @@ else process.exit(1);
     ...['http://backup.example.test','https://backup.example.test/path','https://backup.example.test?credential=synthetic-chest-1'].map(endpoint=>({CHEST_BACKUP_PROVIDER:'s3',CHEST_BACKUP_S3_ENDPOINT:endpoint,CHEST_BACKUP_S3_REGION:'us-east-1',CHEST_BACKUP_S3_ACCESS_KEY_ID:'synthetic-chest-3',CHEST_BACKUP_S3_SECRET_ACCESS_KEY:'synthetic-chest-4'}))
   ]) await cli(['backup','--environment','production'],{extra,refuse:true});
   const receipt=await cli(['backup','--environment','production','--retention-days','30']);
+  const accountingDb=new DatabaseSync(source);
+  const accounting=accountingDb.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage' AND actor='chest:backup'").all().map(r=>JSON.parse(r.detail));accountingDb.close();
+  assert.ok(accounting.length>=6,'backup lists, reads, multipart uploads and independent readback have durable receipts');assert.ok(accounting.every(r=>r.outcome==='succeeded'&&r.quote===null&&r.usd===null),'unquoted provider costs remain unknown');
+  assert.ok(accounting.some(r=>r.requestBytes>=64*1024*1024),'multipart request body counted at the provider boundary');assert.ok(accounting.some(r=>r.responseBytes===bytes.length),'original response reconciles exactly');assert.ok(accounting.some(r=>r.responseBytes===receipt.bytes),'independent archive readback reconciles exactly');
+  assert.doesNotMatch(JSON.stringify(accounting),/sha256\/|authorization|synthetic-chest-1|owner-backups/,'no object keys or credentials enter accounting');
   assert.equal(receipt.objects,1); const stored=join(bucketPath('owner-account','owner-backups'),receipt.key);
   const encrypted=await readFile(stored); assert.ok(!encrypted.includes(Buffer.from('Keep the complete graph')));
   const extracted=join(temp,'inspection');await mkdir(extracted,{mode:0o700});

@@ -10,6 +10,9 @@ export type CostRates = {
  aiInputUsdPerMillion?: number
  aiOutputUsdPerMillion?: number
  aiRequestUsd?: number
+ aiCacheReadUsdPerMillion?: number
+ aiCacheWrite5mUsdPerMillion?: number
+ aiCacheWrite1hUsdPerMillion?: number
  provider: string
  storageUsdPerGbMonth: number
  egressUsdPerGb: number
@@ -44,6 +47,7 @@ export async function saveCostSettings(env: Bindings, s: Session, input: any): P
  insist(input?.confirm === true, 'cost_confirmation_required')
  const rates: CostRates = {
   ...(input.aiProvider?{aiProvider:plain(input.aiProvider,'ai_provider',120),aiModel:plain(input.aiModel||'request','ai_model',120),aiInputUsdPerMillion:rate(input.aiInputUsdPerMillion,'ai_input_rate'),aiOutputUsdPerMillion:rate(input.aiOutputUsdPerMillion,'ai_output_rate'),aiRequestUsd:rate(input.aiRequestUsd??0,'ai_request_rate')}:{}),
+  ...Object.fromEntries(['aiCacheReadUsdPerMillion','aiCacheWrite5mUsdPerMillion','aiCacheWrite1hUsdPerMillion'].filter(k=>input[k]!==undefined&&input[k]!=='').map(k=>[k,rate(input[k],k)])),
   provider: plain(input.provider, 'provider', 120),
   quote: plain(input.quote, 'quote', 300),
   storageUsdPerGbMonth: rate(input.storageUsdPerGbMonth, 'storage_rate'),

@@ -1,3 +1,4 @@
+import { providerTransport } from './accounting.mjs';
 import { spawn } from 'node:child_process';
 import { mkdir, mkdtemp, rm, chmod, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -58,9 +59,13 @@ export async function hostedEdge(config) {
       async upload(key, file) { return (await open()).upload(key, file); },
     };
   };
-  const originals=lazy(() => r2(live,resources.bucket)),archives=lazy(() => config.provider === 's3' ? Promise.resolve(s3(destination,bucket)) : r2(destination,bucket));
+  let accounting=false;
+  const transport=provider=>async(url,init)=>accounting?providerTransport(sql=>query(live,id,sql),provider)(url,init):fetch(url,init);
+  const originals=lazy(() => r2(live,resources.bucket,transport('Cloudflare R2'))),archives=lazy(() => config.provider === 's3' ? Promise.resolve(s3(destination,bucket,transport('Amazon S3'))) : r2(destination,bucket,transport('Cloudflare R2')));
   return {
     originals, archives,
+    enableAccounting: () => { accounting=true; },
+    disableAccounting: () => { accounting=false; },
     exportDatabase: output => runWrangler(live, ['d1','export',resources.database,'--remote','--output',output]),
     executeDatabase: file => runWrangler(live, ['d1','execute',resources.database,'--remote','--file',file,'--yes']),
     query: sql => query(live,id,sql),
@@ -80,6 +85,7 @@ export async function pruneBackups(config, edge, { retentionDays, now = new Date
   return removed;
 }
 export async function createBackup(config, edge, { retentionDays } = {}) {
+  edge.enableAccounting?.();
   if (retentionDays !== undefined && (!Number.isInteger(retentionDays) || retentionDays < 1 || retentionDays > 36500)) throw new Error('Retention days must be between 1 and 36500.');
   return scratch(async directory => {
     await mkdir(join(directory,'objects'), { mode: 0o700 });
@@ -120,6 +126,7 @@ function archiveObject(config, key) {
   return key;
 }
 export async function recoverBackup(config, edge, { key, input, apply = false, erasureJournal, acknowledgeOfflineErasures = false } = {}) {
+  edge.disableAccounting?.();
   if (!!key === !!input) throw new Error('Choose one archive key or private input file.');
   const journal = apply ? await restoreConsent({ erasureJournal, acknowledgeOfflineErasures }) : erasureJournal ? await restoreConsent({ erasureJournal }) : null;
   return scratch(async directory => {

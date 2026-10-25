@@ -553,7 +553,7 @@
       "executable": false
     },
     "public/chest-collabora.js": {
-      "sha256": "a4f634e855072938a6c5c2adecd4d80be727a701b1b60009b413c6317373b768",
+      "sha256": "0037249cb4371c5f430f66aca36a64346dfd7618da67e8bae84549bc4a61a007",
       "executable": false
     },
     "public/chest-files.css": {
@@ -876,6 +876,10 @@
       "sha256": "bf7197a060702994fe1d59a10b1f1c77ed12373cc3d27f1301ab701226752ed3",
       "executable": false
     },
+    "scripts/backup/accounting.mjs": {
+      "sha256": "11583270a81ff0504b34b8fa4429e2a14e3a61d53bce1fc7c97011201e98edd6",
+      "executable": false
+    },
     "scripts/backup/archive.mjs": {
       "sha256": "e1d48e42b3fee48fd02201a6ac2fda44a79013163785b59ccd5af8ac6909f72a",
       "executable": false
@@ -893,7 +897,7 @@
       "executable": false
     },
     "scripts/backup/hosted.mjs": {
-      "sha256": "d475cb153eb9a41ec5b9674fb0c79f3d7c409e53ad162d06626b94adc1c513f7",
+      "sha256": "d518d3767dd9ec972c69b1a718ca4c53e4c4dddc9329629bbd1b43f915ccc692",
       "executable": false
     },
     "scripts/backup/README.md": {
@@ -1117,11 +1121,11 @@
       "executable": false
     },
     "scripts/hosted/r2.mjs": {
-      "sha256": "40bd98f82a2a03880e026e9d48ade69cab3c578d9668f5f9b2f6d26b56cd831f",
+      "sha256": "e9381fbf8b2c8fe7a499732f611e300db1fa33d276fc589d6e7d6b9c2482878b",
       "executable": false
     },
     "scripts/hosted/s3.mjs": {
-      "sha256": "70e437e0a4919ec3722beaf306dcb6a5832988c275e93a9e551918c97c3dce9d",
+      "sha256": "2c9f4b70132268268d6d12e869bd385b72ac85af494e12864415e3151a820945",
       "executable": false
     },
     "scripts/install-browser.mjs": {
@@ -1333,19 +1337,23 @@
       "executable": false
     },
     "src/chest/administration/cost-ui.ts": {
-      "sha256": "f6621fa239ce542d0fb84153463e19d3063ef26710d474d8f4788449317c3c8c",
+      "sha256": "d7d3067cfb28671867611434556ec694b2a83f2da269fee96aeb81f9728e3057",
       "executable": false
     },
     "src/chest/administration/costs.ts": {
-      "sha256": "7691932a7741f0c436e8f5afeb868cbf0eca1fad8ca04f30d0263ea61867ebec",
+      "sha256": "e0440d9bdb41d02dd6320a82fa877917c1243b68540ae2846fddffc7e6ef0621",
       "executable": false
     },
     "src/chest/administration/editor-capacity.ts": {
-      "sha256": "4a809558bc4ccf0f65dfee2cf61fb56884ab744cc5e1ad47f8dac3b6c2d365fb",
+      "sha256": "e0b4108033da46a827edc413f49b6e44c074a2f04638852fd78f2a2e7f1c4345",
+      "executable": false
+    },
+    "src/chest/administration/editor-observation.ts": {
+      "sha256": "0390c658388a717a0b5c2038dfdca8283a650a972254d58deb3a64510db1030c",
       "executable": false
     },
     "src/chest/administration/editor-ui.ts": {
-      "sha256": "418f76a30e129ee470c14047efcd174f4a95c3a56162139ad0dd89c179aad4af",
+      "sha256": "b2b7e4fdd16e654ee61c06c748ea8c02757791f225b19a2eabfd9c7cc7561927",
       "executable": false
     },
     "src/chest/administration/egress.ts": {
@@ -1369,7 +1377,7 @@
       "executable": false
     },
     "src/chest/administration/provider-usage.ts": {
-      "sha256": "4e7d57c7726e023f42336fa886639d4ebb3dbe47235449219cfef0b8e3798082",
+      "sha256": "88d140ced982ad17036fcb4a21d274786e1a7133af320f36c454c79b16132296",
       "executable": false
     },
     "src/chest/administration/recovery.ts": {
@@ -1401,7 +1409,7 @@
       "executable": false
     },
     "src/chest/administration/service.ts": {
-      "sha256": "62bf249839b57feef8c08ca047453fae35f6ece0b9f870bd31bc0794c633c600",
+      "sha256": "3e45dd5273cdfbdebec2a6818f99ee39750cf75ab9cd4875844f68bacc175723",
       "executable": false
     },
     "src/chest/administration/ui.ts": {
@@ -2149,7 +2157,7 @@
       "executable": false
     },
     "src/chest/office/wopi.ts": {
-      "sha256": "18b9d8ab1f6eb84d9a7f9c14f42468de2d692cb5cc7b613462d1d1673e40123e",
+      "sha256": "a1164d578234966d0bbec927d9f30d898918bccdb89f829552d974eda7f31ef5",
       "executable": false
     },
     "src/chest/office/word.ts": {
@@ -4501,7 +4509,7 @@
       "executable": false
     },
     "tests/chest/administration-accounting-flow.mjs": {
-      "sha256": "080a83a71ee06769a643ff65daefc992a4c4d2f8c8776221d8b685b506112b3a",
+      "sha256": "b0ca341039350792cf30c4b844520abc524772ff050e9d52a5c9ee3c8cd61cd5",
       "executable": false
     },
     "tests/chest/administration-guest-flow.mjs": {
@@ -4537,7 +4545,7 @@
       "executable": false
     },
     "tests/chest/backup-archive.mjs": {
-      "sha256": "b7df4f840ea7562f9b9d95cd06d08da317745b06864f0ad08d4a2069ff488e66",
+      "sha256": "befd497d0fb225b36ca763a0765e5ba1c5e6edd868037a1b45289ed68aa2d909",
       "executable": false
     },
     "tests/chest/backup-sandbox.mjs": {

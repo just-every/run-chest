@@ -1,3 +1,4 @@
+import { probeEditor } from './editor-observation'
 import { editorConfiguration, saveEditorConfiguration, administrativeEditorReport, administrativeEditorCsv } from './editor-capacity'
 import { administrativeProviderUsage, administrativeProviderUsageCsv } from './provider-usage'
 import { administrativeEgress, administrativeEgressCsv } from './egress'
@@ -39,6 +40,7 @@ export async function administrationExecute(env:Bindings,request:Request,s:Sessi
   if(get&&key)return recoveryView(env,s,key)
   if(post&&key)return applyRecovery(env,s,key,input)
  }
+ if(section==='editor'&&post&&key==='probe')return probeEditor(env,s)
  if(section==='editor')return post?saveEditorConfiguration(env,s,input):editorConfiguration(env,s)
  if(get&&section==='editor-report')return key==='export'?administrativeEditorCsv(env,s,url.searchParams):administrativeEditorReport(env,s,url.searchParams)
  if(section==='costs')return post?saveCostSettings(env,s,input):costSettings(env,s)

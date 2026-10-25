@@ -73,6 +73,12 @@ export async function wopiResponse(request:Request,env:Bindings):Promise<Respons
  const item=parts[2]
  try{
   const a=await editorAuthority(env,request,item),file=a.ctx.chain.at(-1)!,current=file.payload.versions.at(-1);insist(current,'version_not_found',404)
+  if(request.method==='POST'&&parts[3]==='state'&&request.headers.get('content-type')?.includes('application/json')){
+   const input=await request.json() as any;insist(input.event==='provider-refused'&&typeof input.kind==='string'&&/^[a-zA-Z0-9_-]{1,80}$/.test(input.kind),'invalid_editor_outcome')
+   const key='editor-outcome:'+a.row.id+':'+input.kind,prior=await maybe(env,'editor-outcome',key)
+   if(!prior)await commit(env,a.s,[{row:fresh('editor-outcome',{session:a.row.id,kind:input.kind},key)}],{fences:[...a.ctx.fences,a.row],audits:[{action:'office.provider.refused',object:item,detail:{source:'Browser-reported provider outcome',code:input.kind==='limitreached'?'editor_capacity_reached':input.kind,limit:'provider',currentUse:null,maximum:null}}]})
+   return Response.json({recorded:true},{headers:{'cache-control':'no-store'}})
+  }
   if(request.method==='POST'&&parts[3]==='state'){await commit(env,a.s,[{row:a.row,previous:a.row,remove:true}],{fences:a.ctx.fences,audits:[{action:'office.collabora.close',object:item,detail:{session:a.row.id}}]});return Response.json({closed:true},{headers:{'cache-control':'no-store'}})}
   if(request.method==='GET'&&parts[3]==='state')return Response.json({version:current.id,restore:file.payload.versions.findLast(v=>v.arrival==='restore')?.id??''},{headers:{'cache-control':'no-store'}})
   const lock=await maybe<Lock>(env,'wopi-lock',lockKey(item)),active=lock&&lock.payload.expires>Date.now()?lock:null,provided=request.headers.get('X-WOPI-Lock')??'',override=request.headers.get('X-WOPI-Override')??''

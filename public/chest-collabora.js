@@ -18,6 +18,10 @@ for (const host of document.querySelectorAll('[data-collabora]')) {
  window.addEventListener('message', event => {
   if (stopped || event.origin !== origin || event.source !== frame.contentWindow) return;
   let message; try { message = typeof event.data === 'string' ? JSON.parse(event.data) : event.data; } catch { return; }
+  if (message?.MessageId === 'Error' && /^[a-zA-Z0-9_-]{1,80}$/.test(message.Values?.Kind ?? '')) {
+   status.textContent = 'The editor reported a refusal. Keep your work; the file preview remains available.';
+   fetch(host.dataset.state, {method:'POST', headers:{authorization:'Bearer '+token,'content-type':'application/json'}, body:JSON.stringify({event:'provider-refused',kind:message.Values.Kind}), cache:'no-store'}).catch(()=>{status.textContent='The editor reported a refusal; its report could not be saved. Keep your work.';});
+  }
   if (message?.MessageId === 'App_LoadingStatus') {
    if (message.Values?.Status === 'Frame_Ready') send('Host_PostmessageReady');
    if (message.Values?.Status === 'Document_Loaded') {

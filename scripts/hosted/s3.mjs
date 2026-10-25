@@ -11,7 +11,7 @@ const hex = data => createHash('sha256').update(data).digest('hex');
 const hmac = (key, data) => createHmac('sha256', key).update(data).digest();
 const encode = s => encodeURIComponent(s).replace(/[!'()*]/g, c => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
 
-export function s3({ endpoint, region, accessKeyId, secretAccessKey, sessionToken }, bucket) {
+export function s3({ endpoint, region, accessKeyId, secretAccessKey, sessionToken }, bucket, transport = fetch) {
   const base = new URL(endpoint), host = base.host;
   async function send(method, key, query = {}, body, headers = {}) {
     const now = new Date().toISOString().replace(/[-:]|\.\d{3}/g, ''), day = now.slice(0, 8);
@@ -22,7 +22,7 @@ export function s3({ endpoint, region, accessKeyId, secretAccessKey, sessionToke
     const canonical = [method, path, qs, names.map(k => `${k}:${String(signed[Object.keys(signed).find(h => h.toLowerCase() === k)]).trim()}\n`).join(''), names.join(';'), 'UNSIGNED-PAYLOAD'].join('\n');
     const scope = `${day}/${region}/s3/aws4_request`, toSign = ['AWS4-HMAC-SHA256', now, scope, hex(canonical)].join('\n');
     const signature = createHmac('sha256', [region, 's3', 'aws4_request'].reduce(hmac, hmac(`AWS4${secretAccessKey}`, day))).update(toSign).digest('hex');
-    const r = await fetch(`https://${host}${path}${qs ? '?' + qs : ''}`, { method, body, redirect: 'error', headers: { ...signed, authorization: `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${scope}, SignedHeaders=${names.join(';')}, Signature=${signature}` } });
+    const r = await transport(`https://${host}${path}${qs ? '?' + qs : ''}`, { method, body, redirect: 'error', headers: { ...signed, authorization: `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${scope}, SignedHeaders=${names.join(';')}, Signature=${signature}` } });
     if (!r.ok) throw new Error(`Object store refused ${method} (${r.status}).`);
     return r;
   }
