@@ -4,6 +4,7 @@ import {zipSync,unzipSync,strFromU8,strToU8} from 'fflate';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
 import {docx} from './office-fixtures.mjs';
+import {roleBrowserMatrix} from './role-browser-matrix.mjs';
 const b64=v=>Buffer.from(v).toString('base64');
 export async function roleReviewFlow({browserProof=false}={}){
  const h=await harness();let browser;
@@ -88,27 +89,7 @@ export async function roleReviewFlow({browserProof=false}={}){
     const v=await contexts.viewer.newPage();await v.goto(h.origin+`/app/items/${item.id}?edit=1`);await v.getByRole('heading',{name:'Read-only editor',exact:true}).waitFor();assert.equal(await v.getByRole('button',{name:'Save new version',exact:true}).count(),0);await shot(v,'readonly');
     // Audit existing icon controls on the changed file screen; labels appear on focus and delayed hover.
     const icons=v.locator('button,a,summary').filter({has:v.locator('svg')});for(const control of await icons.all()){if((await control.innerText()).trim()||!await control.isVisible())continue;assert.ok(await control.getAttribute('data-tooltip'),'icon control has a tooltip');await control.focus();await v.getByRole('tooltip').waitFor({state:'visible'});await v.locator('h1').click();await control.hover();await v.waitForTimeout(350);assert.equal(await v.getByRole('tooltip').isVisible(),true)}
-    // The built file page exposes each cumulative role's controls at both widths.
-    for(const [rank,role] of roles.entries()){
-     const ctx=contexts[role]??await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});
-     if(!contexts[role]){await ctx.addCookies(people[role].split('; ').map(s=>{const i=s.indexOf('=');return{name:s.slice(0,i),value:s.slice(i+1),url:h.origin}}));contexts[role]=ctx}
-     const page=await ctx.newPage(),file=await create(),key=file.id,go=()=>page.goto(h.origin+`/app/items/${key}`),press=(scope,name)=>Promise.all([page.waitForNavigation(),scope.getByRole('button',{name,exact:true}).click()]);await go();
-     await page.getByRole('heading',{name:file.payload.name,exact:true}).waitFor();assert.equal(await page.locator('article.ver').count(),1);assert.equal(await page.locator('.doc-actions').getByRole('link',{name:'Download',exact:true}).count(),1);
-     assert.equal(await page.getByRole('button',{name:'Post comment',exact:true}).count(),rank>=1?1:0);assert.equal(await page.getByRole('button',{name:'Move to trash',exact:true}).count(),rank>=3?1:0);assert.equal(await page.getByRole('button',{name:'Share',exact:true}).count(),rank>=3?1:0);
-     await shot(page,`file-${role}`);
-     if(rank>=1){await page.getByLabel('Comment',{exact:true}).fill(`Review by ${role}`);await press(page,'Post comment');await page.getByText(`Review by ${role}`,{exact:true}).waitFor()}
-     await page.getByRole('link',{name:rank>=2?'Edit in browser':rank===1?'Suggest changes':'Open read-only editor',exact:true}).click();
-     if(rank>=2){await go();await page.getByRole('link',{name:'Suggest changes',exact:true}).click();await page.getByRole('heading',{name:'Suggest changes',exact:true}).waitFor();await go();await page.getByRole('link',{name:'Edit in browser',exact:true}).click();const edit=page.locator('form').filter({has:page.getByRole('button',{name:'Save new version',exact:true})});await edit.locator('textarea').first().fill(`Edited by ${role}`);await press(edit,'Save new version');
-      const picker=page.locator('[data-upload] input[data-pick]').first();await Promise.all([page.waitForNavigation(),picker.setInputFiles({name:'Replacement.docx',mimeType:file.payload.versions[0].mediaType,buffer:Buffer.from(docx())})]);assert.equal((await h.api(`/items/${key}`,people.manager)).versions.length,3);
-      const original=page.locator('article.ver').last();await press(original,'Restore as current version');assert.equal((await h.api(`/items/${key}`,people.manager)).versions.length,4)
-     }else await page.getByRole('link',{name:'Close editor',exact:true}).click();
-     if(rank>=3){await page.screenshot({path:`test-results/${width}-roles-before-share-${role}.png`,fullPage:true});await page.getByLabel('Person or group').selectOption('outsider@example.test');const share=page.locator('form').filter({has:page.getByLabel('Person or group')});await share.getByLabel(/^Role/).selectOption('viewer');await press(share,'Share');assert.ok((await h.api(`/items/${key}`,people.manager)).grants.some(g=>g.principal==='outsider@example.test'));
-      await page.getByText('Move',{exact:true}).click();const move=page.locator('form').filter({has:page.getByRole('button',{name:'Move here',exact:true})});await move.getByLabel('Destination').selectOption(`space:${space.id}`);await press(move,'Move here');assert.equal((await h.api(`/items/${key}`,people.manager)).item.parent,null);
-      await press(page,'Move to trash');await page.goto(h.origin+'/app/files/trash');const row=page.locator('li').filter({hasText:file.payload.name});await press(row,'Restore');assert.equal((await h.api(`/items/${key}`,people.manager)).item.name,file.payload.name)
-     }
-     await page.goto(h.origin+`/app/spaces/${space.id}?manage`);assert.equal(await page.getByRole('button',{name:'Change role',exact:true}).count()>0,rank===4);if(rank===4){const row=page.locator('li.member').filter({hasText:'viewer@example.test'});await row.getByLabel(/^Role for/).selectOption('viewer');await press(row,'Change role')}
-     await page.close();
-    }
+    await roleBrowserMatrix(h,browser,people,roles,space,width);
     for(const ctx of Object.values(contexts))await ctx.close();
    }
   }
