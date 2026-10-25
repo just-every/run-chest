@@ -4785,7 +4785,7 @@
       "executable": false
     },
     "tests/chest/hosted-mail.mjs": {
-      "sha256": "1453b33d3de3f9f77559744e0b5a8c5d6f209582d22e6fd69cb0a2d5b66e26d8",
+      "sha256": "c900ce96341afae4b358b344780771f5ab413bb55e870aca1c415caaef2ac6e5",
       "executable": false
     },
     "tests/chest/hosted-screens.mjs": {

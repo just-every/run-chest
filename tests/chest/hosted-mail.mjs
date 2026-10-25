@@ -67,8 +67,8 @@ function confirmationLink(message, origin) {
   if ([...url.searchParams.keys()].some(key => key !== 'token')) continue;
   matches.add(url.href);
  }
- if (matches.size !== 1) fail('Delivered mail did not contain exactly one confirmation link at the expected origin and auth path');
- return [...matches][0];
+ if (matches.size > 1) fail('Delivered mail contained several confirmation links at the expected origin');
+ return [...matches][0] ?? null;
 }
 
 /** Poll real delivered mail. Subject is exact; since must precede the triggering action.
@@ -84,7 +84,7 @@ export async function waitForMailLink({ to, subject, since, origin, from, token 
  for (const [key, value] of Object.entries({ to: recipient, from: sender, subject, since: new Date(sinceMs).toISOString(), limit: '50' })) {
   endpoint.searchParams.set(key, value);
  }
- const deadline = Date.now() + timeoutMs;
+ const deadline = Date.now() + timeoutMs, inspected = new Set();
  while (Date.now() < deadline) {
   let body;
   const response = await inboxFetch(endpoint, token, deadline);
@@ -92,11 +92,10 @@ export async function waitForMailLink({ to, subject, since, origin, from, token 
   if (body?.ok !== true || !Array.isArray(body.receipts)) fail('QA inbox returned an invalid receipt response; contents withheld');
   const candidates = body.receipts.filter(receipt => {
    if (!receipt || typeof receipt.receivedAt !== 'string' || !Number.isFinite(Date.parse(receipt.receivedAt))) return false;
-   if (Date.parse(receipt.receivedAt) < sinceMs || receipt.subject !== subject) return false;
+   if (inspected.has(receipt.id) || Date.parse(receipt.receivedAt) < sinceMs || receipt.subject !== subject) return false;
    try { return mailbox(receipt.to) === recipient && mailbox(receipt.from) === sender; } catch { return false; }
   }).sort((a, b) => Date.parse(b.receivedAt) - Date.parse(a.receivedAt));
-  if (candidates.length) {
-   const receipt = candidates[0];
+  for (const receipt of candidates) {
    if (typeof receipt.id !== 'string' || !/^[\w-]+$/.test(receipt.id)) fail('QA inbox returned an invalid receipt identity');
    // Restrict rawUrl before sending the bearer token; redirects are forbidden too.
    if (receipt.rawUrl !== `/receipts/${receipt.id}/raw`) fail('Delivered mail has no safe raw MIME receipt');
@@ -106,6 +105,9 @@ export async function waitForMailLink({ to, subject, since, origin, from, token 
    catch { fail('Delivered mail MIME could not be parsed; contents withheld'); }
    if (message.subject !== subject || mailbox(message.from?.address) !== sender) fail('Delivered MIME did not match the requested subject and sender');
    const url = confirmationLink(message, expectedOrigin);
+   inspected.add(receipt.id);
+   // Other live Chest proofs share the QA inbox. Only this deployment's link proves this request.
+   if (!url) continue;
    return { url, receipt: { id: receipt.id, receivedAt: receipt.receivedAt, subject: receipt.subject, auth: receipt.auth } };
   }
   await delay(Math.min(pollMs, Math.max(0, deadline - Date.now())));
