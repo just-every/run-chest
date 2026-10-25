@@ -47,6 +47,8 @@ export function projectReview(bytes:Uint8Array,decisions:Map<string,'accept'|'re
   const doc=parseXml(bytes)
   const walk=(parent:Node,restoring=false)=>{for(const e of elements(parent)){
    const name=e.localName??'',ns=e.namespaceURI??''
+   if(/wordprocessingml/.test(ns)&&['trackRevisions','revisionView','proofState','rsids'].includes(name)){parent.removeChild(e);continue}
+   for(const a of Array.from(e.attributes))if(/wordprocessingml/.test(a.namespaceURI??'')&&a.localName.startsWith('rsid'))e.removeAttributeNode(a)
    if(mainNs.test(ns)&&['commentRangeStart','commentRangeEnd','commentReference','annotationRef'].includes(name)){parent.removeChild(e);continue}
    if(e.localName==='Relationship'&&/comments|commentAuthors|people/.test(attr(e,'Type'))||e.localName==='Override'&&removed.has(attr(e,'PartName').replace(/^\//,''))){parent.removeChild(e);continue}
    if(mainNs.test(ns)&&['ins','del'].includes(name)){
@@ -85,7 +87,7 @@ export function packageSignature(bytes:Uint8Array):string{
  for(const path of Object.keys(parts).filter(p=>!p.endsWith('/')).sort()){
   if(isXml(path)){
    const doc=parseXml(parts[path]);visit(doc,e=>{
-    if(path==='docProps/core.xml'&&['modified','lastModifiedBy','revision','lastPrinted'].includes(e.localName??'')||path==='docProps/app.xml'&&['TotalTime','Pages','Words','Characters','CharactersWithSpaces','AppVersion'].includes(e.localName??''))e.parentNode?.removeChild(e)
+    if(path==='docProps/core.xml'&&['created','modified','lastModifiedBy','revision','lastPrinted'].includes(e.localName??'')||path==='docProps/app.xml'&&['TotalTime','Pages','Words','Characters','CharactersWithSpaces','AppVersion'].includes(e.localName??''))e.parentNode?.removeChild(e)
    });values.push([path,canonical(doc)])
   }else {let binary='';for(let offset=0;offset<parts[path].length;offset+=8192)binary+=String.fromCharCode(...parts[path].subarray(offset,offset+8192));values.push([path,btoa(binary)])}
  }
