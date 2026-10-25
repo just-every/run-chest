@@ -92,7 +92,11 @@ export function packageSignature(bytes:Uint8Array):string{
     if(path==='docProps/core.xml'&&['created','modified','lastModifiedBy','revision','lastPrinted'].includes(e.localName??'')||path==='docProps/app.xml'&&['TotalTime','Pages','Words','Characters','CharactersWithSpaces','AppVersion'].includes(e.localName??''))e.parentNode?.removeChild(e)
     // CODE may materialize its empty built-in line-number character style on a later export.
     // It has no effect without line numbering; nonempty or explicitly referenced styles remain protected.
-    if(path==='word/styles.xml'&&!lineNumbering&&e.localName==='style'&&attr(e,'styleId')==='LineNumber'&&attr(e,'type')==='character'&&!attr(e,'default')&&elements(e).every(c=>c.localName==='name'&&attr(c,'val')==='line number'||c.localName==='rPr'&&!elements(c).length&&!c.attributes.length)&&!Object.entries(parts).some(([p,b])=>p!==path&&isXml(p)&&new TextDecoder().decode(b).includes('LineNumber')))e.parentNode?.removeChild(e)
+    if(path==='word/styles.xml'&&!lineNumbering&&e.localName==='style'&&attr(e,'styleId')==='LineNumber'&&attr(e,'type')==='character'&&!attr(e,'default')){
+     const empty=elements(e).every(c=>c.localName==='name'&&attr(c,'val')==='line number'||c.localName==='rPr'&&!elements(c).length&&!c.attributes.length)
+     const referenced=Array.from(doc.getElementsByTagName('*')).some(n=>n!==e&&attr(n,'val')==='LineNumber')||Object.entries(parts).some(([p,b])=>p!==path&&isXml(p)&&new TextDecoder().decode(b).includes('LineNumber'))
+     if(empty&&!referenced)e.parentNode?.removeChild(e)
+    }
    });values.push([path,canonical(doc)])
   }else {let binary='';for(let offset=0;offset<parts[path].length;offset+=8192)binary+=String.fromCharCode(...parts[path].subarray(offset,offset+8192));values.push([path,btoa(binary)])}
  }

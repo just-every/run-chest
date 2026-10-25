@@ -73,7 +73,14 @@ export async function wopiResponse(request:Request,env:Bindings):Promise<Respons
   if(request.method==='GET'&&parts[3]==='state')return Response.json({version:current.id,restore:file.payload.versions.findLast(v=>v.arrival==='restore')?.id??''},{headers:{'cache-control':'no-store'}})
   const lock=await maybe<Lock>(env,'wopi-lock',lockKey(item)),active=lock&&lock.payload.expires>Date.now()?lock:null,provided=request.headers.get('X-WOPI-Lock')??'',override=request.headers.get('X-WOPI-Override')??''
   const commenter=allowed(a.ctx,'comment')&&!allowed(a.ctx,'contribute'),readonly=!allowed(a.ctx,'comment'),document=/\.docx$/i.test(current.filename)
-  if(request.method==='GET'&&!parts[3])return Response.json({PostMessageOrigin:new URL(env.AUTH_ORIGIN).origin,BaseFileName:file.payload.name,OwnerId:file.payload.createdBy,Size:current.size,UserId:await digest(new TextEncoder().encode(a.s.operator.email)),UserFriendlyName:a.s.operator.displayName||a.s.operator.email,Version:current.id,UserCanWrite:!readonly,ReadOnly:readonly,UserCanOnlyComment:commenter&&!document,...(commenter&&document?{DisableChangeTrackingRecord:false,HideChangeTrackingControls:true}:{}),IsAnonymousUser:false,SupportsLocks:!readonly,SupportsGetLock:true,SupportsUpdate:!readonly,SupportsRename:false,UserCanRename:false,UserCanNotWriteRelative:true,DisableExport:false,DisablePrint:false,LastModifiedTime:current.at},{headers:{'cache-control':'no-store'}})
+  let editorSize=current.size
+  if(request.method==='GET'&&!parts[3]&&commenter&&document){
+   await assertContent(env,current.checksum)
+   const original=await env.BLOBS.get(`sha256/${current.checksum}`);insist(original,'blob_missing',503)
+   const source=new Uint8Array(await original.arrayBuffer());insist(source.length===current.size&&await digest(source)===current.checksum,'blob_integrity',503)
+   editorSize=trackedSource(source).length
+  }
+  if(request.method==='GET'&&!parts[3])return Response.json({PostMessageOrigin:new URL(env.AUTH_ORIGIN).origin,BaseFileName:file.payload.name,OwnerId:file.payload.createdBy,Size:editorSize,UserId:await digest(new TextEncoder().encode(a.s.operator.email)),UserFriendlyName:a.s.operator.displayName||a.s.operator.email,Version:current.id,UserCanWrite:!readonly,ReadOnly:readonly,UserCanOnlyComment:commenter&&!document,...(commenter&&document?{DisableChangeTrackingRecord:false,HideChangeTrackingControls:true}:{}),IsAnonymousUser:false,SupportsLocks:!readonly,SupportsGetLock:true,SupportsUpdate:!readonly,SupportsRename:false,UserCanRename:false,UserCanNotWriteRelative:true,DisableExport:false,DisablePrint:false,LastModifiedTime:current.at},{headers:{'cache-control':'no-store'}})
   if(request.method==='GET'&&parts[3]==='contents'){
    const response=await bytes(env,a.s,a.w,item,current.id,true,null,'office.download')
    if(!commenter||!document)return response

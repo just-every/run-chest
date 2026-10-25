@@ -92,7 +92,7 @@ export async function liveCollaboraReviewJourney(h,owner,browser,{stage}){
    try{await expect.poll(async()=>{const view=await h.api(`/items/${file.id}`,owner);return view.versions.some(v=>v.actor==='reviewer@outside.test'&&v.suggestion&&!v.suggestion.decision)},{timeout:60000,intervals:[1000]}).toBe(true)}catch(error){const audit=await h.api(`/audit?paginate=true&action=office.collabora.refused&object=${file.id}`,owner);console.error('WOPI_REVIEW_REFUSALS',JSON.stringify(audit.rows.map(r=>JSON.parse(r.detail))));throw error}
    let content=await currentBytes(),parts=unzipSync(content),xml=strFromU8(parts['word/document.xml']);assert.match(xml,/<w:ins[^>]*w:author="reviewer@outside.test"/);assert.ok(xml.includes(`Guest tracked proposal ${width}`));
    await guest.page.screenshot({path:`test-results/${width}-collabora-live-suggest.png`,fullPage:true});
-   await guest.frame.locator('#document-container').click({position:{x:Math.min(250,width-50),y:200}});await guest.page.keyboard.press('Control+Alt+c');
+   if(width===390){await guest.frame.locator('#insertion_mobile_wizard').click();await guest.frame.getByText('Comment',{exact:true}).click()}else{await guest.frame.locator('#Review-tab-label').click();await guest.frame.locator('[id$="insertannotation"]').first().click()}
    const commentText=`Please confirm the delivery term ${width}.`;
    if(width===390){await guest.frame.locator('#input-modal-input').fill(commentText);await guest.frame.locator('#response-ok').click()}
    else{await guest.frame.locator('#annotation-modify-textarea-new').fill(commentText);await guest.frame.locator('#annotation-save-new').click()}

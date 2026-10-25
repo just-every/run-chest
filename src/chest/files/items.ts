@@ -76,6 +76,7 @@ export async function rename(env: Bindings, s: Session, w: Who, key: string, inp
  return get<Item>(env, 'item', key)
 }
 async function subtree(env: Bindings, item: Row<Item>) {
+ if(item.payload.type!=='folder')return []
  const rows = await spaceItems(env, item.payload.space), result: Row<Item>[] = [], walk = (parent: string) => { for (const r of rows) if (r.payload.parent === parent) { insist(result.length < 5000, 'tree_too_large'); result.push(r); walk(r.id) } }
  walk(item.id); return result
 }
