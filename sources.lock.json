@@ -233,7 +233,7 @@
       "executable": false
     },
     "docs/administration.md": {
-      "sha256": "5eff3241dc00bf5526bb2fb0a91105e32e9298feb84e048449d175fc14ce2138",
+      "sha256": "1627ea40cac7e2d0163e0286fe3692e70c27b2a16cc3b85995ed1e49d0222f33",
       "executable": false
     },
     "docs/backup-and-restore.md": {
@@ -1349,7 +1349,7 @@
       "executable": false
     },
     "src/chest/administration/egress.ts": {
-      "sha256": "f73ad482c4dc7df467cffdc37e6036e60db38aa4ceda3f14ccdeda74e181b821",
+      "sha256": "cb6aa05ce49eb413c899516c73444703f1b3b85ba7a81318c1737ec3834d80ac",
       "executable": false
     },
     "src/chest/administration/invitations.ts": {
@@ -4501,7 +4501,7 @@
       "executable": false
     },
     "tests/chest/administration-accounting-flow.mjs": {
-      "sha256": "5ab69e44cd2c26716174c5b870840cca4c05a5a6d2c3b5023355c666a6447a97",
+      "sha256": "080a83a71ee06769a643ff65daefc992a4c4d2f8c8776221d8b685b506112b3a",
       "executable": false
     },
     "tests/chest/administration-guest-flow.mjs": {

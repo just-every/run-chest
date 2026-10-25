@@ -56,6 +56,9 @@ export async function accountingJourney(browser){
   assert.equal(member.uncertainBytes,outer.uncertainBytes);assert.equal(member.byteBasis,'Original member bytes at ZIP output checkpoints');
   await h.stop();await h.start();
   const persisted=(await h.api('/administration/egress?group='+accountingGroup.id,owner)).rows.find(r=>r.item===finished.result.item&&r.door==='archive member');assert.deepEqual(persisted,member,'restart preserves scoped cancelled output');
+  await h.sql("UPDATE chest_audit SET detail=json_remove(detail,'$.measurement') WHERE action='transfer.egress' AND object_id=? AND json_extract(detail,'$.door')='archive member'",finished.result.item);
+  const legacy=(await h.api('/administration/egress?group='+accountingGroup.id,owner)).rows.find(r=>r.item===finished.result.item&&r.door==='archive member');assert.equal(legacy.byteBasis,'Generated original chunks entering ZIP assembly');assert.equal(legacy.bytes,member.bytes,'historical assembly measurements are not rewritten');
+  await h.sql("UPDATE chest_audit SET detail=json_set(detail,'$.measurement','zip-output') WHERE action='transfer.egress' AND object_id=? AND json_extract(detail,'$.door')='archive member'",finished.result.item);
   await h.sql("UPDATE chest_audit SET detail=json_set(detail,'$.outcome','running','$.bytes',0,'$.reservedBytes',64,'$.checkpointAt','2000-01-01T00:00:00.000Z') WHERE action='transfer.egress' AND object_id=? AND json_extract(detail,'$.outcome')='cancelled'",finished.result.item);
   await h.stop();await h.start();const uncertain=(await h.api('/administration/egress',owner)).rows.find(r=>r.item===finished.result.item&&r.outcome==='uncertain');assert.ok(uncertain);assert.equal(uncertain.uncertainBytes,64);assert.equal(uncertain.bytes,0);
   const config={edition:'CODE',enabled:true,documents:1,connections:1,annualUsd:0,quote:'Synthetic reported capacity dated 2026-10-25',confirm:true,codeAcknowledged:true};
