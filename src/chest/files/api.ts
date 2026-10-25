@@ -1,3 +1,4 @@
+import { renderedPreview } from './restricted-preview'
 import { openCollabora } from '../office/wopi'
 import { guestPolicy, saveGuestPolicy } from './guest-policy'
 import { contentExecute } from '../content-security/service'
@@ -108,6 +109,7 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && sub === 'collabora')return openCollabora(env,s,key)
   if (post && !key) return createItem(env, s, w, input)
   if (get && key && !sub) return itemView(env, s, w, key)
+  if (get && sub === 'rendered-preview') return renderedPreview(env,s,w,key,version,url.searchParams.get('page'))
   if (get && sub === 'office-preview') return officeDocument((await readOffice(env, w, key, version)).html)
   if (get && sub === 'office') { const result = await readOffice(env, w, key, undefined, url.searchParams.get('edit') === 'true', url.searchParams.get('mode')==='suggest'); return { ...result, fields: url.searchParams.get('edit') === 'true' ? result.fields : undefined } }
   if (post && sub === 'office-suggestions') return suggestOffice(env,s,w,key,input)

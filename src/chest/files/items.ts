@@ -115,16 +115,17 @@ export async function children(env: Bindings, w: Who, ctx: Ctx, parent: string |
  const {hiddenMerged}=await import('../filing/duplicate-view'), hidden=await hiddenMerged(env,w,entries.map(e=>({...e,space:ctx.space})))
  const result=[],security=await contentPolicy(env);for(const e of entries){const p=memberProjection(ctx.space,[...ctx.chain,e.row],ctx.links,w,descend(ctx.directState??ctx.state,e.row,w,[]),e.state);if(p.state.role&&!hidden.has(e.row.id)&&await contentReadable(env,p.row.payload.versions,w.email,false,security))result.push(p)}return result
 }
-// Original bytes: download needs download rights (the no-download setting refuses viewers and commenters); their
-// preview is limited to extracted text. Access is checked again after reading, before the bytes leave.
+// Every original response needs download rights, including inline text and range requests.
+// Restricted readers use rendered page previews. Recheck access after reading content, before returning a response.
 export async function bytes(env: Bindings, s: Session, w: Who, key: string, versionId: string, download: boolean, range?: string | null, action?: string) {
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'view')
  await guardDownload(env,s,item)
  const v = item.payload.versions.find(v => v.id === versionId); insist(v, 'version_not_found', 404)
- if (download || (!allowed(ctx, 'download') && v.preview !== 'text')) demand(ctx, 'download')
+ demand(ctx, 'download')
  await assertContent(env,v.checksum)
  const response = range ? await ranged(env, v, range) : await serve(env, v as unknown as Version, download)
- demand(await context(env, w, key), download || range ? 'download' : 'view')
+ const current = await context(env, await (await import('./access')).who(env, s), key); demand(current, 'download')
+ insist(current.chain.at(-1)!.payload.versions.some(version => version.id === v.id && version.checksum === v.checksum), 'version_not_found', 404)
  await recordAccess(env, s, item, action ?? (download || range ? 'version.download' : 'version.preview'), v.id,range?Number(response.headers.get('content-length')):v.size)
  return meterOriginal(env,response,key,s.operator.email,action??(download||range?'file download':'original preview'),range?Number(response.headers.get('content-length')):v.size)
 }

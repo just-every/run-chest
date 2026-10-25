@@ -14,6 +14,7 @@ function preview(d: any) {
  const v = d.versions.find((v: any) => v.id === d.item.current), kind = fileKind(d.item.name, d.item.type)
  if (!v || d.item.type === 'folder') return `<div class="pv pv-empty">${fileTile(kind)}</div>`
  const bytes = `/api/chest/items/${esc(v.sourceItem || d.id)}/bytes/${esc(v.id)}`
+ if (!d.can.download) return `<div class="pv pv-page"><iframe src="/api/chest/items/${esc(v.sourceItem || d.id)}/rendered-preview/${esc(v.id)}" title="Preview of ${esc(d.item.name)}" tabindex="-1" loading="lazy" sandbox="allow-scripts allow-same-origin"></iframe></div>`
  if (v.preview === 'image' && d.can.download) return `<div class="pv pv-image"><img src="${bytes}" alt="Preview of ${esc(d.item.name)}"></div>`
  if (/\.(docx|xlsx|pptx)$/i.test(v.filename)) return `<div class="pv pv-page"><iframe src="/api/chest/items/${esc(v.sourceItem || d.id)}/office-preview/${esc(v.id)}" title="Preview of ${esc(d.item.name)}" tabindex="-1" loading="lazy" sandbox></iframe></div>`
  if (v.preview === 'text') return `<div class="pv pv-page"><iframe src="${bytes}" title="Preview of ${esc(d.item.name)}" tabindex="-1" loading="lazy" sandbox></iframe></div>`

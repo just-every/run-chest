@@ -19,13 +19,15 @@ async function original(env: Bindings, version: { size: number; checksum: string
  return bytes
 }
 export async function readOffice(env: Bindings, w: Who, key: string, versionId?: string, edit = false, suggest = false) {
- const ctx = await context(env, w, key); demand(ctx, 'view')
+ const ctx = await context(env, w, key); demand(ctx, 'view'); demand(ctx, 'download')
  const item = ctx.chain.at(-1)!, v = item.payload.versions.find(v => v.id === (versionId || item.payload.current))
  insist(item.payload.type === 'file' && v, 'version_not_found', 404)
  const preview = await officePreview(await original(env, v)); insist(preview, 'office_format_unsupported', 415)
  if (edit) insist(preview.kind !== 'pptx', 'office_edit_unsupported', 415)
- demand(await context(env, w, key), 'view')
- return { ...preview, version: v.id, filename: v.filename, mode: suggest && allowed(ctx,'comment') && preview.kind==='docx' ? 'suggest' : allowed(ctx,'contribute') ? 'edit' : allowed(ctx,'comment') && preview.kind==='docx' ? 'suggest' : 'readonly', suggestion: v.suggestion }
+ const freshWho = w.guest ? w : { ...w, ...await (await import('../files/access')).whoFor(env, w.email) }
+ const current = await context(env, freshWho, key); demand(current, 'download')
+ insist(current.chain.at(-1)!.payload.versions.some(version => version.id === v.id && version.checksum === v.checksum), 'version_not_found', 404)
+ return { ...preview, version: v.id, filename: v.filename, mode: suggest && allowed(current,'comment') && preview.kind==='docx' ? 'suggest' : allowed(current,'contribute') ? 'edit' : allowed(current,'comment') && preview.kind==='docx' ? 'suggest' : 'readonly', suggestion: v.suggestion }
 }
 // Changes name individual parts of the document. Independent edits can be merged onto the latest version;
 // a field changed by both people is refused rather than overwriting the other person's work.

@@ -1,3 +1,4 @@
+import { renderRestrictedVersion } from './restricted-preview'
 import { meterOriginal } from '../administration/egress'
 import { openCollabora } from '../office/wopi'
 import { guestAuthority } from './guest-mutations'
@@ -63,7 +64,7 @@ async function open(env: Bindings, request: Request, secret: string) {
  const r = await resolveLink(env, secret), base = `/l/${secret}`; if ('refused' in r) return refusedLink(r.refused)
  const actor=await guestEmail(env,request,r);if(!actor)return verifyPage(`/l/${secret}`)
  if (await locked(env, request, r)) return passwordPage(base)
- const files = (await reachable(env, r)).flatMap(({ row, path }) => { const v = publicVersion(row,r.link.payload); return v ? [{ id: row.id, path, name: row.payload.name, size: v.size, mediaType: v.mediaType, canPreview: v.size <= 8_000_000 && (isOffice(v.filename) || v.preview === 'text') }] : [] })
+ const files = (await reachable(env, r)).flatMap(({ row, path }) => { const v = publicVersion(row,r.link.payload); return v ? [{ id: row.id, path, name: row.payload.name, size: v.size, mediaType: v.mediaType, canPreview: v.size <= 8_000_000 && (isOffice(v.filename) || ['text','pdf','image'].includes(v.preview)) }] : [] })
  await commit(env, null, [], { by: actor, audits: [{ action: 'link.view', object: r.root.id, detail: { link: r.link.id } }] })
  return linkPage(base, r.link.payload, r.root.payload, files, !r.state.noDownload,await externalComments(env,r,base)+await guestTools(env,request,r,base)+`<form method="post" action="${esc(base)}/sign-out"><button class="action">Sign out of link</button></form>`)
 }
@@ -73,6 +74,16 @@ async function preview(env: Bindings, request: Request, secret: string, key: str
  if (await locked(env, request, r)) return passwordPage(`/l/${secret}`, false, 401)
  const file = await fileThrough(env, r, key, true); if (!file) return refusedLink('unavailable')
  const v = publicVersion(file.row,r.link.payload); insist(v, 'version_not_found', 404)
+ const restricted = r.state.noDownload || file.fences.some(row => row.kind === 'item' && row.payload.noDownload)
+ if (restricted) {
+  const response = await renderRestrictedVersion(env,v,`/l/${secret}/p/${key}`,new URL(request.url).searchParams.get('page'))
+  const fresh = await resolveLink(env,secret); if ('refused' in fresh) return refusedLink(fresh.refused)
+  const currentActor = await guestEmail(env,request,fresh); insist(currentActor === actor,'guest_pin_required',403)
+  insist(!await locked(env,request,fresh),'password_required',401)
+  const current = await fileThrough(env,fresh,key,true); insist(current && publicVersion(current.row,fresh.link.payload)?.id === v.id,'version_not_found',404)
+  await commit(env,null,[],{by:actor,fences:current.fences,audits:[{action:'link.preview',object:key,detail:{link:fresh.link.id,version:v.id,rendered:true}}]})
+  return response
+ }
  insist(v.size <= 8_000_000, 'office_file_too_large', 413)
  const blob = await env.BLOBS.get(`sha256/${v.checksum}`); insist(blob, 'blob_missing', 503)
  const bytes = new Uint8Array(await blob.arrayBuffer()); insist(bytes.length === v.size && await digest(bytes) === v.checksum, 'blob_integrity', 503)

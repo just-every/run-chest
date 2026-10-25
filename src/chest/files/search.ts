@@ -1,6 +1,6 @@
 import type { Bindings } from '../../auth.server'
 import { list } from '../store'
-import { everything, type Who } from './access'
+import { allowed, everything, type Who } from './access'
 import { maybe } from './repo'
 import { type Link, type Prefs } from './model'
 import { hiddenMerged } from '../filing/duplicate-view'
@@ -29,7 +29,7 @@ export async function search(env: Bindings, w: Who, url: URL) {
   const metadataHit = !!q && metadata.includes(q), versions = f.versions === 'any' ? [current,...p.versions.slice().reverse().filter(v => v.id !== p.current)].filter(v => !!v) : current ? [current] : []
   const found = versions.find(v => v.text.toLowerCase().includes(q) || read.has(v.checksum)), version = metadataHit || !q ? current : found
   if (q && !metadataHit && !found) continue
-  const at = q && version ? version.text.toLowerCase().indexOf(q) : -1, snippet = at >= 0 ? version!.text.slice(Math.max(0,at-24),at+q.length+80) : version ? read.get(version.checksum) ?? '' : ''
+  const at = q && version && allowed(e,'download') ? version.text.toLowerCase().indexOf(q) : -1, snippet = at >= 0 ? version!.text.slice(Math.max(0,at-24),at+q.length+80) : version && allowed(e,'download') ? read.get(version.checksum) ?? '' : ''
   const earlier = !!version && version.id !== p.current
   types[kind] = (types[kind] ?? 0) + 1
   result.push({ id:e.row.id,name:p.name,type:p.type,category:kind,role:e.state.role,updatedAt:p.updatedAt,size:version?.size ?? null,mediaType:version?.mediaType ?? null,space:{id:e.space.id,name:e.space.payload.kind === 'personal' ? e.space.payload.owner === w.email ? 'My files' : 'Shared with me' : e.space.payload.name},snippet,matchedVersion:version?.id ?? null,versionLabel:earlier ? `Earlier version ${p.versions.findIndex(v => v.id === version!.id)+1}${version!.name ? ` · ${version!.name}` : ''}` : null,rank:q ? (p.name.toLowerCase() === q ? 5 : p.name.toLowerCase().includes(q) ? 4 : metadataHit ? 3 : earlier ? 1 : 2) : 0 })

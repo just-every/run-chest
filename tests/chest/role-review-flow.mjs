@@ -72,7 +72,7 @@ export async function roleReviewFlow({browserProof=false}={}){
    const cookie=people[role],job=await h.api('/bulk',cookie,{action:'download',items:[id]}),device=await h.api('/devices',cookie,{name:'Review device',platform:'macos'});
    for(const scope of ['space','file']){
     await h.api(scope==='space'?`/spaces/${space.id}/settings`:`/items/${id}/settings`,people.manager,{noDownload:true});
-    assert.match((await h.api(`/items/${id}/office`,cookie)).html,/forty-five/);
+    const extracted=await h.api(`/items/${id}/office`,cookie,undefined,403);assert.equal(extracted.error,'download_restricted');
     for(const suffix of ['', '?download=true'])for(const range of [false,true])assert.equal((await h.fetch(`/api/chest/items/${id}/bytes/${rejected.version}${suffix}`,{headers:{cookie,...range?{range:'bytes=0-63'}:{}}})).status,403);
     assert.equal((await h.fetch(`/api/chest/sync/items/${id}/content`,{headers:{authorization:`Bearer ${device.token}`}})).status,403);
     const archive=unzipSync(new Uint8Array(await(await h.raw(`/api/chest/bulk/${job.id}/archive`,cookie)).arrayBuffer())),manifest=JSON.parse(strFromU8(archive['chest-manifest.json']));assert.equal(manifest.included.length,0);assert.equal(manifest.excluded[0].reason,'download_restricted');assert.equal(Object.keys(archive).length,1);

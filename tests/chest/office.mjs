@@ -50,7 +50,7 @@ try {
  assert.equal((await h.fetch(`${path}/p/${file}`)).status,401,'password gates direct preview');
  const unlocked=await h.fetch(path,{method:'POST',headers:{origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'password=safe-preview-password'}),cookie=unlocked.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ');
  assert.ok((await (await h.fetch(`${path}/p/${file}`,{headers:{cookie}})).text()).includes('Harbor signed agreement'));
- await h.api(`/items/${file}/settings`,owner,{noDownload:true});const rendered=await h.fetch(`${path}/p/${file}`,{headers:{cookie}});assert.equal(rendered.status,200);assert.match(rendered.headers.get('content-type'),/^text\/html/);const renderedHtml=await rendered.text();assert.ok(renderedHtml.includes('Harbor signed agreement')&&renderedHtml.includes('Payment within forty-five days.'));assert.ok(!renderedHtml.includes('keep this unedited part'),'the rendered preview excludes nonvisual original parts');
+ await h.api(`/items/${file}/settings`,owner,{noDownload:true});const rendered=await h.fetch(`${path}/p/${file}`,{headers:{cookie}});assert.equal(rendered.status,503);const renderedHtml=await rendered.text();assert.ok(renderedHtml.includes('collabora_not_configured'));assert.ok(!renderedHtml.includes('Harbor signed agreement')&&!renderedHtml.includes('Payment within forty-five days.'),'an unavailable renderer exposes no extracted content');
  for(const headers of [{cookie},{cookie,range:'bytes=0-63'}]){const original=await h.fetch(`${path}/f/${file}`,{headers});assert.equal(original.status,410,'no-download policy refuses original and range requests');assert.ok(!(await original.text()).includes('Harbor signed agreement'),'an original refusal contains no document text')}
  await h.api(`/items/${file}/settings`,owner,{noDownload:false});
  await h.api(`/public-links/${link.link.id}/revoke`,owner,{});assert.equal((await h.fetch(`${path}/p/${file}`,{headers:{cookie}})).status,410);
@@ -68,3 +68,5 @@ try {
 await (await import('./wopi-flow.mjs')).wopiFlow();
 
 await (await import('./role-review-flow.mjs')).roleReviewFlow();
+
+await (await import('./restriction-flow.mjs')).restrictionFlow();

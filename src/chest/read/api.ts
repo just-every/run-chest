@@ -37,7 +37,7 @@ export async function readingExecute(env: Bindings, s: Session, method: string, 
   if (get_ && sub === 'reading') {
    if (url.searchParams.get('work') === '1') await advance(env)
    const v = item.payload.versions.find(v => v.id === (version || item.payload.current)); insist(v, 'version_not_found', 404)
-   return { item: key, version: v.id, reading: summary((await extraction(env, v.checksum))?.payload ?? null, v.mediaType, false), versions: await itemReadings(env,key,item.payload,false) }
+   return { item: key, version: v.id, reading: summary((await extraction(env, v.checksum))?.payload ?? null, v.mediaType, false), versions: allowed(ctx,'download') ? await itemReadings(env,key,item.payload,false) : [] }
   }
   if (post && sub === 'reading') {
    demand(ctx, 'contribute'); const v = item.payload.versions.find(v => v.id === (version || item.payload.versions.at(-1)?.id)); insist(v, 'version_not_found', 404); await requestReading(env,key,v.id,v.checksum); await requeue(env, v.checksum); kick(env); return { item: key, state: 'queued' }

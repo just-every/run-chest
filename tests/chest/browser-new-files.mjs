@@ -30,3 +30,5 @@ try {
 await (await import('./wopi-flow.mjs')).wopiFlow({browserProof:true});
 
 await (await import('./role-review-flow.mjs')).roleReviewFlow({browserProof:true});
+
+await (await import('./restriction-flow.mjs')).restrictionFlow({browserProof:true});
