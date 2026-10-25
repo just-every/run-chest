@@ -39,7 +39,10 @@ export function wordPreview(archive: OfficeArchive, part: string): OfficePreview
     const document = parseXml(archive.get(path)), images = imageRenderer(archive, path)
     const inline = (node: Element): string => {
       switch (node.localName) {
-        case 'del': case 'moveFrom': case 'instrText': case 'pPr': case 'rPr': return ''
+        case 'del': return `<del title="${escape(attr(node,'author'))}">${elements(node).map(inline).join('')}</del>`
+        case 'ins': return `<ins title="${escape(attr(node,'author'))}">${elements(node).map(inline).join('')}</ins>`
+        case 'delText': return budget.add(escape(node.textContent??''))
+        case 'moveFrom': case 'instrText': case 'pPr': case 'rPr': return ''
         case 't': {
           const value = node.textContent ?? ''
           return budget.add(escape(value))

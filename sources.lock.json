@@ -177,7 +177,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "cd6fbcea8e5d55d9383ce3b797f026186e93508e3833401e445dc384eb2ef50c",
+      "sha256": "93168bdaa9372d01356381f5adf89534e590bdde3ac2e843642aa47d54e96ffc",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -205,7 +205,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "4bd824e278ebf442b3e0a53af9df75c37346eadc5648253415ef500383ac33ae",
+      "sha256": "702735c62dcba738f289ac7849c7b47287922e8746ef035eae1dfc1d8a8b68fe",
       "executable": false
     },
     "DEMO.md": {
@@ -241,7 +241,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "06593669cca5ac6ff2b6e4a59fe1c99ef06dbc72140a7de41026a948aa02194f",
+      "sha256": "1e260e087a3cab04aa2fdc7f8b8cc9346b0a5c00e51da3bd9e07e58eeb07f4fd",
       "executable": false
     },
     "docs/collections.md": {
@@ -301,7 +301,7 @@
       "executable": false
     },
     "docs/office.md": {
-      "sha256": "27a74c24e32bb1b62288af35b83774fef2ecc7c65ab22f4179675f7667f495ac",
+      "sha256": "13073f73caf5fa1af9573d66c9256e74bd09b25e97f8077d5e82626a4c3f9a38",
       "executable": false
     },
     "docs/open-source.md": {
@@ -1549,7 +1549,7 @@
       "executable": false
     },
     "src/chest/files/api.ts": {
-      "sha256": "9982a8542d9fc4a64e60ecb685af9f108c0010496e6e56e73e80cd23d5ebb5d1",
+      "sha256": "7ae82d92c0def76a738edfe49064f1020e33892c0aca73b8d79dfefc60668ed5",
       "executable": false
     },
     "src/chest/files/capability.ts": {
@@ -1557,7 +1557,7 @@
       "executable": false
     },
     "src/chest/files/comments.ts": {
-      "sha256": "7138d07f9f5aec0da700279c9f41e0d237f39ba5cb1a7164e0fe1d186b0e159c",
+      "sha256": "a45957124f0452fd6823707d7e6c59717e5781a8fa8015ae9741a879baa26da9",
       "executable": false
     },
     "src/chest/files/devices.ts": {
@@ -1625,7 +1625,7 @@
       "executable": false
     },
     "src/chest/files/model.ts": {
-      "sha256": "110cd1577b38904d27ee5d5ea427c2008a6dd10fd73fada7840699aac5422785",
+      "sha256": "f93a3d52b9b489c5d3ed4a28468e6abe1b231c65d8be198bf7d229a2b19a0a84",
       "executable": false
     },
     "src/chest/files/notify.ts": {
@@ -1745,7 +1745,7 @@
       "executable": false
     },
     "src/chest/files/ui-item.ts": {
-      "sha256": "76c4003cb7cb0144715ec1c959f9ca60fb810c0bd2327affce9ccb7734f9ef1c",
+      "sha256": "e33f641cec3ec27622c44d1eaba71670bd88ceeaca43c4ccd8342d9af1d04ba4",
       "executable": false
     },
     "src/chest/files/ui-link-form.ts": {
@@ -1793,7 +1793,7 @@
       "executable": false
     },
     "src/chest/files/ui.ts": {
-      "sha256": "b608b0d0f54e727e2f26e2451e6c65b8bd292bb66647074ef37cd682a14c431f",
+      "sha256": "ffbb0f831d650cda6939e1479272022865682fa4936b1a6ac3b3bd4c5b3ba47a",
       "executable": false
     },
     "src/chest/files/uploads.ts": {
@@ -2033,7 +2033,7 @@
       "executable": false
     },
     "src/chest/office/codec.ts": {
-      "sha256": "05f83da5216f90062063bc9cc9517746f33a3e7a40f0228a0d66d0f269a2a5b0",
+      "sha256": "0b90aa411d0b147afd7106739c6fa0cd0e299c03cc930fccf50e603099c3552c",
       "executable": false
     },
     "src/chest/office/create-gallery.ts": {
@@ -2085,7 +2085,7 @@
       "executable": false
     },
     "src/chest/office/service.ts": {
-      "sha256": "56e62e0778060544e08d3520e9c1bdee17b373580c2b51d7cf1ffc29f43f3989",
+      "sha256": "709638c6b6915a0b1098176ea89a704a60cfa2091a905ea409e7af7a850f3f53",
       "executable": false
     },
     "src/chest/office/sheets.ts": {
@@ -2097,7 +2097,7 @@
       "executable": false
     },
     "src/chest/office/ui.ts": {
-      "sha256": "f5124cf0d9f4c93c47db9ad0a120abc52f591ee564ea97af7048c8a06e7573ca",
+      "sha256": "d3f7844176481e1f3f897145e70ba7440377952c8530c747f6e1d26ec8fecc1c",
       "executable": false
     },
     "src/chest/office/wopi.ts": {
@@ -2105,7 +2105,7 @@
       "executable": false
     },
     "src/chest/office/word.ts": {
-      "sha256": "cb1b56189035372efdc5900e21fd95a9b820fd782d811617e062ca55ebc59615",
+      "sha256": "e1790be443e66dc2f2785c51d2e1bfca006f52579ff8ec9b67d836c1bb1ac8f0",
       "executable": false
     },
     "src/chest/office/xml.ts": {
@@ -4569,7 +4569,7 @@
       "executable": false
     },
     "tests/chest/browser-new-files.mjs": {
-      "sha256": "be2e6078e702b0655f0c883432e247c167208250ba734f452968a93d5ff79d9c",
+      "sha256": "68702d3bbeda061515f06306f650d8ad606b29d8146d9dde86f8753675eb1011",
       "executable": false
     },
     "tests/chest/browser-ownership.mjs": {
@@ -4737,7 +4737,7 @@
       "executable": false
     },
     "tests/chest/office.mjs": {
-      "sha256": "9f257f9c07baf42da424b0dba2f9dbe551a9fbb61e547faa0ff08769c81091b2",
+      "sha256": "c5c30b73e52ba1ce91ccc1fe25afef07f91d878c2b757af2c33ae7489b180c64",
       "executable": false
     },
     "tests/chest/open-source.mjs": {
@@ -4786,6 +4786,10 @@
     },
     "tests/chest/restore.mjs": {
       "sha256": "3bf708f06c40755a778e3b3e91a3242e69e737bedbab6f3b5142bc240502ee39",
+      "executable": false
+    },
+    "tests/chest/role-review-flow.mjs": {
+      "sha256": "c70b5adf2ccef99c56545d639ccea7583f6a3b8d1fef5733915174e90303eaeb",
       "executable": false
     },
     "tests/chest/scan-fields.mjs": {

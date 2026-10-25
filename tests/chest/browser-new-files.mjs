@@ -28,3 +28,5 @@ try {
 } finally { await browser?.close();await h.close() }
 
 await (await import('./wopi-flow.mjs')).wopiFlow({browserProof:true});
+
+await (await import('./role-review-flow.mjs')).roleReviewFlow({browserProof:true});

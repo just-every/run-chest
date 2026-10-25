@@ -27,7 +27,7 @@ try {
  const file=files.docx.id;
  for(const role of ['editor','viewer'])await h.api(`/items/${file}/shares`,owner,{principal:`${role}@example.test`,role});
  const base=await h.api(`/items/${file}/office?edit=true`,members.editor), field=base.fields.find(f=>f.value==='Payment within thirty days.'); assert.ok(field);
- await h.api(`/items/${file}/office?edit=true`,members.viewer,undefined,403);
+ assert.equal((await h.api(`/items/${file}/office?edit=true`,members.viewer)).mode,'readonly');
  await h.api(`/items/${file}/office`,members.viewer,{version:base.version,changes:{[field.key]:'not permitted'}},403);
  assert.ok((await h.api(`/items/${file}/office`,members.viewer)).html.includes('Payment within thirty days.'));
  const saved=await h.api(`/items/${file}/office`,members.editor,{version:base.version,changes:{[field.key]:'Payment within forty-five days.'}});
@@ -66,3 +66,5 @@ try {
 
 // SHARE-005's external editor transport uses the same stable file and current authority.
 await (await import('./wopi-flow.mjs')).wopiFlow();
+
+await (await import('./role-review-flow.mjs')).roleReviewFlow();

@@ -66,7 +66,7 @@ export function filesInput(input: any) {
  for (const key of ['confirmExternal', 'allowExternal', 'allowNonMembers', 'allowEditors', 'warnExternal', 'scanIntake', 'externalAccess', 'nonMemberAccess', 'contentManagerFolderSharing', 'managerOverride', 'confirmOverLimit', 'noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove', 'retainEditor', 'allowPublic', 'allowOrganisation', 'allowDiscovery', 'download']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
  if (input.path === '/items' && input.type === 'file' && !input.name) input.name = input.filename
  if (typeof input.destination === 'string') { const [kind, id] = input.destination.split(':'); if (kind === 'space') { input.space = id; input.parent = null } else input.parent = id }
- if (/^\/items\/[^/]+\/office$/.test(input.path)) input.changes = Object.fromEntries(Object.entries(input).filter(([k]) => k.startsWith('office:')).map(([k, v]) => [k.slice(7), v]))
+ if (/^\/items\/[^/]+\/office(?:-suggestions)?$/.test(input.path)) input.changes = Object.fromEntries(Object.entries(input).filter(([k]) => k.startsWith('office:')).map(([k, v]) => [k.slice(7), v]))
  if(typeof input.linkVersion==='string'){if(input.linkVersion.startsWith('pinned:')){input.versionMode='pinned';input.version=input.linkVersion.slice(7)}else input.versionMode=['approved','pinned'].includes(input.linkVersion)?input.linkVersion:'current'}
  if (input.expires === '') delete input.expires
  // The restore preview's checkboxes name the items to restore.
@@ -130,7 +130,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (parts[1] === 'spaces' && parts[2]) { const d = await spaceView(env, w, parts[2]), creation = d.can.contribute ? await listTemplates(env, s, w, { space: d.id }) : null, folder = await browser(env, s, w, d.id, null, d.children.map((c: any) => c.id), url); return { body: spacePage({ ...d, folder, creation, serviceAdmin: isAdmin(s), quotaOwner: s.operator.role === 'owner', manage: url.searchParams.has('manage') }, people, groups), bar: bar([{ label: d.name }], creation, { space: d.id }, `/app/spaces/${d.id}`) } }
  if (parts[1] === 'items' && parts[2]) {
   try {
-   const officeEdit = url.searchParams.get('edit') === '1' ? await readOffice(env, w, parts[2], undefined, true) : null, d = await itemView(env, s, w, parts[2]), returnTo = `/app/items/${d.id}`
+   const officeEdit = url.searchParams.get('edit') === '1' ? await readOffice(env, w, parts[2], undefined, true, url.searchParams.get('mode')==='suggest') : null, d = await itemView(env, s, w, parts[2]), returnTo = `/app/items/${d.id}`
    const creation = d.item.type === 'folder' && d.can.contribute ? await listTemplates(env, s, w, { parent: parts[2] }) : null, folder = d.item.type === 'folder' ? await browser(env, s, w, d.space.id, d.id, d.children.map((c: any) => c.id), url) : null
    return { body: itemPage({ ...d, folder, members: await members(env, w, d.id), creation, officeEdit, me: s.operator.email, ownerRole: s.operator.role === 'owner', manage: url.searchParams.has('manage') }, { people, groups, destinations: await destinations(env, w) }), bar: d.item.type === 'folder' ? bar(itemCrumbs(d), creation, { parent: d.id }, returnTo, d.can.share ? '?manage#share' : undefined) : { crumbs: itemCrumbs(d), upload: d.can.contribute ? '#upload' : undefined, share: d.can.share ? '#share' : undefined } }
   }

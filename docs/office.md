@@ -35,3 +35,24 @@ For a reviewed file, choose **Create link › Audience › Anyone with the link*
 When Collabora is configured, **Open in Collabora Online** opens a Chest host page. Continue once to load the editor in its frame. The host checks for restores every 12 seconds using the same expiring editor token and current staff or verified guest authority. A restore starts Collabora's version-restore handshake; the engine reconciles, closes and reloads the current original. The host accepts messages only from its editor frame at the configured origin and never discards that frame on a timer. If reconciliation cannot finish, keep unsaved work in the editor before reopening it. A stale lock refresh or save cannot overwrite restored bytes.
 
 `tests/chest/wopi-flow.mjs` covers the authenticated state door, stale-write refusal and host protocol. Its `liveCollaboraRestoreFlow` runs against an explicitly provisioned engine with trusted local TLS and proves DOCX and XLSX remote restores at 1440 and 390 through the engine's original-read audit and exact downloaded bytes. This configured integration does not establish the other EDIT-001 requirements.
+
+## Tracked suggestions in the built-in DOCX editor
+
+Commenters open **Suggest changes** on a DOCX file. Their text becomes attributed
+tracked insertions and deletions in a new immutable original. The preview displays
+both sides of each replacement. A direct save is refused with `suggest_only` and
+creates no version. Viewers open the read-only editor and cannot save.
+
+A contributor chooses **Accept suggestions** or **Reject suggestions**. Each decision
+creates a version attributed to that contributor, retains the original proposal
+and records its author, source version and decision in the file history and audit.
+A stale decision is refused. One proposal batch may be pending at a time; ordinary
+built-in edits resume after its decision. Existing tracked changes from another
+editor must be decided there first. This bounded workflow does not claim the full
+Collabora review loop or migrated-review fidelity under EDIT-001 and EDIT-003.
+
+File comments accept comma-separated mention addresses and an optional assignee.
+Every recipient must be active and already able to view the file. An unavailable
+recipient refuses the complete comment without creating a grant or notification.
+Authorized recipients receive the ordinary in-app notice and installation mail;
+assignment itself grants no access. The file page retains the version and author.

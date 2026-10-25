@@ -38,7 +38,7 @@ import { home, itemView, search, spaceView } from './views'
 import { sharingPolicy } from './people'
 import { list } from '../store'
 import { comment } from './comments'
-import { readOffice, saveOffice, officeDocument } from '../office/service'
+import { readOffice, saveOffice, officeDocument, suggestOffice } from '../office/service'
 import { presence } from '../office/presence'
 import { apply, plan, undo } from './rewind'
 import { begin, cancel, complete, receive, status, unfinished } from './uploads'
@@ -107,7 +107,9 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && !key) return createItem(env, s, w, input)
   if (get && key && !sub) return itemView(env, s, w, key)
   if (get && sub === 'office-preview') return officeDocument((await readOffice(env, w, key, version)).html)
-  if (get && sub === 'office') { const result = await readOffice(env, w, key, undefined, url.searchParams.get('edit') === 'true'); return { ...result, fields: url.searchParams.get('edit') === 'true' ? result.fields : undefined } }
+  if (get && sub === 'office') { const result = await readOffice(env, w, key, undefined, url.searchParams.get('edit') === 'true', url.searchParams.get('mode')==='suggest'); return { ...result, fields: url.searchParams.get('edit') === 'true' ? result.fields : undefined } }
+  if (post && sub === 'office-suggestions') return suggestOffice(env,s,w,key,input)
+  if (post && sub === 'office-decisions') return suggestOffice(env,s,w,key,input,true)
   if (post && sub === 'office') return saveOffice(env, s, w, key, input)
   if (sub === 'presence' && (get || post)) return presence(env, s, key, post ? input : undefined)
   if (get && sub === 'bytes' && version) return bytes(env, s, w, key, version, url.searchParams.get('download') === 'true', request.headers.get('range'))
