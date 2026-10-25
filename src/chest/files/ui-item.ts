@@ -1,3 +1,4 @@
+import { commentsPanel } from './ui-comments'
 import { signaturePanel, versionBadge } from '../signatures/ui'
 import { selectionControls } from '../bulk/ui'
 import { storagePanel } from '../quota/ui'
@@ -103,9 +104,6 @@ function manageCards(d: any, extra: { people: any[]; groups: any[] }, returnTo: 
 // The storage card shows on a folder or file page once its space is at 90% of a limit (the warning it carries).
 const nearLimit = (q: any) => q.limitBytes !== null && q.usedBytes >= q.limitBytes * .9
 const notes = (d: any) => `${d.mergedInto ? `<section class="card"><p>Merged into <a class="link" href="/app/items/${esc(d.mergedInto.id)}">${esc(d.mergedInto.name)}</a>. This original and its links are kept.</p></section>` : ''}${d.merges?.length ? `<section class="card"><p>${d.merges.length} duplicate(s) merged; all versions are shown below. <a class="link" href="/app/filing/duplicates">Review or undo merge</a></p></section>` : ''}`
-function commentSection(d: any, returnTo: string) {
- return `<h2 class="section-title">Comments</h2>${d.comments.length ? `<ol class="events">${d.comments.map((c: any) => `<li><span class="mono">${esc(c.author)} · <span class="nowrap">${stamp(c.at)}</span></span><p>${esc(c.message)}</p>${c.assignee?`<p>Assigned to ${esc(c.assignee)}</p>`:''}${c.mentions?.length?`<p>Mentioned: ${c.mentions.map(esc).join(', ')}</p>`:''}</li>`).join('')}</ol>` : '<p class="quiet">No comments yet.</p>'}${d.can.comment ? form(`/items/${d.id}/comments`, area('Comment', 'message', '') + field('Mention people (email addresses, comma separated)', 'mentions', '', 'text', false) + field('Assign comment (email address)', 'assignee', '', 'email', false), 'Post comment', returnTo, { buttonClass: 'btn btn-outline' }) : ''}`
-}
 export function itemPage(d: any, extra: { people: any[]; groups: any[]; destinations: { id: string; label: string }[] }) {
  const returnTo = `/app/items/${d.id}`, parentHref = d.path.length ? `/app/items/${d.path.at(-1).id}` : d.space.member ? `/app/spaces/${d.space.id}` : '/app/shared', named = name(extra.people)
  const current = d.versions.find((v: any) => v.id === d.item.current)
@@ -119,7 +117,7 @@ export function itemPage(d: any, extra: { people: any[]; groups: any[]; destinat
   // Persisted parts remain visible after reload; choosing the same file resumes them in the uploader.
   // Under the table, one row of the folder's own tools: New folder, Restore to a date, Rename, Move and Move to trash.
   const add = d.can.contribute ? `<div id="new" class="add-bar">${addHere({ parent: d.id }, returnTo, d.uploads, rewindForm({ folder: d.id }, returnTo) + rename + manage, d.creation, folderFilingInputs(d.metadata, extra.people, d.me), false)}</div>` : ''
-  const main = folderTitle([d.space.name, ...d.path.map((p: any) => p.name)], d.item.name, returnTo, f.show) + agentStrip(f.agent, returnTo) + f.conflicts.map((c: any) => conflictBanner(c, returnTo, d.can.manage, d.can.contribute)).join('') + notes(d) + (nearLimit(d.storage) ? storagePanel(d.storage, false) : '') + `<div id="contents">${table}</div>` + add + restores(d.rewinds, returnTo) + (d.can.contribute ? '' : custody) + commentSection(d, returnTo)
+  const main = folderTitle([d.space.name, ...d.path.map((p: any) => p.name)], d.item.name, returnTo, f.show) + agentStrip(f.agent, returnTo) + f.conflicts.map((c: any) => conflictBanner(c, returnTo, d.can.manage, d.can.contribute)).join('') + notes(d) + (nearLimit(d.storage) ? storagePanel(d.storage, false) : '') + `<div id="contents">${table}</div>` + add + restores(d.rewinds, returnTo) + (d.can.contribute ? '' : custody) + commentsPanel(d, returnTo)
   const side = sel ? detailsPanel(sel, named, { close: returnTo, returnTo: `${returnTo}?file=${sel.id}`, uploads: d.uploads }) : detailsPanel(d, named, { returnTo, uploads: d.uploads, children: d.children.length }) + manageTools('folder', 'Access, sharing, links, file requests, review and settings', manageCards(d, extra, `${returnTo}?manage`), d.manage)
   return `<div class="browse"><div class="browse-main">${main}</div><div class="browse-side doc-side">${side}</div></div>`
  }
@@ -128,7 +126,7 @@ export function itemPage(d: any, extra: { people: any[]; groups: any[]; destinat
    ${signaturePanel(d, returnTo)}${officePanel(d)}${textInside(d.reading, { poll: `/api/chest/items/${d.id}/reading`, page: n => `/api/chest/items/${d.id}/pages/${d.item.current}/${n}`, retry: d.can.contribute ? `/items/${d.id}/reading` : undefined, returnTo, owner: d.ownerRole, showPhoto: !(d.fieldReadings ?? []).some((r: any) => r.version === d.item.current && r.fields?.state === 'done' && r.fields.proposals.some((p: any) => p.box)) })}
    ${(d.fieldReadings ?? []).slice().reverse().map((r: any) => readFields({id:d.id,fields:d.metadata?.filing?.fields ?? {}},{id:r.version,label:`Version ${d.versions.findIndex((v: any) => v.id === r.version)+1}`},r.reading,r.fields,Object.fromEntries((d.metadata?.schema?.payload.fields ?? []).map((f: any) => [f.name,f.type])),d.can.contribute && r.version === d.versions.at(-1)?.id,d.ownerRole,returnTo,'items')).join('')}<h2 class="section-title" id="history">Version history</h2><div class="versions">${d.versions.map((v: any) => version(v, d, returnTo)).join('')}</div>
    ${fileActivity(d.activity,d.id,d.versions)}
-   ${commentSection(d, returnTo)}${custody}`
+   ${commentsPanel(d, returnTo)}${custody}`
  return `<div class="browse browse-file"><div class="browse-main">${main}</div><div class="browse-side doc-side">${detailsPanel(d, named, { returnTo, head: false })}${manageCards(d, extra, returnTo)}</div></div>`
 }
 export function requestAccessPage(id: string) {

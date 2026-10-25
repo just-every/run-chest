@@ -37,7 +37,7 @@ import { spaceSettingsView } from './space-settings'
 import { home, itemView, search, spaceView } from './views'
 import { sharingPolicy } from './people'
 import { list } from '../store'
-import { comment } from './comments'
+import { comment, replyComment, resolveComment } from './comments'
 import { readOffice, saveOffice, officeDocument, suggestOffice } from '../office/service'
 import { presence } from '../office/presence'
 import { apply, plan, undo } from './rewind'
@@ -103,6 +103,8 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && sub === 'settings') return settings(env, s, w, key, input)
  }
  if (head === 'items') {
+  if (post && sub === 'comments' && version && verb === 'reply') return replyComment(env, s, w, key, version, input)
+  if (post && sub === 'comments' && version && verb === 'resolve') return resolveComment(env, s, w, key, version, input)
   if (post && sub === 'collabora')return openCollabora(env,s,key)
   if (post && !key) return createItem(env, s, w, input)
   if (get && key && !sub) return itemView(env, s, w, key)
