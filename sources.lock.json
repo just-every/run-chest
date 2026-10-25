@@ -4773,7 +4773,7 @@
       "executable": false
     },
     "tests/chest/hosted-cloud.mjs": {
-      "sha256": "334fa6e523480e7b5f8edb010c07fa5fa5bf4fa7fb561cf6472325616a33b595",
+      "sha256": "6f48fdddb29bf4f75786b696f940afba944a21658689ccf63d05b9d0cbc943d7",
       "executable": false
     },
     "tests/chest/hosted-data.mjs": {

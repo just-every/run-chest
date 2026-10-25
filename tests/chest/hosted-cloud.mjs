@@ -42,9 +42,9 @@ export async function cloudResources(environment) {
  async function state(){
   const script=await api(`/workers/scripts/${worker}/settings`,{allowMissing:true});
   const databases=await api(`/d1/database?name=${encodeURIComponent(database)}`);
-  const buckets=await api('/r2/buckets');
+  const storedBucket=await api(`/r2/buckets/${bucket}`,{allowMissing:true});
   return {worker:script!==null,database:databases.find(row=>row.name===database)?.uuid??null,
-   bucket:(buckets.buckets??[]).some(row=>row.name===bucket)};
+   bucket:storedBucket!==null};
  }
  async function absent(){const found=await state();assert.deepEqual(found,{worker:false,database:null,bucket:false},'the named Worker, database and bucket are all absent')}
  await absent();
