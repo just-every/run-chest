@@ -65,7 +65,7 @@ export async function roleBrowserMatrix(h,browser,people,roles,space,width){
      await go(base);await fillMove();await press(p,'Move here');assert.equal((await h.api(`/items/${key}`,manager)).item.parent,destination.id);await go(base);await press(p,'Move to trash');await go('/app/files/trash');await press(form(`/items/${key}/restore`),'Restore');assert.ok(!(await h.api('/trash',manager)).some(t=>t.id===key));
     }else{
      await denied(key,manage,fillCopy,'Copy here');await denied(key,manage,fillShare,'Share',()=>form(`/items/${key}/shares`));await denied(key,base,fillMove,'Move here');await denied(key,base,null,'Move to trash');
-     await h.api(`/items/${key}/trash`,manager,{});await setRole(role,'manager');await go('/app/files/trash');await setRole(role,role);const [r]=await Promise.all([p.waitForNavigation(),form(`/items/${key}/restore`).getByRole('button',{name:'Restore',exact:true}).click()]);assert.equal(r.status(),403);await h.api(`/items/${key}/restore`,manager,{});
+     await h.api(`/items/${key}/trash`,manager,{});await setRole(role,'manager');await go('/app/files/trash');await setRole(role,role);const beforeRestore=await h.api('/trash',manager),[r]=await Promise.all([p.waitForNavigation(),form(`/items/${key}/restore`).getByRole('button',{name:'Restore',exact:true}).click()]);assert.equal(r.status(),403);assert.deepEqual(await h.api('/trash',manager),beforeRestore,`${role} cannot restore the trashed ${target.payload.type}`);await h.api(`/items/${key}/restore`,manager,{});
     }
     await shot(p,`${target.payload.type}-end-${role}`);
    }
@@ -79,7 +79,7 @@ export async function roleBrowserMatrix(h,browser,people,roles,space,width){
    // Membership remains a manager action, regardless of which item was open.
    const memberUrl=`/app/spaces/${space.id}?manage`,memberPath=`/spaces/${space.id}/member`,memberForm=()=>form(memberPath).filter({has:p.locator('input[name=principal][value="outsider@example.test"]')});
    await h.api(`/spaces/${space.id}/member`,manager,{action:'add',principal:'outsider@example.test',role:'viewer'});
-   if(rank===4){await go(memberUrl);await memberForm().getByLabel(/^Role for/).selectOption('commenter');await press(memberForm(),'Change role')}
+   if(rank===4){await go(memberUrl);await memberForm().getByLabel(/^Role for/).selectOption('commenter');await press(memberForm(),'Change role');assert.equal((await h.api(`/spaces/${space.id}`,manager)).members.find(member=>member.principal==='outsider@example.test').role,'commenter')}
    else await denied(id,memberUrl,()=>memberForm().getByLabel(/^Role for/).selectOption('commenter'),'Change role',memberForm);
    await h.api(`/spaces/${space.id}/member`,manager,{action:'remove',principal:'outsider@example.test'});
    // A retained download control also uses the newly restricted role on its next request.
