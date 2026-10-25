@@ -25,7 +25,7 @@ globalThis.fetch=async(input,init={})=>{
    const body=JSON.parse(init.body);
    if(body.action==='init'){importAccount=account;return json({upload_url:'https://synthetic-chest-import.test/upload',filename:'synthetic-chest-8'});}
    assert.equal(body.action,'ingest');assert.equal(importAccount,account);assert.equal(body.etag,createHash('md5').update(importBytes).digest('hex'));
-   const db=new DatabaseSync(file);try{db.exec(importBytes.toString('utf8'));}finally{db.close();}return json({success:true,status:'complete'});
+   const db=new DatabaseSync(file);try{db.exec('BEGIN;');db.exec(importBytes.toString('utf8'));db.exec('COMMIT;');}finally{db.close();}return json({success:true,status:'complete'});
   }
   if(url.pathname.endsWith('/export')){const body=JSON.parse(init.body);exportNoSchema=body.dump_options.no_schema;assert.deepEqual(body,{output_format:'polling',dump_options:{no_schema:exportNoSchema,no_data:false,tables:[]},...(exportStarted?{current_bookmark:'synthetic-chest-bookmark'}:{})});if(!exportStarted){exportStarted=true;return json({success:true,status:'active',at_bookmark:'synthetic-chest-bookmark'});}return json({success:true,status:'complete',result:{signed_url:process.env.CHEST_BACKUP_TEST_UNSAFE_EXPORT==='yes'?'http://synthetic-chest-database.test/download':'https://synthetic-chest-database.test/download'}});}
   if(url.pathname.endsWith('/query')){const db=new DatabaseSync(file);try{return json([{results:db.prepare(JSON.parse(init.body).sql).all()}]);}finally{db.close();}}

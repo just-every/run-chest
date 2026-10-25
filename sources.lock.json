@@ -4565,7 +4565,7 @@
       "executable": false
     },
     "tests/chest/backup-storage-edge.mjs": {
-      "sha256": "08f6ef3e9eb3b9caae1d0808936c93fa6d50a81c6840ad22449ef6747a40b482",
+      "sha256": "593df2eadf9436eb742cca1525ca271310c0021f03519842cd760d64239b35fb",
       "executable": false
     },
     "tests/chest/browser-agent-filing.mjs": {
