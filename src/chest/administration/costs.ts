@@ -6,6 +6,7 @@ import { canAdmin, requireAdmin } from './roles'
 
 export type CostRates = {
  aiProvider?: string
+ aiServiceTier?: string
  aiModel?: string
  aiInputUsdPerMillion?: number
  aiOutputUsdPerMillion?: number
@@ -47,6 +48,7 @@ export async function saveCostSettings(env: Bindings, s: Session, input: any): P
  insist(input?.confirm === true, 'cost_confirmation_required')
  const rates: CostRates = {
   ...(input.aiProvider?{aiProvider:plain(input.aiProvider,'ai_provider',120),aiModel:plain(input.aiModel||'request','ai_model',120),aiInputUsdPerMillion:rate(input.aiInputUsdPerMillion,'ai_input_rate'),aiOutputUsdPerMillion:rate(input.aiOutputUsdPerMillion,'ai_output_rate'),aiRequestUsd:rate(input.aiRequestUsd??0,'ai_request_rate')}:{}),
+  ...(input.aiServiceTier?{aiServiceTier:plain(input.aiServiceTier,'ai_service_tier',80)}:{}),
   ...Object.fromEntries(['aiCacheReadUsdPerMillion','aiCacheWrite5mUsdPerMillion','aiCacheWrite1hUsdPerMillion'].filter(k=>input[k]!==undefined&&input[k]!=='').map(k=>[k,rate(input[k],k)])),
   provider: plain(input.provider, 'provider', 120),
   quote: plain(input.quote, 'quote', 300),

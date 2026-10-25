@@ -23,7 +23,8 @@ export function s3({ endpoint, region, accessKeyId, secretAccessKey, sessionToke
     const scope = `${day}/${region}/s3/aws4_request`, toSign = ['AWS4-HMAC-SHA256', now, scope, hex(canonical)].join('\n');
     const signature = createHmac('sha256', [region, 's3', 'aws4_request'].reduce(hmac, hmac(`AWS4${secretAccessKey}`, day))).update(toSign).digest('hex');
     const r = await transport(`https://${host}${path}${qs ? '?' + qs : ''}`, { method, body, redirect: 'error', headers: { ...signed, authorization: `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${scope}, SignedHeaders=${names.join(';')}, Signature=${signature}` } });
-    if (!r.ok) throw new Error(`Object store refused ${method} (${r.status}).`);
+    if (!r.ok) { await r.body?.cancel(); throw new Error(`Object store refused ${method} (${r.status}).`); }
+    if (method === 'PUT' || method === 'DELETE') await r.arrayBuffer();
     return r;
   }
   return {
