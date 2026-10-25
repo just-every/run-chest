@@ -1,0 +1,12 @@
+node_modules
+dist
+test-results
+.cache
+.seed
+.rer
+.tanstack
+.env*
+.dev.vars*
+exports
+*.rer
+*.tsbuildinfo

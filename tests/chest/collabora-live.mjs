@@ -12,7 +12,7 @@ import {docx} from './office-fixtures.mjs';
 import {liveCollaboraReviewJourney} from './wopi-flow.mjs';
 import {restrictionFlow} from './restriction-flow.mjs';
 const editorPort=Number(process.env.CHEST_COLLABORA_PORT??29984);assert.ok(Number.isInteger(editorPort)&&editorPort>1024&&editorPort<65536,'valid dedicated editor port');
-const image='collabora/code@sha256:bb8f3c9c5c9016045f25fccb5f0649be94469ebc7c7cc379f3576e470cccf33d',container=`sx-chest-c-next4-collabora-${process.pid}`,editor=`http://127.0.0.1:${editorPort}`,directory=await mkdtemp(join(tmpdir(),'chest-collabora-'));
+const image='collabora/code@sha256:bb8f3c9c5c9016045f25fccb5f0649be94469ebc7c7cc379f3576e470cccf33d',container=`sx-chest-c-next4-collabora-${crypto.randomUUID()}`,editor=`http://127.0.0.1:${editorPort}`,directory=await mkdtemp(join(tmpdir(),'chest-collabora-'));
 const dockerEnv={...process.env};for(const k of ['DOCKER_HOST','DOCKER_CONTEXT','DOCKER_TLS','DOCKER_TLS_VERIFY','DOCKER_CERT_PATH'])delete dockerEnv[k];
 const docker=(args)=>execFileSync('docker',['--host=unix:///var/run/docker.sock',...args],{env:dockerEnv,encoding:'utf8',stdio:['ignore','pipe','pipe']});
 const openssl=args=>execFileSync('openssl',args,{cwd:directory,stdio:'ignore'});
