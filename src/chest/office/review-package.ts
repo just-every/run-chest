@@ -69,9 +69,9 @@ export function projectReview(bytes:Uint8Array,decisions:Map<string,'accept'|'re
  for(const path of removed)delete parts[path]
  return zipSync(parts)
 }
+const protectedPart=(path:string)=>path.startsWith('customXml/')||/\.(?:bin|vba|png|jpe?g|gif|svg|emf|wmf|mp3|mp4|wav|ttf|woff2?)$/i.test(path)&&!path.startsWith('docProps/')
 export function protectedPartsEqual(a:Uint8Array,b:Uint8Array){
  const left=packageParts(a),right=packageParts(b)
- const protectedPart=(path:string)=>path.startsWith('customXml/')||/\.(?:bin|vba|png|jpe?g|gif|svg|emf|wmf|mp3|mp4|wav|ttf|woff2?)$/i.test(path)&&!path.startsWith('docProps/')
  for(const path of new Set([...Object.keys(left),...Object.keys(right)]))if(protectedPart(path)){
   const x=left[path],y=right[path];if(!x||!y)return false
   if(isXml(path)){if(canonical(parseXml(x))!==canonical(parseXml(y)))return false}
@@ -90,4 +90,12 @@ export function packageSignature(bytes:Uint8Array):string{
   }else {let binary='';for(let offset=0;offset<parts[path].length;offset+=8192)binary+=String.fromCharCode(...parts[path].subarray(offset,offset+8192));values.push([path,btoa(binary)])}
  }
  return JSON.stringify(values)
+}
+
+// Preserve source parts that this engine demonstrably omits during its ordinary export.
+// A changed or newly added protected part still fails the role validation below.
+export function retainOmittedParts(source:Uint8Array,content:Uint8Array,engineSource:Uint8Array){
+ const before=packageParts(source),after=packageParts(content),normalized=packageParts(engineSource);let restored=false
+ for(const [path,value]of Object.entries(before))if(protectedPart(path)&&!after[path]&&!normalized[path]){after[path]=value;restored=true}
+ return restored?zipSync(after):content
 }

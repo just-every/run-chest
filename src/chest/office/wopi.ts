@@ -11,7 +11,7 @@ import { admit, bytes } from '../files/items'
 import { versionPublication } from '../files/governance'
 import { protect } from '../upload-protection/guard'
 import { assertContent } from '../content-security/scan'
-import { validateWopiReview } from './wopi-review'
+import { preserveWopiParts, validateWopiReview } from './wopi-review'
 import { guestIdentityForSession, type GuestSession } from '../files/guest-links'
 import { guestAuthorityForIdentity } from '../files/guest-mutations'
 import { resolveLinkRecord } from '../files/public-links'
@@ -89,14 +89,15 @@ export async function wopiResponse(request:Request,env:Bindings):Promise<Respons
    demand(a.ctx,'comment')
    if(!active||active.payload.lock!==provided||active.payload.version!==current.id)return conflict(active?.payload.lock??'')
    insist(Number(request.headers.get('content-length')??0)<=SMALL,'office_file_too_large',413)
-   const content=new Uint8Array(await request.arrayBuffer());insist(content.length>0&&content.length<=SMALL,'office_file_too_large',413)
+   let content=new Uint8Array(await request.arrayBuffer());insist(content.length>0&&content.length<=SMALL,'office_file_too_large',413)
    if(await digest(content)===current.checksum){await commit(env,a.s,[],{fences:[...a.ctx.fences,active]});return new Response(null,{status:200,headers:{'X-WOPI-ItemVersion':current.id}})}
    await assertContent(env,current.checksum)
    const original=await env.BLOBS.get(`sha256/${current.checksum}`);insist(original,'blob_missing',503)
    const source=new Uint8Array(await original.arrayBuffer());insist(source.length===current.size&&await digest(source)===current.checksum,'blob_integrity',503)
+   if(commenter)content=await preserveWopiParts(env,source,content,current)
    let suggestion
    try{suggestion=await validateWopiReview(env,source,content,current,{email:a.s.operator.email,name:a.s.operator.displayName||a.s.operator.email},commenter)}catch(error){
-    if(error instanceof ChestError&&['author_mismatch','suggest_only'].includes(error.code))await commit(env,a.s,[],{fences:a.ctx.fences,audits:[{action:'office.collabora.refused',object:item,detail:{reason:error.code,source:current.id}}]})
+    if(error instanceof ChestError&&['author_mismatch','suggest_only'].includes(error.code))await commit(env,a.s,[],{fences:a.ctx.fences,audits:[{action:'office.collabora.refused',object:item,detail:{reason:error.code,source:current.id,...((error as any).reviewReason?{reviewReason:(error as any).reviewReason}:{})}}]})
     throw error
    }
    await protect(env,a.s,{item:file,space:file.payload.space,parent:file.payload.parent,name:current.filename},content)
