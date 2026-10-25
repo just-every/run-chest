@@ -4,7 +4,7 @@ import {zipSync,unzipSync,strFromU8,strToU8} from 'fflate';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
 import {docx} from './office-fixtures.mjs';
-import {roleBrowserMatrix} from './role-browser-matrix.mjs';
+import {roleBrowserMatrix,roleFolderHttpMatrix} from './role-browser-matrix.mjs';
 const b64=v=>Buffer.from(v).toString('base64');
 export async function roleReviewFlow({browserProof=false}={}){
  const h=await harness();let browser;
@@ -51,6 +51,7 @@ export async function roleReviewFlow({browserProof=false}={}){
    if(index<3)await h.api(`/items/${key}/trash`,people.manager,{});
    await h.api(`/items/${key}/restore`,cookie,{},index>=3?200:403);if(index<3)await h.api(`/items/${key}/restore`,people.manager,{});
   }
+  await roleFolderHttpMatrix(h,people,roles,space);
   // Folder inheritance, reviewer duty and personal grants carry the same live role boundary.
   const restricted=await h.api('/items',people.manager,{space:space.id,type:'folder',name:'Restricted reviews'}),privateFile=await h.api('/items',people.manager,{parent:restricted.id,name:'Review.docx',base64:b64(docx())});
   await h.api(`/items/${restricted.id}/governance`,people.manager,{reviewer:'outsider@example.test'});await h.api(`/items/${privateFile.id}`,people.outsider,undefined,403);
@@ -77,6 +78,7 @@ export async function roleReviewFlow({browserProof=false}={}){
    }
   }
   await h.api(`/spaces/${space.id}/settings`,people.manager,{editorSharing:false});await h.api(`/items/${id}/shares`,people.content_manager,{principal:'outsider@example.test',role:'viewer'},403);await h.api(`/items/${id}/shares`,people.manager,{principal:'outsider@example.test',role:'viewer'});await h.api(`/spaces/${space.id}/settings`,people.manager,{editorSharing:true});
+  console.log('ROLE-001 HTTP roles and original transport checks passed');
   if(browserProof){
    await mkdir('test-results',{recursive:true});browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
    for(const width of [1440,390]){

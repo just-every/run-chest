@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {docx} from './office-fixtures.mjs';
+import {unzipSync,strFromU8} from 'fflate';
 
 // Actual page controls are submitted after a live downgrade as well as at their permitted role.
 // A stale form is still a real browser door: the server must refuse it without changing the graph.
@@ -21,10 +22,12 @@ export async function roleBrowserMatrix(h,browser,people,roles,space,width){
   };
   try{
    const folder=await h.api('/items',manager,{space:space.id,type:'folder',name:`Supplier reviews ${width} ${role}`}),destination=await h.api('/items',manager,{space:space.id,type:'folder',name:`Completed reviews ${width} ${role}`});
-   const file=await h.api('/items',manager,{parent:folder.id,name:'Payment terms.docx',base64:Buffer.from(docx()).toString('base64')}),id=file.id,original=file.payload.current,url=`/app/items/${id}`,folderUrl=`/app/items/${folder.id}`;
-   await go(folderUrl);await p.getByRole('heading',{name:folder.payload.name,exact:true}).waitFor();await shot(p,`folder-${role}`);
+   const source=docx(),file=await h.api('/items',manager,{parent:folder.id,name:'Payment terms.docx',base64:Buffer.from(source).toString('base64')}),id=file.id,original=file.payload.current,url=`/app/items/${id}`,folderUrl=`/app/items/${folder.id}`;
+   await go(folderUrl);await p.getByRole('heading',{name:folder.payload.name,exact:true,level:1}).waitFor();await shot(p,`folder-${role}`);
+   await go(`/app/spaces/${space.id}`);await p.locator(`input[name=items][value="${folder.id}"]`).check();await press(p,'Actions for selected items');await p.getByLabel('Action',{exact:true}).selectOption('download');await press(p,'Start selected action');await p.locator('[data-bulk-pending="false"]').waitFor();
+   const archive=p.waitForEvent('download');await p.getByRole('link',{name:'Download selection ZIP',exact:true}).click();const zip=unzipSync(new Uint8Array(await readFile(await(await archive).path()))),manifest=JSON.parse(strFromU8(zip['chest-manifest.json']));assert.equal(manifest.included.length,1);assert.equal(manifest.included[0].sha256,file.payload.versions[0].checksum);await go(folderUrl);
    await p.getByRole('link',{name:'Payment terms.docx',exact:true}).first().click();await p.getByRole('heading',{name:'Payment terms.docx',exact:true}).waitFor();
-   assert.equal(await p.locator('article.ver').count(),1);const download=p.waitForEvent('download');await p.locator('.doc-actions').getByRole('link',{name:'Download',exact:true}).click();assert.deepEqual(new Uint8Array(await readFile(await(await download).path())),docx());
+   assert.equal(await p.locator('article.ver').count(),1);const download=p.waitForEvent('download');await p.locator('.doc-actions').getByRole('link',{name:'Download',exact:true}).click();assert.deepEqual(new Uint8Array(await readFile(await(await download).path())),source);
    await shot(p,`file-${role}`);
    const comment=async(target,targetUrl)=>{
     if(rank>=1){await go(targetUrl);await p.getByLabel('Comment',{exact:true}).fill(`Please confirm the ${role} review.`);await press(p,'Post comment');await p.getByText(`Please confirm the ${role} review.`,{exact:true}).waitFor()}
@@ -54,16 +57,23 @@ export async function roleBrowserMatrix(h,browser,people,roles,space,width){
    // Copy, move, sharing, trash and recovery operate on both the folder and the file.
    for(const target of [file,folder]){
     const key=target.id,base=`/app/items/${key}`,manage=base+(target.payload.type==='folder'?'?manage':'');
-    const fillCopy=async()=>{await p.getByText('Move',{exact:true}).click();await p.getByLabel('Copy destination',{exact:true}).selectOption(`folder:${destination.id}`);await p.getByLabel('Copy name',{exact:true}).fill(`Copy of ${target.payload.name}`)};
-    const fillMove=async()=>{await p.getByText('Move',{exact:true}).click();await p.getByLabel('Destination',{exact:true}).selectOption(`folder:${destination.id}`)};
-    const fillShare=async()=>{await p.getByLabel('Person or group',{exact:true}).selectOption('outsider@example.test');await form(`/items/${key}/shares`).getByLabel('Role',{exact:true}).selectOption('viewer')};
+    const fillCopy=async()=>{await p.getByText('Move',{exact:true}).click();await p.getByLabel(/^Copy destination/).selectOption(`folder:${destination.id}`);await p.getByLabel('Copy name',{exact:true}).fill(`Copy of ${target.payload.name}`)};
+    const fillMove=async()=>{await p.getByText('Move',{exact:true}).click();await p.getByLabel(/^Destination/).selectOption(`folder:${destination.id}`)};
+    const fillShare=async()=>{await p.getByLabel(/^Person or group/).selectOption('outsider@example.test');await form(`/items/${key}/shares`).getByLabel(/^Role/).selectOption('viewer')};
     if(rank>=3){await go(manage);await fillCopy();await press(p,'Copy here');assert.ok((await h.api(`/items/${destination.id}`,manager)).children.some(c=>c.name===`Copy of ${target.payload.name}`));await go(manage);await fillShare();await press(form(`/items/${key}/shares`),'Share');assert.ok((await h.api(`/items/${key}`,manager)).grants.some(g=>g.principal==='outsider@example.test'));
-     await go(base);await fillMove();await press(p,'Move here');assert.equal((await h.api(`/items/${key}`,manager)).item.parent,destination.id);await go(base);await press(p,'Move to trash');await go('/app/files/trash');await press(form(`/items/${key}/restore`),'Restore');assert.equal((await h.api(`/items/${key}`,manager)).item.trash,null);
+     await go(base);await fillMove();await press(p,'Move here');assert.equal((await h.api(`/items/${key}`,manager)).item.parent,destination.id);await go(base);await press(p,'Move to trash');await go('/app/files/trash');await press(form(`/items/${key}/restore`),'Restore');assert.ok(!(await h.api('/trash',manager)).some(t=>t.id===key));
     }else{
      await denied(key,manage,fillCopy,'Copy here');await denied(key,manage,fillShare,'Share',()=>form(`/items/${key}/shares`));await denied(key,base,fillMove,'Move here');await denied(key,base,null,'Move to trash');
      await h.api(`/items/${key}/trash`,manager,{});await setRole(role,'manager');await go('/app/files/trash');await setRole(role,role);const [r]=await Promise.all([p.waitForNavigation(),form(`/items/${key}/restore`).getByRole('button',{name:'Restore',exact:true}).click()]);assert.equal(r.status(),403);await h.api(`/items/${key}/restore`,manager,{});
     }
     await shot(p,`${target.payload.type}-end-${role}`);
+   }
+   if(role==='content_manager'){
+    await h.api(`/spaces/${space.id}/settings`,manager,{editorSharing:false});
+    const sharePath=`/items/${id}/shares`,fill=async()=>{await p.getByLabel(/^Person or group/).selectOption('outsider@example.test');await form(sharePath).getByLabel(/^Role/).selectOption('viewer')};
+    await denied(id,url,fill,'Share',()=>form(sharePath));
+    await setRole(role,'manager');await go(url);await fill();await press(form(sharePath),'Share');assert.ok((await h.api(`/items/${id}`,manager)).grants.some(g=>g.principal==='outsider@example.test'));
+    await setRole(role,role);await h.api(`/spaces/${space.id}/settings`,manager,{editorSharing:true});
    }
    // Membership remains a manager action, regardless of which item was open.
    const memberUrl=`/app/spaces/${space.id}?manage`,memberPath=`/spaces/${space.id}/member`,memberForm=()=>form(memberPath).filter({has:p.locator('input[name=principal][value="outsider@example.test"]')});
@@ -74,8 +84,22 @@ export async function roleBrowserMatrix(h,browser,people,roles,space,width){
    // A retained download control also uses the newly restricted role on its next request.
    await setRole(role,'manager');await go(url);await h.api(`/spaces/${space.id}/settings`,manager,{noDownload:true});await setRole(role,role);
    if(rank<2){const r=await p.request.get(h.origin+`/api/chest/items/${id}/bytes/${original}?download=true`);assert.equal(r.status(),403)}
-   await h.api(`/spaces/${space.id}/settings`,manager,{noDownload:false});await go(url);await shot(p,`final-${role}`);
+   await h.api(`/spaces/${space.id}/settings`,manager,{noDownload:false});await go(url);await shot(p,`final-${role}`);console.log(`ROLE-001 ${role} folder and file controls passed at ${width}`);
   }finally{await setRole(role,role);await ctx.close()}
  }
  console.log(`ROLE-001 real folder and file browser role matrix passed at ${width}`);
+}
+
+export async function roleFolderHttpMatrix(h,people,roles,space){
+ for(const [rank,role] of roles.entries()){
+  const cookie=people[role],folder=await h.api('/items',people.manager,{space:space.id,type:'folder',name:`HTTP ${role} ${crypto.randomUUID()}`}),key=folder.id;
+  const state=async()=>{const d=await h.api(`/items/${key}`,people.manager);return {item:d.item,children:d.children,comments:d.comments,grants:d.grants}};
+  assert.equal((await h.api(`/items/${key}`,cookie)).role,role);
+  for(const [action,body,permitted] of [['comments',{message:'Folder role review'},rank>=1],['copy',{space:space.id,name:`Copied ${folder.payload.name}`},rank>=3],['move',{space:space.id,parent:null},rank>=3],['shares',{principal:'outsider@example.test',role:'viewer'},rank>=3],['settings',{restricted:false},rank===4]]){
+   const before=await state();await h.api(`/items/${key}/${action}`,cookie,body,permitted?200:403);if(!permitted)assert.deepEqual(await state(),before,role+' '+action+' changes no folder state');
+  }
+  const before=await state();await h.api('/items',cookie,{parent:key,name:'Arrival.txt',base64:Buffer.from('Expected arrival').toString('base64')},rank>=2?200:403);if(rank<2)assert.deepEqual(await state(),before);
+  await h.api(`/items/${key}/trash`,cookie,{},rank>=3?200:403);if(rank<3)await h.api(`/items/${key}/trash`,people.manager,{});
+  await h.api(`/items/${key}/restore`,cookie,{},rank>=3?200:403);if(rank<3)await h.api(`/items/${key}/restore`,people.manager,{});
+ }
 }
