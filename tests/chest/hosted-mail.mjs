@@ -127,6 +127,12 @@ export async function emailSignIn({ browser, origin, email, from, width = 1440 }
   stage = 'opening the sign-in page';
   const response = await page.goto(`${expectedOrigin}/signin`);
   if (!response?.ok()) fail('Hosted sign-in page was unavailable');
+  for (const screenWidth of [1440, 390]) {
+   await page.setViewportSize({ width: screenWidth, height: screenWidth === 390 ? 844 : 1000 });
+   if (!await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)) fail('Hosted sign-in overflows its viewport');
+   await page.screenshot({ path: `test-results/${screenWidth}-hosted-signin.png`, fullPage: true });
+  }
+  await page.setViewportSize({ width, height: width <= 760 ? 844 : 1000 });
   await page.getByRole('textbox', { name: 'Email', exact: true }).fill(recipient);
   const since = Date.now();
   stage = 'requesting a sign-in email';

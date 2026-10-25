@@ -4785,11 +4785,11 @@
       "executable": false
     },
     "tests/chest/hosted-mail.mjs": {
-      "sha256": "ce7850838cd243bf62c95b63a3020fe25993db4e0121979c71faa7e002421dff",
+      "sha256": "1453b33d3de3f9f77559744e0b5a8c5d6f209582d22e6fd69cb0a2d5b66e26d8",
       "executable": false
     },
     "tests/chest/hosted-screens.mjs": {
-      "sha256": "ef627d26e502a3b0f29acd902c4e339fa39409256653ae4764b4431524410c89",
+      "sha256": "5e3b4635032cc644fa12f33bfdaa8db469f057ea9755503986fdff01ae8c4563",
       "executable": false
     },
     "tests/chest/integration-client.mjs": {
