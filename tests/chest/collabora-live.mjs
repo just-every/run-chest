@@ -7,7 +7,7 @@ import {join} from 'node:path';
 import {request as httpRequest} from 'node:http';
 import {unzipSync,strFromU8} from 'fflate';
 import {chromium} from '@playwright/test';
-import {harness} from './harness.mjs';
+import {observedHost} from './observed-host.mjs';
 import {docx} from './office-fixtures.mjs';
 import {liveCollaboraReviewJourney} from './wopi-flow.mjs';
 import {restrictionFlow} from './restriction-flow.mjs';
@@ -23,7 +23,7 @@ try{
  await mkdir('test-results',{recursive:true});openssl(['req','-x509','-newkey','rsa:2048','-nodes','-keyout','ca.key','-out','ca.pem','-days','1','-subj','/CN=Chest synthetic test CA','-addext','basicConstraints=critical,CA:TRUE']);
  openssl(['req','-new','-newkey','rsa:2048','-nodes','-keyout','server.key','-out','server.csr','-subj','/CN=localhost']);await writeFile(join(directory,'extensions'),'subjectAltName=DNS:localhost,IP:127.0.0.1\nbasicConstraints=CA:FALSE\nextendedKeyUsage=serverAuth\n');openssl(['x509','-req','-in','server.csr','-CA','ca.pem','-CAkey','ca.key','-CAcreateserial','-out','server.pem','-days','1','-extfile','extensions']);
  await chmod(join(directory,'ca.pem'),0o644);
- h=await harness({tls:{key:await readFile(join(directory,'server.key'),'utf8'),cert:await readFile(join(directory,'server.pem'),'utf8')},bindings:{COLLABORA_URL:editor},edge:async r=>{if(r.url.startsWith(editor+'/')){const response=await http(r.url,{method:r.method,headers:Object.fromEntries(r.headers)},r.method==='POST'?Buffer.from(await r.arrayBuffer()):undefined);return new Response(response.body,{status:response.status,headers:{'content-type':response.headers['content-type']??'application/octet-stream'}})}}});
+ h=await observedHost({tls:{key:await readFile(join(directory,'server.key'),'utf8'),cert:await readFile(join(directory,'server.pem'),'utf8')},bindings:{COLLABORA_URL:editor},edge:async r=>{if(r.url.startsWith(editor+'/')){const response=await http(r.url,{method:r.method,headers:Object.fromEntries(r.headers)},r.method==='POST'?Buffer.from(await r.arrayBuffer()):undefined);return new Response(response.body,{status:response.status,headers:{'content-type':response.headers['content-type']??'application/octet-stream'}})}}});
  // Host networking connects only these two task-owned loopback components; no external destination or policy is bypassed.
  docker(['run','--detach','--name',container,'--network','host','--cap-add','MKNOD','--mount',`type=bind,src=${join(directory,'ca.pem')},dst=/tmp/chest-test-ca.pem,readonly`,image,`--port=${editorPort}`,'--o:ssl.enable=false','--o:ssl.termination=false','--o:ssl.ssl_verification=true','--o:ssl.ca_file_path=/tmp/chest-test-ca.pem','--o:storage.ssl.enable=true','--o:storage.ssl.as_scheme=true','--o:storage.ssl.ca_file_path=/tmp/chest-test-ca.pem','--o:logging.level=information',`--o:server_name=127.0.0.1:${editorPort}`,'--o:storage.wopi.alias_groups[@mode]=groups',`--o:storage.wopi.alias_groups.group[0].host=${h.origin}`,'--o:storage.wopi.alias_groups.group[0].host[@allow]=true']);started=true;
  let ready=false;for(let n=0;n<60;n++){try{if((await http(editor+'/hosting/discovery')).status===200){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,1000))}assert.ok(ready,'CODE becomes ready with TLS validation enabled');stage('real editor ready');
