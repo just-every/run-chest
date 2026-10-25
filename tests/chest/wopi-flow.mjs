@@ -44,6 +44,7 @@ async function collaboraRestoreJourney(h,owner,staff,file,call){
   await mkdir('test-results',{recursive:true});
   for(const width of [1440,390]){
    const context=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});
+   try{
    await context.addCookies(owner.split('; ').map(s=>{const i=s.indexOf('=');return {name:s.slice(0,i),value:s.slice(i+1),url:h.origin}}));
    let deliveries=0,acknowledge=true;
    await context.route('https://synthetic-chest-editor.test/**',async route=>{
@@ -83,7 +84,12 @@ async function collaboraRestoreJourney(h,owner,staff,file,call){
    await page.waitForFunction(()=>document.querySelector('[data-collabora-status]').textContent.includes('reconciling'));
    assert.equal(await page.frameLocator('iframe').getByLabel('Unsaved editor work').inputValue(),'synthetic-chest-1');
    await page.screenshot({path:`test-results/${width}-collabora-restore-pending.png`,fullPage:true});
-   await context.close();
+   }finally{
+    // Finish route-handler WOPI reads before closing the context and its worker.
+    for(const page of context.pages())await page.unrouteAll({behavior:'wait'});
+    await context.unrouteAll({behavior:'wait'});
+    await context.close();
+   }
   }
   console.log('VERSION-001 Collabora host protocol at 1440 and 390: automatic restore notification, exact WOPI originals, unchanged history, origin fences and pending unsaved frame retained; live Collabora engine NOT exercised');
  }finally{await browser.close()}
