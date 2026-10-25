@@ -106,7 +106,8 @@ export async function liveCollaboraReviewJourney(h,owner,browser,{stage}){
    const read=await open(viewer,'/app/items/'+file.id),readonly=await(await raw(read)).json();assert.equal(readonly.ReadOnly,true);assert.equal(readonly.UserCanWrite,false);assert.equal(await read.page.locator('[data-review-decision]').count(),0);const versions=(await h.api(`/items/${file.id}`,owner)).versions;assert.equal((await raw(read,'POST','/contents',{'X-WOPI-Lock':lock},content)).status,403);assert.deepEqual((await h.api(`/items/${file.id}`,owner)).versions,versions);await read.page.screenshot({path:`test-results/${width}-collabora-live-viewer.png`,fullPage:true});
    content=await currentBytes();xml=strFromU8(unzipSync(content)['word/document.xml']);assert.ok(xml.includes(`Guest tracked proposal ${width}`));assert.ok(!xml.includes(`Rejected proposal ${width}`));
    stage(width+' real tracked guest typing, direct and author refusals, attributed accept and reject, readonly viewer passed');
-  }finally{for(const ctx of contexts)await ctx.close()}
+  }catch(error){let failed=0;for(const ctx of contexts)for(const page of ctx.pages())await page.screenshot({path:`test-results/${width}-collabora-review-failed-${failed++}.png`,fullPage:true}).catch(()=>{});throw error}
+  finally{for(const ctx of contexts)await ctx.close()}
  }
 }
 
