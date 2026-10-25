@@ -94,13 +94,16 @@ export async function roleBrowserMatrix(h,browser,people,roles,space,width){
 export async function roleFolderHttpMatrix(h,people,roles,space){
  for(const [rank,role] of roles.entries()){
   const cookie=people[role],folder=await h.api('/items',people.manager,{space:space.id,type:'folder',name:`HTTP ${role} ${crypto.randomUUID()}`}),key=folder.id;
+  const bytes=Buffer.from('The delivery schedule remains available.'),child=await h.api('/items',people.manager,{parent:key,name:'Delivery schedule.txt',base64:bytes.toString('base64')});
+  const job=await h.api('/bulk',cookie,{action:'download',items:[key]}),response=await h.raw(`/api/chest/bulk/${job.id}/archive`,cookie);assert.equal(response.status,200);
+  const archive=unzipSync(new Uint8Array(await response.arrayBuffer())),manifest=JSON.parse(strFromU8(archive['chest-manifest.json']));assert.equal(manifest.included.length,1);assert.equal(manifest.included[0].sha256,child.payload.versions[0].checksum);
   const state=async()=>{const d=await h.api(`/items/${key}`,people.manager);return {item:d.item,children:d.children,comments:d.comments,grants:d.grants}};
   assert.equal((await h.api(`/items/${key}`,cookie)).role,role);
   for(const [action,body,permitted] of [['comments',{message:'Folder role review'},rank>=1],['copy',{space:space.id,name:`Copied ${folder.payload.name}`},rank>=3],['move',{space:space.id,parent:null},rank>=3],['shares',{principal:'outsider@example.test',role:'viewer'},rank>=3],['settings',{restricted:false},rank===4]]){
    const before=await state();await h.api(`/items/${key}/${action}`,cookie,body,permitted?200:403);if(!permitted)assert.deepEqual(await state(),before,role+' '+action+' changes no folder state');
   }
   const before=await state();await h.api('/items',cookie,{parent:key,name:'Arrival.txt',base64:Buffer.from('Expected arrival').toString('base64')},rank>=2?200:403);if(rank<2)assert.deepEqual(await state(),before);
-  await h.api(`/items/${key}/trash`,cookie,{},rank>=3?200:403);if(rank<3)await h.api(`/items/${key}/trash`,people.manager,{});
-  await h.api(`/items/${key}/restore`,cookie,{},rank>=3?200:403);if(rank<3)await h.api(`/items/${key}/restore`,people.manager,{});
+  const beforeTrash=await state();await h.api(`/items/${key}/trash`,cookie,{},rank>=3?200:403);if(rank<3){assert.deepEqual(await state(),beforeTrash);await h.api(`/items/${key}/trash`,people.manager,{})}
+  const trash=await h.api('/trash',people.manager);await h.api(`/items/${key}/restore`,cookie,{},rank>=3?200:403);if(rank<3){assert.deepEqual(await h.api('/trash',people.manager),trash);await h.api(`/items/${key}/restore`,people.manager,{})}
  }
 }

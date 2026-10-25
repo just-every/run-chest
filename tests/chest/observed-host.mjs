@@ -17,7 +17,7 @@ export async function observedHost(options){
    if(match&&request.method==='GET'&&result.status===200)await writeFile(`test-results/wopi-${match[1]}-read-${sequence++}.docx`,Buffer.from(await result.clone().arrayBuffer()));
    const headers=Object.fromEntries(result.headers);if(result.headers.getSetCookie().length)headers['set-cookie']=result.headers.getSetCookie();
    response.writeHead(result.status,headers);if(result.body)await pipeline(Readable.fromWeb(result.body),response);else response.end();
-  }catch{response.writeHead(502);response.end('The test transport failed.')}
+  }catch{if(response.headersSent)response.destroy();else{response.writeHead(502);response.end('The test transport failed.')}}
  });
  server.listen(0,'127.0.0.1');await once(server,'listening');
  const publicOrigin=`https://127.0.0.1:${server.address().port}`;

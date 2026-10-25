@@ -37,21 +37,22 @@ export async function roleReviewFlow({browserProof=false}={}){
   // Every current role's ordinary content and management rights, including refused mutations.
   for(const [index,role] of roles.entries()){
    const cookie=people[role],item=await create(),key=item.id,version=item.payload.current;
+   const attempt=async(path,body,permitted)=>{const state=async()=>({item:path===`/items/${key}/restore`?await h.api('/trash',people.manager):await snapshot(key),members:(await h.api(`/spaces/${space.id}`,people.manager)).members}),before=permitted?null:await state(),result=await h.api(path,cookie,body,permitted?200:403);if(!permitted)assert.deepEqual(await state(),before,role+' '+path+' changes no state');return result};
    const original=await snapshot(key);assert.equal((await h.api(`/items/${key}`,cookie)).role,role);assert.equal((await h.raw(`/api/chest/items/${key}/bytes/${version}?download=true`,cookie)).status,200);assert.ok((await h.api(`/items/${key}`,cookie)).versions.some(v=>v.id===version));
    const suggestionBase=await h.api(`/items/${key}/office?edit=true&mode=suggest`,cookie);assert.equal(suggestionBase.mode,index>=1?'suggest':'readonly');
-   const first=suggestionBase.fields[0],suggested=await h.api(`/items/${key}/office-suggestions`,cookie,{version:suggestionBase.version,changes:{[first.key]:`Proposed by ${role}`}},index>=1?200:403);
-   if(index>=1){const beforeDecision=await snapshot(key);await h.api(`/items/${key}/office-decisions`,cookie,{version:suggested.version,decision:'accept'},index>=2?200:403);if(index===1){assert.deepEqual(await snapshot(key),beforeDecision);await h.api(`/items/${key}/office-decisions`,people.manager,{version:suggested.version,decision:'accept'})}}
-   await h.api(`/items/${key}/comments`,cookie,{message:'Role review'},index>=1?200:403);
-   await h.api(`/items/${key}/versions`,cookie,{base64:b64(docx())},index>=2?200:403);
-   await h.api(`/items/${key}/versions/${version}/restore`,cookie,{},index>=2?200:403);
-   await h.api(`/items/${key}/move`,cookie,{space:space.id,parent:null},index>=3?200:403);
-   await h.api(`/items/${key}/copy`,cookie,{space:space.id,parent:null,name:'Copy '+item.payload.name},index>=3?200:403);
-   await h.api(`/items/${key}/shares`,cookie,{principal:'outsider@example.test',role:'viewer'},index>=3?200:403);
-   await h.api(`/spaces/${space.id}/member`,cookie,{action:'role',principal:'viewer@example.test',role:'viewer'},index===4?200:403);
+   const first=suggestionBase.fields[0],suggested=await attempt(`/items/${key}/office-suggestions`,{version:suggestionBase.version,changes:{[first.key]:`Proposed by ${role}`}},index>=1);
+   if(index>=1){const beforeDecision=await snapshot(key);await attempt(`/items/${key}/office-decisions`,{version:suggested.version,decision:'accept'},index>=2);if(index===1){assert.deepEqual(await snapshot(key),beforeDecision);await h.api(`/items/${key}/office-decisions`,people.manager,{version:suggested.version,decision:'accept'})}}
+   await attempt(`/items/${key}/comments`,{message:'Role review'},index>=1);
+   await attempt(`/items/${key}/versions`,{base64:b64(docx())},index>=2);
+   await attempt(`/items/${key}/versions/${version}/restore`,{},index>=2);
+   await attempt(`/items/${key}/move`,{space:space.id,parent:null},index>=3);
+   await attempt(`/items/${key}/copy`,{space:space.id,parent:null,name:'Copy '+item.payload.name},index>=3);
+   await attempt(`/items/${key}/shares`,{principal:'outsider@example.test',role:'viewer'},index>=3);
+   await attempt(`/spaces/${space.id}/member`,{action:'role',principal:'viewer@example.test',role:'viewer'},index===4);
    if(index<1)assert.deepEqual(await snapshot(key),original);
-   await h.api(`/items/${key}/trash`,cookie,{},index>=3?200:403);
+   await attempt(`/items/${key}/trash`,{},index>=3);
    if(index<3)await h.api(`/items/${key}/trash`,people.manager,{});
-   await h.api(`/items/${key}/restore`,cookie,{},index>=3?200:403);if(index<3)await h.api(`/items/${key}/restore`,people.manager,{});
+   await attempt(`/items/${key}/restore`,{},index>=3);if(index<3)await h.api(`/items/${key}/restore`,people.manager,{});
   }
   await roleFolderHttpMatrix(h,people,roles,space);
   // Folder inheritance, reviewer duty and personal grants carry the same live role boundary.
