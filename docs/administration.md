@@ -70,7 +70,10 @@ are replayed by their IDs after successful commands for that target; completed
 replay removes the local pending receipt. An interrupted or refused restore can
 leave pending receipts locally; run a successful verification or list command with the same target and journal
 directory to reconcile them. Failed validation leaves the remote target unchanged. Keep
-the private directory through recovery. Local exports with no provider traffic
+the private directory through recovery. Commands on the same computer serialize
+per target; a second command is refused until the active command finishes. A
+command interrupted by process exit leaves a stale claim that the next command
+recovers before reconciling the durable receipt journal. Local exports with no provider traffic
 do not establish a provider charge. Historical uninstrumented traffic is unknown.
 
 ## Collabora reporting boundary

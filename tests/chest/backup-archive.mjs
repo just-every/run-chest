@@ -95,7 +95,10 @@ else process.exit(1);
     {CHEST_BACKUP_ACCOUNT_ID:'live-account',CHEST_BACKUP_BUCKET:'chest-production-blobs'},
     ...['http://backup.example.test','https://backup.example.test/path','https://backup.example.test?credential=synthetic-chest-1'].map(endpoint=>({CHEST_BACKUP_PROVIDER:'s3',CHEST_BACKUP_S3_ENDPOINT:endpoint,CHEST_BACKUP_S3_REGION:'us-east-1',CHEST_BACKUP_S3_ACCESS_KEY_ID:'synthetic-chest-3',CHEST_BACKUP_S3_SECRET_ACCESS_KEY:'synthetic-chest-4'}))
   ]) await cli(['backup','--environment','production'],{extra,refuse:true});
-  const receipt=await cli(['backup','--environment','production','--retention-days','30']);
+  const creating=cli(['backup','--environment','production','--retention-days','30'],{extra:{CHEST_BACKUP_TEST_DELAY_EXPORT:'yes'}});
+  while(!(await stat(join(temp,'export-started')).catch(()=>null)))await new Promise(resolve=>setTimeout(resolve,20));
+  await cli(['list','--environment','production'],{refuse:true});
+  const receipt=await creating;
   const accountingDb=new DatabaseSync(source);
   const accounting=accountingDb.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage' AND actor='chest:backup'").all().map(r=>JSON.parse(r.detail));accountingDb.close();
   assert.ok(accounting.some(r=>r.provider==='Cloudflare D1'&&r.responseBytes>0),'database export control call and private SQL download are metered');

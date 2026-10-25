@@ -233,7 +233,7 @@
       "executable": false
     },
     "docs/administration.md": {
-      "sha256": "59811dd4e199002b82ea0fc08aab82d036e81451895356ba50d180bba54ad57c",
+      "sha256": "204884ba30fc90d046313c8604db296020404aa77508fe03a12f25a251753eaa",
       "executable": false
     },
     "docs/backup-and-restore.md": {
@@ -877,7 +877,7 @@
       "executable": false
     },
     "scripts/backup/accounting-journal.mjs": {
-      "sha256": "aadd47efc51e5964ecebde176f4c6221a345193dfdefe315ab762f4ca05c2500",
+      "sha256": "3e058dff5b5e3ebe8debcbeda0c69e5590a1dd2ed9ef0837bf583018b37dce0c",
       "executable": false
     },
     "scripts/backup/accounting.mjs": {
@@ -4557,7 +4557,7 @@
       "executable": false
     },
     "tests/chest/backup-archive.mjs": {
-      "sha256": "6abe1022259b9cb28fc740c773193f1a618a097722e2c085a16caac775525644",
+      "sha256": "ba28b09f753cbad52c72b911662eb3c450dc94367b507ee5fcd8b30078d7d083",
       "executable": false
     },
     "tests/chest/backup-sandbox.mjs": {
@@ -4565,7 +4565,7 @@
       "executable": false
     },
     "tests/chest/backup-storage-edge.mjs": {
-      "sha256": "593df2eadf9436eb742cca1525ca271310c0021f03519842cd760d64239b35fb",
+      "sha256": "fafe19469371f5ec7971995b0152dde163c715a34f30b5f4a512f2471b1bb71f",
       "executable": false
     },
     "tests/chest/browser-agent-filing.mjs": {
