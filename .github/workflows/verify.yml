@@ -10,7 +10,7 @@ on:
 permissions:
   contents: read
 jobs:
-  # Three parallel push shards cover the RER/HTTP checks, files browser journey, and Auth organisation integration.
+  # Parallel push shards keep the core, role and Office journeys within the job budget.
   # The fresh-clone installer journey retains coverage on release tags, nightly and manual runs.
   verify:
     runs-on: ubuntu-latest
@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [files, other, security]
+        suite: [files, other, office, security]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -88,6 +88,8 @@ jobs:
       - run: pnpm install --frozen-lockfile && pnpm exec rer install
       - run: node scripts/install-browser.mjs
       - run: pnpm run build
+      - if: matrix.suite == 'office'
+        run: pnpm run test:chest:office
       - run: pnpm run test:browser:${{ matrix.suite }}
       - uses: actions/upload-artifact@v4
         if: always()
