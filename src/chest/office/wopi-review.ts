@@ -2,7 +2,7 @@ import type { Bindings } from '../../auth.server'
 import type { FileVersion } from '../files/model'
 import { ChestError, insist, now } from '../model'
 import { SMALL } from '../blobs'
-import { packageSignature, projectReview, protectedPartsEqual, reviewRecords, retainOmittedParts } from './review-package'
+import { packageSignature, projectReview, protectedPartsEqual, reviewRecords, retainOmittedParts, trackingEnabled } from './review-package'
 
 async function exported(env:Bindings,bytes:Uint8Array,extension:string){
  const form=new FormData();form.set('data',new Blob([bytes as BlobPart]),`review.${extension}`)
@@ -26,6 +26,8 @@ export async function validateWopiReview(env:Bindings,source:Uint8Array,content:
  const extension=current.filename.split('.').at(-1)!.toLowerCase(),before=reviewRecords(source),after=reviewRecords(content),previous=new Map(before.map(r=>[r.key,r])),allowedAuthors=new Set([actor.email,actor.name])
  for(const record of after){const prior=previous.get(record.key);if(!prior||prior.value!==record.value)insist(allowedAuthors.has(record.author),'author_mismatch',403)}
  if(commenter){
+  if(extension==='docx')suggestOnly(trackingEnabled(content)!==false,'tracking_disabled')
+  else suggestOnly(after.every(record=>record.kind==='comment'),'comment_only')
   suggestOnly(protectedPartsEqual(source,content),'protected_parts_changed')
   for(const record of before)if(!allowedAuthors.has(record.author))suggestOnly(after.some(r=>r.key===record.key&&r.value===record.value),'foreign_review_changed')
   const removed=before.filter(r=>r.kind!=='comment'&&!after.some(next=>next.key===r.key));suggestOnly(!removed.length,'tracked_change_removed')

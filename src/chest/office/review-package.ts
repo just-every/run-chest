@@ -101,3 +101,9 @@ export function retainOmittedParts(source:Uint8Array,content:Uint8Array,engineSo
  for(const [path,value]of Object.entries(before))if(protectedPart(path)&&!after[path]&&!normalized[path]){after[path]=value;restored=true}
  return restored?zipSync(after):content
 }
+
+export function trackingEnabled(bytes:Uint8Array):boolean|null{
+ const settings=packageParts(bytes)['word/settings.xml'];if(!settings)return null
+ const node=Array.from(parseXml(settings).getElementsByTagName('*')).find(e=>e.localName==='trackRevisions'&&/wordprocessingml/.test(e.namespaceURI??''))
+ return !!node&&!['0','false','off'].includes(attr(node,'val').toLowerCase())
+}
