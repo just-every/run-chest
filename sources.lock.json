@@ -877,7 +877,7 @@
       "executable": false
     },
     "scripts/backup/accounting-journal.mjs": {
-      "sha256": "3e058dff5b5e3ebe8debcbeda0c69e5590a1dd2ed9ef0837bf583018b37dce0c",
+      "sha256": "e0f83525e41f248938ae5fa5f6aafa35e05271a461c4644bef00fb0444696e5b",
       "executable": false
     },
     "scripts/backup/accounting.mjs": {

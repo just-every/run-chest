@@ -1,6 +1,6 @@
 // Private metadata journal survives database replacement and interrupted commands.
 import {DatabaseSync} from 'node:sqlite';
-import {mkdirSync,chmodSync,lstatSync,existsSync,openSync,writeFileSync,readFileSync,closeSync,unlinkSync} from 'node:fs';
+import {mkdirSync,chmodSync,lstatSync,existsSync,openSync,writeFileSync,readFileSync,closeSync,unlinkSync,rmdirSync} from 'node:fs';
 import {homedir} from 'node:os';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
@@ -16,11 +16,15 @@ export async function accountingJournal(query,identity,producer) {
  function claim(){const fd=openSync(lock,'wx',0o600);try{writeFileSync(fd,String(process.pid))}finally{closeSync(fd)}}
  try{claim()}catch(error){
   if(error.code!=='EEXIST')throw error;
-  const info=lstatSync(lock);if(!info.isFile()||info.isSymbolicLink()||typeof process.getuid==='function'&&info.uid!==process.getuid())throw Error('Accounting command lock needs owner inspection.');
-  const owner=Number(readFileSync(lock,'utf8'));if(!Number.isSafeInteger(owner)||owner<1)throw Error('Accounting command lock needs owner inspection.');
-  try{process.kill(owner,0);throw Error('Another portability command owns this target; retry after it finishes.')}catch(error){if(error.code!=='ESRCH')throw error}
-  // Exclusive creation still rejects another command that recovered the stale owner first.
-  unlinkSync(lock);claim();
+  // Only one process may inspect and replace a stale claim. A crash while
+  // recovering leaves this gate for owner inspection rather than risking two writers.
+  const recovery=lock+'.recovery';mkdirSync(recovery,{mode:0o700});
+  try{
+   const info=lstatSync(lock);if(!info.isFile()||info.isSymbolicLink()||typeof process.getuid==='function'&&info.uid!==process.getuid())throw Error('Accounting command lock needs owner inspection.');
+   const owner=Number(readFileSync(lock,'utf8'));if(!Number.isSafeInteger(owner)||owner<1)throw Error('Accounting command lock needs owner inspection.');
+   try{process.kill(owner,0);throw Error('Another portability command owns this target; retry after it finishes.')}catch(error){if(error.code!=='ESRCH')throw error}
+   unlinkSync(lock);claim();
+  }finally{rmdirSync(recovery)}
  }
  let db;try{db=new DatabaseSync(path);chmodSync(path,0o600)}catch(error){unlinkSync(lock);throw error}
 
