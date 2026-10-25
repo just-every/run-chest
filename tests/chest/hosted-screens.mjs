@@ -5,6 +5,7 @@ export async function hostedScreens(page,origin,expected,actor) {
  for(const width of [1440,390]){
   await page.setViewportSize({width,height:width===390?844:1000});
   for(const [name,path,visible] of [
+   ['library',`/app/documents/${expected.library.document}`,'Harbor retained agreement'],
    ['folders',`/app/items/${expected.parent}`,'Approved originals'],
    ['original',`/app/items/${expected.large}`,'Harbor production handover.bin'],
    ['trash','/app/files/trash','Payment terms.txt'],

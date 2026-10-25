@@ -17,6 +17,14 @@ export function hostedClient(origin,context) {
 export async function createHostedData(owner,member,email,memberEmail,marker) {
  const space=await owner.api('/spaces',{name:'Harbor delivery '+marker});
  await owner.api(`/spaces/${space.id}/members`,{members:[{principal:email,role:'manager'},{principal:memberEmail,role:'manager'}]});
+ const collection=await owner.api('/collections',{name:'Harbor supplier evidence'});
+ const schema=await owner.api('/schemas',{name:'Delivery evidence',fields:[{name:'reference',type:'text',required:true}]});
+ await owner.api(`/collections/${collection.id}/grants`,{grants:[{principal:memberEmail,role:'reviewer'}]});
+ let document=await owner.api('/documents',{title:'Harbor retained agreement',collection:collection.id,schema:schema.id,
+  fields:{reference:marker},owner:email,reviewer:memberEmail,reference:{kind:'project',name:'Harbor delivery'},
+  filename:'Approved agreement.txt',base64:Buffer.from('Agreed supplier evidence '+marker).toString('base64')});
+ await member.api(`/documents/${document.id}/review/${document.payload.versions[0].id}`,{action:'approve'});
+ document=await owner.api(`/documents/${document.id}/versions`,{filename:'Proposed agreement.txt',base64:Buffer.from('Proposed supplier evidence '+marker).toString('base64')});
  const parent=await owner.api('/items',{space:space.id,type:'folder',name:'Client agreements'});
  const folder=await owner.api('/items',{parent:parent.id,type:'folder',name:'Approved originals'});
  const first=Buffer.from('Harbor payment terms, original '+marker),second=Buffer.from('Harbor payment terms, agreed revision '+marker);
@@ -49,6 +57,7 @@ export async function createHostedData(owner,member,email,memberEmail,marker) {
  await owner.api(`/items/${small.id}/trash`,{});
  return {space:space.id,parent:parent.id,folder:folder.id,incoming:incoming.id,trash:small.id,delivery:delivery.id,received:receivedItem.id,
   large:large.id,largeVersion:large.item.current,checksum,size,link:link.link.id,linkUrl:link.url,request:request.request.id,requestUrl:request.url,
+  library:{document:document.id,collection:collection.id,schema:schema.id,versions:document.payload.versions.map(v=>({id:v.id,checksum:v.checksum,size:v.size}))},
   originals:[{item:small.id,versions:revised.payload.versions.map(v=>({id:v.id,checksum:v.checksum,size:v.size}))},
    {item:delivery.id,versions:delivery.payload.versions.map(v=>({id:v.id,checksum:v.checksum,size:v.size}))},
    {item:receivedItem.id,versions:[{id:(await owner.api(`/items/${receivedItem.id}`)).item.current,checksum:sha(received),size:received.length}]}]};
@@ -56,6 +65,7 @@ export async function createHostedData(owner,member,email,memberEmail,marker) {
 
 export async function snapshotHostedData(client,expected) {
  const space=await client.api(`/spaces/${expected.space}`);
+ const library=await client.api('/library'),document=await client.api(`/documents/${expected.library.document}`);
  const rows=[];
  for(const id of [expected.parent,expected.folder,expected.incoming,expected.delivery,expected.received,expected.large]){
   const view=await client.api(`/items/${id}`);
@@ -72,10 +82,15 @@ export async function snapshotHostedData(client,expected) {
  const request=requests.find(row=>row.id===expected.request);
  assert.ok(request?.open);assert.equal(request.uploads,1,'the file request retains its accepted upload');
  return {space:{id:space.id,name:space.name,members:space.members,children:space.children.map(row=>({id:row.id,name:row.name,type:row.type})).sort((a,b)=>a.id.localeCompare(b.id))},rows,
-  trash:{id:trashed.id,name:trashed.name,trashedBy:trashed.trashedBy,trashedAt:trashed.trashedAt},request};
+  trash:{id:trashed.id,name:trashed.name,trashedBy:trashed.trashedBy,trashedAt:trashed.trashedAt},request,
+  library:{document:document.payload,collection:library.collections.find(row=>row.id===expected.library.collection),schema:library.schemas.find(row=>row.id===expected.library.schema)}};
 }
 
 export async function reconcileHostedOriginals(client,expected) {
+ for(const version of expected.library.versions){
+  const response=await client.request(`/documents/${expected.library.document}/bytes/${version.id}?download=true`);
+  assert.equal(sha(await response.body()),version.checksum);await response.dispose();
+ }
  await client.api(`/items/${expected.trash}/restore`,{});
  for(const file of expected.originals){
   const view=await client.api(`/items/${file.item}`);

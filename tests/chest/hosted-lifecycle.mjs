@@ -46,7 +46,7 @@ try {
  assert.equal((await stat(backup)).mode&0o077,0,'the hosted backup is private');
  const manifest=JSON.parse(await readFile(join(backup,'manifest.json'),'utf8'));
  const sql=await readFile(join(backup,'database.sql'),'utf8'),objects=await readdir(join(backup,'objects'));
- for(const value of [environment,expected.space,expected.parent,expected.folder,expected.trash,expected.link,expected.request,expected.checksum])assert.ok(sql.includes(value),'the private backup holds the data created only on the hosted installation');
+ for(const value of [environment,expected.space,expected.parent,expected.folder,expected.trash,expected.link,expected.request,expected.checksum,...[expected.library.document,expected.library.collection,expected.library.schema]])assert.ok(sql.includes(value),'the private backup holds the data created only on the hosted installation');
  assert.ok(objects.includes(expected.checksum));assert.ok(manifest.bytes>=expected.size);assert.equal(manifest.objects,objects.length);
  console.log('Hosted backup contains the hosted-only graph and original.');
  await resources.remove(env);console.log('First removal read back no Worker, database or bucket.');

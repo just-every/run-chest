@@ -4777,11 +4777,11 @@
       "executable": false
     },
     "tests/chest/hosted-data.mjs": {
-      "sha256": "2379916ed367fcd94d56eda4d73280139afb19b226516f4b1ff4e891858cd90f",
+      "sha256": "56531440a68949e221c0fad031016f567fb8ab0ee1aec61cfd552eda9591e83c",
       "executable": false
     },
     "tests/chest/hosted-lifecycle.mjs": {
-      "sha256": "f4f730f06512874431c034b88198b232cd25f798e2f127e2bb4b8453b7b500cd",
+      "sha256": "5e4a476447eddd7363db3d833e53446ac3b90a73f67df592e048aaf2b647f520",
       "executable": false
     },
     "tests/chest/hosted-mail.mjs": {
@@ -4789,7 +4789,7 @@
       "executable": false
     },
     "tests/chest/hosted-screens.mjs": {
-      "sha256": "5e3b4635032cc644fa12f33bfdaa8db469f057ea9755503986fdff01ae8c4563",
+      "sha256": "599c634a5bf2a0bbf13eac5c1b9f2182bcfe1e4a6cc8a85c0c19d62d5fdcaca1",
       "executable": false
     },
     "tests/chest/integration-client.mjs": {
