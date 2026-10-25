@@ -26,7 +26,7 @@ async function convert(env: Bindings, bytes: Uint8Array, filename: string, forma
  body.set('data', new Blob([bytes as BlobPart]), filename)
  // The service renders only visual content; its PDF result remains inside the Worker.
  let response: Response
- try { response = await fetch(endpoint, { method: 'POST', body, redirect: 'error', signal: AbortSignal.timeout(60_000) }) }
+ try { response = await fetch(endpoint, { method: 'POST', body, redirect: 'manual', signal: AbortSignal.timeout(60_000) }) }
  catch { throw new ChestError('collabora_render_unavailable', 503) }
  insist(response.ok, 'collabora_render_unavailable', 503)
  insist(Number(response.headers.get('content-length') ?? 0) <= MAX_RENDER, 'rendered_preview_too_large', 413)
