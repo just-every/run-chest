@@ -43,7 +43,7 @@ export async function administrationPage(env:Bindings,s:Session,url:URL){
 export function administrationInput(input:any){
  if(!String(input.path).startsWith('/administration/'))return
  if(input.path==='/administration/editor')for(const k of ['confirm','enabled','codeAcknowledged'])input[k]=input[k]==='true'
- if(input.path==='/administration/costs')input.confirm=input.confirm==='true'
+ if(input.path==='/administration/costs'){input.confirm=input.confirm==='true';const keys=Object.keys(input).filter(k=>k.startsWith('objectOperation:'));if(keys.length)input.objectOperations=Object.fromEntries(keys.filter(k=>input[k]!=='').map(k=>[k.slice('objectOperation:'.length),input[k]]))}
  if(input.path==='/administration/roles'){if(input.super!==undefined)input.super=input.super==='true';input.groups=Object.keys(input).filter(k=>k.startsWith('adminGroup:')).map(k=>k.slice(11));if(input.action==='define')input.privileges=Object.keys(input).filter(k=>k.startsWith('adminPrivilege:')).map(k=>k.slice(15))}
  if(input.path==='/administration/owner')input.keepGrants=Object.keys(input).filter(k=>k.startsWith('keepGrant:')).map(k=>k.slice(10))
  if(input.path.startsWith('/administration/recovery/'))input.items=Object.keys(input).filter(k=>k.startsWith('recoverItem:')).map(k=>k.slice(12))

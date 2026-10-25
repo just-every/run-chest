@@ -51,7 +51,7 @@ Independent backup database export and object-store requests retain intent befor
 ## Portability and object-store estimates
 
 The owner confirms optional object-store rates under Provider rates. Enter USD
-per million requests for the exact operation names shown by the form. Missing
+per million requests in each named operation field. Missing
 operations remain unknown; a quoted zero is different from a missing rate.
 Provider inbound means payload bytes sent to the named store; provider outbound
 means bytes received from it, using decimal GB. These charges and the separate
@@ -68,8 +68,8 @@ before returning bytes. D1 file imports use the provider's upload and ingestion
 protocol, including control calls. Receipts survive audit-table replacement and
 are replayed by their IDs after successful commands for that target; completed
 replay removes the local pending receipt. An interrupted or refused restore can
-leave pending receipts locally; rerun with the same target and journal directory
-to reconcile them. Failed validation leaves the remote target unchanged. Keep
+leave pending receipts locally; run a successful verification or list command with the same target and journal
+directory to reconcile them. Failed validation leaves the remote target unchanged. Keep
 the private directory through recovery. Local exports with no provider traffic
 do not establish a provider charge. Historical uninstrumented traffic is unknown.
 

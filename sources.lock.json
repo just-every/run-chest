@@ -209,7 +209,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "babbc37bca921e6d74161fa507e27d7452442228065595ee7d7f58a2296a1882",
+      "sha256": "741ea86c4b37d3ec915e794c324465e351e28008a0df7096b81ee5ff15e41fac",
       "executable": false
     },
     "DEMO.md": {
@@ -233,7 +233,7 @@
       "executable": false
     },
     "docs/administration.md": {
-      "sha256": "dd0a77ec4882a80531c9980ebe8eec65eff8b85b4bbf12d53452a4eb4bfe9b4b",
+      "sha256": "59811dd4e199002b82ea0fc08aab82d036e81451895356ba50d180bba54ad57c",
       "executable": false
     },
     "docs/backup-and-restore.md": {
@@ -877,7 +877,7 @@
       "executable": false
     },
     "scripts/backup/accounting-journal.mjs": {
-      "sha256": "3c939188331f0948ff30425b1f3da269a018d531ac4786cda41232f08e1de8f1",
+      "sha256": "aadd47efc51e5964ecebde176f4c6221a345193dfdefe315ab762f4ca05c2500",
       "executable": false
     },
     "scripts/backup/accounting.mjs": {
@@ -1349,7 +1349,7 @@
       "executable": false
     },
     "src/chest/administration/cost-ui.ts": {
-      "sha256": "9d6e17c8eafab8e1cd2b8a3d197f17a276a8311278b1df152d9f672b2a440320",
+      "sha256": "d0f7eb65902999c3df685e46760ec44318acd2b22ded674b81802a3904e07c04",
       "executable": false
     },
     "src/chest/administration/costs.ts": {
@@ -1425,7 +1425,7 @@
       "executable": false
     },
     "src/chest/administration/ui.ts": {
-      "sha256": "5d78a4f2b1860f81bcd4614158f06814ed61f8e5b939a25340c472df7725f8b7",
+      "sha256": "84abf5085858bb5dab1fc42ca97b83d671de033cc69e7829c63e9686fce7d896",
       "executable": false
     },
     "src/chest/api.ts": {
@@ -4521,7 +4521,7 @@
       "executable": false
     },
     "tests/chest/administration-accounting-flow.mjs": {
-      "sha256": "fc192c4a260b81cdaf73abbd7281d1dd75225635ad37fe81aef553ba6fdaf874",
+      "sha256": "b4c60f42dd7f57252f88c6eaf9838beca1035bf2bebc40af3473b2a0ec76cfe0",
       "executable": false
     },
     "tests/chest/administration-guest-flow.mjs": {

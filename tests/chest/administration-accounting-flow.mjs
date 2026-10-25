@@ -27,7 +27,7 @@ export async function accountingJourney(browser){
   await h.api('/administration/costs',owner,objectQuote);
   const realFetch=globalThis.fetch;
   try{
-   globalThis.fetch=async(input,init)=>new URL(input instanceof Request?input.url:input).hostname==='synthetic-chest-store.test'?new Response(Buffer.alloc(37,1)):realFetch(input,init);
+   globalThis.fetch=async(input,init)=>typeof input==='string'&&input.startsWith('https://synthetic-chest-store.test/')?new Response(Buffer.alloc(37,1)):realFetch(input,init);
    const transport=providerTransport(async sql=>(await h.sql(sql)).results,'Cloudflare R2','accounting journey');
    for(const [method,path,body] of [['GET','?list-type=2',undefined],['GET','/synthetic-chest-1',undefined],['PUT','/synthetic-chest-1','synthetic-chest-2'],['POST','/synthetic-chest-1?uploads',''],['PUT','/synthetic-chest-1?uploadId=synthetic-chest-3&partNumber=1','synthetic-chest-4'],['POST','/synthetic-chest-1?uploadId=synthetic-chest-3','synthetic-chest-5'],['DELETE','/synthetic-chest-1?uploadId=synthetic-chest-3',undefined],['DELETE','/synthetic-chest-1',undefined]])await (await transport('https://synthetic-chest-store.test/bucket'+path,{method,body})).arrayBuffer();
   }finally{globalThis.fetch=realFetch}
@@ -101,7 +101,12 @@ export async function accountingJourney(browser){
   let lastSessionToken;
   for(const width of [1440,390]){
    const context=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});await context.addCookies(owner.split('; ').map(c=>{const i=c.indexOf('=');return{name:c.slice(0,i),value:c.slice(i+1),url:h.origin}}));const page=await context.newPage();
-   await page.goto(h.origin+'/app/administration/costs');const form=page.locator('form').filter({has:page.getByRole('button',{name:'Confirm editor configuration',exact:true})});
+   await page.goto(h.origin+'/app/administration/costs');
+   const costForm=page.locator('form').filter({has:page.getByRole('button',{name:'Save estimate rates',exact:true})});
+   await costForm.getByLabel('Object-store provider',{exact:true}).fill('Cloudflare R2');await costForm.getByLabel('List objects (USD per million requests)',{exact:true}).fill('8');await costForm.getByLabel('Read object (USD per million requests)',{exact:true}).fill('4');await costForm.getByLabel('Inbound to object store (USD per decimal GB)',{exact:true}).fill('0.03');await costForm.getByLabel('Outbound from object store (USD per decimal GB)',{exact:true}).fill('0.09');await costForm.getByLabel('I confirm these provider rates and their source for estimates.',{exact:true}).check();
+   await Promise.all([page.waitForNavigation(),costForm.getByRole('button',{name:'Save estimate rates',exact:true}).click()]);
+   const savedRates=(await h.api('/administration/costs',owner)).rates;assert.equal(savedRates.objectOperations.read,4);assert.equal(savedRates.objectOperations.list,8);assert.equal(savedRates.objectInboundUsdPerGb,0.03);assert.equal(savedRates.objectOutboundUsdPerGb,0.09);
+   const form=page.locator('form').filter({has:page.getByRole('button',{name:'Confirm editor configuration',exact:true})});
    assert.equal(await page.getByLabel('Object-store provider',{exact:true}).count(),1);assert.match(await page.locator('body').innerText(),/Inbound is sent to the named provider/);
    assert.equal(await form.count(),1,(await page.locator('body').innerText()).slice(0,1000));
    await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Read service capabilities',exact:true}).click()]);assert.match(await page.locator('body').innerText(),/Collabora Online Development Edition/);const observed=await h.api('/administration/editor',owner);assert.equal(observed.observation.connections,null);assert.equal(observed.observation.documents,null);

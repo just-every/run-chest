@@ -11,7 +11,7 @@ export async function accountingJournal(query,identity,producer) {
  const path=join(directory,createHash('sha256').update(identity).digest('hex')+'.sqlite');
  if(existsSync(path)&&(!lstatSync(path).isFile()||lstatSync(path).isSymbolicLink()||typeof process.getuid==='function'&&lstatSync(path).uid!==process.getuid()||(lstatSync(path).mode&0o077)!==0))throw Error('Accounting journal requires a private regular file.');
  const db=new DatabaseSync(path);chmodSync(path,0o600);
- db.exec('CREATE TABLE IF NOT EXISTS chest_records(id TEXT PRIMARY KEY,kind TEXT,payload TEXT); CREATE TABLE IF NOT EXISTS chest_audit(id TEXT PRIMARY KEY,actor TEXT,action TEXT,object_id TEXT,detail TEXT,at TEXT);');
+ db.exec('CREATE TABLE IF NOT EXISTS chest_audit(id TEXT PRIMARY KEY,actor TEXT,action TEXT,object_id TEXT,detail TEXT,at TEXT);');
  const local=async sql=>{const stmt=db.prepare(sql);return stmt.columns().length?stmt.all():(stmt.run(),[])};
  const quote=v=>"'"+String(v).replaceAll("'","''")+"'";
  return {
@@ -28,6 +28,6 @@ export async function accountingJournal(query,identity,producer) {
     db.prepare('DELETE FROM chest_audit WHERE id=?').run(row.id);
    }
   },
-  close(){db.prepare('DELETE FROM chest_records').run();db.close()},
+  close(){db.close()},
  };
 }
