@@ -22,7 +22,7 @@ function original(d: any, c: any) {
  if (!c.version) return ''
  const v = d.versions.find((v: any) => v.id === c.version), label = `Version ${versionNumber(d, c.version)}`, old = c.version !== d.item.current
  const base = `/api/chest/items/${d.id}`
- const href = c.anchor ? d.can.download ? `${base}/bytes/${c.version}#page=${c.anchor.page}` : `${base}/rendered-preview/${c.version}?page=${c.anchor.page}` : v?.mediaType?.includes('officedocument') ? `${base}/office-preview/${c.version}` : d.can.download ? `${base}/bytes/${c.version}` : ''
+ const href = c.anchor ? d.can.download ? `${base}/bytes/${c.version}#page=${c.anchor.page}` : `${base}/rendered-preview/${c.version}?page=${c.anchor.page}` : v?.mediaType?.includes('officedocument') ? d.can.download ? `${base}/office-preview/${c.version}` : `${base}/rendered-preview/${c.version}` : d.can.download ? `${base}/bytes/${c.version}` : ''
  const link = href ? `<a class="link" href="${esc(href)}" target="_blank" rel="noopener">${c.anchor ? 'Open original page' : 'Open original version'}</a>` : ''
  const location = c.anchor ? ` · Page ${c.anchor.page} · Region ${c.anchor.region.map((n: number) => percent(n) + '%').join(', ')}` : ''
  return `<p class="mono">${esc(label)}${old ? ' · earlier version' : ''}${esc(location)}${link ? ` · ${link}` : ''}</p>`

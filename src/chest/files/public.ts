@@ -64,7 +64,7 @@ async function open(env: Bindings, request: Request, secret: string) {
  const r = await resolveLink(env, secret), base = `/l/${secret}`; if ('refused' in r) return refusedLink(r.refused)
  const actor=await guestEmail(env,request,r);if(!actor)return verifyPage(`/l/${secret}`)
  if (await locked(env, request, r)) return passwordPage(base)
- const files = (await reachable(env, r)).flatMap(({ row, path }) => { const v = publicVersion(row,r.link.payload); return v ? [{ id: row.id, path, name: row.payload.name, size: v.size, mediaType: v.mediaType, canPreview: v.size <= 8_000_000 && (isOffice(v.filename) || ['text','pdf','image'].includes(v.preview)) }] : [] })
+ const files = (await reachable(env, r)).flatMap(({ row, path }) => { const v = publicVersion(row,r.link.payload); return v ? [{ id: row.id, path, name: row.payload.name, size: v.size, mediaType: v.mediaType, canPreview: v.size <= 8_000_000 && (isOffice(v.filename) || v.preview === 'text' || !!env.COLLABORA_URL && ['pdf','image'].includes(v.preview)) }] : [] })
  await commit(env, null, [], { by: actor, audits: [{ action: 'link.view', object: r.root.id, detail: { link: r.link.id } }] })
  return linkPage(base, r.link.payload, r.root.payload, files, !r.state.noDownload,await externalComments(env,r,base)+await guestTools(env,request,r,base)+`<form method="post" action="${esc(base)}/sign-out"><button class="action">Sign out of link</button></form>`)
 }
@@ -74,7 +74,7 @@ async function preview(env: Bindings, request: Request, secret: string, key: str
  if (await locked(env, request, r)) return passwordPage(`/l/${secret}`, false, 401)
  const file = await fileThrough(env, r, key, true); if (!file) return refusedLink('unavailable')
  const v = publicVersion(file.row,r.link.payload); insist(v, 'version_not_found', 404)
- const restricted = r.state.noDownload || file.fences.some(row => row.kind === 'item' && row.payload.noDownload)
+ const restricted = ['pdf','image'].includes(v.preview) || r.state.noDownload || file.fences.some(row => row.kind === 'item' && row.payload.noDownload)
  if (restricted) {
   const response = await renderRestrictedVersion(env,v,`/l/${secret}/p/${key}`,new URL(request.url).searchParams.get('page'))
   const fresh = await resolveLink(env,secret); if ('refused' in fresh) return refusedLink(fresh.refused)
