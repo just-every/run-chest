@@ -172,6 +172,10 @@
       "sha256": "a0e27aeeac42d6102f4ff2bce40d8fb011c07e5cb28eff3c9d77e68df29e5dd6",
       "executable": false
     },
+    ".publish-check/config.json": {
+      "sha256": "09aa135e2fe0ca755bf185088fd3faf565d2859dcc354399db72a1f02aee1a77",
+      "executable": false
+    },
     "ACCEPTANCE.md": {
       "sha256": "cd6fbcea8e5d55d9383ce3b797f026186e93508e3833401e445dc384eb2ef50c",
       "executable": false
@@ -217,7 +221,7 @@
       "executable": false
     },
     "deploy.json": {
-      "sha256": "8b35212c192938f31f1e383da5c61dd601476487b5e6d298cea0c6bf28184691",
+      "sha256": "c30a48deac72e2e4171cbf0512ca94b3b2a0878fd3ddb152fcf962c6cf5887e3",
       "executable": false
     },
     "docs/access.md": {
@@ -4693,7 +4697,7 @@
       "executable": false
     },
     "tests/chest/journey.mjs": {
-      "sha256": "1a98d691e6af57fa9c407aefff281994ba5aa83204cd6c58980ccc0afc61ac8c",
+      "sha256": "d6f3401ff47f25522993721bee8104cd0321fd4536f61467321409aa21247be3",
       "executable": false
     },
     "tests/chest/link-discussions.mjs": {
