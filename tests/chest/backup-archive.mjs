@@ -129,14 +129,9 @@ else process.exit(1);
     await cli(['restore','--environment','recovery','--input',stored,'--erasure-journal',laterJournal],{account:'recovery-account',refuse:true});
     assert.deepEqual(await readFile(target),before);assert.deepEqual(await readdir(originalTarget),[]);
   }
-  const journalFiles=(await readdir(join(temp,'accounting'))).filter(f=>f.endsWith('.sqlite'));
-  let pendingReceipts=0;
-  for(const file of journalFiles){const localPath=join(temp,'accounting',file);assert.equal((await stat(localPath)).mode&0o777,0o600);const local=new DatabaseSync(localPath);pendingReceipts+=local.prepare('SELECT COUNT(*) n FROM chest_audit').get().n;local.close();}
-  assert.ok(pendingReceipts>0,'failed validation retains billable request metadata privately without writing to the target');
   const recovered=await cli(['restore','--environment','recovery','--input',stored,'--acknowledge-offline-erasures'],{account:'recovery-account'});assert.equal(recovered.restored,true);assert.equal(recovered.providersNeedAuthorization,true);
   const restored=new DatabaseSync(target);
   const restoreAccounting=restored.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage'").all().map(r=>JSON.parse(r.detail));
-  const journalAfter=(await readdir(join(temp,'accounting'))).filter(f=>f.endsWith('.sqlite'));for(const file of journalAfter){const local=new DatabaseSync(join(temp,'accounting',file));assert.equal(local.prepare('SELECT COUNT(*) n FROM chest_audit').get().n,0,'successful command replays pending receipts once');local.close();}
   assert.ok(restoreAccounting.some(r=>r.operation==='database-import'&&r.outcome==='succeeded'));
   assert.ok(restoreAccounting.some(r=>r.operation==='database-upload'&&r.requestBytes>0));
   assert.ok(restoreAccounting.some(r=>r.operation==='multipart-part'&&r.requestBytes>=64*1024*1024));
@@ -153,6 +148,14 @@ else process.exit(1);
   assert.notEqual(restored.prepare('SELECT claim_id FROM oa_bootstrap').get().claim_id,'old-bootstrap-authority');restored.close();
   assert.deepEqual(await readFile(join(originalTarget,'sha256',hash)),bytes);
   const after=await readFile(target);await cli(['restore','--environment','recovery','--input',stored,'--acknowledge-offline-erasures'],{account:'recovery-account',refuse:true});assert.deepEqual(await readFile(target),after);
+  const pendingIds=[];
+  for(const file of (await readdir(join(temp,'accounting'))).filter(f=>f.endsWith('.sqlite'))){const localPath=join(temp,'accounting',file);assert.equal((await stat(localPath)).mode&0o777,0o600);const local=new DatabaseSync(localPath);pendingIds.push(...local.prepare('SELECT id FROM chest_audit').all().map(r=>r.id));local.close();}
+  assert.ok(pendingIds.length>0,'nonempty-target refusal retains its real provider query receipts privately');
+  await cli(['verify','--environment','recovery','--input',stored],{account:'recovery-account'});
+  const replayed=new DatabaseSync(target);for(const id of pendingIds)assert.equal(replayed.prepare('SELECT COUNT(*) n FROM chest_audit WHERE id=?').get(id).n,1,'successful command replays each pending receipt once');const countBefore=replayed.prepare('SELECT COUNT(*) n FROM chest_audit').get().n;replayed.close();
+  await cli(['verify','--environment','recovery','--input',stored],{account:'recovery-account'});
+  const repeated=new DatabaseSync(target);assert.equal(repeated.prepare('SELECT COUNT(*) n FROM chest_audit').get().n,countBefore,'repeated reconciliation never duplicates a receipt');repeated.close();
+  for(const file of (await readdir(join(temp,'accounting'))).filter(f=>f.endsWith('.sqlite'))){const local=new DatabaseSync(join(temp,'accounting',file));assert.equal(local.prepare('SELECT COUNT(*) n FROM chest_audit').get().n,0);local.close();}
   // Retention touches only the exact archive namespace and preserves newest.
   const oldKey=receipt.key.replace(/\/\d{4}-\d\d-\d\dT/,'/2000-01-01T');await copyFile(stored,join(bucketPath('owner-account','owner-backups'),oldKey));
   assert.equal((await cli(['prune','--environment','production','--retention-days','1'])).length,1);assert.equal((await stat(stored)).size,receipt.bytes);

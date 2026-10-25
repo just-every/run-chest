@@ -877,7 +877,7 @@
       "executable": false
     },
     "scripts/backup/accounting-journal.mjs": {
-      "sha256": "93fd0feaad0c48f38242adc5087657ba24bfb4da5e951ca444348f477a524d62",
+      "sha256": "3c939188331f0948ff30425b1f3da269a018d531ac4786cda41232f08e1de8f1",
       "executable": false
     },
     "scripts/backup/accounting.mjs": {
@@ -4557,7 +4557,7 @@
       "executable": false
     },
     "tests/chest/backup-archive.mjs": {
-      "sha256": "6d37f8ebef0d8b14ad9ab752b8096dc57855b5970e9720d8a716c1a25ac0e1fb",
+      "sha256": "6abe1022259b9cb28fc740c773193f1a618a097722e2c085a16caac775525644",
       "executable": false
     },
     "tests/chest/backup-sandbox.mjs": {

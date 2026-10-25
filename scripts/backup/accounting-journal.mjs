@@ -17,8 +17,8 @@ export async function accountingJournal(query,identity,producer) {
  return {
   transport:provider=>async(url,init)=>{
    const rates=await query("SELECT payload FROM chest_records WHERE id='admin-cost-rates' AND kind='admin-cost-rates'");
-   db.prepare('DELETE FROM chest_records').run();if(rates[0])db.prepare('INSERT INTO chest_records VALUES(?,?,?)').run('admin-cost-rates','admin-cost-rates',rates[0].payload);
-   return providerTransport(local,provider,producer)(url,init);
+   const snapshot=sql=>sql.startsWith('SELECT payload FROM chest_records')?Promise.resolve(rates):local(sql);
+   return providerTransport(snapshot,provider,producer)(url,init);
   },
   async flush(){
    for(const row of db.prepare('SELECT * FROM chest_audit').all()){
