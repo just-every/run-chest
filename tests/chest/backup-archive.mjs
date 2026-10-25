@@ -81,10 +81,12 @@ else if(args.includes('execute')){const db=new DatabaseSync(file);try{db.exec(aw
 else process.exit(1);
 `); await chmod(join(bin,'npx'),0o700);
   const env={...process.env,PATH:bin+':'+process.env.PATH,CHEST_BACKUP_TEST_HOME:temp,CHEST_ACCOUNTING_DIR:join(temp,'accounting'),CLOUDFLARE_ACCOUNT_ID:'live-account',CLOUDFLARE_API_TOKEN:'synthetic-chest-1',CHEST_BACKUP_ACCOUNT_ID:'owner-account',CHEST_BACKUP_API_TOKEN:'synthetic-chest-2',CHEST_BACKUP_BUCKET:'owner-backups',CHEST_BACKUP_KEY:key};
-  async function cli(args,{account='live-account',refuse=false,entry='cli',extra={}}={}) {
+  async function cli(args,{account='live-account',refuse=false,entry='cli',extra={},onStart,expectedSignal}={}) {
     const child=spawn(process.execPath,['--import',preload,join(root,'scripts/backup/'+entry+'.mjs'),...args],{cwd:root,env:{...env,...extra,CLOUDFLARE_ACCOUNT_ID:account,CLOUDFLARE_API_TOKEN:account==='recovery-account'?'synthetic-chest-7':env.CLOUDFLARE_API_TOKEN},stdio:['ignore','pipe','pipe']});
+    onStart?.(child);
     let out='',err='';child.stdout.on('data',c=>out+=c);child.stderr.on('data',c=>err+=c);
-    const code=await new Promise(r=>child.on('exit',r));
+    const {code,signal}=await new Promise(r=>child.on('exit',(code,signal)=>r({code,signal})));
+    if(expectedSignal){assert.equal(signal,expectedSignal);return null;}
     assert.equal(code,refuse?1:0,refuse?'Unsafe recovery was refused':'CLI operation succeeded: '+err);
     return refuse?null:JSON.parse(out);
   }
@@ -172,6 +174,14 @@ else process.exit(1);
   const requested=new DatabaseSync(source);requested.prepare("UPDATE chest_records SET payload=json_set(payload,'$.requestedAt',?),revision='manual-request' WHERE id=?").run(new Date().toISOString(),scheduleId);requested.close();
   await cli(['--environment','production'],{entry:'schedule',extra:{CHEST_BACKUP_TEST_FAIL:'yes'},refuse:true});
   const failed=new DatabaseSync(source);assert.equal(JSON.parse(failed.prepare("SELECT payload FROM chest_records WHERE kind='backup-run' ORDER BY json_extract(payload,'$.at') DESC LIMIT 1").get().payload).state,'failed');assert.ok(failed.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage'").all().map(r=>JSON.parse(r.detail)).some(r=>r.outcome==='uncertain'&&r.requestOutcome==='uncertain'&&r.requestBytes>0),'interrupted requests preserve the intent without inventing acknowledged delivery');failed.close();
+  // A real command dies after reserving its export request. A fresh process
+  // recovers the stale claim and reports uncertainty, without inventing delivery.
+  await rm(join(temp,'export-started'),{force:true});let interruptedChild;
+  const interrupted=cli(['backup','--environment','production'],{extra:{CHEST_BACKUP_TEST_DELAY_EXPORT:'yes'},onStart:child=>{interruptedChild=child},expectedSignal:'SIGKILL'});
+  while(!(await stat(join(temp,'export-started')).catch(()=>null)))await new Promise(resolve=>setTimeout(resolve,20));
+  interruptedChild.kill('SIGKILL');await interrupted;
+  await cli(['list','--environment','production']);
+  const crashed=new DatabaseSync(source);assert.ok(crashed.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage'").all().map(r=>JSON.parse(r.detail)).some(r=>r.provider==='Cloudflare D1'&&r.operation==='database-export'&&r.outcome==='uncertain'&&r.requestOutcome==='uncertain'&&r.requestBytes>0&&r.responseBytes===0),'restart preserves the reserved request without fabricating provider acknowledgement');crashed.close();
   // Each independent destination uses the same encrypted archive, CLI, cadence and recovery path.
   const pricedDb=new DatabaseSync(source),quotedRates={provider:'Synthetic network',quote:'Synthetic source dated 2026-10-25',egressUsdPerGb:0.08,aiProvider:'Amazon S3',aiModel:'request',aiRequestUsd:0.01,updatedAt:'2026-10-25T00:00:00.000Z'};
   pricedDb.prepare('INSERT INTO chest_records VALUES(?,?,?,?)').run('admin-cost-rates','admin-cost-rates',JSON.stringify(quotedRates),'quote-1');pricedDb.close();
