@@ -26,7 +26,7 @@ export async function harness({edge,bindings={},hostname='127.0.0.1',tls,publicO
  // The numbered migrations, in order, once; a restart keeps the persisted data.
  async function migrate(){const db=await worker.getD1Database('DB'),folder='migrations/core';for(const file of (await readdir(folder)).filter(f=>f.endsWith('.sql')).sort())for(const statement of splitSql(await readFile(join(folder,file),'utf8')))await db.prepare(statement).run();migrated=true}
  async function start(){
-  const initial=port===0,requestedPort=port,config=()=>({...convertV4MiniflareOptions({host:hostname,port:requestedPort,https:true,httpsKey:tls?.key,httpsCert:tls?.cert,...options,bindings:vars,outboundService,unsafeTriggerHandlers:true}),resourcePersistencePath:directory});
+  const initial=port===0,requestedPort=port,config=()=>({...convertV4MiniflareOptions({host:hostname,port:requestedPort,https:true,httpsKey:tls?.key,httpsCert:tls?.cert,...(publicOrigin?{upstream:publicOrigin}:{}),...options,bindings:vars,outboundService,unsafeTriggerHandlers:true}),resourcePersistencePath:directory});
   worker=new Miniflare(config());const ready=await worker.ready;
   // Let Workerd bind port zero itself. Selecting then releasing an ephemeral port races its loopback sockets.
   if(initial){port=Number(ready.port);origin=publicOrigin??`https://${hostname}:${port}`;vars.AUTH_ORIGIN=origin;await worker.setOptions(config())}
@@ -43,7 +43,7 @@ export async function harness({edge,bindings={},hostname='127.0.0.1',tls,publicO
  async function api(path,cookie,body,status=200){const r=await raw('/api/chest'+path,cookie,body);assert.equal(r.status,status,`${path}: ${r.status===status?'':await r.text()}`);return r.json()}
  // The newest message to this address carries the ordinary sign-in or invitation link.
  async function signIn(email,invite=false){
-  if(!invite)assert.equal((await raw('/auth/magic-link',null,{email,returnTo:'/app'})).status,202);
+  if(!invite){const response=await raw('/auth/magic-link',null,{email,returnTo:'/app'});assert.equal(response.status,202,response.status===202?'':(await response.text()).slice(0,120))}
   const message=mails.findLast(m=>[m.to].flat().includes(email));assert.ok(message,'the provider received the sign-in message');
   const link=new URL(message.text.match(/https?:\/\/[^\s]+/)[0]);assert.equal(link.origin,origin);
   const response=await raw('/auth/confirm',null,{token:link.searchParams.get('token')});assert.equal(response.status,303,'ordinary link confirmation');return response.headers.getSetCookie().map(v=>v.split(';')[0]).join('; ')

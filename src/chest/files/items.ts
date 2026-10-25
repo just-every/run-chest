@@ -79,23 +79,25 @@ async function subtree(env: Bindings, item: Row<Item>) {
  const rows = await spaceItems(env, item.payload.space), result: Row<Item>[] = [], walk = (parent: string) => { for (const r of rows) if (r.payload.parent === parent) { insist(result.length < 5000, 'tree_too_large'); result.push(r); walk(r.id) } }
  walk(item.id); return result
 }
-// Moving needs manage rights on the item and contribute rights at the destination; inherited access follows it.
+// Moving needs manage rights throughout the tree and contribute rights at the destination; inherited access follows it.
 export async function move(env: Bindings, s: Session, w: Who, key: string, input: any) {
  const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'manage')
+ const descendants = await subtree(env, item)
+ for (const child of descendants) { const access = await context(env, w, child.id); demand(access, 'manage'); ctx.fences.push(...access.fences) }
  const dest = await place(env, w, input.space ?? item.payload.space, input.parent), parent = folderOf(dest)
  insist(!dest.chain.some(n => n.id === key), 'move_into_itself'); unique(await siblings(env, dest.space.id, parent), item.payload.name, key)
  const ops: Op[] = [{ row: next(item, { ...item.payload, governance: effectiveGovernance(ctx, item.payload), space: dest.space.id, parent, updatedAt: now() }), previous: item }]
- if (dest.space.id !== item.payload.space) for (const r of await subtree(env, item)) ops.push({ row: next(r, { ...r.payload, space: dest.space.id }), previous: r })
+ if (dest.space.id !== item.payload.space) for (const r of descendants) ops.push({ row: next(r, { ...r.payload, space: dest.space.id }), previous: r })
  await commit(env, s, ops, { fences: [...ctx.fences, ...dest.fences], changes: [...new Set([item.payload.space, dest.space.id])].map(space => ({ item: key, space, kind: 'move' })), audits: [{ action: 'item.move', object: key, detail: { from: { space: item.payload.space, parent: item.payload.parent }, to: { space: dest.space.id, parent } } }] })
  return get<Item>(env, 'item', key)
 }
 export async function copy(env: Bindings, s: Session, w: Who, key: string, input: any) {
- const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'manage')
+ const ctx = await context(env, w, key), item = ctx.chain.at(-1)!; demand(ctx, 'manage'); demand(ctx, 'download')
  const dest = await place(env, w, input.space ?? item.payload.space, input.parent), parent = folderOf(dest), at = now()
  insist(!dest.chain.some(n => n.id === key), 'copy_into_itself')
  const value = typeof input.name === 'string' ? name(input.name) : item.payload.name; unique(await siblings(env, dest.space.id, parent), value)
  const ids = new Map<string, string>([[key, id() as string]]), ops: Op[] = []
- const clone = async (r: Row<Item>, newParent: string | null, newName: string) => { const sourceCtx=await context(env,w,r.id);demand(sourceCtx,'view');ctx.fences.push(...sourceCtx.fences); const v = r.payload.versions.find(v => v.id === r.payload.current), versions = v ? [{ ...v, id: id(), at, actor: s.operator.email, arrival: 'copy' as Arrival, name: '', restoredFrom: undefined, device: undefined }] : []
+ const clone = async (r: Row<Item>, newParent: string | null, newName: string) => { const sourceCtx=await context(env,w,r.id);demand(sourceCtx,'manage');demand(sourceCtx,'download');ctx.fences.push(...sourceCtx.fences); const v = r.payload.versions.find(v => v.id === r.payload.current), versions = v ? [{ ...v, id: id(), at, actor: s.operator.email, arrival: 'copy' as Arrival, name: '', restoredFrom: undefined, device: undefined }] : []
   const payload: Item = { space: dest.space.id, parent: newParent, type: r.payload.type, name: newName, createdBy: s.operator.email, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions: [], current: null }
   ops.push({ row: fresh<Item>('item', versions[0] ? await versionPublication(env, dest, { ...payload, governance:effectiveGovernance(sourceCtx,r.payload), ...(r.payload.filing ? { filing: r.payload.filing } : {}) }, versions[0], input) : { ...payload, governance:effectiveGovernance(sourceCtx,r.payload) }, ids.get(r.id)!) }) }
  await clone(item, parent, value)

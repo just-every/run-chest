@@ -29,6 +29,7 @@ export async function restrictionFlow({browserProof=false,collaboraUrl}={}){
   for(const role of ['viewer','commenter']){await h.api('/people',owner,{action:'invite',email:`${role}@example.test`,name:role});people[role]=await h.signIn(`${role}@example.test`,true)}
   const space=await h.api('/spaces',owner,{name:'Rendered previews'}),members=[{principal:h.vars.OWNER_EMAIL,role:'manager'},...['viewer','commenter'].map(role=>({principal:`${role}@example.test`,role}))];
   await h.api(`/spaces/${space.id}/members`,owner,{members});
+  await restrictedTreeFlow(h,owner,people,space,members);
   const files=[];
   for(const [ext,bytes] of [['txt',Buffer.from('synthetic-chest-1\nA private original.')],['docx',docx()],['xlsx',xlsx()],['pptx',pptx()],['pdf',pdfBytes],['png',png]]){
    const file=await h.api('/items',owner,{space:space.id,name:`synthetic-chest-1.${ext}`,base64:b64(bytes)});
@@ -111,4 +112,19 @@ async function restrictedBrowser(h,owner,people,space,files){
    }finally{await context.close()}
   }
  }finally{await browser.close()}
+}
+
+async function restrictedTreeFlow(h,owner,people,space,members){
+ for(const role of ['viewer','commenter']){
+  const cookie=people[role];await h.api(`/spaces/${space.id}/members`,owner,{members:members.map(m=>m.principal===`${role}@example.test`?{...m,role:'content_manager'}:m)});
+  const folder=await h.api('/items',owner,{space:space.id,type:'folder',name:`Restricted tree ${role}`}),file=await h.api('/items',owner,{parent:folder.id,name:'Restricted original.txt',base64:Buffer.from('This original must stay restricted.').toString('base64')});
+  await h.api(`/items/${file.id}/settings`,owner,{restricted:true,noDownload:true});await h.api(`/items/${file.id}/shares`,owner,{principal:`${role}@example.test`,role});
+  assert.equal((await h.api(`/items/${file.id}`,cookie)).can.download,false);
+  const personal=(await h.api('/files',cookie)).personal,before=(await h.api(`/spaces/${personal}`,cookie)).children;
+  await h.api(`/items/${folder.id}/copy`,cookie,{space:personal,parent:null,name:'Copied restricted tree'},403);
+  assert.deepEqual((await h.api(`/spaces/${personal}`,cookie)).children,before,'copy cannot hydrate a restricted descendant into a personal area');
+  await h.api(`/items/${folder.id}/move`,cookie,{space:personal,parent:null},403);
+  assert.equal((await h.api(`/items/${folder.id}`,owner)).item.space,space.id);assert.equal((await h.api(`/items/${file.id}`,owner)).item.parent,folder.id);
+  await h.api(`/spaces/${space.id}/members`,owner,{members});
+ }
 }

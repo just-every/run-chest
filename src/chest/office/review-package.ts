@@ -16,7 +16,8 @@ export function canonical(node:Node):string {
  if(node.nodeType===3||node.nodeType===4)return node.nodeValue??''
  if(node.nodeType!==1)return Array.from(node.childNodes).map(canonical).join('')
  const e=node as Element,attributes=Array.from(e.attributes).filter(a=>a.namespaceURI!=='http://www.w3.org/2000/xmlns/').map(a=>[`{${a.namespaceURI??''}}${a.localName}`,a.value]).sort(([a],[b])=>a.localeCompare(b))
- return JSON.stringify([nodeName(e),attributes,Array.from(e.childNodes).filter(n=>n.nodeType===1||n.nodeType===3&&!!n.nodeValue?.trim()||n.nodeType===4).map(canonical)])
+ const textBearing=['t','delText','instrText'].includes(e.localName??'')||e.getAttributeNS('http://www.w3.org/XML/1998/namespace','space')==='preserve'
+ return JSON.stringify([nodeName(e),attributes,Array.from(e.childNodes).filter(n=>n.nodeType===1||n.nodeType===3&&(textBearing||!!n.nodeValue?.trim())||n.nodeType===4).map(canonical)])
 }
 function visit(node:Node,fn:(e:Element)=>void){for(const e of elements(node)){fn(e);visit(e,fn)}}
 export function reviewRecords(bytes:Uint8Array):ReviewRecord[]{
