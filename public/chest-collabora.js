@@ -27,7 +27,7 @@ for (const host of document.querySelectorAll('[data-collabora]')) {
     check();
    }
   }
-  if (message?.MessageId === 'Action_Save_Resp') status.textContent = message.Values?.success === false ? 'The decision was refused. Keep your work and check your current access.' : 'Collabora saved the document.';
+  if (message?.MessageId === 'Action_Save_Resp') status.textContent = message.Values?.result === 'unmodified' ? 'No changes are waiting to be saved.' : message.Values?.success === false ? 'The save was refused. Keep your work and check your current access.' : 'Collabora saved the document.';
   if (message?.MessageId === 'App_VersionRestore' && message.Values?.Status === 'Pre_Restore_Ack' && pending) {
    // Collabora acknowledges only after its save and close; it reloads the current WOPI original itself.
    loaded = false; pending = false;
