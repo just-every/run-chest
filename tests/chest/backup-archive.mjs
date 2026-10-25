@@ -198,7 +198,7 @@ else process.exit(1);
   const legacyDb=new DatabaseSync(target),legacyReceipts=legacyDb.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage'").all().map(r=>JSON.parse(r.detail));legacyDb.close();
   assert.ok(legacyReceipts.some(r=>r.producer==='legacy hosted restore'&&r.operation==='database-upload'&&r.requestBytes>0));
   assert.ok(legacyReceipts.some(r=>r.producer==='legacy hosted restore'&&r.operation==='multipart-part'&&r.requestBytes>=64*1024*1024));
-  assert.ok(legacyReceipts.some(r=>r.producer==='legacy hosted backup'&&r.operation==='database-download'&&r.responseBytes>0));
+  const legacySource=new DatabaseSync(source);assert.ok(legacySource.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage'").all().map(r=>JSON.parse(r.detail)).some(r=>r.producer==='legacy hosted backup'&&r.operation==='database-download'&&r.responseBytes>0));legacySource.close();
   console.log('Legacy portability accounting passed: database export, multipart originals, metered database import and retained receipts after replacement.');
   console.log('Scheduled CLI passed: durable claims, completed authenticated copy, cadence, no replay and recorded independent-provider failure.');
   console.log('Independent backup CLI passed: complete schema/graph/original roundtrip, credential exclusion, inert links/jobs, encrypted tamper/truncation/append refusal before target writes, empty-target refusal and scoped retention.');

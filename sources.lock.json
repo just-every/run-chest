@@ -181,7 +181,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "e32d5d2d73c04eff29f21e63a13ebee3d9a45ee38323dff507dc029da29411a9",
+      "sha256": "e3a2220b71928f209ac4781db20713dfdcc2fdbbdb9f04b46e8aaafb7a4f0838",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -209,7 +209,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "867798dd5f868a5bf4aa7dac6adfaa0b151170b88aceaa217c7beb3ea73c7258",
+      "sha256": "babbc37bca921e6d74161fa507e27d7452442228065595ee7d7f58a2296a1882",
       "executable": false
     },
     "DEMO.md": {
@@ -233,7 +233,7 @@
       "executable": false
     },
     "docs/administration.md": {
-      "sha256": "c8a0b69c0f5f937e4e385e99d9e09f441826541d0238bef342c8a186e775fcc4",
+      "sha256": "dd0a77ec4882a80531c9980ebe8eec65eff8b85b4bbf12d53452a4eb4bfe9b4b",
       "executable": false
     },
     "docs/backup-and-restore.md": {
@@ -245,7 +245,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "2f626c44358f9dae0b566e94679672aa76c376ab3bf081f7af1f5d653a3d2bb7",
+      "sha256": "b09d5925175ac2bd3427fa5046ce19489ca03b1ba66b541ed3e7ccfe0ac3baa8",
       "executable": false
     },
     "docs/collections.md": {
@@ -877,7 +877,7 @@
       "executable": false
     },
     "scripts/backup/accounting-journal.mjs": {
-      "sha256": "7485d294f27742094f7a27b9940a8a97ba31856cf6c9fff311a3d84122c538e6",
+      "sha256": "5122ceb12f20c650cf9e5ca25c0bc0ca06310e0aa73b4d4fc17057a179adcccc",
       "executable": false
     },
     "scripts/backup/accounting.mjs": {
@@ -4521,7 +4521,7 @@
       "executable": false
     },
     "tests/chest/administration-accounting-flow.mjs": {
-      "sha256": "52ece69ab64b059724ea89e292824193ffed2981f8f0bb820eaf680ab4346353",
+      "sha256": "268c730bdd6722a2323f12363b92f6f66a098f7b34ef8bf2fa3c14f8beb3865a",
       "executable": false
     },
     "tests/chest/administration-guest-flow.mjs": {
@@ -4557,7 +4557,7 @@
       "executable": false
     },
     "tests/chest/backup-archive.mjs": {
-      "sha256": "dfb2d2638b447938c02ca1ddf91e02fca13b4d2d7672bf2054ceeec02b5228b3",
+      "sha256": "2a900fcf90d4172198f2da26ec3b212752030c9af60bcc0ece770f953d935772",
       "executable": false
     },
     "tests/chest/backup-sandbox.mjs": {

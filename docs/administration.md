@@ -47,3 +47,40 @@ Provider rates can quote cache reads, five minute cache writes and one hour cach
 Read service capabilities explicitly queries the configured Collabora service and records only its product name, version and observation time. The public endpoint does not expose licensed edition, connection ceilings or live capacity. Owner-entered limits retain their own label. Browser-reported editor errors are deduplicated by session and kind, carry no provider diagnostic text, and appear separately from Chest admission refusals. They are not a provider-side census.
 
 Independent backup database export and object-store requests retain intent before the network call, response byte checkpoints, outcome and the quote at request start. Listings, original reads, multipart upload bodies and encrypted readbacks are included. Unfinished requests remain uncertain; metadata contains neither signed request details nor object keys. Restoration, other portability traffic, operation-specific object-store prices and inbound transfer prices remain unreconciled, so ADMIN-002 remains partial.
+
+## Portability and object-store estimates
+
+The owner confirms optional object-store rates under Provider rates. Enter USD
+per million requests for the exact operation names shown by the form. Missing
+operations remain unknown; a quoted zero is different from a missing rate.
+Provider inbound means payload bytes sent to the named store; provider outbound
+means bytes received from it, using decimal GB. These charges and the separate
+network estimate may overlap, so they are not added into a purported invoice.
+Each receipt retains its operation, quote date, rates, confirmed bytes and
+uncertain response bound even after rates change.
+
+Legacy hosted backup and restore and independent backup, restore, verify, list
+and prune commands retain a private metadata journal under the current user's
+`~/.rer/chest-accounting` directory. `CHEST_ACCOUNTING_DIR` selects another private
+directory. The journal contains no object keys, signed URLs, request bodies or
+credentials. It records requests before sending them and response checkpoints
+before returning bytes. D1 file imports use the provider's upload and ingestion
+protocol, including control calls. Receipts survive audit-table replacement and
+are replayed by their IDs after successful commands for that target; completed
+replay removes the local pending receipt. An interrupted or refused restore can
+leave pending receipts locally; rerun with the same target and journal directory
+to reconcile them. Failed validation leaves the remote target unchanged. Keep
+the private directory through recovery. Local exports with no provider traffic
+do not establish a provider charge. Historical uninstrumented traffic is unknown.
+
+## Collabora reporting boundary
+
+Licensed edition, document and connection limits and annual USD per user are
+administrator-recorded from a named quote. Read service capabilities performs an
+explicit audited probe and shows the reported product, version and observation
+time. It cannot independently verify a subscription or licensed limits.
+Reports retain every Chest admission refusal and match each new browser-reported
+provider outcome to its Chest admission. Older outcomes without a session remain
+unmatched. Provider-side live capacity and completeness of provider refusal
+reporting remain unknown. This is the conservative ADMIN-002 default; it does not
+claim provider verification or close that contract gap.

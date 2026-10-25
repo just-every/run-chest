@@ -22,8 +22,9 @@ export async function accountingJournal(query,identity,producer) {
     // Lost completions remain uncertain; never infer a successful transfer.
     const detail=JSON.parse(row.detail);if(detail.outcome==='running'){detail.outcome='uncertain';row.detail=JSON.stringify(detail)}
     await query('INSERT INTO chest_audit VALUES('+[row.id,row.actor,row.action,row.object_id,row.detail,row.at].map(quote).join(',')+') ON CONFLICT(id) DO UPDATE SET detail=excluded.detail');
+    db.prepare('DELETE FROM chest_audit WHERE id=?').run(row.id);
    }
   },
-  close(){db.close()},
+  close(){db.prepare('DELETE FROM chest_records').run();db.close()},
  };
 }
