@@ -4605,7 +4605,7 @@
       "executable": false
     },
     "tests/chest/browser-links.mjs": {
-      "sha256": "4d0175b5a3e57ce02cb9758a3928f0e2015a086fb8bca44ffde91a85d14b67fc",
+      "sha256": "1493e950a5663fd67d5fc388356bdea0f768e079e066fc38054a6cafde68d64f",
       "executable": false
     },
     "tests/chest/browser-new-files.mjs": {
@@ -4761,7 +4761,7 @@
       "executable": false
     },
     "tests/chest/link-versions.mjs": {
-      "sha256": "576a0073f73c6d7ad32c8e3067d636c4fd635b2790a4b8f9f1175e1c3b431ca7",
+      "sha256": "d1388778f1a1fbd24c0804dab11aced748541dd7db10d45ccdffd46cd5967e82",
       "executable": false
     },
     "tests/chest/local.mjs": {
@@ -4813,7 +4813,7 @@
       "executable": false
     },
     "tests/chest/organization-link-controls-flow.mjs": {
-      "sha256": "a376ef05bb521e4962fb2f764b155755db900dbf350e2c3da31fa78565bca798",
+      "sha256": "c4b5dfeb40ed1296981c71bf6302b68949a04db5dbeb62ed83476c6143b2aa8f",
       "executable": false
     },
     "tests/chest/ownership.mjs": {
@@ -4830,6 +4830,10 @@
     },
     "tests/chest/reading.mjs": {
       "sha256": "62571ab75e27312833b534b68422d6e3ad6a50ba583a23de0d1fabff638913d6",
+      "executable": false
+    },
+    "tests/chest/render-edge.mjs": {
+      "sha256": "0ca232d5033b947fc2cb3886f503573fb977ea05d9256069b4e38f17cd0503ab",
       "executable": false
     },
     "tests/chest/request-browser-flow.mjs": {
