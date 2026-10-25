@@ -89,7 +89,7 @@ export async function liveCollaboraReviewJourney(h,owner,browser,{stage}){
   try{
    let guest=await open(guestCookie,base+'/guest/'+file.id);const info=await(await raw(guest)).json();assert.equal(info.DisableChangeTrackingRecord,false);assert.equal(info.HideChangeTrackingControls,true);assert.equal(info.UserFriendlyName,'reviewer@outside.test');
    await type(guest,`Guest tracked proposal ${width}. `);
-   await expect.poll(async()=>{const view=await h.api(`/items/${file.id}`,owner);return view.versions.some(v=>v.actor==='reviewer@outside.test'&&v.suggestion&&!v.suggestion.decision)},{timeout:60000,intervals:[1000]}).toBe(true);
+   try{await expect.poll(async()=>{const view=await h.api(`/items/${file.id}`,owner);return view.versions.some(v=>v.actor==='reviewer@outside.test'&&v.suggestion&&!v.suggestion.decision)},{timeout:60000,intervals:[1000]}).toBe(true)}catch(error){const audit=await h.api(`/audit?paginate=true&action=office.collabora.refused&object=${file.id}`,owner);console.error('WOPI_REVIEW_REFUSALS',JSON.stringify(audit.rows.map(r=>JSON.parse(r.detail))));throw error}
    let content=await currentBytes(),parts=unzipSync(content),xml=strFromU8(parts['word/document.xml']);assert.match(xml,/<w:ins[^>]*w:author="reviewer@outside.test"/);assert.ok(xml.includes(`Guest tracked proposal ${width}`));
    await guest.page.screenshot({path:`test-results/${width}-collabora-live-suggest.png`,fullPage:true});
    const lock=(await raw(guest,'POST','',{'X-WOPI-Override':'GET_LOCK'})).headers.get('X-WOPI-Lock'),before=(await h.api(`/items/${file.id}`,owner)).versions;
