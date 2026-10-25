@@ -6,7 +6,7 @@
 import { readFileSync, readdirSync, writeFileSync, rmSync, createReadStream } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
-import { args, credentials, names, databaseId, query, wrangler, fail } from './hosted/account.mjs';
+import { args, credentials, names, databaseId, query, fail } from './hosted/account.mjs';
 import { importDatabase } from './backup/database-import.mjs';
 import { accountingJournal } from './backup/accounting-journal.mjs';
 import { r2 } from './hosted/r2.mjs';

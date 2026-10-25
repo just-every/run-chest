@@ -3,8 +3,6 @@ import {randomUUID} from 'node:crypto';
 const literal=value=>"'"+String(value).replaceAll("'","''")+"'";
 export function operationFor(url,method='GET') {
  const u=new URL(url);
- if(u.pathname.endsWith('/export'))return 'database-export';
- if(!u.hostname.endsWith('.r2.cloudflarestorage.com')&&!u.searchParams.has('list-type')&&!/s3/.test(u.hostname)&&u.pathname.endsWith('/download'))return 'database-download';
  if(u.searchParams.has('list-type'))return 'list';
  if(u.searchParams.has('uploads'))return 'multipart-start';
  if(u.searchParams.has('uploadId'))return method==='PUT'?'multipart-part':method==='DELETE'?'multipart-abort':'multipart-complete';

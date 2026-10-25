@@ -27,7 +27,7 @@ export async function accountingJourney(browser){
   await h.api('/administration/costs',owner,objectQuote);
   const realFetch=globalThis.fetch;
   try{
-   globalThis.fetch=async()=>new Response(Buffer.alloc(37,1));
+   globalThis.fetch=async(input,init)=>new URL(input instanceof Request?input.url:input).hostname==='synthetic-chest-store.test'?new Response(Buffer.alloc(37,1)):realFetch(input,init);
    const transport=providerTransport(async sql=>(await h.sql(sql)).results,'Cloudflare R2','accounting journey');
    for(const [method,path,body] of [['GET','?list-type=2',undefined],['GET','/synthetic-chest-1',undefined],['PUT','/synthetic-chest-1','synthetic-chest-2'],['POST','/synthetic-chest-1?uploads',''],['PUT','/synthetic-chest-1?uploadId=synthetic-chest-3&partNumber=1','synthetic-chest-4'],['POST','/synthetic-chest-1?uploadId=synthetic-chest-3','synthetic-chest-5'],['DELETE','/synthetic-chest-1?uploadId=synthetic-chest-3',undefined],['DELETE','/synthetic-chest-1',undefined]])await (await transport('https://synthetic-chest-store.test/bucket'+path,{method,body})).arrayBuffer();
   }finally{globalThis.fetch=realFetch}

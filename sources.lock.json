@@ -877,11 +877,11 @@
       "executable": false
     },
     "scripts/backup/accounting-journal.mjs": {
-      "sha256": "5122ceb12f20c650cf9e5ca25c0bc0ca06310e0aa73b4d4fc17057a179adcccc",
+      "sha256": "93fd0feaad0c48f38242adc5087657ba24bfb4da5e951ca444348f477a524d62",
       "executable": false
     },
     "scripts/backup/accounting.mjs": {
-      "sha256": "9c4e53b9d60933c23a33c7655879d5ca01a9186f7dc71e89afca650b15db7c9a",
+      "sha256": "dd0731ca5e8d8960484535c5e3e02e26c22f33adb49587564e5cb9845dedc301",
       "executable": false
     },
     "scripts/backup/archive.mjs": {
@@ -909,7 +909,7 @@
       "executable": false
     },
     "scripts/backup/hosted.mjs": {
-      "sha256": "186b017fc1149dec1e2d5f03493cb14783148eed3bbea202bbf28eeed1c24bb7",
+      "sha256": "fa004e6381c0d365e9c98d92d2b3824737398a55126f30ea6d0fd4c1f0322ab1",
       "executable": false
     },
     "scripts/backup/README.md": {
@@ -1121,11 +1121,11 @@
       "executable": false
     },
     "scripts/hosted-backup.mjs": {
-      "sha256": "da0dfc28d769b5fb019b32677fa5879405267b262a66a0fa84becfb46ff44e98",
+      "sha256": "1cec165f0cc4d01955a5f5997d2d1f855686b6c7d7060bebabf1fd2a8dc58bcf",
       "executable": false
     },
     "scripts/hosted-restore.mjs": {
-      "sha256": "979aff9fde0c5536dba78f14202e62d5a98fc12e906f22747f80509520409957",
+      "sha256": "f39f0fbfbff1370ad93311ff6adb5ff0b25c29bdc4da856af539d05e106faafc",
       "executable": false
     },
     "scripts/hosted/account.mjs": {
@@ -4521,7 +4521,7 @@
       "executable": false
     },
     "tests/chest/administration-accounting-flow.mjs": {
-      "sha256": "268c730bdd6722a2323f12363b92f6f66a098f7b34ef8bf2fa3c14f8beb3865a",
+      "sha256": "fc192c4a260b81cdaf73abbd7281d1dd75225635ad37fe81aef553ba6fdaf874",
       "executable": false
     },
     "tests/chest/administration-guest-flow.mjs": {
@@ -4557,7 +4557,7 @@
       "executable": false
     },
     "tests/chest/backup-archive.mjs": {
-      "sha256": "2a900fcf90d4172198f2da26ec3b212752030c9af60bcc0ece770f953d935772",
+      "sha256": "6d37f8ebef0d8b14ad9ab752b8096dc57855b5970e9720d8a716c1a25ac0e1fb",
       "executable": false
     },
     "tests/chest/backup-sandbox.mjs": {

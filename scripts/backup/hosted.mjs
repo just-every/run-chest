@@ -1,7 +1,6 @@
 import { importDatabase } from './database-import.mjs';
 import { exportDatabase } from './database-export.mjs';
 import { accountingJournal } from './accounting-journal.mjs';
-import { spawn } from 'node:child_process';
 import { mkdir, mkdtemp, rm, chmod, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -20,11 +19,6 @@ const archivePattern = /^\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-\d{3}Z-[a-f0-9-]{36}\.ch
 async function scratch(run) {
   const path = await mkdtemp(join(tmpdir(), 'chest-independent-')); await chmod(path, 0o700);
   try { return await run(path); } finally { await rm(path, { recursive: true, force: true }); }
-}
-export async function runWrangler(creds, argv) {
-  // Wrangler export output contains a presigned database URL: never relay it.
-  const child = spawn('npx', ['--no-install', 'wrangler', ...argv], { stdio: ['ignore','ignore','ignore'], env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: creds.account, CLOUDFLARE_API_TOKEN: creds.token, WRANGLER_SEND_METRICS: 'false' } });
-  await new Promise((ok, no) => { child.once('error', () => no(new Error('Could not launch installed Wrangler.'))); child.once('exit', code => code === 0 ? ok() : no(new Error('Wrangler operation failed; provider output was withheld to protect credentials.'))); });
 }
 export function configuration({ environment = 'production', envFile, backupBucket, key } = {}) {
   const live = credentials(envFile), resources = names(environment), env = live.env;
@@ -68,7 +62,6 @@ export async function hostedEdge(config) {
   return {
     originals, archives,
     enableAccounting: () => { accounting=true; },
-    disableAccounting: () => { accounting=false; },
     flushAccounting: () => journal.flush(),
     closeAccounting: () => journal.close(),
     exportDatabase: output => exportDatabase(live,id,output,transport('Cloudflare D1')),
