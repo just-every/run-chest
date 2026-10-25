@@ -76,20 +76,20 @@ async function preview(env: Bindings, request: Request, secret: string, key: str
  const v = publicVersion(file.row,r.link.payload); insist(v, 'version_not_found', 404)
  const restricted = ['pdf','image'].includes(v.preview) || r.state.noDownload || file.fences.some(row => row.kind === 'item' && row.payload.noDownload)
  if (restricted) {
-  const response = await renderRestrictedVersion(env,v,`/l/${secret}/p/${key}`,new URL(request.url).searchParams.get('page'))
+  const response = await renderRestrictedVersion(env,v,`/l/${secret}/p/${key}`,new URL(request.url).searchParams.get('page'),key)
   const fresh = await resolveLink(env,secret); if ('refused' in fresh) return refusedLink(fresh.refused)
   const currentActor = await guestEmail(env,request,fresh); insist(currentActor === actor,'guest_pin_required',403)
   insist(!await locked(env,request,fresh),'password_required',401)
   const current = await fileThrough(env,fresh,key,true); insist(current && publicVersion(current.row,fresh.link.payload)?.id === v.id,'version_not_found',404)
   await commit(env,null,[],{by:actor,fences:current.fences,audits:[{action:'link.preview',object:key,detail:{link:fresh.link.id,version:v.id,rendered:true}}]})
-  return response
+  return meterOriginal(env,response,key,actor,'shared rendered preview',response.headers.has('content-length')?Number(response.headers.get('content-length')):undefined)
  }
  insist(v.size <= 8_000_000, 'office_file_too_large', 413)
  const blob = await env.BLOBS.get(`sha256/${v.checksum}`); insist(blob, 'blob_missing', 503)
  const bytes = new Uint8Array(await blob.arrayBuffer()); insist(bytes.length === v.size && await digest(bytes) === v.checksum, 'blob_integrity', 503)
  const text = v.preview === 'text', result = text ? null : await officePreview(bytes); insist(text || result, 'office_format_unsupported', 415)
  await commit(env, null, [], { by: actor, fences: file.fences, audits: [{ action: 'link.preview', object: file.row.id, detail: { link: r.link.id, version: v.id } }] })
- return text ? publicPage(file.row.payload.name, `<pre class="receipt">${esc(new TextDecoder().decode(bytes))}</pre>`) : officeDocument(result!.html)
+ return meterOriginal(env,text ? publicPage(file.row.payload.name, `<pre class="receipt">${esc(new TextDecoder().decode(bytes))}</pre>`) : officeDocument(result!.html),key,actor,'shared document preview')
 }
 // Ten wrong passwords for one link in 15 minutes pause it; every refusal is audited without the attempt itself.
 async function unlock(env: Bindings, request: Request, secret: string) {

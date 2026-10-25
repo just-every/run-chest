@@ -1,3 +1,4 @@
+import { providerFetch } from '../administration/provider-usage'
 import { attempt } from '../audit/journal'
 import type { Bindings } from '../../auth.server'
 import { ChestError, insist } from '../model'
@@ -7,7 +8,7 @@ export async function providerJson(env:Bindings,url:string,init:RequestInit={}) 
 }
 async function readJson(env:Bindings,url:string,init:RequestInit={}) {
  insist(!managed(env),'provider_not_available_yet',503);providerUrl(env,url)
- let response:Response;try{response=await fetch(url,{...init,redirect:'manual',signal:AbortSignal.timeout(12000)})}catch{throw new ChestError('provider_unreachable',502)}
+ let response:Response;try{response=await providerFetch(env,new URL(url).hostname,'organization','chest:identity',new Request(url,{...init,redirect:'manual',signal:AbortSignal.timeout(12000)}))}catch{throw new ChestError('provider_unreachable',502)}
  insist(response.ok,'provider_request_failed',502)
  const reader=response.body!.getReader(),parts:Uint8Array[]=[];let size=0
  try {while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;insist(size<=512_000,'provider_response_too_large',502);parts.push(value)}}finally{void reader.cancel()}

@@ -21,6 +21,7 @@ try {
  // Original names, both trees, ZIP64 metadata, exact version IDs/hashes and five exclusions reconcile.
  const download=await h.api('/bulk',people.viewer,{action:'download',items:files.map(f=>f.id)});
  const zip=await h.raw(`/api/chest/bulk/${download.id}/archive`,people.viewer);assert.equal(zip.status,200);const zipped=new Uint8Array(await zip.arrayBuffer()),archive=unzipSync(zipped),manifest=JSON.parse(strFromU8(archive['chest-manifest.json']));
+ const metered=(await h.api('/administration/egress',owner)).rows.filter(r=>r.door==='selection archive'&&r.item===download.id);assert.equal(metered.length,1);assert.equal(metered[0].bytes,zipped.length);assert.equal(metered[0].outcome,'complete');
  assert.equal(manifest.included.length,195);assert.equal(manifest.excluded.length,5);assert.equal(manifest.complete,false);assert.ok(Buffer.from(zipped).includes(Buffer.from([0x50,0x4b,0x06,0x06])),'ZIP64 end record');
  for(const item of manifest.included){const source=files.find(f=>f.payload.current===item.version);assert.ok(source);assert.equal(item.sha256,sha(source.text));assert.equal(item.size,Buffer.byteLength(source.text));assert.equal(sha(archive[item.path]),item.sha256);assert.ok(item.path.endsWith('/'+source.payload.name));assert.ok(item.path.includes('/'+folders[Number(source.text.match(/Original (\d+)/)[1])%2].payload.name+'/'))}
  for(const item of manifest.excluded){assert.equal(item.reason,'download_restricted');assert.ok(item.path);assert.equal(archive[item.path],undefined)}

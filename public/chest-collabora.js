@@ -55,5 +55,5 @@ for (const host of document.querySelectorAll('[data-collabora]')) {
  }
  const timer = setInterval(check, 12000);
  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
- window.addEventListener('pagehide', () => { stopped = true; clearInterval(timer); });
+ window.addEventListener('pagehide', () => { stopped = true; clearInterval(timer); fetch(host.dataset.state, {method:'POST', headers:{authorization:'Bearer '+token}, keepalive:true, cache:'no-store'}).catch(()=>{}); });
 }

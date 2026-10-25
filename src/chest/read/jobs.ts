@@ -109,7 +109,7 @@ async function readPage(env: Bindings, row: Row<Extraction>, config: ReaderConfi
  else {
   await env.BLOBS.put(copyKey(checksum, page.n), image.bytes, { httpMetadata: { contentType: image.mediaType } })
   try {
-   const t = await attempt(env,'chest:reader','provider.ocr',row.id,{authority:'installation reader',provider:config.provider,model:config.model,page:page.n,checksum:row.id.slice(8)},()=>transcribe(config, image, x.mediaType === 'application/pdf' ? `page ${page.n} of ${pages.length} of a scanned PDF` : 'this photo of a document'))
+   const t = await attempt(env,'chest:reader','provider.ocr',row.id,{authority:'installation reader',provider:config.provider,model:config.model,page:page.n,checksum:row.id.slice(8)},()=>transcribe({...config,accounting:{env,actor:'chest:reader',object:row.id}}, image, x.mediaType === 'application/pdf' ? `page ${page.n} of ${pages.length} of a scanned PDF` : 'this photo of a document'))
    Object.assign(mine, { state: 'done', chars: t.text.length, language: t.language, confidence: t.confidence, image: { mediaType: image.mediaType, width: image.width, height: image.height }, problem: t.readable ? undefined : 'No legible text on this page.', attempts: undefined })
    texts[page.n - 1] = t.text.replaceAll(SEP, ' ')
    x.usage = added(x.usage, t.usage)
@@ -135,7 +135,7 @@ async function readDocument(env: Bindings, row: Row<Reading>, config: ReaderConf
  const pages: { n: number; image: PageImage }[] = []
  for (const p of scanned) { const copy = await env.BLOBS.get(copyKey(r.checksum, p.n)); if (copy) pages.push({ n: p.n, image: { mediaType: p.image!.mediaType as PageImage['mediaType'], bytes: new Uint8Array(await copy.arrayBuffer()), width: p.image!.width, height: p.image!.height } }) }
  try {
-  const { proposals, usage } = await attempt(env,'chest:reader','provider.fields',r.document,{authority:'installation reader',provider:config.provider,model:config.model,version:r.version},()=>readFields(config, pages, wanted, schema!.payload.name))
+  const { proposals, usage } = await attempt(env,'chest:reader','provider.fields',r.document,{authority:'installation reader',provider:config.provider,model:config.model,version:r.version},()=>readFields({...config,accounting:{env,actor:'chest:reader',object:r.document}}, pages, wanted, schema!.payload.name))
   const previousRows = (await env.DB.prepare("SELECT payload FROM chest_records WHERE kind='reading' AND json_extract(payload,'$.document')=? AND json_extract(payload,'$.state')='done' ORDER BY json_extract(payload,'$.createdAt') DESC").bind(r.document).all()).results as {payload:string}[]
   const versions = doc?.payload.versions ?? item!.payload.versions, retained = new Set(versions.slice(0,versions.findIndex(v => v.id === r.version)).map(v => v.id))
   const earlier = previousRows.map(x => JSON.parse(x.payload) as Reading).filter(x => retained.has(x.version) && x.schema === schema!.id)

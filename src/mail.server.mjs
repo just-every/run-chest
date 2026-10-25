@@ -1,3 +1,4 @@
+import { providerFetch } from './chest/administration/provider-usage'
 import { attempt } from './chest/audit/journal'
 import { createMailSender } from './modules/mail/index.mjs'
 
@@ -8,7 +9,7 @@ export function operatorMail(env) {
  if (!env.MAIL_PROVIDER || env.MAIL_PROVIDER === 'development') return undefined
  return {
   async send(message) {
-   return attempt(env, 'chest:mail', 'provider.mail', 'mail', { authority: 'installation mail sender', provider: env.MAIL_PROVIDER }, () => createMailSender({ provider: env.MAIL_PROVIDER, mode: 'production', apiKey: env.MAIL_API_KEY, ...(env.MAIL_PROVIDER === 'rer' && env.MAIL_RELAY_URL?.trim() ? { relayUrl: env.MAIL_RELAY_URL } : {}), ...(env.MAIL_PROVIDER === 'cloudflare' ? { accountId: env.MAIL_ACCOUNT_ID } : {}) }).send(message))
+   return attempt(env, 'chest:mail', 'provider.mail', 'mail', { authority: 'installation mail sender', provider: env.MAIL_PROVIDER }, () => createMailSender({ provider: env.MAIL_PROVIDER, mode: 'production', apiKey: env.MAIL_API_KEY, ...(env.MAIL_PROVIDER === 'rer' && env.MAIL_RELAY_URL?.trim() ? { relayUrl: env.MAIL_RELAY_URL } : {}), ...(env.MAIL_PROVIDER === 'cloudflare' ? { accountId: env.MAIL_ACCOUNT_ID } : {}) },{fetch:(url,init)=>providerFetch(env,String(env.MAIL_PROVIDER),'mail','chest:mail',new Request(url,init))}).send(message))
   },
  }
 }

@@ -1,3 +1,4 @@
+import { providerFetch } from '../administration/provider-usage'
 import { insist } from '../model'
 import type { ReaderConfig } from '../read/provider'
 export type Classification = { destination: string; explanation: string; quote: string; confidence: number; uncertainty: string; taxonomy: string[]; responsible: string; proposedName: string; tags: string[] }
@@ -9,7 +10,7 @@ export async function classify(config: ReaderConfig, input: { name: string; text
  const content = JSON.stringify(input)
  const body = anthropic ? { model: config.model, max_tokens: 1600, system: instructions, output_config: { format: { type: 'json_schema', schema } }, messages: [{ role: 'user', content }] } : { model: config.model, response_format: { type: 'json_schema', json_schema: { name: 'filing_suggestion', strict: true, schema } }, messages: [{ role: 'system', content: instructions }, { role: 'user', content }] }
  let response: Response
- try { response = await fetch(config.endpoint, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body), signal: AbortSignal.timeout(30_000), redirect: 'manual' }) }
+ try { response = await (config.accounting?providerFetch(config.accounting.env,config.provider,config.accounting.object,config.accounting.actor,new Request(config.endpoint,{method:'POST',headers:{'content-type':'application/json',...headers},body:JSON.stringify(body),signal:AbortSignal.timeout(30_000),redirect:'manual'}),config.model):fetch(config.endpoint,{method:'POST',headers:{'content-type':'application/json',...headers},body:JSON.stringify(body),signal:AbortSignal.timeout(30_000),redirect:'manual'})) }
  catch { insist(false, 'filing_provider_unreachable', 502) }
  insist(response.ok, response.status === 401 || response.status === 403 ? 'filing_provider_key_refused' : 'filing_provider_failed', 502)
  const result: any = await response.json().catch(() => null)

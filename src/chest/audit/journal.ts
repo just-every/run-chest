@@ -41,5 +41,5 @@ export async function operation(env: Bindings, s: Session, method: string, path:
 }
 // Old unfinished work is explicitly uncertain. It stays uncertain after restart and is never changed to success by time.
 export async function interrupted(env: Bindings) {
- await env.DB.prepare("UPDATE chest_audit SET detail=json_set(detail,'$.outcome','uncertain','$.reason','Execution ended without a recorded outcome') WHERE json_extract(detail,'$.outcome')='running' AND at<?").bind(new Date(Date.now() - 5 * 60_000).toISOString()).run()
+ await env.DB.prepare("UPDATE chest_audit SET detail=json_set(detail,'$.outcome','uncertain','$.reason','Execution ended without a recorded outcome') WHERE json_extract(detail,'$.outcome')='running' AND coalesce(json_extract(detail,'$.checkpointAt'),at)<?").bind(new Date(Date.now() - 5 * 60_000).toISOString()).run()
 }

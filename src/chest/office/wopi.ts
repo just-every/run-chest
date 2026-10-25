@@ -1,3 +1,5 @@
+import { providerFetch } from '../administration/provider-usage'
+import { admitEditor, requireEditorEnabled } from '../administration/editor-capacity'
 import { DOMParser } from '@xmldom/xmldom'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -30,7 +32,7 @@ async function engine(env:Bindings,extension:string){
  insist(env.COLLABORA_URL,'collabora_not_configured',503)
  const origin=new URL(env.COLLABORA_URL),app=new URL(env.AUTH_ORIGIN),local=['localhost','127.0.0.1','[::1]'].includes(origin.hostname)&&['localhost','127.0.0.1','[::1]'].includes(app.hostname)
  insist((origin.protocol==='https:'||local&&origin.protocol==='http:')&&!origin.username&&!origin.password&&!origin.search&&!origin.hash,'collabora_requires_https',503)
- const response=await fetch(new URL('/hosting/discovery',origin).href,{redirect:'manual',signal:AbortSignal.timeout(15000)})
+ const response=await providerFetch(env,'Collabora Online','editor','chest:editor',new Request(new URL('/hosting/discovery',origin).href,{redirect:'manual',signal:AbortSignal.timeout(15000)}))
  insist(response.ok,'collabora_unavailable',503);const xml=await response.text();insist(xml.length<=1000000,'invalid_collabora_discovery',503)
  const doc=new DOMParser().parseFromString(xml,'application/xml'),actions=Array.from(doc.getElementsByTagName('action')),action=actions.find(a=>a.getAttribute('ext')===extension&&a.getAttribute('name')==='edit')
  insist(action,'collabora_format_unavailable',415);const target=new URL(action.getAttribute('urlsrc')!.replace(/<[^>]*>/g,''));insist(target.origin===origin.origin,'collabora_origin_mismatch',503);return target
@@ -38,10 +40,11 @@ async function engine(env:Bindings,extension:string){
 export async function openCollabora(env:Bindings,s:Session,item:string){
  const w=await who(env,s),ctx=await context(env,w,item);demand(ctx,'view');demand(ctx,'download');const row=ctx.chain.at(-1)!,current=row.payload.versions.at(-1)
  insist(current&&/\.(docx|xlsx|pptx)$/i.test(current.filename),'collabora_format_unavailable',415)
+ await requireEditorEnabled(env)
  const target=await engine(env,current.filename.split('.').at(-1)!.toLowerCase()),token=randomToken('chest_editor_'),guest=(s as any).guestWho as typeof w|undefined
  const payload:Editor={item,email:s.operator.email,tokenHash:await tokenHash(token),expires:Math.min(s.expiresAt,Date.now()+30*60000),...(guest?{guest:{admission:(s as any).guestAdmission,link:guest.guest!.fences.find(r=>r.kind==='public-link')!.id,session:guest.guest!.fences.find(r=>r.kind==='guest-session')!.id}}:{staff:{session:s.id,kind:s.kind}})}
  const session=fresh('editor-session',payload)
- await commit(env,s,[{row:session}],{fences:ctx.fences,audits:[{action:'office.collabora.open',object:item,detail:{session:session.id,version:current.id}}]})
+ await admitEditor(env,s,item,session,ctx.fences,current.id)
  target.searchParams.set('WOPISrc',`${env.AUTH_ORIGIN}/wopi/files/${item}`)
  return publicPage('Open in Collabora Online',`<section data-collabora data-origin="${esc(target.origin)}" data-restore="${esc(row.payload.versions.findLast(v=>v.arrival==='restore')?.id??'')}" data-state="/wopi/files/${esc(item)}/state"><p>${esc(row.payload.name)} · ${esc(s.operator.email)}</p><p role="status" aria-live="polite" data-collabora-status>Open the editor to begin. Restores are checked while this page is open.</p><form method="post" target="chest-collabora" action="${esc(target.href)}"><input type="hidden" name="access_token" value="${esc(token)}"><input type="hidden" name="access_token_ttl" value="${payload.expires}"><button class="action">Continue to Collabora</button></form><iframe class="office-frame" name="chest-collabora" title="Collabora Online editor" hidden></iframe>${allowed(ctx,'contribute')&&/\.docx$/i.test(current.filename)?'<details><summary>Review suggestions</summary><button type="button" class="action" data-review-decision="accept" disabled>Accept suggestion</button> <button type="button" class="action" data-review-decision="reject" disabled>Reject suggestion</button></details>':''}</section><script src="/chest-collabora.js" defer></script>`,200,{'content-security-policy':policy.replace("form-action 'self'",`form-action 'self' ${target.origin}`).replace("frame-src 'self'",`frame-src 'self' ${target.origin}`),'referrer-policy':'no-referrer'})
 }
@@ -70,6 +73,7 @@ export async function wopiResponse(request:Request,env:Bindings):Promise<Respons
  const item=parts[2]
  try{
   const a=await editorAuthority(env,request,item),file=a.ctx.chain.at(-1)!,current=file.payload.versions.at(-1);insist(current,'version_not_found',404)
+  if(request.method==='POST'&&parts[3]==='state'){await commit(env,a.s,[{row:a.row,previous:a.row,remove:true}],{fences:a.ctx.fences,audits:[{action:'office.collabora.close',object:item,detail:{session:a.row.id}}]});return Response.json({closed:true},{headers:{'cache-control':'no-store'}})}
   if(request.method==='GET'&&parts[3]==='state')return Response.json({version:current.id,restore:file.payload.versions.findLast(v=>v.arrival==='restore')?.id??''},{headers:{'cache-control':'no-store'}})
   const lock=await maybe<Lock>(env,'wopi-lock',lockKey(item)),active=lock&&lock.payload.expires>Date.now()?lock:null,provided=request.headers.get('X-WOPI-Lock')??'',override=request.headers.get('X-WOPI-Override')??''
   const commenter=allowed(a.ctx,'comment')&&!allowed(a.ctx,'contribute'),readonly=!allowed(a.ctx,'comment'),document=/\.docx$/i.test(current.filename)

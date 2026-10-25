@@ -30,7 +30,7 @@ export async function readerState(env: Bindings): Promise<ReaderState> {
  const key = await unseal(env.SESSION_SECRET, PURPOSE, row.keySealed)
  if (!key) return { missing: 'The saved AI key cannot be opened on this installation; the owner adds it again under Reading scans.' }
  const { provider, endpoint, model, workspace } = row
- return { config: { provider, endpoint, model, key, workspace } }
+ return { config: { provider, endpoint, model, key, workspace,accounting:{env,actor:'chest:reader',object:'reader'} } }
 }
 export async function readerView(env: Bindings) {
  const row = await saved(env), state = await readerState(env)

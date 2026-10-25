@@ -53,7 +53,7 @@ try{
  const consent=await text(await h.fetch(ext,{headers:{cookie}}));assert.match(consent,/withdraw your consent/);assert.match(consent,/paper copy/);
  assert.equal((await post(ext+'/sign',{adopt:'Ellis Outside',intent:'true'},cookie)).status,409,'signing needs the consent first');
  assert.equal((await post(ext+'/consent',{},cookie)).status,303);
- const doc=await h.fetch(ext+'/document',{headers:{cookie}});assert.equal(doc.headers.get('content-type'),'application/pdf');assert.equal(sha(Buffer.from(await doc.arrayBuffer())),sha(bytes));
+ const doc=await h.fetch(ext+'/document',{headers:{cookie}});assert.equal(doc.headers.get('content-type'),'application/pdf');assert.equal(sha(Buffer.from(await doc.arrayBuffer())),sha(bytes));assert.ok((await h.api('/administration/egress',owner)).rows.some(r=>r.item===file.id&&r.door==='signing document'&&r.bytes===bytes.length&&r.outcome==='complete'));
  const other1=await h.fetch(`/api/chest/items/${other.id}/bytes/${(await itemOf(owner,other.id)).versions[0].id}?download=true`,{headers:{cookie}});assert.equal(other1.status,401,'the signer holds no Chest access');
  assert.equal((await h.fetch(`/api/chest/items/${file.id}`,{headers:{cookie}})).status,401);
  assert.equal((await h.fetch(`/sign/${'chest_sign_'+'b'.repeat(43)}/document`,{headers:{cookie}})).status,404);
@@ -93,7 +93,7 @@ try{
  await rewrite(draft.id,p=>{for(const s of p.signers){delete s.remindedAt;s.invitedAt=new Date(Date.now()-9*day).toISOString()}});const mailCount=h.mails.length;await h.scheduled();assert.equal(h.mails.length,mailCount,'a completed request sends no reminders');
  // Each signer reaches exactly the completed pair, byte for byte.
  const completedLink=link(mailsTo('ext@outside.test').find(m=>/^Signed:/.test(m.subject)));assert.equal(completedLink,ext);
- assert.match(await text(await h.fetch(ext,{headers:{cookie}})),/Download the signed PDF/);const again=await h.fetch(ext+'/signed',{headers:{cookie}});assert.equal(sha(Buffer.from(await again.arrayBuffer())),signedV.checksum);
+ assert.match(await text(await h.fetch(ext,{headers:{cookie}})),/Download the signed PDF/);const again=await h.fetch(ext+'/signed',{headers:{cookie}});assert.equal(sha(Buffer.from(await again.arrayBuffer())),signedV.checksum);assert.ok((await h.api('/administration/egress',owner)).rows.some(r=>r.item===file.id&&r.door==='signing signed'&&r.bytes===signedV.size&&r.outcome==='complete'));
  assert.notEqual((await h.fetch(ext+'/signed')).headers.get('content-type'),'application/pdf','the completed copy needs verification too');
  assert.equal((await post(ext+'/sign',{adopt:'Ellis Outside',intent:'true'},cookie)).status,409,'a completed request takes no more signatures');
  const audit=await h.api(`/audit?object=${file.id}`,owner);for(const a of ['signature.draft','signature.send','signature.sign','signature.complete'])assert.ok(audit.some(r=>r.action===a),a);

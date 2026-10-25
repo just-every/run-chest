@@ -5,6 +5,11 @@ import { commit, fresh, maybe, next } from '../files/repo'
 import { canAdmin, requireAdmin } from './roles'
 
 export type CostRates = {
+ aiProvider?: string
+ aiModel?: string
+ aiInputUsdPerMillion?: number
+ aiOutputUsdPerMillion?: number
+ aiRequestUsd?: number
  provider: string
  storageUsdPerGbMonth: number
  egressUsdPerGb: number
@@ -38,6 +43,7 @@ export async function saveCostSettings(env: Bindings, s: Session, input: any): P
  await requireAdmin(env, s, 'service-settings')
  insist(input?.confirm === true, 'cost_confirmation_required')
  const rates: CostRates = {
+  ...(input.aiProvider?{aiProvider:plain(input.aiProvider,'ai_provider',120),aiModel:plain(input.aiModel||'request','ai_model',120),aiInputUsdPerMillion:rate(input.aiInputUsdPerMillion,'ai_input_rate'),aiOutputUsdPerMillion:rate(input.aiOutputUsdPerMillion,'ai_output_rate'),aiRequestUsd:rate(input.aiRequestUsd??0,'ai_request_rate')}:{}),
   provider: plain(input.provider, 'provider', 120),
   quote: plain(input.quote, 'quote', 300),
   storageUsdPerGbMonth: rate(input.storageUsdPerGbMonth, 'storage_rate'),

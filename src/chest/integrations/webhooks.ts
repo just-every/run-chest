@@ -1,3 +1,4 @@
+import { providerFetch } from '../administration/provider-usage'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get, list } from '../store'
@@ -32,7 +33,7 @@ export async function deliverEvent(env: Bindings,key: string,replay = false) {
  await commit(env,auth.session,[{row:sending,previous:delivery},spend(auth,{requests:1})],{fences:[subscription,event],audits:[{action:replay?'integration.webhook.replay':'integration.webhook.attempt',object:delivery.id,detail:{event:event.id,attempt:sending.payload.attempt}}]});delivery=sending;d=sending.payload
  const body=JSON.stringify({id:event.id,type:event.payload.kind,at:event.payload.at,item:event.payload.item,version:event.payload.version}),timestamp=String(Math.floor(Date.now()/1000)),signature=await sign(signingKey,`${timestamp}.${body}`)
  let state:Delivery['state']='uncertain',status:number|undefined,reason:string|undefined
- try {await live(env,auth,event.payload.item,'webhook');const response=await fetch(subscription.payload.endpoint,{method:'POST',redirect:'manual',headers:{'content-type':'application/json','x-chest-event':event.id,'x-chest-delivery':delivery.id,'x-chest-signature':`t=${timestamp},v1=${signature}`},body,signal:AbortSignal.timeout(10000)});status=response.status;state=response.ok?'delivered':'failed';reason=response.ok?undefined:'receiver_refused';await response.body?.cancel()}catch(error){reason=error instanceof ChestError?error.code:'receiver_outcome_unknown';state=error instanceof ChestError?'failed':'uncertain'}
+ try {await live(env,auth,event.payload.item,'webhook');const response=await providerFetch(env,'Webhook receiver',event.payload.item,'chest:integration',new Request(subscription.payload.endpoint,{method:'POST',redirect:'manual',headers:{'content-type':'application/json','x-chest-event':event.id,'x-chest-delivery':delivery.id,'x-chest-signature':`t=${timestamp},v1=${signature}`},body,signal:AbortSignal.timeout(10000)}));status=response.status;state=response.ok?'delivered':'failed';reason=response.ok?undefined:'receiver_refused';await response.body?.cancel()}catch(error){reason=error instanceof ChestError?error.code:'receiver_outcome_unknown';state=error instanceof ChestError?'failed':'uncertain'}
  // Always retain the observed result, including if the grant was revoked while the receiver responded.
  const row=next(delivery,{...d,state,status,reason,finishedAt:now()});await commit(env,null,[{row,previous:delivery}],{by:'chest:webhook',audits:[{action:'integration.webhook.outcome',object:delivery.id,detail:{event:event.id,state,status,attempt:d.attempt}}]});return row
 }

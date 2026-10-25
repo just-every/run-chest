@@ -1,3 +1,4 @@
+import { providerFetch } from '../administration/provider-usage'
 import { canAdmin, requireAdmin } from '../administration/roles'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -19,7 +20,7 @@ export async function scanUpload(env:Bindings,v:{checksum:string;size:number;fil
  try {
   const endpoint=new URL(env.CONTENT_SCANNER_URL!);insist(!endpoint.username&&!endpoint.password&&!endpoint.search&&!endpoint.hash,'invalid_scanner_endpoint',503);insist(endpoint.protocol==='https:'||env.AUTH_LOCAL==='true'&&['localhost','127.0.0.1'].includes(endpoint.hostname),'scanner_requires_https',503)
   const blob=await env.BLOBS.get(`sha256/${v.checksum}`);insist(blob&&blob.size===v.size,'blob_missing',503)
-  const response=await fetch(endpoint,{method:'POST',redirect:'manual',headers:{authorization:`Bearer ${env.CONTENT_SCANNER_TOKEN}`,'content-type':'application/octet-stream','content-length':String(v.size),'x-content-sha256':v.checksum},body:blob.body,signal:AbortSignal.timeout(120_000)})
+  const response=await providerFetch(env,'Content scanner',key(v.checksum),v.actor,new Request(endpoint,{method:'POST',redirect:'manual',headers:{authorization:`Bearer ${env.CONTENT_SCANNER_TOKEN}`,'content-type':'application/octet-stream','content-length':String(v.size),'x-content-sha256':v.checksum},body:blob.body,signal:AbortSignal.timeout(120_000)}))
   insist(response.ok,'scanner_unavailable',503)
   const r=await response.json() as any
   insist(r.checksum===v.checksum&&r.size===v.size&&['clean','infected'].includes(r.state)&&typeof r.sensitive==='boolean'&&typeof r.engine==='string'&&r.engine.length>0&&r.engine.length<=200&&typeof r.reason==='string'&&r.reason.length<=500,'invalid_scanner_receipt',503)

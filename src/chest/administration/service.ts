@@ -1,3 +1,5 @@
+import { editorConfiguration, saveEditorConfiguration, administrativeEditorReport, administrativeEditorCsv } from './editor-capacity'
+import { administrativeProviderUsage, administrativeProviderUsageCsv } from './provider-usage'
 import { administrativeEgress, administrativeEgressCsv } from './egress'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -37,7 +39,10 @@ export async function administrationExecute(env:Bindings,request:Request,s:Sessi
   if(get&&key)return recoveryView(env,s,key)
   if(post&&key)return applyRecovery(env,s,key,input)
  }
+ if(section==='editor')return post?saveEditorConfiguration(env,s,input):editorConfiguration(env,s)
+ if(get&&section==='editor-report')return key==='export'?administrativeEditorCsv(env,s,url.searchParams):administrativeEditorReport(env,s,url.searchParams)
  if(section==='costs')return post?saveCostSettings(env,s,input):costSettings(env,s)
+ if(get&&section==='provider-usage')return key==='export'?administrativeProviderUsageCsv(env,s,url.searchParams):administrativeProviderUsage(env,s,url.searchParams)
  if(get&&section==='egress')return key==='export'?administrativeEgressCsv(env,s,url.searchParams):administrativeEgress(env,s,url.searchParams)
  if(get&&section==='guests')return key==='export'?administrativeGuestsCsv(env,s,url.searchParams):administrativeGuests(env,s,url.searchParams)
  if(get&&section==='storage')return key==='export'?administrativeStorageCsv(env,s,url.searchParams):administrativeStorage(env,s,url.searchParams)

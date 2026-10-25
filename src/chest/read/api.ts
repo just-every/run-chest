@@ -1,3 +1,4 @@
+import { meterOriginal } from '../administration/egress'
 import { assertContent } from '../content-security/scan'
 import { decideItemField } from './item-fields'
 import type { Bindings } from '../../auth.server'
@@ -48,7 +49,7 @@ export async function readingExecute(env: Bindings, s: Session, method: string, 
    if (!allowed(ctx, 'download')) demand(ctx, 'download')
    const response = await pageCopy(env, v.checksum, Number(page))
    demand(await context(env, w, key), 'download'); await recordAccess(env, s, item, 'version.preview',v.id)
-   return response
+   return meterOriginal(env,response,key,s.operator.email,'extraction page')
   }
  }
  if (head === 'documents' && key && ['reading', 'pages', 'fields'].includes(sub)) {
@@ -63,7 +64,7 @@ export async function readingExecute(env: Bindings, s: Session, method: string, 
   }
   if (get_ && sub === 'pages') {
    const v = doc.payload.versions.find(v => v.id === version); insist(v, 'version_not_found', 404)
-   const response = await pageCopy(env, v.checksum, Number(page)); await recordAccess(env, s, doc, 'version.preview',v.id); return response
+   const response = await pageCopy(env, v.checksum, Number(page)); await recordAccess(env, s, doc, 'version.preview',v.id); return meterOriginal(env,response,key,s.operator.email,'Library extraction page')
   }
   if (post && sub === 'fields' && version) return decide(env, s, doc, version, input)
  }

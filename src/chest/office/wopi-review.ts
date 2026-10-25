@@ -1,3 +1,4 @@
+import { providerFetch } from '../administration/provider-usage'
 import type { Bindings } from '../../auth.server'
 import type { FileVersion } from '../files/model'
 import { ChestError, insist, now } from '../model'
@@ -7,7 +8,7 @@ import { trackedSource } from './wopi-source'
 
 async function exported(env:Bindings,bytes:Uint8Array,extension:string){
  const form=new FormData();form.set('data',new Blob([bytes as BlobPart]),`review.${extension}`)
- const response=await fetch(new URL(`/cool/convert-to/${extension}`,env.COLLABORA_URL!),{method:'POST',body:form,redirect:'manual',signal:AbortSignal.timeout(30000)})
+ const response=await providerFetch(env,'Collabora Online','editor','chest:editor',new Request(new URL(`/cool/convert-to/${extension}`,env.COLLABORA_URL!),{method:'POST',body:form,redirect:'manual',signal:AbortSignal.timeout(30000)}))
  insist(response.ok,'collabora_review_validation_unavailable',503)
  const result=new Uint8Array(await response.arrayBuffer());insist(result.length>0&&result.length<=SMALL,'collabora_review_validation_invalid',503)
  return result

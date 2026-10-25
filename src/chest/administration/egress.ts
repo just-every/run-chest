@@ -8,45 +8,56 @@ import { eventCondition, reportScope } from './report-scope'
 import { csvCell, eventFilters } from './reports'
 import type { CostRates } from './costs'
 
-const basis = 'Original response bytes emitted by instrumented file, device, shared-link and delivery-package doors. Repeated and overlapping ranges count again. Cancellation records the emitted prefix; refused requests emit no original bytes. This is server stream evidence, not proof of client receipt or a provider invoice. Historical requests before metering, rendered previews, archives, signing and provider traffic are not covered. Unknown rates remain unknown. A process crash can lose an unfinished stream receipt; this report does not claim complete billed egress.'
-// Snapshot the confirmed quote before streaming so a later rate edit never reprices history.
-export async function meterOriginal(env: Bindings, response: Response, item: string, actor: string, door: string, expectedBytes: number) {
+const basis = 'Instrumented response bytes, including originals, rendered previews, selection archives and signing PDFs. Repeated ranges count again. Durable checkpoints precede output: bytes in an unfinished checkpoint are uncertain, never asserted as client receipt or a provider invoice. Completed and cancelled streams retain their emitted prefix. Organization archive totals include ZIP framing; Scoped archive totals count generated original chunks entering ZIP assembly under current custody and omit shared framing. Their public emission is not independently confirmed; use the enclosing organization ZIP receipt for that bound. Historical traffic before instrumentation is excluded. Unknown rates remain unknown.'
+// A receipt exists before the first pull. Each chunk is reserved durably before output.
+// An interruption leaves an explicit upper bound rather than silently losing the transfer.
+export async function meterOriginal(env: Bindings, response: Response, item: string, actor: string, door: string, expectedBytes?: number) {
  if (!response.ok || !response.body) return response
  const rates = (await maybe<CostRates>(env, 'admin-cost-rates', 'admin-cost-rates'))?.payload ?? null
- const at = now(), reader = response.body.getReader(); let bytes = 0, recorded = false
- async function record(outcome: string) {
-  if (recorded) return
-  recorded = true
-  await commit(env, null, [], { by: actor, audits: [{ action: 'transfer.egress', object: item, detail: {
-   startedAt: at, door, bytes, outcome, provider: rates?.provider ?? null, quote: rates?.quote ?? null,
-   rateAt: rates?.updatedAt ?? null, usdPerGb: rates?.egressUsdPerGb ?? null,
-   usd: rates ? Number((bytes / 1e9 * rates.egressUsdPerGb).toFixed(9)) : null,
-  } }] })
+ const at = now(), stream = crypto.randomUUID(), reader = response.body.getReader(); let bytes = 0, reservedBytes = 0, recorded = false
+ const anonymize = await (await import('../audit/privacy')).identityRedactor(env)
+ const key = crypto.randomUUID(), identity = await anonymize(actor), object = await anonymize(item)
+ const detail = (outcome:string) => ( {startedAt:at,stream,door,bytes,reservedBytes,outcome,checkpointAt:now(),provider:rates?.provider??null,quote:rates?.quote??null,rateAt:rates?.updatedAt??null,usdPerGb:rates?.egressUsdPerGb??null,usd:rates?Number((bytes/1e9*rates.egressUsdPerGb).toFixed(9)):null})
+ async function checkpoint(outcome:string){
+  await env.DB.prepare('UPDATE chest_audit SET detail=? WHERE id=?').bind(await (await (await import('../audit/privacy')).identityRedactor(env))(JSON.stringify(detail(outcome))),key).run()
  }
+ await env.DB.prepare('INSERT INTO chest_audit VALUES(?,?,?,?,?,?)').bind(key,identity,'transfer.egress',object,await anonymize(JSON.stringify(detail('running'))),at).run()
+ async function record(outcome:string) { if(recorded)return;await checkpoint(outcome);recorded=true }
  const body = new ReadableStream<Uint8Array>({
   async pull(controller) {
-   try { const part = await reader.read(); if (part.done) { insist(bytes===expectedBytes,'incomplete_original',503); await record('complete'); controller.close() }
-    else { bytes += part.value.byteLength; controller.enqueue(part.value); if(bytes===expectedBytes){insist((await reader.read()).done,'original_size_mismatch',503);await record('complete');controller.close()} }
-   } catch (error) { try { await record('failed') } finally { controller.error(error); await reader.cancel(error) } }
+   try {
+    // Storage can yield four-kilobyte pieces. Coalesce a bounded output batch so
+    // durable admission does not require one database transaction for each piece.
+    const parts:Uint8Array[]=[];let size=0,ended=false
+    while(size<256*1024){const part=await reader.read();if(part.done){ended=true;break}parts.push(part.value);size+=part.value.byteLength}
+    if(!size&&ended){insist(expectedBytes===undefined||bytes===expectedBytes,'incomplete_original',503);await record('complete');controller.close();return}
+    const value=new Uint8Array(size);let offset=0;for(const part of parts){value.set(part,offset);offset+=part.byteLength}
+    reservedBytes=bytes+value.byteLength
+    insist(expectedBytes===undefined||reservedBytes<=expectedBytes,'original_size_mismatch',503)
+    await checkpoint('running')
+    controller.enqueue(value);bytes=reservedBytes
+    if(ended||expectedBytes!==undefined&&bytes===expectedBytes){insist(expectedBytes===undefined||bytes===expectedBytes,'incomplete_original',503);if(!ended)insist((await reader.read()).done,'original_size_mismatch',503);await record('complete');controller.close()}
+   } catch(error){try{await record('failed')}finally{controller.error(error);await reader.cancel(error)}}
   },
-  async cancel(reason) { try { await reader.cancel(reason) } finally { await record('cancelled') } },
- })
- return new Response(body, { status: response.status, statusText: response.statusText, headers: response.headers })
+  async cancel(reason){try{await reader.cancel(reason)}finally{await record('cancelled')}},
+ },{highWaterMark:0})
+ return new Response(body,{status:response.status,statusText:response.statusText,headers:response.headers})
 }
 export async function administrativeEgress(env: Bindings, s: Session, params: URLSearchParams) {
  const scope = await reportScope(env, s, params.get('group')), fence = eventCondition(scope)
  const dates = new URLSearchParams(); for (const key of ['from','to']) if (params.get(key)) dates.set(key,params.get(key)!)
+ const coverage=scope.global?" AND COALESCE(json_extract(detail,'$.door'),'')!='archive member'":" AND COALESCE(json_extract(detail,'$.door'),'')!='selection archive'"
  const filter = eventFilters(dates), visible = await viewFilter(env,true,true)
- const result = await env.DB.prepare(`SELECT actor,object_id,at,action,detail FROM chest_audit a WHERE action='transfer.egress' AND ${fence.sql}${filter.conditions.length ? ' AND '+filter.conditions.join(' AND ') : ''} ORDER BY at,id`).bind(...fence.params,...filter.values).all<{actor:string;object_id:string;at:string;action:string;detail:string}>()
+ const result = await env.DB.prepare(`SELECT actor,object_id,at,action,detail FROM chest_audit a WHERE action='transfer.egress' AND ${fence.sql}${coverage}${filter.conditions.length ? ' AND '+filter.conditions.join(' AND ') : ''} ORDER BY at,id`).bind(...fence.params,...filter.values).all<{actor:string;object_id:string;at:string;action:string;detail:string}>()
  const showCosts = await canAdmin(env,s,'audit-reporting')
- const rows = result.results.filter(r=>visible(r)).map(r=>{const d=JSON.parse(r.detail);return {item:r.object_id,at:r.at,startedAt:d.startedAt,door:d.door,bytes:d.bytes,outcome:d.outcome,provider:showCosts?d.provider:null,quote:showCosts?d.quote:null,rateAt:showCosts?d.rateAt:null,usdPerGb:showCosts?d.usdPerGb:null,usd:showCosts?d.usd:null}})
+ const rows = result.results.filter(r=>visible(r)).map(r=>{const d=JSON.parse(r.detail);const interrupted=d.outcome==='running'&&Date.parse(d.checkpointAt??r.at)<Date.now()-5*60000;return {item:r.object_id,at:r.at,startedAt:d.startedAt,door:d.door,byteBasis:d.door==='archive member'?'Generated original chunks entering ZIP assembly':'Emitted response prefix',bytes:d.bytes,outcome:interrupted?'uncertain':d.outcome,uncertainBytes:['running','uncertain'].includes(d.outcome)?Math.max(0,(d.reservedBytes??d.bytes)-d.bytes):0,provider:showCosts?d.provider:null,quote:showCosts?d.quote:null,rateAt:showCosts?d.rateAt:null,usdPerGb:showCosts?d.usdPerGb:null,usd:showCosts?d.usd:null}})
  const bytes = rows.reduce((n,r)=>n+r.bytes,0), unknownBytes = rows.filter(r=>r.usd===null).reduce((n,r)=>n+r.bytes,0)
  const estimatedUsd = Number(rows.reduce((n,r)=>n+(r.usd??0),0).toFixed(9))
  await commit(env,s,[],{audits:[{action:'admin.egress.read',object:'administration',detail:{count:rows.length}}]})
- return {basis,rows,bytes,unknownBytes,estimatedUsd,groups:scope.groups}
+ return {basis,rows,bytes,unknownBytes,estimatedUsd,uncertainBytes:rows.reduce((n,r)=>n+r.uncertainBytes,0),groups:scope.groups}
 }
 export async function administrativeEgressCsv(env: Bindings, s: Session, params: URLSearchParams) {
  const d=await administrativeEgress(env,s,params)
- const rows=d.rows.map(r=>[r.at,r.startedAt,r.item,r.door,r.bytes,r.outcome,r.provider,r.quote,r.rateAt,r.usdPerGb,r.usd])
- return new Response(['Completed at,Started at,Item ID,Door,Emitted bytes,Outcome,Provider,Quote,Rate recorded at,USD per decimal GB,Estimated USD',...rows.map(r=>r.map(csvCell).join(','))].join('\r\n')+'\r\n',{headers:{'content-type':'text/csv; charset=utf-8','content-disposition':'attachment; filename="chest-egress.csv"','cache-control':'no-store'}})
+ const rows=d.rows.map(r=>[r.at,r.startedAt,r.item,r.door,r.bytes,r.outcome,r.provider,r.quote,r.rateAt,r.usdPerGb,r.usd,r.uncertainBytes,r.byteBasis])
+ return new Response(['Receipt at,Started at,Item ID,Door,Recorded bytes,Outcome,Provider,Quote,Rate recorded at,USD per decimal GB,Estimated USD,Uncertain reserved bytes,Byte basis',...rows.map(r=>r.map(csvCell).join(','))].join('\r\n')+'\r\n',{headers:{'content-type':'text/csv; charset=utf-8','content-disposition':'attachment; filename="chest-egress.csv"','cache-control':'no-store'}})
 }

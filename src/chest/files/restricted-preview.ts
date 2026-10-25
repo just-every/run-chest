@@ -1,3 +1,5 @@
+import { providerFetch } from '../administration/provider-usage'
+import { meterOriginal } from '../administration/egress'
 import { PDFDocument, PDFName } from 'pdf-lib'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -21,12 +23,12 @@ function converter(env: Bindings) {
  return base
 }
 
-async function convert(env: Bindings, bytes: Uint8Array, filename: string, format: 'pdf' | 'png') {
+async function convert(env: Bindings, bytes: Uint8Array, filename: string, format: 'pdf' | 'png',object:string) {
  const endpoint = new URL(`/cool/convert-to/${format}`, converter(env)), body = new FormData()
  body.set('data', new Blob([bytes as BlobPart]), filename)
  // The service renders only visual content; its PDF result remains inside the Worker.
  let response: Response
- try { response = await fetch(endpoint, { method: 'POST', body, redirect: 'manual', signal: AbortSignal.timeout(60_000) }) }
+ try { response = await providerFetch(env,'Collabora Online',object,'chest:renderer',new Request(endpoint,{method:'POST',body,redirect:'manual',signal:AbortSignal.timeout(60_000)})) }
  catch { throw new ChestError('collabora_render_unavailable', 503) }
  insist(response.ok, 'collabora_render_unavailable', 503)
  insist(Number(response.headers.get('content-length') ?? 0) <= MAX_RENDER, 'rendered_preview_too_large', 413)
@@ -68,7 +70,7 @@ function pixels(bytes: Uint8Array) {
  return result
 }
 
-async function paginated(env: Bindings, v: FileVersion) {
+async function paginated(env: Bindings, v: FileVersion,object:string) {
  converter(env)
  insist(v.size <= SMALL, 'rendered_preview_too_large', 413)
  const office = /\.(docx|xlsx|pptx|odt|ods|odp|doc|xls|ppt)$/i.test(v.filename)
@@ -84,7 +86,7 @@ async function paginated(env: Bindings, v: FileVersion) {
   insist(image.width * image.height <= 30_000_000, 'rendered_preview_too_large', 413)
   document.addPage([image.width, image.height]).drawImage(image, { x: 0, y: 0, width: image.width, height: image.height })
   pdf = await document.save()
- } else pdf = await convert(env, bytes, v.preview === 'text' ? 'preview.txt' : v.filename, 'pdf')
+ } else pdf = await convert(env, bytes, v.preview === 'text' ? 'preview.txt' : v.filename, 'pdf',object)
  let document: PDFDocument
  try { document = await PDFDocument.load(pdf, { updateMetadata: false }) }
  catch { throw new ChestError('collabora_render_invalid', 503) }
@@ -100,14 +102,14 @@ export function restrictedPreviewDocument(source: string, pages: number) {
 
 // Callers check their current staff or link authority before reading content, then fence it again before returning.
 // No PDF, extracted text, document fields, or original object is returned from either response.
-export async function renderRestrictedVersion(env: Bindings, version: FileVersion, source: string, page?: string | null): Promise<Response> {
+export async function renderRestrictedVersion(env: Bindings, version: FileVersion, source: string, page?: string | null,object=`version:${version.id}`): Promise<Response> {
  if (page !== undefined && page !== null) insist(/^[1-9]\d{0,2}$/.test(page), 'preview_page_not_found', 404)
- const document = await paginated(env, version), count = document.getPageCount()
+ const document = await paginated(env, version,object), count = document.getPageCount()
  if (page === undefined || page === null) return restrictedPreviewDocument(source, count)
  const n = Number(page); insist(n <= count, 'preview_page_not_found', 404)
  const single = await PDFDocument.create(), [copied] = await single.copyPages(document, [n - 1])
  copied.node.delete(PDFName.of('Annots')); single.addPage(copied)
- const png = pixels(await convert(env, await single.save(), 'page.pdf', 'png'))
+ const png = pixels(await convert(env, await single.save(), 'page.pdf', 'png',object))
  return new Response(png as BodyInit, { headers: { ...headers, 'content-type': 'image/png', 'content-security-policy': "sandbox; default-src 'none'", 'content-length': String(png.length) } })
 }
 
@@ -115,9 +117,9 @@ export async function renderedPreview(env: Bindings, s: Session, w: Who, key: st
  const ctx = await context(env, w, key); demand(ctx, 'view')
  const item = ctx.chain.at(-1)!, version = item.payload.versions.find(v => v.id === (versionId || item.payload.current))
  insist(item.payload.type === 'file' && version, 'version_not_found', 404)
- const response = await renderRestrictedVersion(env, version, `/api/chest/items/${encodeURIComponent(key)}/rendered-preview/${encodeURIComponent(version.id)}`, page)
+ const response = await renderRestrictedVersion(env, version, `/api/chest/items/${encodeURIComponent(key)}/rendered-preview/${encodeURIComponent(version.id)}`, page,key)
  const current = await context(env, await who(env, s), key); demand(current, 'view')
  insist(current.chain.at(-1)!.payload.versions.some(v => v.id === version.id && v.checksum === version.checksum), 'version_not_found', 404)
  await commit(env, s, [], { fences: current.fences, audits: [{ action: 'version.preview', object: key, detail: { version: version.id, rendered: true, ...(page ? { page: Number(page) } : {}) } }] })
- return response
+ return meterOriginal(env,response,key,s.operator.email,'rendered preview',response.headers.has('content-length')?Number(response.headers.get('content-length')):undefined)
 }

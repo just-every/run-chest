@@ -1,10 +1,12 @@
+import type { Bindings } from '../../auth.server'
+import { providerFetch } from '../administration/provider-usage'
 import { maskedTin, tinField } from './field-values'
 import type { PageImage } from './raster'
 // Reading scans with the installation's own AI model: Anthropic, or any OpenAI-compatible Chat Completions provider.
 // The model gets page images and must answer through one fixed schema. Its answers are normalised here; text inside
 // a document is evidence, never an instruction, and nothing it proposes is written without a person's yes.
 export type Provider = 'anthropic' | 'openai'
-export type ReaderConfig = { provider: Provider; endpoint: string; model: string; key: string; workspace: string }
+export type ReaderConfig = { provider: Provider; endpoint: string; model: string; key: string; workspace: string; accounting?: {env:Bindings;actor:string;object:string} }
 export const DEFAULTS: Record<Provider, { endpoint: string; model: string }> = {
  anthropic: { endpoint: 'https://api.anthropic.com/v1/messages', model: 'claude-sonnet-5-5' },
  openai: { endpoint: 'https://api.openai.com/v1/chat/completions', model: '' },
@@ -51,7 +53,7 @@ export type Usage = { input: number | null; output: number | null }
 async function call(c: ReaderConfig, system: string, schema: object, name: string, parts: Part[], deadline: number) {
  const r = request(c, system, schema, name, parts), controller = new AbortController(), timer = setTimeout(() => controller.abort(), deadline)
  let response: Response
- try { response = await fetch(c.endpoint, { method: 'POST', signal: controller.signal, headers: { 'content-type': 'application/json', ...r.headers }, body: JSON.stringify(r.body) }) }
+ try { response = await (c.accounting?providerFetch(c.accounting.env,c.provider,c.accounting.object,c.accounting.actor,new Request(c.endpoint,{method:'POST',signal:controller.signal,headers:{'content-type':'application/json',...r.headers},body:JSON.stringify(r.body)}),c.model):fetch(c.endpoint,{method:'POST',signal:controller.signal,headers:{'content-type':'application/json',...r.headers},body:JSON.stringify(r.body)})) }
  catch { throw new ReaderError(controller.signal.aborted ? `The AI model did not answer within ${Math.round(deadline / 1000)} seconds.` : 'The AI model could not be reached.') }
  finally { clearTimeout(timer) }
  const body: any = await response.json().catch(() => null)
