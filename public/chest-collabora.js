@@ -4,6 +4,13 @@ for (const host of document.querySelectorAll('[data-collabora]')) {
  const origin = host.dataset.origin, token = form.elements.access_token.value;
  let loaded = false, started = false, stopped = false, checking = false, pending = false, notified = host.dataset.restore;
  const send = (MessageId, Values = {}) => frame.contentWindow.postMessage(JSON.stringify({MessageId, SendTime: Date.now(), Values}), origin);
+ for (const button of host.querySelectorAll('[data-review-decision]')) button.addEventListener('click', () => {
+  if (!loaded || stopped || pending) return;
+  send('Send_UNO_Command', {Command: '.uno:NextTrackedChange'});
+  send('Send_UNO_Command', {Command: button.dataset.reviewDecision === 'accept' ? '.uno:AcceptTrackedChange' : '.uno:RejectTrackedChange'});
+  send('Action_Save', {DontTerminateEdit: true, DontSaveIfUnmodified: true, Notify: true});
+  status.textContent = 'Collabora is saving the suggestion decision.';
+ });
  form.addEventListener('submit', () => {
   started = true; loaded = false; frame.hidden = false; form.hidden = true;
   status.textContent = 'Opening Collabora Online…';
@@ -15,10 +22,12 @@ for (const host of document.querySelectorAll('[data-collabora]')) {
    if (message.Values?.Status === 'Frame_Ready') send('Host_PostmessageReady');
    if (message.Values?.Status === 'Document_Loaded') {
     loaded = true; pending = false;
+    for (const button of host.querySelectorAll('[data-review-decision]')) button.disabled = false;
     status.textContent = 'Editor connected. Restores are checked automatically.';
     check();
    }
   }
+  if (message?.MessageId === 'Action_Save_Resp') status.textContent = message.Values?.success === false ? 'The decision was refused. Keep your work and check your current access.' : 'Collabora saved the document.';
   if (message?.MessageId === 'App_VersionRestore' && message.Values?.Status === 'Pre_Restore_Ack' && pending) {
    // Collabora acknowledges only after its save and close; it reloads the current WOPI original itself.
    loaded = false; pending = false;

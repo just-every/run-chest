@@ -6,8 +6,12 @@ import { requireMfa } from '../security/session'
 import { ChestError, insist, now, type Row } from '../model'
 import { get, sessionPredicate, snapshot } from '../store'
 import { commit, fresh, maybe, next, where, withCommitAttachment } from '../files/repo'
-import { context, demand, who } from '../files/access'
-import { addVersion, bytes } from '../files/items'
+import { allowed, context, demand, who } from '../files/access'
+import { admit, bytes } from '../files/items'
+import { versionPublication } from '../files/governance'
+import { protect } from '../upload-protection/guard'
+import { assertContent } from '../content-security/scan'
+import { validateWopiReview } from './wopi-review'
 import { guestIdentityForSession, type GuestSession } from '../files/guest-links'
 import { guestAuthorityForIdentity } from '../files/guest-mutations'
 import { resolveLinkRecord } from '../files/public-links'
@@ -31,14 +35,14 @@ async function engine(env:Bindings,extension:string){
  insist(action,'collabora_format_unavailable',415);const target=new URL(action.getAttribute('urlsrc')!.replace(/<[^>]*>/g,''));insist(target.origin===origin.origin,'collabora_origin_mismatch',503);return target
 }
 export async function openCollabora(env:Bindings,s:Session,item:string){
- const w=await who(env,s),ctx=await context(env,w,item);demand(ctx,'contribute');demand(ctx,'download');const row=ctx.chain.at(-1)!,current=row.payload.versions.at(-1)
+ const w=await who(env,s),ctx=await context(env,w,item);demand(ctx,'view');demand(ctx,'download');const row=ctx.chain.at(-1)!,current=row.payload.versions.at(-1)
  insist(current&&/\.(docx|xlsx|pptx)$/i.test(current.filename),'collabora_format_unavailable',415)
  const target=await engine(env,current.filename.split('.').at(-1)!.toLowerCase()),token=randomToken('chest_editor_'),guest=(s as any).guestWho as typeof w|undefined
  const payload:Editor={item,email:s.operator.email,tokenHash:await tokenHash(token),expires:Math.min(s.expiresAt,Date.now()+30*60000),...(guest?{guest:{admission:(s as any).guestAdmission,link:guest.guest!.fences.find(r=>r.kind==='public-link')!.id,session:guest.guest!.fences.find(r=>r.kind==='guest-session')!.id}}:{staff:{session:s.id,kind:s.kind}})}
  const session=fresh('editor-session',payload)
  await commit(env,s,[{row:session}],{fences:ctx.fences,audits:[{action:'office.collabora.open',object:item,detail:{session:session.id,version:current.id}}]})
  target.searchParams.set('WOPISrc',`${env.AUTH_ORIGIN}/wopi/files/${item}`)
- return publicPage('Open in Collabora Online',`<section data-collabora data-origin="${esc(target.origin)}" data-restore="${esc(row.payload.versions.findLast(v=>v.arrival==='restore')?.id??'')}" data-state="/wopi/files/${esc(item)}/state"><p>${esc(row.payload.name)} · ${esc(s.operator.email)}</p><p role="status" aria-live="polite" data-collabora-status>Open the editor to begin. Restores are checked while this page is open.</p><form method="post" target="chest-collabora" action="${esc(target.href)}"><input type="hidden" name="access_token" value="${esc(token)}"><input type="hidden" name="access_token_ttl" value="${payload.expires}"><button class="action">Continue to Collabora</button></form><iframe class="office-frame" name="chest-collabora" title="Collabora Online editor" hidden></iframe></section><script src="/chest-collabora.js" defer></script>`,200,{'content-security-policy':policy.replace("form-action 'self'",`form-action 'self' ${target.origin}`).replace("frame-src 'self'",`frame-src 'self' ${target.origin}`),'referrer-policy':'no-referrer'})
+ return publicPage('Open in Collabora Online',`<section data-collabora data-origin="${esc(target.origin)}" data-restore="${esc(row.payload.versions.findLast(v=>v.arrival==='restore')?.id??'')}" data-state="/wopi/files/${esc(item)}/state"><p>${esc(row.payload.name)} · ${esc(s.operator.email)}</p><p role="status" aria-live="polite" data-collabora-status>Open the editor to begin. Restores are checked while this page is open.</p><form method="post" target="chest-collabora" action="${esc(target.href)}"><input type="hidden" name="access_token" value="${esc(token)}"><input type="hidden" name="access_token_ttl" value="${payload.expires}"><button class="action">Continue to Collabora</button></form><iframe class="office-frame" name="chest-collabora" title="Collabora Online editor" hidden></iframe>${allowed(ctx,'contribute')&&/\.docx$/i.test(current.filename)?'<details><summary>Review suggestions</summary><button type="button" class="action" data-review-decision="accept" disabled>Accept suggestion</button> <button type="button" class="action" data-review-decision="reject" disabled>Reject suggestion</button></details>':''}</section><script src="/chest-collabora.js" defer></script>`,200,{'content-security-policy':policy.replace("form-action 'self'",`form-action 'self' ${target.origin}`).replace("frame-src 'self'",`frame-src 'self' ${target.origin}`),'referrer-policy':'no-referrer'})
 }
 async function editorAuthority(env:Bindings,request:Request,item:string){
  const url=new URL(request.url),token=url.searchParams.get('access_token')??request.headers.get('authorization')?.replace(/^Bearer /,'')??''
@@ -56,7 +60,7 @@ async function editorAuthority(env:Bindings,request:Request,item:string){
   await assertDomainSession(env,s);await requireMfa(env,s)
  }
  const current=sessionPredicate(s),saved=snapshot(row);(s as any).predicate={sql:`(${current.sql}) AND (${saved.sql}) AND (julianday('now')-2440587.5)*86400000<?`,params:[...current.params,...saved.params,row.payload.expires]}
- const w=await who(env,s),ctx=await context(env,w,item);demand(ctx,'contribute');demand(ctx,'download')
+ const w=await who(env,s),ctx=await context(env,w,item);demand(ctx,'view');demand(ctx,'download')
  return {s,w,ctx,row}
 }
 const conflict=(lock:string)=>new Response(null,{status:409,headers:{'X-WOPI-Lock':lock,'X-WOPI-LockFailureReason':'The current lock or file version changed','cache-control':'no-store'}})
@@ -67,10 +71,12 @@ export async function wopiResponse(request:Request,env:Bindings):Promise<Respons
   const a=await editorAuthority(env,request,item),file=a.ctx.chain.at(-1)!,current=file.payload.versions.at(-1);insist(current,'version_not_found',404)
   if(request.method==='GET'&&parts[3]==='state')return Response.json({version:current.id,restore:file.payload.versions.findLast(v=>v.arrival==='restore')?.id??''},{headers:{'cache-control':'no-store'}})
   const lock=await maybe<Lock>(env,'wopi-lock',lockKey(item)),active=lock&&lock.payload.expires>Date.now()?lock:null,provided=request.headers.get('X-WOPI-Lock')??'',override=request.headers.get('X-WOPI-Override')??''
-  if(request.method==='GET'&&!parts[3])return Response.json({PostMessageOrigin:new URL(env.AUTH_ORIGIN).origin,BaseFileName:file.payload.name,OwnerId:file.payload.createdBy,Size:current.size,UserId:await digest(new TextEncoder().encode(a.s.operator.email)),UserFriendlyName:a.s.operator.displayName||a.s.operator.email,Version:current.id,UserCanWrite:true,ReadOnly:false,IsAnonymousUser:false,SupportsLocks:true,SupportsGetLock:true,SupportsUpdate:true,SupportsRename:false,UserCanRename:false,UserCanNotWriteRelative:true,DisableExport:false,DisablePrint:true,LastModifiedTime:current.at},{headers:{'cache-control':'no-store'}})
+  const commenter=allowed(a.ctx,'comment')&&!allowed(a.ctx,'contribute'),readonly=!allowed(a.ctx,'comment'),document=/\.docx$/i.test(current.filename)
+  if(request.method==='GET'&&!parts[3])return Response.json({PostMessageOrigin:new URL(env.AUTH_ORIGIN).origin,BaseFileName:file.payload.name,OwnerId:file.payload.createdBy,Size:current.size,UserId:await digest(new TextEncoder().encode(a.s.operator.email)),UserFriendlyName:a.s.operator.displayName||a.s.operator.email,Version:current.id,UserCanWrite:!readonly,ReadOnly:readonly,UserCanOnlyComment:commenter&&!document,...(commenter&&document?{DisableChangeTrackingRecord:false,HideChangeTrackingControls:true}:{}),IsAnonymousUser:false,SupportsLocks:!readonly,SupportsGetLock:true,SupportsUpdate:!readonly,SupportsRename:false,UserCanRename:false,UserCanNotWriteRelative:true,DisableExport:false,DisablePrint:true,LastModifiedTime:current.at},{headers:{'cache-control':'no-store'}})
   if(request.method==='GET'&&parts[3]==='contents')return await bytes(env,a.s,a.w,item,current.id,true,null,'office.download')
   if(request.method==='POST'&&!parts[3]){
    if(override==='GET_LOCK')return new Response(null,{status:200,headers:{'X-WOPI-Lock':active?.payload.lock??'','cache-control':'no-store'}})
+   demand(a.ctx,'comment')
    insist(['LOCK','REFRESH_LOCK','UNLOCK'].includes(override),'wopi_operation_unsupported',501);insist(provided.length>0&&provided.length<=1024,'invalid_wopi_lock')
    if(active&&active.payload.lock!==provided&&!(override==='LOCK'&&request.headers.get('X-WOPI-OldLock')===active.payload.lock))return conflict(active.payload.lock)
    if(!active&&override!=='LOCK')return conflict('')
@@ -80,11 +86,22 @@ export async function wopiResponse(request:Request,env:Bindings):Promise<Respons
    await commit(env,a.s,[{row:override==='UNLOCK'?lock!:updated,previous:lock??undefined,...(override==='UNLOCK'?{remove:true}:{})}],{fences:a.ctx.fences});return new Response(null,{status:200})
   }
   if(request.method==='POST'&&parts[3]==='contents'){
+   demand(a.ctx,'comment')
    if(!active||active.payload.lock!==provided||active.payload.version!==current.id)return conflict(active?.payload.lock??'')
    insist(Number(request.headers.get('content-length')??0)<=SMALL,'office_file_too_large',413)
    const content=new Uint8Array(await request.arrayBuffer());insist(content.length>0&&content.length<=SMALL,'office_file_too_large',413)
    if(await digest(content)===current.checksum){await commit(env,a.s,[],{fences:[...a.ctx.fences,active]});return new Response(null,{status:200,headers:{'X-WOPI-ItemVersion':current.id}})}
-   const result=await addVersion(env,a.s,a.w,item,content,{filename:current.filename},'browser edit',{ops:made=>[{row:next(active,{...active.payload,version:made.payload.versions.at(-1)!.id,expires:Date.now()+30*60000}),previous:active}]})
+   await assertContent(env,current.checksum)
+   const original=await env.BLOBS.get(`sha256/${current.checksum}`);insist(original,'blob_missing',503)
+   const source=new Uint8Array(await original.arrayBuffer());insist(source.length===current.size&&await digest(source)===current.checksum,'blob_integrity',503)
+   let suggestion
+   try{suggestion=await validateWopiReview(env,source,content,current,{email:a.s.operator.email,name:a.s.operator.displayName||a.s.operator.email},commenter)}catch(error){
+    if(error instanceof ChestError&&['author_mismatch','suggest_only'].includes(error.code))await commit(env,a.s,[],{fences:a.ctx.fences,audits:[{action:'office.collabora.refused',object:item,detail:{reason:error.code,source:current.id}}]})
+    throw error
+   }
+   await protect(env,a.s,{item:file,space:file.payload.space,parent:file.payload.parent,name:current.filename},content)
+   const version=await admit(env,content,current.filename,a.s.operator.email,'browser edit',{},suggestion?{suggestion}:{}),result=next(file,await versionPublication(env,a.ctx,file.payload,version))
+   await commit(env,a.s,[{row:result,previous:file},{row:next(active,{...active.payload,version:version.id,expires:Date.now()+30*60000}),previous:active}],{fences:[...a.ctx.fences,a.row],changes:[{item,space:a.ctx.space.id,kind:'version'}],audits:[{action:suggestion?.decision?'suggestion.decide':suggestion?'suggestion.add':'version.upload',object:item,detail:{version:version.id,arrival:'browser edit',...suggestion}}]})
    return new Response(null,{status:200,headers:{'X-WOPI-ItemVersion':result.payload.versions.at(-1)!.id}})
   }
   insist(false,'method_not_allowed',405)
