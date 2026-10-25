@@ -20,6 +20,10 @@ export function canonical(node:Node):string {
  return JSON.stringify([nodeName(e),attributes,Array.from(e.childNodes).filter(n=>n.nodeType===1||n.nodeType===3&&(textBearing||!!n.nodeValue?.trim())||n.nodeType===4).map(canonical)])
 }
 function visit(node:Node,fn:(e:Element)=>void){for(const e of elements(node)){fn(e);visit(e,fn)}}
+function commentMarkerRevision(node:Element){
+ const runs=elements(node)
+ return runs.length>0&&runs.every(run=>run.localName==='r'&&elements(run).length>0&&elements(run).every(e=>e.localName==='rPr'||['commentReference','annotationRef'].includes(e.localName??'')))&&runs.some(run=>elements(run).some(e=>['commentReference','annotationRef'].includes(e.localName??'')))
+}
 export function reviewRecords(bytes:Uint8Array):ReviewRecord[]{
  const parts=packageParts(bytes),records:ReviewRecord[]=[],keys=new Set<string>()
  for(const [part,bytes]of Object.entries(parts))if(isXml(part)){
@@ -30,7 +34,7 @@ export function reviewRecords(bytes:Uint8Array):ReviewRecord[]{
    if(mainNs.test(ns)&&tracked.has(name)){
     insist(['ins','del'].includes(name),'review_change_unsupported',409)
     const id=attr(e,'id'),author=attr(e,'author');insist(id&&author,'invalid_review_author',403)
-    records.push({key:`${part}#${name}:${id}`,id,part,kind:name as 'ins'|'del',author,value:canonical(e)})
+    if(!commentMarkerRevision(e))records.push({key:`${part}#${name}:${id}`,id,part,kind:name as 'ins'|'del',author,value:canonical(e)})
    }
    if((name==='comment'&&/wordprocessingml/.test(ns))||(name==='cm'&&/presentationml/.test(ns))||(name==='comment'&&/spreadsheetml/.test(ns))){
     const id=attr(e,'id')||attr(e,'idx')||attr(e,'ref'),author=/wordprocessingml/.test(ns)?attr(e,'author'):/spreadsheetml/.test(ns)?Array.from(doc.getElementsByTagName('*')).filter(x=>x.localName==='author')[Number(attr(e,'authorId'))]?.textContent??'':Array.from(parseXml(parts['ppt/commentAuthors.xml']??strToU8('<authors/>')).getElementsByTagName('*')).find(x=>x.localName==='cmAuthor'&&attr(x,'id')===attr(e,'authorId'))?.getAttribute('name')??''
@@ -66,6 +70,7 @@ export function projectReview(bytes:Uint8Array,decisions:Map<string,'accept'|'re
   }}
   walk(doc)
   visit(doc,e=>{if(mainNs.test(e.namespaceURI??'')&&e.localName==='r'&&elements(e).every(c=>c.localName==='rPr'))e.parentNode?.removeChild(e)})
+  visit(doc,e=>{if(mainNs.test(e.namespaceURI??'')&&['ins','del'].includes(e.localName??'')&&!elements(e).length&&!e.textContent?.trim())e.parentNode?.removeChild(e)})
   if(path.endsWith('.rels')&&!elements(doc.documentElement).length)removed.add(path)
   else parts[path]=serializeXml(doc)
  }
