@@ -30,14 +30,16 @@ try {
  origin=await resources.deploy(env);console.log('Hosted deploy and resource readback passed.');
  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
  owner=await emailSignIn({browser,origin,email:ownerEmail,from});mails.push(owner.receipt.id);
- const ownerClient=hostedClient(origin,owner.context),since=Date.now();
+ console.log('Hosted owner email sign-in passed.');
+ const ownerClient=hostedClient(origin,owner.context),inviter=(await ownerClient.api('/files')).me,since=Date.now();
  await ownerClient.api('/people',{action:'invite',email:memberEmail,name:'Harbor colleague'});
- const invitation=await waitForMailLink({to:memberEmail,subject:'Chest operations test invited you to Chest',since,origin,from});mails.push(invitation.receipt.id);
+ const invitation=await waitForMailLink({to:memberEmail,subject:`${inviter.name} (${inviter.email}) invited you to Chest`,since,origin,from});mails.push(invitation.receipt.id);
  const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();member={context,page};
  await page.goto(invitation.url);await page.getByRole('button',{name:'Confirm',exact:true}).click();
  await page.waitForURL(url=>url.origin===origin&&url.pathname==='/app/files');
  const memberClient=hostedClient(origin,context);
  assert.equal((await (await context.request.get(origin+'/auth/session')).json()).operator.email,memberEmail,'the invitation email establishes the invited identity');
+ console.log('Hosted invitation delivery and acceptance passed.');
  expected=await createHostedData(ownerClient,memberClient,ownerEmail,memberEmail,environment);
  beforeOwner=await snapshotHostedData(ownerClient,expected);beforeMember=await snapshotHostedData(memberClient,expected);
  console.log('Hosted-only tree, versions, grants, link count, request and 150 MB original created.');
