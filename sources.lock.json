@@ -181,7 +181,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "04769a7be3a7f58330cf43877eda83b4a938fdaa85693e3a037ccc50da41405a",
+      "sha256": "e32d5d2d73c04eff29f21e63a13ebee3d9a45ee38323dff507dc029da29411a9",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -209,7 +209,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "302b829a8709985cdc8b51346aaccd2c0e0c825afd688fb4177187061635d674",
+      "sha256": "867798dd5f868a5bf4aa7dac6adfaa0b151170b88aceaa217c7beb3ea73c7258",
       "executable": false
     },
     "DEMO.md": {
@@ -233,7 +233,7 @@
       "executable": false
     },
     "docs/administration.md": {
-      "sha256": "0f9298210b85648d5dbad8dfa87f524d4575b979d025586633d78ee2049d8ad5",
+      "sha256": "c8a0b69c0f5f937e4e385e99d9e09f441826541d0238bef342c8a186e775fcc4",
       "executable": false
     },
     "docs/backup-and-restore.md": {
@@ -245,7 +245,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "0d2f5b16e88d91770cb60d521cc5416296f678cfac7d456e00ae7e7147228ce6",
+      "sha256": "2f626c44358f9dae0b566e94679672aa76c376ab3bf081f7af1f5d653a3d2bb7",
       "executable": false
     },
     "docs/collections.md": {
@@ -892,12 +892,16 @@
       "sha256": "170785391ab8784ad4141d261553d2ddea3ad3c3b658053d8cbd94b4dec171cb",
       "executable": false
     },
+    "scripts/backup/database-export.mjs": {
+      "sha256": "100393df1ae8c0afad4e73d162fbc8e7744d18f1d28c1ea941c2244b199a4b54",
+      "executable": false
+    },
     "scripts/backup/database.mjs": {
       "sha256": "a31e76bf6b3e8de276047b45b2b5564d031d12912d09511cdea1ec4375b92fe3",
       "executable": false
     },
     "scripts/backup/hosted.mjs": {
-      "sha256": "d518d3767dd9ec972c69b1a718ca4c53e4c4dddc9329629bbd1b43f915ccc692",
+      "sha256": "64b35eb7029e4c3a4b80c18fee438425f7ed111351f9eeba06d2599376044b50",
       "executable": false
     },
     "scripts/backup/README.md": {
@@ -1377,7 +1381,7 @@
       "executable": false
     },
     "src/chest/administration/provider-usage.ts": {
-      "sha256": "b9536dabe75bac1a96156fb98c127454ef779a0466fdf1756faf035e3213d51b",
+      "sha256": "264acdf03fddd9fee17198260777885fc3be0bef5a3bc0c4c7ccd6e07139cbdb",
       "executable": false
     },
     "src/chest/administration/recovery.ts": {
@@ -4545,7 +4549,7 @@
       "executable": false
     },
     "tests/chest/backup-archive.mjs": {
-      "sha256": "befd497d0fb225b36ca763a0765e5ba1c5e6edd868037a1b45289ed68aa2d909",
+      "sha256": "6e22be45041b5c2b82c2d3bc732095b144a8df7c3d0372a76c2b3f35687a2488",
       "executable": false
     },
     "tests/chest/backup-sandbox.mjs": {
@@ -4553,7 +4557,7 @@
       "executable": false
     },
     "tests/chest/backup-storage-edge.mjs": {
-      "sha256": "da37e45467fe80845e5b355e939bb9bf263d34679793bf5b08e93b06e8b64096",
+      "sha256": "5e8e977b4ba2069c4fa0adb3350007f8f83592f0388b28edeb53793baa6eec1e",
       "executable": false
     },
     "tests/chest/browser-agent-filing.mjs": {

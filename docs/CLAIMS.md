@@ -153,4 +153,4 @@ ADMIN-002 remains partial after durable stream and dated provider accounting: re
 
 ADMIN-002 remains partial after scoped ZIP output accounting. The existing accountingJourney reconciles cancelled member bytes to the enclosing archive output and preserves those receipts across restart. Backup and portability billing, cached AI tiers and live Collabora reconciliation remain open; homepage row 37 stays partial.
 
-ADMIN-002 remains partial after independent backup object-store receipts, quoted provider-specific cached AI tiers and observed Collabora product and version with browser-reported refusals. Database export and restore billing, full portability reconciliation and provider-side licensed capacity remain open. Homepage row 37 stays partial.
+ADMIN-002 remains partial after independent backup object-store receipts, quoted provider-specific cached AI tiers and observed Collabora product and version with browser-reported refusals. Restore billing and full portability reconciliation and provider-side licensed capacity remain open. Homepage row 37 stays partial.

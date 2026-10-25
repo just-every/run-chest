@@ -88,6 +88,7 @@ else process.exit(1);
     return refuse?null:JSON.parse(out);
   }
   for(const extra of [
+    {CHEST_BACKUP_TEST_UNSAFE_EXPORT:'yes'},
     {CHEST_BACKUP_PROVIDER:'unknown'},
     {CHEST_BACKUP_API_TOKEN:env.CLOUDFLARE_API_TOKEN},
     {CHEST_BACKUP_ACCOUNT_ID:'live-account',CHEST_BACKUP_BUCKET:'chest-production-blobs'},
@@ -96,7 +97,8 @@ else process.exit(1);
   const receipt=await cli(['backup','--environment','production','--retention-days','30']);
   const accountingDb=new DatabaseSync(source);
   const accounting=accountingDb.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage' AND actor='chest:backup'").all().map(r=>JSON.parse(r.detail));accountingDb.close();
-  assert.ok(accounting.length>=6,'backup lists, reads, multipart uploads and independent readback have durable receipts');assert.ok(accounting.every(r=>r.outcome==='succeeded'&&r.quote===null&&r.usd===null),'unquoted provider costs remain unknown');
+  assert.ok(accounting.some(r=>r.provider==='Cloudflare D1'&&r.responseBytes>0),'database export control call and private SQL download are metered');
+  assert.ok(accounting.length>=8,'backup lists, reads, multipart uploads and independent readback have durable receipts');assert.ok(accounting.every(r=>r.outcome==='succeeded'&&r.quote===null&&r.usd===null),'unquoted provider costs remain unknown');
   assert.ok(accounting.some(r=>r.requestBytes>=64*1024*1024),'multipart request body counted at the provider boundary');assert.ok(accounting.some(r=>r.responseBytes===bytes.length),'original response reconciles exactly');assert.ok(accounting.some(r=>r.responseBytes===receipt.bytes),'independent archive readback reconciles exactly');
   assert.doesNotMatch(JSON.stringify(accounting),/sha256\/|authorization|synthetic-chest-1|owner-backups/,'no object keys or credentials enter accounting');
   assert.equal(receipt.objects,1); const stored=join(bucketPath('owner-account','owner-backups'),receipt.key);
@@ -152,13 +154,16 @@ else process.exit(1);
   assert.equal((await cli(['--environment','production'],{entry:'schedule'})).state,'not_due');
   const requested=new DatabaseSync(source);requested.prepare("UPDATE chest_records SET payload=json_set(payload,'$.requestedAt',?),revision='manual-request' WHERE id=?").run(new Date().toISOString(),scheduleId);requested.close();
   await cli(['--environment','production'],{entry:'schedule',extra:{CHEST_BACKUP_TEST_FAIL:'yes'},refuse:true});
-  const failed=new DatabaseSync(source);assert.equal(JSON.parse(failed.prepare("SELECT payload FROM chest_records WHERE kind='backup-run' ORDER BY json_extract(payload,'$.at') DESC LIMIT 1").get().payload).state,'failed');failed.close();
+  const failed=new DatabaseSync(source);assert.equal(JSON.parse(failed.prepare("SELECT payload FROM chest_records WHERE kind='backup-run' ORDER BY json_extract(payload,'$.at') DESC LIMIT 1").get().payload).state,'failed');assert.ok(failed.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage'").all().map(r=>JSON.parse(r.detail)).some(r=>r.outcome==='uncertain'&&r.requestOutcome==='uncertain'&&r.requestBytes>0),'interrupted requests preserve the intent without inventing acknowledged delivery');failed.close();
   // Each independent destination uses the same encrypted archive, CLI, cadence and recovery path.
+  const pricedDb=new DatabaseSync(source),quotedRates={provider:'Synthetic network',quote:'Synthetic source dated 2026-10-25',egressUsdPerGb:0.08,aiProvider:'Amazon S3',aiModel:'request',aiRequestUsd:0.01,updatedAt:'2026-10-25T00:00:00.000Z'};
+  pricedDb.prepare('INSERT INTO chest_records VALUES(?,?,?,?)').run('admin-cost-rates','admin-cost-rates',JSON.stringify(quotedRates),'quote-1');pricedDb.close();
   for(const endpoint of ['https://s3.us-east-1.amazonaws.com','https://backup.example.test']) {
     const extra={CHEST_BACKUP_PROVIDER:'s3',CHEST_BACKUP_S3_ENDPOINT:endpoint,CHEST_BACKUP_S3_REGION:endpoint.includes('amazonaws')?'us-east-1':'eu-west-2',CHEST_BACKUP_S3_ACCESS_KEY_ID:'synthetic-chest-3',CHEST_BACKUP_S3_SECRET_ACCESS_KEY:'synthetic-chest-4',CHEST_BACKUP_S3_SESSION_TOKEN:'synthetic-chest-5'};
     await mkdir(bucketPath('s3-owner','owner-backups'),{recursive:true});
     const s3=await cli(['backup','--environment','production'],{extra});
     assert.equal((await cli(['verify','--environment','production','--key',s3.key],{extra})).verified,true);
+    const priced=new DatabaseSync(source),quoted=priced.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage'").all().map(r=>JSON.parse(r.detail)).filter(r=>r.provider==='Amazon S3');assert.ok(quoted.length>0);assert.ok(quoted.every(r=>r.quote===quotedRates.quote&&r.usd===0.01));priced.close();
     const s3Stored=join(bucketPath('s3-owner','owner-backups'),s3.key);
     const oldS3=s3.key.replace(/\/\d{4}-\d\d-\d\dT/,'/2000-01-01T');await copyFile(s3Stored,join(bucketPath('s3-owner','owner-backups'),oldS3));
     assert.ok((await cli(['list','--environment','production'],{extra})).some(b=>b.key===oldS3),'paginated destination lists all archives');

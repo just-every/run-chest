@@ -1,3 +1,4 @@
+import { exportDatabase } from './database-export.mjs';
 import { providerTransport } from './accounting.mjs';
 import { spawn } from 'node:child_process';
 import { mkdir, mkdtemp, rm, chmod, stat } from 'node:fs/promises';
@@ -66,7 +67,7 @@ export async function hostedEdge(config) {
     originals, archives,
     enableAccounting: () => { accounting=true; },
     disableAccounting: () => { accounting=false; },
-    exportDatabase: output => runWrangler(live, ['d1','export',resources.database,'--remote','--output',output]),
+    exportDatabase: output => exportDatabase(live,id,output,transport('Cloudflare D1')),
     executeDatabase: file => runWrangler(live, ['d1','execute',resources.database,'--remote','--file',file,'--yes']),
     query: sql => query(live,id,sql),
     deleteArchive: key => archives.delete(key),
