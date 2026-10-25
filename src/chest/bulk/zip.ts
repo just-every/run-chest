@@ -5,8 +5,8 @@ for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1
 function checksum(crc: number, bytes: Uint8Array) { for (const b of bytes) crc = table[(crc ^ b) & 255] ^ (crc >>> 8); return crc >>> 0 }
 function record(size: number, fill: (v: DataView) => void) { const bytes = new Uint8Array(size); fill(new DataView(bytes.buffer)); return bytes }
 const u64 = (v: DataView, at: number, n: bigint) => v.setBigUint64(at, n, true)
-export type ZipEntry = { path: string; chunks: AsyncIterable<Uint8Array> }
-export async function* zip64(entries: AsyncIterable<ZipEntry>): AsyncGenerator<Uint8Array> {
+export type ZipEntry = { path: string; chunks: AsyncIterable<Uint8Array>; original?: string }
+export async function* zip64(entries: AsyncIterable<ZipEntry>, observe?: (entry:ZipEntry, start:number, end:number, complete:boolean)=>void): AsyncGenerator<Uint8Array> {
  let offset = 0n
  const directory: Uint8Array[] = []
  for await (const entry of entries) {
@@ -16,7 +16,8 @@ export async function* zip64(entries: AsyncIterable<ZipEntry>): AsyncGenerator<U
   const extra = record(20, v => { v.setUint16(0,1,true); v.setUint16(2,16,true) })
   for (const chunk of [header,name,extra]) { offset += BigInt(chunk.length); yield chunk }
   let crc = 0xffffffff, size = 0n
-  for await (const chunk of entry.chunks) { crc = checksum(crc,chunk); size += BigInt(chunk.length); offset += BigInt(chunk.length); yield chunk }
+  for await (const chunk of entry.chunks) { crc = checksum(crc,chunk); size += BigInt(chunk.length); const start=Number(offset); offset += BigInt(chunk.length); observe?.(entry,start,Number(offset),false); yield chunk }
+  observe?.(entry,Number(offset),Number(offset),true)
   crc = (crc ^ 0xffffffff) >>> 0
   const descriptor = record(24, v => { v.setUint32(0,0x08074b50,true); v.setUint32(4,crc,true); u64(v,8,size); u64(v,16,size) }); offset += 24n; yield descriptor
   const central = record(46 + name.length + 28, v => { v.setUint32(0,0x02014b50,true); v.setUint16(4,45,true); v.setUint16(6,45,true); v.setUint16(8,0x0808,true); v.setUint16(14,0x21,true); v.setUint32(16,crc,true); v.setUint32(20,0xffffffff,true); v.setUint32(24,0xffffffff,true); v.setUint16(28,name.length,true); v.setUint16(30,28,true); v.setUint32(42,0xffffffff,true); const at=46+name.length; v.setUint16(at,1,true); v.setUint16(at+2,24,true); u64(v,at+4,size); u64(v,at+12,size); u64(v,at+20,localOffset) }); central.set(name,46); directory.push(central)

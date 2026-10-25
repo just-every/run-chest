@@ -37,6 +37,25 @@ export async function accountingJourney(browser){
   const finished=await h.api(`/uploads/${pending.id}/complete`,owner,{}),large=await h.api(`/items/${finished.result.item}`,owner);
   const interrupted=await h.raw(`/api/chest/items/${finished.result.item}/bytes/${large.item.current}?download=true`,owner);assert.equal(interrupted.status,200);const body=interrupted.body.getReader();assert.ok((await body.read()).value.length>0);await body.cancel();
   let cancelled;for(let n=0;n<30;n++){cancelled=(await h.api('/administration/egress',owner)).rows.find(r=>r.item===finished.result.item&&r.outcome==='cancelled');if(cancelled)break;await new Promise(r=>setTimeout(r,100))}assert.ok(cancelled);assert.ok(cancelled.bytes>0&&cancelled.bytes<20*1024*1024);
+  // A cancelled ZIP's scoped originals reconcile to the enclosing output,
+  // rather than to chunks pulled ahead during assembly.
+  const interruptedSelection=await h.api('/bulk',owner,{action:'download',items:[finished.result.item]}),zip=await h.raw(`/api/chest/bulk/${interruptedSelection.id}/archive`,owner);
+  assert.equal(zip.status,200);const zipReader=zip.body.getReader();let prefix=Buffer.alloc(0);
+  while(prefix.length<1024*1024){const part=await zipReader.read();assert.equal(part.done,false);prefix=Buffer.concat([prefix,part.value])}
+  await zipReader.cancel();assert.equal(prefix.readUInt32LE(0),0x04034b50);
+  const originalOffset=30+prefix.readUInt16LE(26)+prefix.readUInt16LE(28);
+  const accountingGroup=await h.api('/groups',owner,{name:'ZIP accounting scope',members:[h.vars.OWNER_EMAIL]});
+  let outer,member;
+  for(let n=0;n<30;n++){
+   outer=(await h.api('/administration/egress',owner)).rows.find(r=>r.item===interruptedSelection.id&&r.outcome==='cancelled');
+   member=(await h.api('/administration/egress?group='+accountingGroup.id,owner)).rows.find(r=>r.item===finished.result.item&&r.door==='archive member');
+   if(outer&&member?.outcome==='cancelled')break;await new Promise(r=>setTimeout(r,100));
+  }
+  assert.ok(outer&&member);assert.equal(member.outcome,'cancelled');assert.ok(member.bytes>0&&member.bytes<20*1024*1024);
+  assert.equal(member.bytes,Math.max(0,outer.bytes-originalOffset),'only original bytes at the ZIP output boundary count in the scoped report');
+  assert.equal(member.uncertainBytes,outer.uncertainBytes);assert.equal(member.byteBasis,'Original member bytes at ZIP output checkpoints');
+  await h.stop();await h.start();
+  const persisted=(await h.api('/administration/egress?group='+accountingGroup.id,owner)).rows.find(r=>r.item===finished.result.item&&r.door==='archive member');assert.deepEqual(persisted,member,'restart preserves scoped cancelled output');
   await h.sql("UPDATE chest_audit SET detail=json_set(detail,'$.outcome','running','$.bytes',0,'$.reservedBytes',64,'$.checkpointAt','2000-01-01T00:00:00.000Z') WHERE action='transfer.egress' AND object_id=? AND json_extract(detail,'$.outcome')='cancelled'",finished.result.item);
   await h.stop();await h.start();const uncertain=(await h.api('/administration/egress',owner)).rows.find(r=>r.item===finished.result.item&&r.outcome==='uncertain');assert.ok(uncertain);assert.equal(uncertain.uncertainBytes,64);assert.equal(uncertain.bytes,0);
   const config={edition:'CODE',enabled:true,documents:1,connections:1,annualUsd:0,quote:'Synthetic reported capacity dated 2026-10-25',confirm:true,codeAcknowledged:true};

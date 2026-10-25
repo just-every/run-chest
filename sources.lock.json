@@ -181,7 +181,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "80b058b8a0632bdb95b3c0731ab7deb43980c1691790ea9646b2382cc577424e",
+      "sha256": "9aa64692d80b3aba129398d56398287f8295cb764e374de69258a703182f6c79",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -209,7 +209,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "50f3e2c588062a445efa3d0fa4b3c7dc60015812f1953559ec0687adb0eed52a",
+      "sha256": "b30384d60e1f4f88d7066b42a3684979f49f7ab27e2c71023d3f2cc32d1b3828",
       "executable": false
     },
     "DEMO.md": {
@@ -233,7 +233,7 @@
       "executable": false
     },
     "docs/administration.md": {
-      "sha256": "d294e3a49b8a4d09089601c3ed0d9c365e1c00ad0086d77d16fdc8361d4fa1bb",
+      "sha256": "5eff3241dc00bf5526bb2fb0a91105e32e9298feb84e048449d175fc14ce2138",
       "executable": false
     },
     "docs/backup-and-restore.md": {
@@ -245,7 +245,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "45383e2e3169989c2a203c1a68186c622514399808da54e9b1a85a6db783e523",
+      "sha256": "892fb5533218509622c15344e4d80703f698bdcbb430ed38a7f3fcc90daf2b55",
       "executable": false
     },
     "docs/collections.md": {
@@ -1349,7 +1349,7 @@
       "executable": false
     },
     "src/chest/administration/egress.ts": {
-      "sha256": "c2ba5a582c359574c39145fb70cfd37d38ae2cfb424dd72d0e353d6c24f7f753",
+      "sha256": "56206738f38049b0950545d5bf992f1268845f5d0df57b5d68c8a6d49239766b",
       "executable": false
     },
     "src/chest/administration/invitations.ts": {
@@ -1457,7 +1457,7 @@
       "executable": false
     },
     "src/chest/bulk/archive.ts": {
-      "sha256": "1c63a348d72c0d3433a75ad7d97d538d82e4b93b709a9ce9e5fcaf99cf08be82",
+      "sha256": "e688ee7b8d4a94e0c8fa1112fef6669fe59eddb9870d9498f6d9e66712023a61",
       "executable": false
     },
     "src/chest/bulk/index.ts": {
@@ -1477,7 +1477,7 @@
       "executable": false
     },
     "src/chest/bulk/zip.ts": {
-      "sha256": "35d9ee64225a9f9b693466988adaa934dcf963ba45b68533446e35b5ccfb291b",
+      "sha256": "d46c92480a15ffbff13a07514adef6a3ddc3c214bab2f44754987e2e71453d00",
       "executable": false
     },
     "src/chest/collection/api.ts": {
@@ -4501,7 +4501,7 @@
       "executable": false
     },
     "tests/chest/administration-accounting-flow.mjs": {
-      "sha256": "c58eed6fb0d057d51f54323b73539a4406cb7202fdbca3ffcd382b6ce4ad9e70",
+      "sha256": "5ab69e44cd2c26716174c5b870840cca4c05a5a6d2c3b5023355c666a6447a97",
       "executable": false
     },
     "tests/chest/administration-guest-flow.mjs": {

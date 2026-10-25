@@ -1,4 +1,4 @@
-import { meterOriginal } from '../administration/egress'
+import { meterOriginal, egressReceipt, type EgressCheckpoint } from '../administration/egress'
 import { activity } from '../content-security/activity'
 import { guardDownload } from '../upload-protection/guard'
 import type { Bindings } from '../../auth.server'
@@ -51,9 +51,7 @@ export async function archive(env: Bindings, s: Session, key: string) {
      finally { await writer.abort().catch(()=>{}); await reader.cancel(); reader.releaseLock() }
     }
     paths.add(path)
-    const metered=await meterOriginal(env,new Response(streaming(chunks())),entry.item,s.operator.email,'archive member',version.size)
-    async function* emitted(){const reader=metered.body!.getReader();try{for(;;){const p=await reader.read();if(p.done)break;yield p.value}}finally{await reader.cancel()}}
-    yield { path, chunks: emitted() }
+    yield { path, chunks: chunks(), original:entry.item }
     included.push({ path, version: version.id, size: version.size, sha256: version.checksum })
     const receiptId = `bulk-archive:${key}:${index}`
     if (!await maybe(env,'bulk-archive',receiptId)) {
@@ -76,5 +74,24 @@ export async function archive(env: Bindings, s: Session, key: string) {
   const manifest={format:'chest-selection-v1',job:key,generatedAt:now(),complete:excluded.length===0,included,excluded,delivery:'Server-generated archive bytes; client receipt is not confirmed.'}
   yield {path:'chest-manifest.json',chunks:one(new TextEncoder().encode(JSON.stringify(manifest,null,2)))}
  }
- return meterOriginal(env,new Response(streaming(zip64(entries())),{headers:{'content-type':'application/zip','content-disposition':'attachment; filename="chest-selection.zip"','cache-control':'no-store','x-content-type-options':'nosniff'}}),key,s.operator.email,'selection archive')
+ // ZIP offsets describe only original bytes; names, framing and the manifest
+ // remain organization-only. The outer stream checkpoints each bounded batch.
+ const members=new Map<string,{item:string;start:number;end:number;complete:boolean;receipt?:Awaited<ReturnType<typeof egressReceipt>>}>()
+ const observe=(entry:ZipEntry,start:number,end:number,complete:boolean)=>{
+  if(!entry.original)return
+  const previous=members.get(entry.path)
+  if(previous){previous.end=end;previous.complete=complete}
+  else members.set(entry.path,{item:entry.original,start,end,complete})
+ }
+ const checkpoint=async(state:EgressCheckpoint)=>{
+  for(const member of members.values()){
+   const count=(offset:number)=>Math.max(0,Math.min(offset,member.end)-member.start)
+   const bytes=count(state.bytes),reservedBytes=count(state.reservedBytes)
+   if(!reservedBytes&&!member.complete)continue
+   member.receipt??=await egressReceipt(env,member.item,s.operator.email,'archive member')
+   const complete=member.complete&&state.bytes>=member.end
+   await member.receipt({bytes,reservedBytes,outcome:complete?'complete':state.outcome==='complete'?'failed':state.outcome})
+  }
+ }
+ return meterOriginal(env,new Response(streaming(zip64(entries(),observe)),{headers:{'content-type':'application/zip','content-disposition':'attachment; filename="chest-selection.zip"','cache-control':'no-store','x-content-type-options':'nosniff'}}),key,s.operator.email,'selection archive',undefined,checkpoint)
 }
