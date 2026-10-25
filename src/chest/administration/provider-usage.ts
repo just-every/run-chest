@@ -33,7 +33,7 @@ export async function providerFetch(env: Bindings, provider: string, object: str
   const tier=usage?.service_tier??data?.service_tier??null,tierMatches=tier===null?!rate?.aiServiceTier:tier===(rate?.aiServiceTier??(provider==='anthropic'?'standard':'default'))
   const known=cacheValid&&tierMatches&&(!data?.model||data.model===model)&&uncached!==null&&uncached>=0&&output!==null&&write5m!==null&&write5m+write1h===creation&&tiers.every(t=>t.units===0||t.rate!==undefined)
   const usd=rate&&(model==='request'||known)?Number(((model==='request'?0:uncached!/1e6*rate.aiInputUsdPerMillion!+output!/1e6*rate.aiOutputUsdPerMillion!+tiers.reduce((n,t)=>n+(t.units??0)/1e6*(t.rate??0),0))+(rate.aiRequestUsd??0)).toFixed(9)):null
-  await finish({responseBytes:raw.length,input,output,reportedServiceTier:tier,uncachedInput:uncached,cacheInput,cacheRead:read,cacheWrite5m:write5m,cacheWrite1h:write1h,usd,status:response.status,outcome:response.ok?'succeeded':'refused'})
+  await finish({responseBytes:raw.length,input,output,reportedServiceTier:tier===null?null:['standard','default','priority','flex','auto','batch'].includes(tier)?tier:'unrecognized',uncachedInput:cacheValid&&uncached!==null&&uncached>=0?uncached:null,cacheInput:cacheValid?cacheInput:null,cacheRead:cacheValid?read:null,cacheWrite5m:cacheValid?write5m:null,cacheWrite1h:cacheValid?write1h:null,usd,status:response.status,outcome:response.ok?'succeeded':'refused'})
   return new Response(raw.length?raw:null,{status:response.status,statusText:response.statusText,headers:response.headers})
  }catch(error){await finish({outcome:'uncertain'});throw error}
 }
