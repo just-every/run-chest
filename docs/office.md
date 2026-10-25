@@ -56,3 +56,28 @@ Every recipient must be active and already able to view the file. An unavailable
 recipient refuses the complete comment without creating a grant or notification.
 Authorized recipients receive the ordinary in-app notice and installation mail;
 assignment itself grants no access. The file page retains the version and author.
+
+## Collabora review roles
+
+With Collabora configured, viewers open a read-only session. DOCX commenters
+open with recording enabled before typing; the recording switch is hidden.
+Chest validates each saved package against the original after removing proposed
+changes. A direct edit, an altered author or another person's changed proposal
+is refused without publishing a version. Contributors use **Review suggestions**
+on the host page to accept or reject one change and save an attributed version.
+Spreadsheet and presentation commenter sessions allow comments only. Every
+request rechecks current staff or verified guest access and the retained version.
+
+## PDF annotations and restricted previews
+
+Under **Comments**, choose **Annotate a PDF**, select the retained version and
+page, and enter the region as percentages from its top left. Replies, mentions,
+assignment and resolution stay with that original version. Uploading a replacement
+does not move the annotation; **Open original page** returns to its original.
+
+The no-download setting gives viewers and commenters rendered page images from
+Collabora for text, Office, PDF and image files. Page navigation remains available.
+Original bytes, extraction, retained originals, ranges, sync and archive inclusion
+are refused. The viewer suppresses browser copy and print commands and blanks
+printed content. If rendering is unavailable, Chest reports that condition.
+Moving or copying a folder also checks the current rights on each descendant.
