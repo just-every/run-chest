@@ -36,6 +36,7 @@
     "test:chest:extra": "node tests/chest/signatures.mjs",
     "test:browser:extra": "node tests/chest/browser-signatures.mjs",
     "test:journey": "node tests/chest/journey.mjs",
+    "test:hosted": "node tests/chest/hosted-lifecycle.mjs",
     "test:site": "node tests/chest/site.mjs",
     "test:organisation": "node tests/chest/organisation.mjs",
     "test:upgrade": "node tests/chest/upgrade.mjs",

@@ -489,7 +489,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "373405d8f9a968af46c89dcc1a57daa0aaa7981890a0dc7c1a19e7c63e278a69",
+      "sha256": "37a664d4548306987e7c978cafe1d7c42ab9a47812bf6cac1b08166e0f91234d",
       "executable": false
     },
     "packaging.json": {
@@ -4770,6 +4770,26 @@
     },
     "tests/chest/harness.mjs": {
       "sha256": "fbf09382ef22dd1e6b14bca27e0dec7e5bb7654662ab318080bc39e0acdff91c",
+      "executable": false
+    },
+    "tests/chest/hosted-cloud.mjs": {
+      "sha256": "334fa6e523480e7b5f8edb010c07fa5fa5bf4fa7fb561cf6472325616a33b595",
+      "executable": false
+    },
+    "tests/chest/hosted-data.mjs": {
+      "sha256": "2379916ed367fcd94d56eda4d73280139afb19b226516f4b1ff4e891858cd90f",
+      "executable": false
+    },
+    "tests/chest/hosted-lifecycle.mjs": {
+      "sha256": "f4f730f06512874431c034b88198b232cd25f798e2f127e2bb4b8453b7b500cd",
+      "executable": false
+    },
+    "tests/chest/hosted-mail.mjs": {
+      "sha256": "ce7850838cd243bf62c95b63a3020fe25993db4e0121979c71faa7e002421dff",
+      "executable": false
+    },
+    "tests/chest/hosted-screens.mjs": {
+      "sha256": "ef627d26e502a3b0f29acd902c4e339fa39409256653ae4764b4431524410c89",
       "executable": false
     },
     "tests/chest/integration-client.mjs": {
