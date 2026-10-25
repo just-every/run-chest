@@ -8,7 +8,9 @@ export function hostedClient(origin,context) {
   const response=await context.request.fetch(origin+'/api/chest'+path,{
    method,headers:{origin,...(body===undefined?{}:{'content-type':'application/json'})},
    ...(body===undefined?{}:{data:JSON.stringify(body)}),maxRedirects:0});
-  assert.equal(response.status(),status,`${method} ${path.split('?')[0]} returned ${response.status()}`);
+  let code='';
+  if(response.status()!==status){const body=await response.json().catch(()=>null);if(typeof body?.error==='string'&&/^[a-z][a-z0-9_]{0,63}$/.test(body.error))code=` (${body.error})`}
+  assert.equal(response.status(),status,`${method} ${path.split('?')[0]} returned ${response.status()}${code}`);
   return response;
  }
  return {origin,context,request,async api(path,body,status=200){return (await request(path,body,status)).json()}};
@@ -30,7 +32,7 @@ export async function createHostedData(owner,member,email,memberEmail,marker) {
  const first=Buffer.from('Harbor payment terms, original '+marker),second=Buffer.from('Harbor payment terms, agreed revision '+marker);
  const small=await member.api('/items',{parent:folder.id,type:'file',name:'Payment terms.txt',base64:first.toString('base64')});
  const revised=await owner.api(`/items/${small.id}/versions`,{base64:second.toString('base64')});
- await owner.api(`/items/${small.id}/shares`,{principal:memberEmail,role:'contributor'});
+ await owner.api(`/items/${small.id}/shares`,{principal:memberEmail,role:'editor'});
  const delivery=await owner.api('/items',{parent:folder.id,type:'file',name:'Delivery note.txt',base64:Buffer.from('Delivery accepted '+marker).toString('base64')});
  const link=await owner.api(`/items/${delivery.id}/public-links`,{limit:5});
  const downloaded=await fetch(new URL(link.url).href+'/f/'+delivery.id);

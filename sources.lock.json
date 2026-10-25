@@ -4777,7 +4777,7 @@
       "executable": false
     },
     "tests/chest/hosted-data.mjs": {
-      "sha256": "56531440a68949e221c0fad031016f567fb8ab0ee1aec61cfd552eda9591e83c",
+      "sha256": "3865e30e5239a22c01c3074f1b86e1f4cc0ee46f84e170f05687d1e9f492cbf0",
       "executable": false
     },
     "tests/chest/hosted-lifecycle.mjs": {
