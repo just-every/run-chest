@@ -16,6 +16,6 @@ try{
  docker(['build','--file','tests/chest/collabora-live.Dockerfile','--tag',image,'.']);built=true;
  docker(['run','--rm','--network','host','--mount','type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock','--mount',`type=bind,src=${temporary},dst=${temporary}`,'--mount',`type=bind,src=${join(root,'test-results')},dst=/work/test-results`,'--env',`TMPDIR=${temporary}`,image]);
 }finally{
- if(built)spawnSync('docker',['--host=unix:///var/run/docker.sock','image','rm',image],{env:dockerEnv,stdio:'ignore'});
+ if(built)spawnSync('docker',['--host=unix:///var/run/docker.sock','image','rm','--no-prune',image],{env:dockerEnv,stdio:'ignore'});
  await rm(temporary,{recursive:true,force:true});
 }

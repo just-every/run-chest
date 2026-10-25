@@ -17,8 +17,9 @@ export async function preserveWopiParts(env:Bindings,source:Uint8Array,content:U
  return retainOmittedParts(source,content,await exported(env,source,current.filename.split('.').at(-1)!.toLowerCase()))
 }
 function suggestOnly(ok:boolean,reason:string){if(!ok)throw Object.assign(new ChestError('suggest_only',403),{reviewReason:reason})}
-async function same(env:Bindings,a:Uint8Array,b:Uint8Array,extension:string){
+async function same(env:Bindings,a:Uint8Array,b:Uint8Array,extension:string,report=false){
  const signatures=await Promise.all([normalized(env,a,extension),normalized(env,b,extension)])
+ if(report&&signatures[0]!==signatures[1]){const left=new Map(JSON.parse(signatures[0]) as [string,unknown][]),right=new Map(JSON.parse(signatures[1]) as [string,unknown][]);const reviewParts=[...new Set([...left.keys(),...right.keys()])].filter(path=>JSON.stringify(left.get(path))!==JSON.stringify(right.get(path)));throw Object.assign(new ChestError('suggest_only',403),{reviewReason:'base_content_changed',reviewParts})}
  return signatures[0]===signatures[1]
 }
 export async function validateWopiReview(env:Bindings,source:Uint8Array,content:Uint8Array,current:FileVersion,actor:{email:string;name:string},commenter:boolean):Promise<FileVersion['suggestion']>{
@@ -28,7 +29,7 @@ export async function validateWopiReview(env:Bindings,source:Uint8Array,content:
   suggestOnly(protectedPartsEqual(source,content),'protected_parts_changed')
   for(const record of before)if(!allowedAuthors.has(record.author))suggestOnly(after.some(r=>r.key===record.key&&r.value===record.value),'foreign_review_changed')
   const removed=before.filter(r=>r.kind!=='comment'&&!after.some(next=>next.key===r.key));suggestOnly(!removed.length,'tracked_change_removed')
-  suggestOnly(await same(env,projectReview(source,new Map(),true),projectReview(content,new Map(),true),extension),'base_content_changed')
+  suggestOnly(await same(env,projectReview(source,new Map(),true),projectReview(content,new Map(),true),extension,true),'base_content_changed')
   const added=after.find(r=>r.kind!=='comment'&&(!previous.has(r.key)||previous.get(r.key)!.value!==r.value))
   return added?{author:actor.email,at:now(),sourceVersion:current.id}:current.suggestion&&!current.suggestion.decision?current.suggestion:undefined
  }

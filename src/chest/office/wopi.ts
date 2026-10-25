@@ -97,7 +97,7 @@ export async function wopiResponse(request:Request,env:Bindings):Promise<Respons
    if(commenter)content=await preserveWopiParts(env,source,content,current)
    let suggestion
    try{suggestion=await validateWopiReview(env,source,content,current,{email:a.s.operator.email,name:a.s.operator.displayName||a.s.operator.email},commenter)}catch(error){
-    if(error instanceof ChestError&&['author_mismatch','suggest_only'].includes(error.code))await commit(env,a.s,[],{fences:a.ctx.fences,audits:[{action:'office.collabora.refused',object:item,detail:{reason:error.code,source:current.id,...((error as any).reviewReason?{reviewReason:(error as any).reviewReason}:{})}}]})
+    if(error instanceof ChestError&&['author_mismatch','suggest_only'].includes(error.code))await commit(env,a.s,[],{fences:a.ctx.fences,audits:[{action:'office.collabora.refused',object:item,detail:{reason:error.code,source:current.id,...((error as any).reviewReason?{reviewReason:(error as any).reviewReason,...((error as any).reviewParts?{reviewParts:(error as any).reviewParts}:{})}:{})}}]})
     throw error
    }
    await protect(env,a.s,{item:file,space:file.payload.space,parent:file.payload.parent,name:current.filename},content)
