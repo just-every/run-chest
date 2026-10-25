@@ -2,10 +2,10 @@
 import {createWriteStream} from 'node:fs';
 import {Readable} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
-export async function exportDatabase(creds, database, output, transport) {
+export async function exportDatabase(creds, database, output, transport, noSchema=false) {
  let bookmark;
  for(let attempt=0;attempt<120;attempt++){
-  const response=await transport(`https://api.cloudflare.com/client/v4/accounts/${creds.account}/d1/database/${database}/export`,{method:'POST',redirect:'error',signal:AbortSignal.timeout(30000),headers:{authorization:`Bearer ${creds.token}`,'content-type':'application/json'},body:JSON.stringify({output_format:'polling',dump_options:{no_schema:false,no_data:false,tables:[]},...(bookmark?{current_bookmark:bookmark}:{})})});
+  const response=await transport(`https://api.cloudflare.com/client/v4/accounts/${creds.account}/d1/database/${database}/export`,{method:'POST',redirect:'error',signal:AbortSignal.timeout(30000),headers:{authorization:`Bearer ${creds.token}`,'content-type':'application/json'},body:JSON.stringify({output_format:'polling',dump_options:{no_schema:noSchema,no_data:false,tables:[]},...(bookmark?{current_bookmark:bookmark}:{})})});
   const data=await response.json().catch(()=>null),result=data?.result;
   if(!response.ok||data?.success===false||!result?.success||result.status==='error')throw Error('Database export was refused; private provider details withheld.');
   if(result.status==='complete'){

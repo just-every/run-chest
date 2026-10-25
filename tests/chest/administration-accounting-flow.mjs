@@ -3,8 +3,11 @@ import {readFile} from 'node:fs/promises';
 import {PDFDocument} from 'pdf-lib';
 import {harness} from './harness.mjs';
 import {docx} from './office-fixtures.mjs';
+import {portabilityJourney} from './backup-archive.mjs';
+import {providerTransport} from '../../scripts/backup/accounting.mjs';
 import {tooltips} from './tooltip-proof.mjs';
 export async function accountingJourney(browser){
+ await portabilityJourney();
  const engine='https://synthetic-chest-editor.test',model='synthetic-chest-model',png=await readFile('tests/chest/scan-nda.png'),pdf=await PDFDocument.create();pdf.addPage().drawText('synthetic-chest-1');const pdfBytes=await pdf.save();let refused=false,cached=false,cacheWrite=false,openai=false,serviceTier=null,malformed=false;
  const h=await harness({bindings:{COLLABORA_URL:engine},edge:async request=>{
   if(request.url===engine+'/hosting/capabilities')return Response.json({productName:'Collabora Online Development Edition',productVersion:'synthetic-chest-1'});
@@ -18,6 +21,22 @@ export async function accountingJourney(browser){
   await h.api('/people',owner,{action:'invite',email:'reader-accounting@example.test',name:'Reader'});const reader=await h.signIn('reader-accounting@example.test',true);
   const space=(await h.api('/files',owner)).personal,file=await h.api('/items',owner,{space,name:'Costs.docx',base64:Buffer.from(docx()).toString('base64')});
   const rates={provider:'Synthetic storage',quote:'Synthetic quote dated 2026-10-25',storageUsdPerGbMonth:0.02,egressUsdPerGb:0.08,aiProvider:'anthropic',aiModel:model,aiInputUsdPerMillion:2,aiOutputUsdPerMillion:4,aiRequestUsd:0.01,confirm:true};
+  const objectQuote={...rates,objectProvider:'Cloudflare R2',objectOperations:{read:4,list:8,write:16,'multipart-start':20,'multipart-part':24,'multipart-complete':28,'multipart-abort':32,delete:0},objectInboundUsdPerGb:0.03,objectOutboundUsdPerGb:0.09};
+  await h.api('/administration/costs',owner,{...objectQuote,objectOperations:{unknown:1}},400);
+  await h.api('/administration/costs',reader,objectQuote,403);
+  await h.api('/administration/costs',owner,objectQuote);
+  const realFetch=globalThis.fetch;
+  try{
+   globalThis.fetch=async()=>new Response(Buffer.alloc(37,1));
+   const transport=providerTransport(async sql=>(await h.sql(sql)).results,'Cloudflare R2','accounting journey');
+   for(const [method,path,body] of [['GET','?list-type=2',undefined],['GET','/synthetic-chest-1',undefined],['PUT','/synthetic-chest-1','synthetic-chest-2'],['POST','/synthetic-chest-1?uploads',''],['PUT','/synthetic-chest-1?uploadId=synthetic-chest-3&partNumber=1','synthetic-chest-4'],['POST','/synthetic-chest-1?uploadId=synthetic-chest-3','synthetic-chest-5'],['DELETE','/synthetic-chest-1?uploadId=synthetic-chest-3',undefined],['DELETE','/synthetic-chest-1',undefined]])await (await transport('https://synthetic-chest-store.test/bucket'+path,{method,body})).arrayBuffer();
+  }finally{globalThis.fetch=realFetch}
+  const objectReceipts=(await h.api('/administration/provider-usage',owner)).rows.filter(r=>r.provider==='Cloudflare R2');
+  assert.deepEqual(objectReceipts.map(r=>r.operation).sort(),['delete','list','multipart-abort','multipart-complete','multipart-part','multipart-start','read','write'].sort());
+  for(const receipt of objectReceipts){assert.equal(receipt.responseBytes,37);assert.equal(receipt.operationUsdPerMillion,objectQuote.objectOperations[receipt.operation]);assert.equal(receipt.inboundUsd,Number((receipt.requestBytes/1e9*0.03).toFixed(9)));assert.equal(receipt.outboundUsd,Number((37/1e9*0.09).toFixed(9)));assert.equal(receipt.usd,Number((receipt.operationUsdPerMillion/1e6+receipt.inboundUsd+receipt.outboundUsd).toFixed(9)));}
+  await h.api('/administration/costs',owner,{...objectQuote,objectOperations:{read:999}});await h.stop();await h.start();
+  assert.deepEqual((await h.api('/administration/provider-usage',owner)).rows.filter(r=>r.provider==='Cloudflare R2'),objectReceipts,'operation quotes and both transfer directions survive replacement and restart');
+  assert.doesNotMatch(JSON.stringify(objectReceipts),/synthetic-chest-store|synthetic-chest-2|uploadId/);
   const unconfirmed=await h.raw(`/api/chest/items/${file.id}/collabora`,owner,{});assert.equal(unconfirmed.status,409);assert.equal((await unconfirmed.json()).error,'editor_confirmation_required');
   await h.api('/administration/costs',owner,rates);
   await h.api('/reading/settings',owner,{provider:'anthropic',endpoint:'https://synthetic-chest-model.test/messages',model,key:'synthetic-chest-1'});
@@ -82,6 +101,7 @@ export async function accountingJourney(browser){
   for(const width of [1440,390]){
    const context=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});await context.addCookies(owner.split('; ').map(c=>{const i=c.indexOf('=');return{name:c.slice(0,i),value:c.slice(i+1),url:h.origin}}));const page=await context.newPage();
    await page.goto(h.origin+'/app/administration/costs');const form=page.locator('form').filter({has:page.getByRole('button',{name:'Confirm editor configuration',exact:true})});
+   assert.equal(await page.getByLabel('Object-store provider',{exact:true}).count(),1);assert.match(await page.locator('body').innerText(),/Inbound is sent to the named provider/);
    assert.equal(await form.count(),1,(await page.locator('body').innerText()).slice(0,1000));
    await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Read service capabilities',exact:true}).click()]);assert.match(await page.locator('body').innerText(),/Collabora Online Development Edition/);
    await form.getByLabel('Collabora edition').selectOption('CODE');await form.getByLabel('Concurrent document limit',{exact:true}).fill('1');await form.getByLabel('Concurrent connection limit',{exact:true}).fill('1');await form.getByLabel('Annual USD per user',{exact:true}).fill('0');await form.getByLabel('Provider quote and reported limit source',{exact:true}).fill(config.quote);await form.getByLabel('New editing sessions').selectOption('true');
@@ -95,7 +115,7 @@ export async function accountingJourney(browser){
   }
   const reportOutcome=()=>h.fetch(`/wopi/files/${file.id}/state`,{method:'POST',headers:{authorization:'Bearer '+lastSessionToken,'content-type':'application/json'},body:JSON.stringify({event:'provider-refused',kind:'limitreached'})});
   assert.equal((await reportOutcome()).status,200);assert.equal((await reportOutcome()).status,200);
-  const providerReport=await h.api('/administration/editor-report',owner);assert.equal(providerReport.providerRefusals,1,'duplicate provider messages count once for the editor session');assert.ok(providerReport.rows.some(r=>r.source==='Browser-reported provider outcome'&&r.maximum===null));
+  const providerReport=await h.api('/administration/editor-report',owner);assert.equal(providerReport.providerRefusals,1,'duplicate provider messages count once for the editor session');assert.deepEqual(providerReport.providerCapacity,{documents:null,connections:null,licensedLimits:null});assert.equal(providerReport.reconciliation.matchedProviderOutcomes,1);assert.equal(providerReport.reconciliation.unmatchedProviderOutcomes,0);assert.ok(providerReport.rows.some(r=>r.source==='Browser-reported provider outcome'&&r.maximum===null));
   const report=await h.api('/administration/editor-report',owner);assert.equal(report.refusals,old+5);assert.equal(report.usage.connections,1);assert.equal(report.usage.documents,1);assert.equal(report.configuration.edition,'CODE');await h.api('/administration/editor-report',reader,undefined,403);
   assert.equal((await h.raw('/api/chest/administration/editor-report/export',owner)).status,200);
   const closed=await h.fetch(`/wopi/files/${file.id}/state`,{method:'POST',headers:{authorization:'Bearer '+lastSessionToken}});assert.equal(closed.status,200);assert.equal((await h.api('/administration/editor-report',owner)).usage.connections,0);assert.equal((await h.fetch(`/wopi/files/${file.id}?access_token=${lastSessionToken}`)).status,401);const reopened=await h.raw(`/api/chest/items/${file.id}/collabora`,owner,{});assert.equal(reopened.status,200);await reopened.text();

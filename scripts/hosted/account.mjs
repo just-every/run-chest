@@ -37,8 +37,8 @@ export function names(environment) {
   return { worker, database: `${worker}-db`, bucket: `${worker}-blobs` };
 }
 
-export async function cloudflare(creds, path, init = {}) {
-  const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${creds.account}${path}`, { ...init, headers: { authorization: `Bearer ${creds.token}`, ...(init.body ? { 'content-type': 'application/json' } : {}), ...init.headers } });
+export async function cloudflare(creds, path, init = {}, transport = fetch) {
+  const r = await transport(`https://api.cloudflare.com/client/v4/accounts/${creds.account}${path}`, { ...init, headers: { authorization: `Bearer ${creds.token}`, ...(init.body ? { 'content-type': 'application/json' } : {}), ...init.headers } });
   const data = await r.json().catch(() => ({}));
   if (!r.ok || data.success === false) throw new Error(`Cloudflare answered ${r.status} for ${init.method ?? 'GET'} ${path.split('?')[0]}: ${(data.errors ?? []).map(e => e.message).join('; ') || 'no detail'}`);
   return data;
@@ -50,8 +50,8 @@ export async function databaseId(creds, name) {
   return found.uuid;
 }
 
-export async function query(creds, id, sql) {
-  return (await cloudflare(creds, `/d1/database/${id}/query`, { method: 'POST', body: JSON.stringify({ sql }) })).result[0].results;
+export async function query(creds, id, sql, transport) {
+  return (await cloudflare(creds, `/d1/database/${id}/query`, { method: 'POST', body: JSON.stringify({ sql }) }, transport)).result[0].results;
 }
 
 // Wrangler from this checkout, with only the deploying account's credentials. Its output stays hidden: an export

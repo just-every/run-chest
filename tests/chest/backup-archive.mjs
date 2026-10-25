@@ -11,6 +11,7 @@ import { openArchive, sealArchive } from '../../scripts/backup/archive.mjs';
 import { archiveKey } from '../../scripts/backup/crypto.mjs';
 import { inspectDatabase } from '../../scripts/backup/database.mjs';
 
+export async function portabilityJourney(){
 const root=resolve(import.meta.dirname,'../..'), temp=await mkdtemp(join(tmpdir(),'chest-backup-test-'));
 const key=randomBytes(32).toString('hex'), bytes=Buffer.alloc(65*1024*1024,87), hash=createHash('sha256').update(bytes).digest('hex');
 const source=join(temp,'source.sqlite'), target=join(temp,'target.sqlite'), bin=join(temp,'bin'), edge=join(temp,'edge');
@@ -79,7 +80,7 @@ if(args.includes('export')){const result=spawnSync('sqlite3',[file,'.dump'],{max
 else if(args.includes('execute')){const db=new DatabaseSync(file);try{db.exec(await readFile(args[args.indexOf('--file')+1],'utf8'));}finally{db.close();}}
 else process.exit(1);
 `); await chmod(join(bin,'npx'),0o700);
-  const env={...process.env,PATH:bin+':'+process.env.PATH,CHEST_BACKUP_TEST_HOME:temp,CLOUDFLARE_ACCOUNT_ID:'live-account',CLOUDFLARE_API_TOKEN:'synthetic-chest-1',CHEST_BACKUP_ACCOUNT_ID:'owner-account',CHEST_BACKUP_API_TOKEN:'synthetic-chest-2',CHEST_BACKUP_BUCKET:'owner-backups',CHEST_BACKUP_KEY:key};
+  const env={...process.env,PATH:bin+':'+process.env.PATH,CHEST_BACKUP_TEST_HOME:temp,CHEST_ACCOUNTING_DIR:join(temp,'accounting'),CLOUDFLARE_ACCOUNT_ID:'live-account',CLOUDFLARE_API_TOKEN:'synthetic-chest-1',CHEST_BACKUP_ACCOUNT_ID:'owner-account',CHEST_BACKUP_API_TOKEN:'synthetic-chest-2',CHEST_BACKUP_BUCKET:'owner-backups',CHEST_BACKUP_KEY:key};
   async function cli(args,{account='live-account',refuse=false,entry='cli',extra={}}={}) {
     const child=spawn(process.execPath,['--import',preload,join(root,'scripts/backup/'+entry+'.mjs'),...args],{cwd:root,env:{...env,...extra,CLOUDFLARE_ACCOUNT_ID:account,CLOUDFLARE_API_TOKEN:account==='recovery-account'?'synthetic-chest-7':env.CLOUDFLARE_API_TOKEN},stdio:['ignore','pipe','pipe']});
     let out='',err='';child.stdout.on('data',c=>out+=c);child.stderr.on('data',c=>err+=c);
@@ -130,6 +131,11 @@ else process.exit(1);
   }
   const recovered=await cli(['restore','--environment','recovery','--input',stored,'--acknowledge-offline-erasures'],{account:'recovery-account'});assert.equal(recovered.restored,true);assert.equal(recovered.providersNeedAuthorization,true);
   const restored=new DatabaseSync(target);
+  const restoreAccounting=restored.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage'").all().map(r=>JSON.parse(r.detail));
+  assert.ok(restoreAccounting.some(r=>r.operation==='database-import'&&r.outcome==='succeeded'));
+  assert.ok(restoreAccounting.some(r=>r.operation==='database-upload'&&r.requestBytes>0));
+  assert.ok(restoreAccounting.some(r=>r.operation==='multipart-part'&&r.requestBytes>=64*1024*1024));
+  assert.ok(restoreAccounting.some(r=>r.operation==='read'&&r.responseBytes===bytes.length));
   assert.deepEqual({...restored.prepare('SELECT source_identity,import_job,applying FROM rer_portability_state WHERE id=1').get()},{source_identity:'independent-source',import_job:null,applying:0});
   for(const [id,kind,payload] of records.filter(r=>['item','space','comment','mapping','future','content-verdict'].includes(r[0])))assert.deepEqual(JSON.parse(restored.prepare('SELECT payload FROM chest_records WHERE id=?').get(id).payload),payload);
   for(const table of ['oa_sessions','chest_integration_secrets','chest_reader','chest_signing_key','chest_sso_config','rer_dependency_keys'])assert.equal(restored.prepare('SELECT COUNT(*) AS n FROM '+table).get().n,0,'restored target requires new authorization for '+table);
@@ -179,6 +185,24 @@ else process.exit(1);
     assert.deepEqual(await readdir(join(temp,'parts','s3-owner')).catch(()=>[]),[],'failed multipart completion aborts private staging');
     console.log('S3 destination CLI passed: signed multipart backup, readback, verify, paginated retention, corruption recovery, schedule and failed completion: '+endpoint);
   }
+  // Legacy public commands share the same durable transport and survive audit replacement.
+  const legacyOutput=join(temp,'legacy-hosted');
+  async function legacy(command,args,account='live-account'){
+   const child=spawn(process.execPath,['--import',preload,join(root,'scripts',command+'.mjs'),...args],{cwd:root,env:{...env,CLOUDFLARE_ACCOUNT_ID:account,CLOUDFLARE_API_TOKEN:account==='recovery-account'?'synthetic-chest-7':env.CLOUDFLARE_API_TOKEN},stdio:['ignore','pipe','pipe']});
+   let err='';child.stdout.resume();child.stderr.on('data',c=>err+=c);assert.equal(await new Promise(r=>child.on('exit',r)),0,err);
+  }
+  await legacy('hosted-backup',['--output',legacyOutput]);
+  await writeFile(target,before);await rm(originalTarget,{recursive:true});await mkdir(originalTarget);
+  await legacy('hosted-restore',['--environment','recovery','--input',legacyOutput,'--acknowledge-offline-erasures'],'recovery-account');
+  assert.deepEqual(await readFile(join(originalTarget,'sha256',hash)),bytes);
+  const legacyDb=new DatabaseSync(target),legacyReceipts=legacyDb.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage'").all().map(r=>JSON.parse(r.detail));legacyDb.close();
+  assert.ok(legacyReceipts.some(r=>r.producer==='legacy hosted restore'&&r.operation==='database-upload'&&r.requestBytes>0));
+  assert.ok(legacyReceipts.some(r=>r.producer==='legacy hosted restore'&&r.operation==='multipart-part'&&r.requestBytes>=64*1024*1024));
+  assert.ok(legacyReceipts.some(r=>r.producer==='legacy hosted backup'&&r.operation==='database-download'&&r.responseBytes>0));
+  console.log('Legacy portability accounting passed: database export, multipart originals, metered database import and retained receipts after replacement.');
   console.log('Scheduled CLI passed: durable claims, completed authenticated copy, cadence, no replay and recorded independent-provider failure.');
   console.log('Independent backup CLI passed: complete schema/graph/original roundtrip, credential exclusion, inert links/jobs, encrypted tamper/truncation/append refusal before target writes, empty-target refusal and scoped retention.');
 } finally { await rm(temp,{recursive:true,force:true}); }
+
+}
+if(process.argv[1]===new URL(import.meta.url).pathname)await portabilityJourney();

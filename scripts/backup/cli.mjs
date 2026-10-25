@@ -11,12 +11,16 @@ export async function main(argv) {
   if (command==='restore') await restoreConsent(options);
   if (options.retentionDays !== undefined && !/^\d+$/.test(options.retentionDays)) throw new Error('Retention days must be a positive integer.');
   const config=configuration(options), edge=await hostedEdge(config), retentionDays=options.retentionDays === undefined ? undefined : Number(options.retentionDays);
+  edge.enableAccounting?.();
   let result;
+  try {
   if (command==='backup') result=await createBackup(config,edge,{retentionDays});
   if (command==='list') result=await listBackups(config,edge);
   if (command==='prune') result=await pruneBackups(config,edge,{retentionDays});
   if (command==='verify'||command==='restore') result=await recoverBackup(config,edge,{key:options.archive,input:options.input,apply:command==='restore',erasureJournal:options.erasureJournal,acknowledgeOfflineErasures:options.acknowledgeOfflineErasures});
+  await edge.flushAccounting?.();
   console.log(JSON.stringify(result));
+  } finally { if(command!=='restore')await edge.flushAccounting?.();edge.closeAccounting?.(); }
 }
 try { await main(process.argv.slice(2)); }
 catch (error) { console.error(error instanceof ErasureFenceError ? error.message : 'Backup operation failed. Check archive integrity, the clean same-schema target and private backup configuration. Provider output and secrets were withheld.'); process.exitCode=1; }

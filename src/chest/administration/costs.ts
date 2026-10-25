@@ -5,6 +5,10 @@ import { commit, fresh, maybe, next } from '../files/repo'
 import { canAdmin, requireAdmin } from './roles'
 
 export type CostRates = {
+ objectProvider?: string
+ objectOperations?: Record<string, number>
+ objectInboundUsdPerGb?: number
+ objectOutboundUsdPerGb?: number
  aiProvider?: string
  aiServiceTier?: string
  aiModel?: string
@@ -46,7 +50,17 @@ function rate(value: unknown, name: string) {
 export async function saveCostSettings(env: Bindings, s: Session, input: any): Promise<CostSettings> {
  await requireAdmin(env, s, 'service-settings')
  insist(input?.confirm === true, 'cost_confirmation_required')
+ let operations:Record<string,number>|undefined
+ if(input.objectProvider){
+  let supplied=input.objectOperations??{}
+  if(typeof supplied==='string'){try{supplied=JSON.parse(supplied)}catch{insist(false,'invalid_object_operations')}}
+  insist(supplied&&typeof supplied==='object'&&!Array.isArray(supplied),'invalid_object_operations')
+  const allowed=['list','read','write','delete','multipart-start','multipart-part','multipart-complete','multipart-abort','database-export','database-download','database-import','database-upload','database-query']
+  insist(Object.keys(supplied).every(k=>allowed.includes(k)),'invalid_object_operation')
+  operations=Object.fromEntries(Object.entries(supplied).map(([k,v])=>[k,rate(v,'object_operation_rate')]))
+ }
  const rates: CostRates = {
+  ...(input.objectProvider?{objectProvider:plain(input.objectProvider,'object_provider',120),objectOperations:operations,objectInboundUsdPerGb:rate(input.objectInboundUsdPerGb,'object_inbound_rate'),objectOutboundUsdPerGb:rate(input.objectOutboundUsdPerGb,'object_outbound_rate')}:{}),
   ...(input.aiProvider?{aiProvider:plain(input.aiProvider,'ai_provider',120),aiModel:plain(input.aiModel||'request','ai_model',120),aiInputUsdPerMillion:rate(input.aiInputUsdPerMillion,'ai_input_rate'),aiOutputUsdPerMillion:rate(input.aiOutputUsdPerMillion,'ai_output_rate'),aiRequestUsd:rate(input.aiRequestUsd??0,'ai_request_rate')}:{}),
   ...(input.aiServiceTier?{aiServiceTier:plain(input.aiServiceTier,'ai_service_tier',80)}:{}),
   ...Object.fromEntries(['aiCacheReadUsdPerMillion','aiCacheWrite5mUsdPerMillion','aiCacheWrite1hUsdPerMillion'].filter(k=>input[k]!==undefined&&input[k]!=='').map(k=>[k,rate(input[k],k)])),

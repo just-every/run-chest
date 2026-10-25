@@ -5,20 +5,29 @@ import {spawnSync} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
 import {readFile,writeFile,mkdir,readdir,stat,rm} from 'node:fs/promises';
 import {join,dirname,relative} from 'node:path';
-const home=process.env.CHEST_BACKUP_TEST_HOME;let exportStarted=false;
+const home=process.env.CHEST_BACKUP_TEST_HOME;let exportStarted=false,exportNoSchema=false,importBytes,importAccount;
 async function files(dir){const out=[];for(const entry of await readdir(dir,{withFileTypes:true}).catch(()=>[])){const p=join(dir,entry.name);if(entry.isDirectory())out.push(...await files(p));else out.push(p);}return out;}
 globalThis.fetch=async(input,init={})=>{
  const url=new URL(input),method=init.method??'GET';
  const json=result=>Response.json({success:true,result});
+ if(url.hostname==='synthetic-chest-import.test'){
+  importBytes=Buffer.from(init.body);return new Response('',{headers:{etag:'"'+createHash('md5').update(importBytes).digest('hex')+'"'}});
+ }
  if(url.hostname==='synthetic-chest-database.test'){
-  const result=spawnSync('sqlite3',[join(home,'source.sqlite'),'.dump'],{maxBuffer:64*1024*1024});assert.equal(result.status,0);return new Response(result.stdout);
+  const result=spawnSync('sqlite3',[join(home,'source.sqlite'),'.dump'],{maxBuffer:64*1024*1024});assert.equal(result.status,0);return new Response(exportNoSchema?result.stdout.toString('utf8').split('\n').filter(line=>line.startsWith('INSERT INTO')).join('\n'):result.stdout);
  }
  if(url.hostname==='api.cloudflare.com'){
   if(url.pathname.endsWith('/tokens/verify'))return json({id:'test-access-key'});
   const account=url.pathname.split('/')[4],file=join(home,account==='recovery-account'?'target.sqlite':'source.sqlite');
   assert.equal(new Headers(init.headers).get('authorization'),'Bearer '+(account==='recovery-account'?'synthetic-chest-7':'synthetic-chest-1'),'provider requires the newly supplied target credential');
   if(url.pathname.endsWith('/d1/database'))return json([{name:url.searchParams.get('name'),uuid:'database'}]);
-  if(url.pathname.endsWith('/export')){const body=JSON.parse(init.body);assert.deepEqual(body,{output_format:'polling',dump_options:{no_schema:false,no_data:false,tables:[]},...(exportStarted?{current_bookmark:'synthetic-chest-bookmark'}:{})});if(!exportStarted){exportStarted=true;return json({success:true,status:'active',at_bookmark:'synthetic-chest-bookmark'});}return json({success:true,status:'complete',result:{signed_url:process.env.CHEST_BACKUP_TEST_UNSAFE_EXPORT==='yes'?'http://synthetic-chest-database.test/download':'https://synthetic-chest-database.test/download'}});}
+  if(url.pathname.endsWith('/import')){
+   const body=JSON.parse(init.body);
+   if(body.action==='init'){importAccount=account;return json({upload_url:'https://synthetic-chest-import.test/upload',filename:'synthetic-chest-8'});}
+   assert.equal(body.action,'ingest');assert.equal(importAccount,account);assert.equal(body.etag,createHash('md5').update(importBytes).digest('hex'));
+   const db=new DatabaseSync(file);try{db.exec(importBytes.toString('utf8'));}finally{db.close();}return json({success:true,status:'complete'});
+  }
+  if(url.pathname.endsWith('/export')){const body=JSON.parse(init.body);exportNoSchema=body.dump_options.no_schema;assert.deepEqual(body,{output_format:'polling',dump_options:{no_schema:exportNoSchema,no_data:false,tables:[]},...(exportStarted?{current_bookmark:'synthetic-chest-bookmark'}:{})});if(!exportStarted){exportStarted=true;return json({success:true,status:'active',at_bookmark:'synthetic-chest-bookmark'});}return json({success:true,status:'complete',result:{signed_url:process.env.CHEST_BACKUP_TEST_UNSAFE_EXPORT==='yes'?'http://synthetic-chest-database.test/download':'https://synthetic-chest-database.test/download'}});}
   if(url.pathname.endsWith('/query')){const db=new DatabaseSync(file);try{return json([{results:db.prepare(JSON.parse(init.body).sql).all()}]);}finally{db.close();}}
  }
  if(url.hostname.endsWith('.r2.cloudflarestorage.com')||url.hostname==='backup.example.test'||url.hostname==='s3.us-east-1.amazonaws.com'){

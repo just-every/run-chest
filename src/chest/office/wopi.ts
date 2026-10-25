@@ -76,7 +76,7 @@ export async function wopiResponse(request:Request,env:Bindings):Promise<Respons
   if(request.method==='POST'&&parts[3]==='state'&&request.headers.get('content-type')?.includes('application/json')){
    const input=await request.json() as any;insist(input.event==='provider-refused'&&typeof input.kind==='string'&&/^[a-zA-Z0-9_-]{1,80}$/.test(input.kind),'invalid_editor_outcome')
    const key='editor-outcome:'+a.row.id+':'+input.kind,prior=await maybe(env,'editor-outcome',key)
-   if(!prior)await commit(env,a.s,[{row:fresh('editor-outcome',{session:a.row.id,kind:input.kind},key)}],{fences:[...a.ctx.fences,a.row],audits:[{action:'office.provider.refused',object:item,detail:{source:'Browser-reported provider outcome',code:input.kind==='limitreached'?'editor_capacity_reached':input.kind,limit:'provider',currentUse:null,maximum:null}}]})
+   if(!prior)await commit(env,a.s,[{row:fresh('editor-outcome',{session:a.row.id,kind:input.kind},key)}],{fences:[...a.ctx.fences,a.row],audits:[{action:'office.provider.refused',object:item,detail:{session:a.row.id,source:'Browser-reported provider outcome',code:input.kind==='limitreached'?'editor_capacity_reached':input.kind,limit:'provider',currentUse:null,maximum:null}}]})
    return Response.json({recorded:true},{headers:{'cache-control':'no-store'}})
   }
   if(request.method==='POST'&&parts[3]==='state'){await commit(env,a.s,[{row:a.row,previous:a.row,remove:true}],{fences:a.ctx.fences,audits:[{action:'office.collabora.close',object:item,detail:{session:a.row.id}}]});return Response.json({closed:true},{headers:{'cache-control':'no-store'}})}

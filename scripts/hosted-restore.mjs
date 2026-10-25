@@ -7,6 +7,8 @@ import { readFileSync, readdirSync, writeFileSync, rmSync, createReadStream } fr
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { args, credentials, names, databaseId, query, wrangler, fail } from './hosted/account.mjs';
+import { importDatabase } from './backup/database-import.mjs';
+import { accountingJournal } from './backup/accounting-journal.mjs';
 import { r2 } from './hosted/r2.mjs';
 import { DatabaseSync } from 'node:sqlite';
 import { mkdtemp, chmod, rm } from 'node:fs/promises';
@@ -40,9 +42,11 @@ if (files.length !== manifest.objects) fail(`The backup lists ${manifest.objects
 for (const f of files) if (await sha(join(opts.input, 'objects', f)) !== f) fail(`objects/${f} is damaged. Nothing was restored.`);
 
 const id = await databaseId(creds, n.database);
-const migrations = (await query(creds, id, 'SELECT name FROM d1_migrations ORDER BY id')).map(r => r.name);
+const accounting=await accountingJournal(sql=>query(creds,id,sql),creds.account+':'+id,'legacy hosted restore');
+const measuredQuery=sql=>query(creds,id,sql,accounting.transport('Cloudflare D1'));
+const migrations = (await measuredQuery('SELECT name FROM d1_migrations ORDER BY id')).map(r => r.name);
 if (JSON.stringify(migrations) !== JSON.stringify(manifest.migrations)) fail(`${n.worker} runs a different Chest version than the backup (database migrations differ). Deploy the same Chest version the backup came from, then restore. Nothing was restored.`);
-const held = (await query(creds, id, 'SELECT COUNT(*) AS n FROM chest_records'))[0].n;
+const held = (await measuredQuery('SELECT COUNT(*) AS n FROM chest_records'))[0].n;
 if (held) fail(`${n.worker} already holds ${held} file or record entries. Restore only into a freshly deployed environment. Nothing was restored.`);
 if (journal) {
   // Historical hosted backups contain INSERTs without schema. Parse those
@@ -51,7 +55,7 @@ if (journal) {
   const directory = await mkdtemp(join(tmpdir(), 'chest-hosted-erasure-')); await chmod(directory,0o700);
   let failure;
   try {
-    const schema = await query(creds,id,"SELECT sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'");
+    const schema = await measuredQuery("SELECT sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'");
     const db = new DatabaseSync(join(directory,'source.sqlite'));
     try {
       db.exec('PRAGMA foreign_keys=OFF;');
@@ -64,7 +68,7 @@ if (journal) {
 }
 
 console.log(`Putting ${files.length} original file(s) back into ${n.bucket}`);
-const bucket = await r2(creds, n.bucket);
+const bucket = await r2(creds, n.bucket,accounting.transport('Cloudflare R2'));
 let done = 0;
 for (const f of files) { await bucket.upload(`sha256/${f}`, join(opts.input, 'objects', f)); process.stdout.write(`\r\x1b[K${++done} of ${files.length}`); }
 process.stdout.write('\n');
@@ -74,7 +78,7 @@ process.stdout.write('\n');
 // owner, import custody), so they are set aside for the replacement and recreated from their own SQL in the same file.
 const has = table => dump.includes(`INSERT INTO "${table}"`) || dump.includes(`INSERT INTO ${table} `);
 // SQLite checks ON DELETE RESTRICT at once even with deferred keys, so a table is emptied before the tables it references.
-const schema = (await query(creds, id, "SELECT name, sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'")).filter(t => t.name !== 'd1_migrations' || has(t.name));
+const schema = (await measuredQuery("SELECT name, sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'")).filter(t => t.name !== 'd1_migrations' || has(t.name));
 const refs = new Map(schema.map(t => [t.name, new Set([...t.sql.matchAll(/REFERENCES\s+["`]?([A-Za-z0-9_]+)/gi)].map(m => m[1]).filter(r => r !== t.name))]));
 const tables = [], placed = new Set();
 while (tables.length < schema.length) {
@@ -86,9 +90,10 @@ while (tables.length < schema.length) {
 // the provider again. SCIM tokens, links and people are hashed without that secret and keep working.
 const deploymentBound = ['chest_integration_secrets', 'chest_mfa_factors', 'chest_mfa_challenges', 'chest_mfa_verified', 'chest_mfa_recovery', 'chest_mfa_limits', 'chest_mfa_resets', 'chest_sso_config', 'chest_sso_transactions', 'chest_saml_requests'].filter(t => tables.includes(t));
 const plan = join(opts.input, `restore-${Date.now()}.sql`);
-const triggers = await query(creds, id, "SELECT name, sql FROM sqlite_master WHERE type='trigger' AND sql IS NOT NULL");
+const triggers = await measuredQuery("SELECT name, sql FROM sqlite_master WHERE type='trigger' AND sql IS NOT NULL");
 writeFileSync(plan, ['PRAGMA defer_foreign_keys = TRUE;', ...triggers.map(t => `DROP TRIGGER "${t.name}";`), ...tables.map(t => `DELETE FROM "${t}";`), dump, ...deploymentBound.map(t => `DELETE FROM "${t}";`), ...triggers.map(t => `${t.sql};`)].join('\n') + '\n', { mode: 0o600 });
 console.log(`Replacing the database of ${n.worker} with the backup`);
-try { wrangler(creds, ['d1', 'execute', n.database, '--remote', '--file', plan, '--yes']); } finally { rmSync(plan, { force: true }); }
-const restored = (await query(creds, id, 'SELECT COUNT(*) AS n FROM chest_records'))[0].n;
+try { await importDatabase(creds,id,plan,accounting.transport('Cloudflare D1'));await accounting.flush(); } finally { rmSync(plan, { force: true }); }
+const restored = (await measuredQuery('SELECT COUNT(*) AS n FROM chest_records'))[0].n;
+await accounting.flush();accounting.close();
 console.log(`Restored ${restored} file and record entries and ${files.length} original file(s) into ${n.worker}. People sign in again by email; if you used company sign-in, enter your provider again under People & settings.`);

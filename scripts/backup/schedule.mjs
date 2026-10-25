@@ -21,6 +21,7 @@ export async function scheduledBackup(config,edge,{now=new Date(),backup=createB
  let result
  try{const receipt=await backup(config,edge,{retentionDays:s.retentionDays});await verify(config,edge,{key:receipt.key});result={...run,...receipt,state:'complete',finishedAt:new Date().toISOString(),checkedAt:new Date().toISOString()}}
  catch{result={...run,state:'failed',finishedAt:new Date().toISOString(),error:'Independent backup failed; provider output withheld. Inspect private credentials, connectivity and archive integrity.'}}
+ await edge.flushAccounting?.()
  await edge.query(`UPDATE chest_records SET payload=${literal(JSON.stringify(result))},revision=${literal(randomUUID())} WHERE id=${literal(id)} AND revision=${literal(revision)}`)
  const saved=(await edge.query(`SELECT payload FROM chest_records WHERE id=${literal(id)}`))[0];if(JSON.parse(saved.payload).state!==result.state)return {id,state:'interrupted_by_owner'}
  await edge.query(`INSERT INTO chest_audit(id,actor,action,object_id,detail,at) VALUES(${literal(randomUUID())},'chest:backup-runner','backup.${result.state}',${literal(id)},${literal(JSON.stringify({outcome:result.state,bytes:result.bytes??0,objects:result.objects??0}))},${literal(result.finishedAt)})`)
