@@ -1,7 +1,7 @@
 name: Verify
 on:
   push:
-    branches: [main]
+    branches: [main, 'cloud/**', 'sx/**', 'hotfix/**']
     tags: ['v*']
   pull_request:
   workflow_dispatch:
@@ -9,6 +9,10 @@ on:
     - cron: '41 18 * * *'
 permissions:
   contents: read
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref == 'refs/heads/main' && github.run_id || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   plan:
     runs-on: ubuntu-24.04
