@@ -31,3 +31,5 @@ try{
  }
  console.log('SEARCH-002 boxed folder scans, correction and read-only viewer at 1440 and 390 passed');
 }finally{await browser?.close();await h.close()}
+
+await (await import('./ask-browser-flow.mjs')).askBrowserFlow();

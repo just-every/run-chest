@@ -35,7 +35,7 @@ export async function askSetup(h,{live=false}={}){
  const pdfFile=await h.api('/items',owner,{parent:folder.id,name:'Harbor signed summary.pdf',base64:Buffer.from(pdf('Harbor NDA effective date 2026-04-09')).toString('base64')});
  for(let n=0;n<60;n++){const r=await h.api(`/items/${pdfFile.id}/reading?work=1`,owner);if(r.reading?.state==='done')break;await new Promise(r=>setTimeout(r,50))}
  const model=live?process.env.CHEST_LIVE_MODEL:'claude-haiku-5-5';
- await h.api('/reading/settings',owner,{provider:'anthropic',model,key:live?process.env.CHEST_LIVE_KEY:'synthetic-chest-41'});
+ await h.api('/reading/settings',owner,{provider:'anthropic',model,workspace:live?process.env.CHEST_LIVE_WORKSPACE:'',key:live?process.env.CHEST_LIVE_KEY:'synthetic-chest-41'});
  await h.api('/administration/costs',owner,{confirm:true,provider:'Owner network',quote:'Authorized synthetic test quote',storageUsdPerGbMonth:0,egressUsdPerGb:0,aiProvider:'anthropic',aiModel:model,aiInputUsdPerMillion:live?Number(process.env.CHEST_LIVE_INPUT_RATE):1,aiOutputUsdPerMillion:live?Number(process.env.CHEST_LIVE_OUTPUT_RATE):5});
  const policy=await h.api('/ask/policy',owner,{confirm:true,enabled:true,maxUsd:.05,maxOutput:1024,providerRetention:'Synthetic documents approved for this provider test; no private records',residency:'Owner-approved provider test endpoint'});
  return {owner,viewer,folder,file,hidden,pdfFile,policy};
