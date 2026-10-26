@@ -22,3 +22,5 @@ test-results/
 
 rer-package/
 delivery-artifact/
+
+server.env

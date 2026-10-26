@@ -28,6 +28,7 @@ export function s3({ endpoint, region, accessKeyId, secretAccessKey, sessionToke
     return r;
   }
   return {
+    request: send,
     async *list(prefix) {
       for (let token; ;) {
         const xml = await (await send('GET', '', { 'list-type': '2', prefix, ...(token ? { 'continuation-token': token } : {}) })).text();
