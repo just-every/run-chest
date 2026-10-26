@@ -181,7 +181,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "ac6a624e299802b18e469bfd06680e46701e8d1f3dc6607a38d3bca61edd8550",
+      "sha256": "b6e2de231e98b607c87817022d346988738312eea77da092a958c8174569d640",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -209,7 +209,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "ca9fbdd3c69bc7ea5fa81e1c2cc7e22eee539bfbe9ca51adc3b2e4fe7eb774b4",
+      "sha256": "6e7a67e16cb45171c004bde2b2bb163a2879e397c40437b5ced5b0bec0ab4e4b",
       "executable": false
     },
     "DEMO.md": {
@@ -245,7 +245,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "638e26cf84d74253e1bb3ee168f86d8bcb6b61042cbcbaace700de4e59e43a4e",
+      "sha256": "2b9ad4ebf1d42b2490325f3cba0996044d16fd881fd41c0ed6dba6e05ca6f233",
       "executable": false
     },
     "docs/collections.md": {
@@ -1185,7 +1185,7 @@
       "executable": false
     },
     "scripts/portability/remote-bindings.mjs": {
-      "sha256": "c2015a527b18a2f4bfecda2ec9b0dea0dbc09be2831b693b44ae4c00945aa70f",
+      "sha256": "4231af7603a161a6a26b39fe8ac65fccdc5462ba38bab3d8ad27606840e532c6",
       "executable": false
     },
     "scripts/portability/remote-objects.mjs": {
@@ -1193,7 +1193,7 @@
       "executable": false
     },
     "scripts/portability/remote.mjs": {
-      "sha256": "dcb2d278e08ec5d03c5e45d1c763f4af6407b44f2b6d741de316f8620f8cbdc8",
+      "sha256": "af9ff1430211cf496f4e47dff6ac867422920c4c5fb8d611bdba0d1b6b642ada",
       "executable": false
     },
     "scripts/server.mjs": {
@@ -4929,7 +4929,7 @@
       "executable": false
     },
     "tests/chest/owner-prepare.mjs": {
-      "sha256": "6cb100e8a6adb1dfa1129dfe8361824e929c619df7af7cb5eab3c2e3f10567bd",
+      "sha256": "19ace8dbfe8c290a44e45452b0113a407f863ef458ea8237369ea831ac4553b0",
       "executable": false
     },
     "tests/chest/owner-process.mjs": {
