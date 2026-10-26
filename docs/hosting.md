@@ -111,8 +111,16 @@ computer, so back up the hosted Chest itself.
 
 ## Back up a hosted Chest
 
-`rer export` saves only the copy on your computer and refuses a hosted address.
-To back up the hosted Chest, run Chest's hosted backup from the same folder:
+`rer export` without a target saves the copy on your computer. For a native
+installation archive, use `rer export --target remote --origin YOUR_DEPLOYED_HTTPS_ORIGIN
+--output exports/hosted.rer` with your deploying credentials in the process
+environment and the matching `.rer/deploy` record in this checkout. Restore that
+archive with `rer import --target remote --origin YOUR_DEPLOYED_HTTPS_ORIGIN
+--input exports/hosted.rer --yes` into an empty deployment. See
+[Linux server installation](/docs/server) for moving between targets.
+
+For Chest's existing hosted backup directory format, run the hosted backup from
+the same folder:
 
 ```sh
 rer run hosted-backup --environment production --env-file chest.env
