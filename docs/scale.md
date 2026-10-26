@@ -31,7 +31,7 @@ the reference and each supplied inventory dimension with 25 percent headroom;
 this plans the required size and does not claim that size was generated.
 No originals are represented by sparse files or invented byte counts.
 
-Use the manually dispatched **Scale journey** workflow on the candidate branch.
+Use the **Scale journey** workflow on the candidate branch. Changes to its workflow, generator or journey start it on a pull request at the exact candidate head; manual dispatch is also available after workflow registration on the default branch.
 It runs separately from push Verify, records the exact checked-out commit and
 uploads measurements and browser captures. It exercises the actual built Worker
 in an isolated local runtime, without a network latency claim. The real 10 TB,
