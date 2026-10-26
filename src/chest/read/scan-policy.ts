@@ -30,9 +30,9 @@ export async function saveScanPolicy(env: Bindings, s: Session, input: any) {
  insist(Number.isInteger(maxOutput) && maxOutput >= 128 && maxOutput <= 16000, 'invalid_scan_output_allowance')
  insist(input.retention === 'until_original_erased', 'explicit_persistent_scan_retention_required')
  insist(input.verified === true || input.verified === 'true', 'verified_provider_terms_required')
- const reader = await env.DB.prepare('SELECT provider,endpoint,model,workspace,updated_at AS readerRevision FROM chest_reader WHERE id=1').first<{ provider: string; endpointHash: string; model: string; workspace: string; readerRevision: string }>()
+ const reader = await env.DB.prepare('SELECT provider,endpoint,model,workspace,updated_at AS readerRevision FROM chest_reader WHERE id=1').first<{ provider: string; endpoint: string; model: string; workspace: string; readerRevision: string }>()
  insist(reader, 'reader_key_required', 409)
- const payload: ScanPolicy = { enabled, maxCalls, maxOutput, retention: 'until_original_erased', providerRetention: plain(input.providerRetention), residency: plain(input.residency), provider:reader.provider, model:reader.model, endpointHash:await digest(new TextEncoder().encode(reader.endpoint)), consentAt: now(), by: s.operator.email }
+ const payload: ScanPolicy = { enabled, maxCalls, maxOutput, retention: 'until_original_erased', providerRetention: plain(input.providerRetention), residency: plain(input.residency), provider:reader.provider, model:reader.model, workspace:reader.workspace, readerRevision:reader.readerRevision, endpointHash:await digest(new TextEncoder().encode(reader.endpoint)), consentAt: now(), by: s.operator.email }
  const row = previous ? next(previous, payload) : fresh(key, payload, key)
  await commit(env, s, [{ row, previous: previous ?? undefined }], {
   preconditions: [{ sql: 'INSERT INTO chest_assert(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM chest_reader WHERE id=1 AND provider=? AND endpoint=? AND model=? AND workspace=? AND updated_at=?) THEN 1 ELSE 0 END', params: [reader.provider, reader.endpoint, reader.model, reader.workspace, reader.readerRevision] }],
@@ -53,7 +53,7 @@ export async function reserveScan(env: Bindings, checksum: string, config: Reade
  try {
   await commit(env, null, [{ row, previous: previous ?? undefined }], {
    fences: [policy], by: 'chest:reader',
-   preconditions: [{ sql: 'INSERT INTO chest_assert(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM chest_reader WHERE id=1 AND provider=? AND endpoint=? AND model=? AND workspace=? AND updated_at=?) THEN 1 ELSE 0 END', params: [config.provider, config.endpoint, config.model, config.workspace, config.readerRevision ?? null] }],
+   preconditions: [{ sql: 'INSERT INTO chest_assert(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM chest_reader WHERE id=1 AND provider=? AND endpoint=? AND model=? AND workspace=? AND updated_at=? AND key_sealed=?) THEN 1 ELSE 0 END', params: [config.provider, config.endpoint, config.model, config.workspace, config.readerRevision ?? null, config.authority ?? null] }],
    audits: [{ action: 'scan.reserve', object: budgetKey, detail: { operation, call: payload.calls, maximum: p.maxCalls, maxOutput: p.maxOutput, policy: { ...p, revision: policy.revision } } }],
   })
  } catch { return { unavailable: 'Scan policy or allowance changed before dispatch. No provider call was made. The owner can approve the current scan policy to resume blocked reading.' } }
