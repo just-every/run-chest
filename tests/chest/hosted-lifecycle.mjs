@@ -53,7 +53,7 @@ try {
  assert.ok(objects.includes(expected.checksum));assert.ok(manifest.bytes>=expected.size);assert.equal(manifest.objects,objects.length);
  console.log('Hosted backup contains the hosted-only graph and original.');
  await resources.remove(env);console.log('First removal read back no Worker, database or bucket.');
- Object.assign(env,deploymentEnvironment(ownerEmail));
+ Object.assign(env,deploymentEnvironment(ownerEmail,env.SIGNING_KEY_SECRET));
  const freshOrigin=await resources.deploy(env);assert.equal(freshOrigin,origin);
  await rer(['run','hosted-restore','--environment',environment,'--input',backup,'--acknowledge-offline-erasures'],env);
  console.log('Fresh deployment and hosted restore passed.');
