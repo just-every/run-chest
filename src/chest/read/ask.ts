@@ -47,7 +47,7 @@ export async function askExecute(env: Bindings, s: Session, method: string, part
  const same = data.versions.every(v => current.versions.some(c => c.item === v.item && c.version === v.version && c.checksum === v.checksum))
  if (!same) return { run, state: 'access_changed', answer: '', claims: [], fields: [], uncertainty: 'Access or evidence changed during the request. The answer was withheld.', cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed }
  await commit(env, s, [], { fences, preconditions: [providerFence], audits: [{ action: 'ask.completed', object: key, detail: { run, citations: result.output.claims.reduce((n, c) => n + c.citations.length, 0), policy: policyUsed } }] })
- return { run, state: 'done', ...result.output, sources: data.sources.map(({ text, ...p }) => ({ ...p, href: `/api/chest/${p.kind}/${p.item}/bytes/${p.version}#page=${p.page}` })), skipped: data.skipped, usage: result.usage, cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed }
+ return { run, state: 'done', ...result.output, sources: data.sources.map(({ text, ...p }) => ({ ...p, href: `/api/chest/${p.kind}/${p.item}/bytes/${p.version}${p.mediaType === 'application/pdf' ? '' : '?download=true'}#page=${p.page}` })), skipped: data.skipped, usage: result.usage, cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed }
 }
 async function receipt(env: Bindings, run: string) {
  const row = await env.DB.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage' AND object_id=? ORDER BY at DESC LIMIT 1").bind(run).first<{ detail: string }>()

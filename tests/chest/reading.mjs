@@ -79,7 +79,7 @@ try{
   await h.api(`/documents/${record.id}/reading`,people.dee,undefined,404);
   await h.api(`/documents/${record.id}/grants`,people.owner,{grants:[],private:true});assert.deepEqual(await library('ben','supplier evidence'),[]);
  });
- await check('SEARCH-001/002 scans',async()=>{
+ await check('SEARCH scans and field decisions',async()=>{
   // Saving a key alone grants no automatic scan authority. Only the owner can approve current provider terms.
   await h.api('/reading/settings',people.ana,{provider:'anthropic',key:'synthetic-chest-100'},403);
   const saved=await h.api('/reading/settings',people.owner,{provider:'anthropic',model:'claude-sonnet-5-5',key:activeKey});assert.ok(!JSON.stringify(saved).includes(activeKey),'the key is never sent back');

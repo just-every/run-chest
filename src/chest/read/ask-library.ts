@@ -1,3 +1,4 @@
+import { askPassages } from './ask-passages'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { access } from '../access'
@@ -14,10 +15,10 @@ export async function libraryAskSources(env: Bindings, s: Session, root: string,
   const x = await extraction(env, v.checksum), text = v.text || x?.payload.text || ''
   if (!text.trim()) { skipped.push({ name: v.filename, reason: x?.payload.state === 'failed' || x?.payload.state === 'unsupported' ? 'Unreadable' : 'Not yet extracted' }); continue }
   versions.push({ item: root, version: v.id, checksum: v.checksum })
-  for (const [i, passage] of text.split('\f').entries()) {
+  for (const [i, page] of text.split('\f').entries()) for (const passage of askPassages(page)) {
    if (!passage.trim()) continue
    if (sources.length >= 60 || passage.length > 20000 || sources.reduce((n, p) => n + p.text.length, 0) + passage.length > 60000) { skipped.push({ name: v.filename, reason: 'Run text limit reached; evidence incomplete' }); continue }
-   sources.push({ id: `source-${sources.length + 1}`, kind: 'documents', item: root, version: v.id, page: i + 1, text: passage, name: v.filename, method: v.text ? 'Original text' : x?.payload.model ?? 'Original text layer', confidence: x?.payload.pages[i]?.confidence ?? null, checksum: v.checksum })
+   sources.push({ id: `source-${sources.length + 1}`, kind: 'documents', mediaType: v.mediaType, versionNumber: doc.payload.versions.indexOf(v) + 1, at: v.at, current: v.id === chosen, item: root, version: v.id, page: i + 1, text: passage, name: v.filename, method: v.text ? 'Original text' : x?.payload.model ?? 'Original text layer', confidence: x?.payload.pages[i]?.confidence ?? null, checksum: v.checksum })
   }
  }
  insist(sources.length, 'file_not_yet_readable', 409)

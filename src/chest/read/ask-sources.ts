@@ -1,3 +1,4 @@
+import { askPassages } from './ask-passages'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { insist, type Row } from '../model'
@@ -6,7 +7,7 @@ import type { FileVersion, Item } from '../files/model'
 import { extraction } from './jobs'
 import type { AskPassage } from './ask-provider'
 import { libraryAskSources } from './ask-library'
-export type AskSource = AskPassage & { kind: 'items' | 'documents'; name: string; method: string; confidence: number | null; checksum: string }
+export type AskSource = AskPassage & { kind: 'items' | 'documents'; mediaType: string; versionNumber: number; at: string; current: boolean; name: string; method: string; confidence: number | null; checksum: string }
 export type Skipped = { name: string; reason: string }
 export async function askSources(env: Bindings, s: Session, root: string, history: boolean, kind: 'items' | 'documents' = 'items') {
  if (kind === 'documents') return libraryAskSources(env, s, root, history)
@@ -26,10 +27,10 @@ export async function askSources(env: Bindings, s: Session, root: string, histor
    if (!text.trim()) { skipped.push({ name: row.payload.name, reason: x?.payload.state === 'failed' || x?.payload.state === 'unsupported' || x?.payload.state === 'done' ? 'Unreadable' : 'Not yet extracted' }); continue }
    if (sources.length >= 60) { skipped.push({ name: row.payload.name, reason: 'Run source limit reached' }); continue }
    versions.push({ item: row.id, version: v.id, checksum: v.checksum })
-   for (const [i, passage] of text.split('\f').entries()) {
+   for (const [i, page] of text.split('\f').entries()) for (const passage of askPassages(page)) {
     if (!passage.trim()) continue
     if (sources.length >= 60 || passage.length > 20000 || sources.reduce((n, p) => n + p.text.length, 0) + passage.length > 60000) { skipped.push({ name: row.payload.name, reason: 'Run text limit reached; evidence incomplete' }); continue }
-    sources.push({ id: `source-${sources.length + 1}`, kind: 'items', item: row.id, version: v.id, page: i + 1, text: passage, name: row.payload.name, method: v.text ? 'Original text' : x?.payload.model ?? 'Original text layer', confidence: x?.payload.pages[i]?.confidence ?? null, checksum: v.checksum })
+    sources.push({ id: `source-${sources.length + 1}`, kind: 'items', mediaType: v.mediaType, versionNumber: row.payload.versions.indexOf(v) + 1, at: v.at, current: v.id === row.payload.current, item: row.id, version: v.id, page: i + 1, text: passage, name: row.payload.name, method: v.text ? 'Original text' : x?.payload.model ?? 'Original text layer', confidence: x?.payload.pages[i]?.confidence ?? null, checksum: v.checksum })
    }
    if (x && x.payload.state !== 'done') skipped.push({ name: row.payload.name, reason: 'Extraction incomplete; only available passages included' })
   }
