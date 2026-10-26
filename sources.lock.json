@@ -4929,15 +4929,15 @@
       "executable": false
     },
     "tests/chest/owner-prepare.mjs": {
-      "sha256": "de38fd39cb74c6a029dff0e910f08e982062fdaf8919317047183a891f88c4d5",
+      "sha256": "6cb100e8a6adb1dfa1129dfe8361824e929c619df7af7cb5eab3c2e3f10567bd",
       "executable": false
     },
     "tests/chest/owner-process.mjs": {
-      "sha256": "e34b7b78c4680c46b4415a1f9756b373254d5c5f1f78ffdd15b382a96e592c9e",
+      "sha256": "6dfdef0e3d60ca5a5cb0c4cab2159d5aa2fa93b5aabd2b6886133a38c2e9b011",
       "executable": false
     },
     "tests/chest/owner-server.mjs": {
-      "sha256": "0120b00ece25646062e50487ab2a0259cf970d012689d2798c3f34df1919c978",
+      "sha256": "75b80fdfb250a624aa5bbb5e007415ca5cac80fad640a1bb7150963d2a78e5b4",
       "executable": false
     },
     "tests/chest/owner-tunnel.mjs": {
