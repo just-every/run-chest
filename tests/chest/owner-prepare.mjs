@@ -45,5 +45,5 @@ try {
  }
  console.log('OWN_PREPARATION_PAGES '+process.cwd());
  if(process.env.CHEST_COLLECT_SCREENS==='1')await waitForFile('test-results/owner-pages-collected',300000);
- console.log('OWN_PREPARATION_PASS macOS owner install, touched journeys and documentation at 1440 and 390.');
+ console.log(process.env.CHEST_DOCS_ONLY==='1'?'OWN_DOCS_PASS installation documentation at 1440 and 390.':'OWN_PREPARATION_PASS macOS owner install, touched journeys and documentation at 1440 and 390.');
 }finally{await browser.close();if(server)await new Promise(resolve=>server.close(resolve));}

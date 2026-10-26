@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
-import {running,ready,rerCommand} from './owner-process.mjs';
+import {tooltips} from './tooltip-proof.mjs';
+import {running,ready,rerCommand,browserHome} from './owner-process.mjs';
 
 // The fresh checkout and locked dependency install are supplied by remote-run.
 export async function computerJourney(browser,port) {
@@ -17,8 +18,15 @@ export async function computerJourney(browser,port) {
   await page.waitForURL('**/app/files');
   const session=await (await context.request.get(`http://127.0.0.1:${port}/auth/session`)).json();
   assert.equal(session.operator.email,process.env.TEST_MAIL_TO);
-  for(const width of [1440,390]){await page.setViewportSize({width,height:width===390?844:1000});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:`test-results/${process.platform}-owner-computer-${width}.png`,fullPage:true});}
+  for(const width of [1440,390]){await page.setViewportSize({width,height:width===390?844:1000});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await tooltips(page,width,'owner-computer');await page.screenshot({path:`test-results/${process.platform}-owner-computer-${width}.png`,fullPage:true});}
   console.log('Fresh computer install reached the owner library on '+process.platform+'.');
  }finally{await context?.close();await server.stop();}
  await rerCommand(['build']);
+}
+
+if(process.argv[1]===import.meta.filename){
+ browserHome();process.env.TEST_MAIL_TO='synthetic-chest-1@example.test';
+ const {chromium}=await import('@playwright/test');
+ const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+ try{await computerJourney(browser,49719);}finally{await browser.close();}
 }
