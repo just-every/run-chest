@@ -14,6 +14,7 @@ try{
  await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
  assert.equal((await h.raw('/api/chest/administration/scale/health',owner)).status,503);
  const data=await generate({api:h.api,owner,files:Number(process.env.CHEST_SCALE_FILES||60),depth:Number(process.env.CHEST_SCALE_DEPTH||8)}),member=await h.signIn(data.sessions[0],true);
+ const wide=await h.api(`/items/${data.folders[0]}`,owner),deep=await h.api(`/items/${data.folders.at(-1)}`,owner);assert.equal(data.counts.largestFolder,Math.max(wide.children.length,deep.children.length),'recorded folder size equals admitted direct children');
  const device=await h.api('/devices',member,{name:'Offline measurement device',platform:'linux'});await h.api('/devices',owner,{name:'Enumeration device',platform:'linux'});data.counts.devices=2;
  const sync=async path=>{const r=await h.fetch('/api/chest/sync'+path,{headers:{authorization:`Bearer ${device.token}`}});assert.equal(r.status,200);return r.json()};
  const start=await timed('enumeration',()=>sync('/tree'));assert.ok(start.items.some(i=>i.id===data.originals[0].id));

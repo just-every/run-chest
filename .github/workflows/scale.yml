@@ -31,7 +31,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: chest-scale-${{ github.sha }}
+          name: chest-scale-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             test-results/scale.json
             test-results/*-scale*.png

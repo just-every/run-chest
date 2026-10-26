@@ -8,5 +8,5 @@ export async function generate({api,owner,seed='synthetic-chest-895',files=60,de
  await api(`/spaces/${space.id}/member`,owner,{action:'add',principal:group.id,role:'viewer'});
  let parent=null;const folders=[];for(let n=0;n<depth;n++){const folder=await api('/items',owner,{space:space.id,parent,type:'folder',name:`Level ${n}`});parent=folder.id;folders.push(folder.id)}
  const originals=[];let bytes=0;for(let n=0;n<files;n++){const body=Buffer.from(`${seed} invoice ${n} quarter ${n%50} verified original`);bytes+=body.length;const item=await api('/items',owner,{space:space.id,parent:n===0?parent:folders[0],type:'file',name:`Invoice ${n}.txt`,base64:body.toString('base64')});originals.push({id:item.id,body})}
- return {space,group,folders,originals,sessions,counts:{items:files+depth,bytes,depth:depth+1,members,devices:0,largestSpace:files+depth,largestFolder:Math.max(files-1,1)+(depth>1?1:0),directMembers:members,changes:0,offlineDays:0}};
+ return {space,group,folders,originals,sessions,counts:{items:files+depth,bytes,depth:depth+1,members,devices:0,largestSpace:files+depth,largestFolder:files,directMembers:members,changes:0,offlineDays:0}};
 }

@@ -165,7 +165,7 @@
       "executable": false
     },
     ".github/workflows/scale.yml": {
-      "sha256": "7684dd7d5ae260aad5cc1cd55bbb81b2d1bcc3d1fa5541d04f9941047e5c6231",
+      "sha256": "60f52af8f9069a6bac94e220613c43dec900570044bcf3cf06966b2f636defc1",
       "executable": false
     },
     ".github/workflows/verify.yml": {
@@ -1213,7 +1213,7 @@
       "executable": false
     },
     "scripts/scale/generator.mjs": {
-      "sha256": "b141e48159a73e50394da1deeb022209ef9ae784d5741ca9f6fee3a634a6f584",
+      "sha256": "6a8d10b205123a0a0f4f9096a77665aa75e17922f850e07e86f34220b5aead0c",
       "executable": false
     },
     "scripts/server.mjs": {
@@ -5069,7 +5069,7 @@
       "executable": false
     },
     "tests/chest/scale.mjs": {
-      "sha256": "df7f1380f855dc09a029238ba5108a6b2bf5b771de5f72f3610d80f89ce4a458",
+      "sha256": "4c42c47eae5a0f55d3a31d31d757c482532345f11a981a35e29d4f56071b9d95",
       "executable": false
     },
     "tests/chest/scan-fields.mjs": {
