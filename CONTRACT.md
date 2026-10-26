@@ -879,8 +879,8 @@ Ownership, new-file creation, folder version review, link version and link-polic
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 24 | 0 | 0 | 24 |
-| Target and push further | 25 | 29 | 18 | 72 |
-| All | 49 | 29 | 18 | 96 |
+| Target and push further | 25 | 30 | 17 | 72 |
+| All | 49 | 30 | 17 | 96 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |

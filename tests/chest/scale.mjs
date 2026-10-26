@@ -27,12 +27,13 @@ try{
  await h.api(`/items/${data.folders[0]}`,member,undefined,403);
  assert.equal((await h.api('/search?q=invoice',member)).count,0);
  assert.equal((await h.raw(download,member)).status,403);
- assert.equal((await h.fetch(`/api/chest/sync/items/${file.item.id}/content`,{headers:{authorization:`Bearer ${device.token}`}})).status,403);
+ assert.equal((await h.fetch(`/api/chest/sync/items/${data.originals[0].id}/content`,{headers:{authorization:`Bearer ${device.token}`}})).status,403);
  const tree=await sync('/tree');assert.ok(!tree.items.some(i=>i.space===data.space.id));
  const inventory=process.env.CHEST_SCALE_INVENTORY?JSON.parse(await readFile(process.env.CHEST_SCALE_INVENTORY,'utf8')):null;
  const report={head,seed:'synthetic-chest-895',counts:data.counts,samples,environment:{region:'Local cloud VM; region unverified',mbps:0,usRegion:false,measuredNetwork:false},revocation:{list:true,search:true,download:true,sync:true}};
  await h.api('/administration/scale',member,report,403);
  await h.api('/administration/scale',owner,{...report,samples:{...samples,search:[]}},400);
+ const slow=await h.api('/administration/scale',owner,{...report,samples:{...samples,listing:[1001]}});assert.equal(slow.timings.listing.pass,false);assert.equal((await h.raw('/api/chest/administration/scale/health',owner)).status,503);
  const saved=await h.api('/administration/scale',owner,report);assert.equal(saved.pass,false);assert.equal(saved.timings.search.count,50);
  assert.equal((await h.raw('/api/chest/administration/scale/health',owner)).status,503);
  await h.stop();await h.start();assert.deepEqual((await h.api('/administration/scale',owner)).counts,data.counts);

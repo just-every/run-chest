@@ -164,6 +164,10 @@
       "sha256": "1466e0cc78eeee30a85f1602c0b4bbb74f053fc9f1aa723635c5f0fc5a0f19b0",
       "executable": false
     },
+    ".github/workflows/scale.yml": {
+      "sha256": "fc38bd4fdbb927c27639feebfbe0ec8a2297496da82fb5d0fec710f704162b18",
+      "executable": false
+    },
     ".github/workflows/verify.yml": {
       "sha256": "d500a2b54d590dff864a8cbe80037f22ed9b8cbbd607b91ea4289bf53476c5cc",
       "executable": false
@@ -209,7 +213,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "42faf3ab9f7818ae0b6d785cb56e20e6be3759c4abc267b7f7e7cc53267052a7",
+      "sha256": "48825a18588454dd34b911670c19572c1733b3c23769f5e603d44b0f591059f4",
       "executable": false
     },
     "DEMO.md": {
@@ -322,6 +326,10 @@
     },
     "docs/reading.md": {
       "sha256": "56ea2299346f2486f97bf38ab48abaa39a9c8da725f188157a45b9f24b108f77",
+      "executable": false
+    },
+    "docs/scale.md": {
+      "sha256": "6470b50edf1a7cf3bca3ad1a32473b836f35453663794279f63c58b3cab4cca4",
       "executable": false
     },
     "docs/search.md": {
@@ -1204,6 +1212,10 @@
       "sha256": "af9ff1430211cf496f4e47dff6ac867422920c4c5fb8d611bdba0d1b6b642ada",
       "executable": false
     },
+    "scripts/scale/generator.mjs": {
+      "sha256": "9121fdcc248d346d66ad41fdc2fa40459c530650fed2c292a36696bd4950f132",
+      "executable": false
+    },
     "scripts/server.mjs": {
       "sha256": "c46fdcfb48770d32f92ff59777eeab55df85100bf9fc608230a909b5a8c76762",
       "executable": false
@@ -1466,6 +1478,10 @@
     },
     "src/chest/administration/roles.ts": {
       "sha256": "6769b282f3db28d4eda7fd8c0199c0aa9da704d4613050bd001d1612cfa1c5b2",
+      "executable": false
+    },
+    "src/chest/administration/scale.ts": {
+      "sha256": "20520d9ac3fc940f621d5e1245c0ed8856991999c792db97db2774309401bf54",
       "executable": false
     },
     "src/chest/administration/service.ts": {
@@ -5050,6 +5066,10 @@
     },
     "tests/chest/role-review-flow.mjs": {
       "sha256": "9389710ccf624d6514091c510a0f0a64b946d1a2a6d992d0e7a21acf21f31a69",
+      "executable": false
+    },
+    "tests/chest/scale.mjs": {
+      "sha256": "2861d5ff3fff2d831c4d5c6a380d8466e5f35b412d91cd8f76795ce94fc8af94",
       "executable": false
     },
     "tests/chest/scan-fields.mjs": {
