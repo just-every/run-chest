@@ -14,7 +14,7 @@ try{
  await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
  assert.equal((await h.raw('/api/chest/administration/scale/health',owner)).status,503);
  const data=await generate({api:h.api,owner,files:Number(process.env.CHEST_SCALE_FILES||60),depth:Number(process.env.CHEST_SCALE_DEPTH||8)}),member=await h.signIn(data.sessions[0],true);
- const device=await h.api('/devices',member,{name:'Offline measurement device',platform:'linux'});await h.api('/devices',owner,{name:'Enumeration device',platform:'linux'});
+ const device=await h.api('/devices',member,{name:'Offline measurement device',platform:'linux'});await h.api('/devices',owner,{name:'Enumeration device',platform:'linux'});data.counts.devices=2;
  const sync=async path=>{const r=await h.fetch('/api/chest/sync'+path,{headers:{authorization:`Bearer ${device.token}`}});assert.equal(r.status,200);return r.json()};
  const start=await timed('enumeration',()=>sync('/tree'));assert.ok(start.items.some(i=>i.id===data.originals[0].id));
  for(let n=0;n<10;n++){await timed('listing',async()=>{const d=await h.api(`/items/${data.folders[0]}`,member);assert.ok(d.children.length)});await timed('deepOpen',async()=>{const d=await h.api(`/items/${data.folders.at(-1)}`,member);assert.ok(d.children.some(i=>i.id===data.originals[0].id))})}
@@ -33,7 +33,7 @@ try{
  const report={head,seed:'synthetic-chest-895',counts:data.counts,samples,environment:{region:'Local cloud VM; region unverified',mbps:0,usRegion:false,measuredNetwork:false},revocation:{list:true,search:true,download:true,sync:true}};
  await h.api('/administration/scale',member,report,403);
  await h.api('/administration/scale',owner,{...report,samples:{...samples,search:[]}},400);
- const slow=await h.api('/administration/scale',owner,{...report,samples:{...samples,listing:[1001]}});assert.equal(slow.timings.listing.pass,false);assert.equal((await h.raw('/api/chest/administration/scale/health',owner)).status,503);
+ const slow=await h.api('/administration/scale',owner,{...report,samples:{...samples,listing:Array(10).fill(1001)}});assert.equal(slow.timings.listing.pass,false);assert.equal((await h.raw('/api/chest/administration/scale/health',owner)).status,503);
  const saved=await h.api('/administration/scale',owner,report);assert.equal(saved.pass,false);assert.equal(saved.timings.search.count,50);
  assert.equal((await h.raw('/api/chest/administration/scale/health',owner)).status,503);
  await h.stop();await h.start();assert.deepEqual((await h.api('/administration/scale',owner)).counts,data.counts);

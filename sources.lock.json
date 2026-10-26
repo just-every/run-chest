@@ -1213,7 +1213,7 @@
       "executable": false
     },
     "scripts/scale/generator.mjs": {
-      "sha256": "9121fdcc248d346d66ad41fdc2fa40459c530650fed2c292a36696bd4950f132",
+      "sha256": "b141e48159a73e50394da1deeb022209ef9ae784d5741ca9f6fee3a634a6f584",
       "executable": false
     },
     "scripts/server.mjs": {
@@ -1481,7 +1481,7 @@
       "executable": false
     },
     "src/chest/administration/scale.ts": {
-      "sha256": "20520d9ac3fc940f621d5e1245c0ed8856991999c792db97db2774309401bf54",
+      "sha256": "5ae90f97938095a208ffb0070cb8319758c9f131856a1b7ae5d6de291962d2f3",
       "executable": false
     },
     "src/chest/administration/service.ts": {
@@ -5069,7 +5069,7 @@
       "executable": false
     },
     "tests/chest/scale.mjs": {
-      "sha256": "2861d5ff3fff2d831c4d5c6a380d8466e5f35b412d91cd8f76795ce94fc8af94",
+      "sha256": "530affa80bb14cd4d2532b006e7e3aa256be9ce1255d437d2c13ebfea7ced7e6",
       "executable": false
     },
     "tests/chest/scan-fields.mjs": {
