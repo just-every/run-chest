@@ -2,7 +2,7 @@ import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {createRequire} from 'node:module';
 import {createPortability,PortabilityError} from '@runeditrun/rer/modules/portability';
-import {fileRecords,importArchive} from '@runeditrun/rer/internal/modules/portability/files.mjs';
+import {fileRecords,importArchive,exportArchive} from '@runeditrun/rer/internal/modules/portability/files.mjs';
 import {appliedMigrations} from '@runeditrun/rer/portability-migrations';
 import {migrationReplay} from '@runeditrun/rer/internal/modules/portability/migration-history.mjs';
 import {ensurePortabilitySchema,portabilityPlan} from '@runeditrun/rer/internal/modules/container/portability-schema.mjs';
@@ -13,11 +13,11 @@ import {policy,transient} from './policy.mjs';
 
 // The provider token authorizes this offline restore. No new web endpoint or
 // session authority is introduced. An exact recorded deployment is required.
-export async function restoreRemote({root,path,origin,store,signal}) {
+export async function transferRemote({root,path,origin,store,signal},direction) {
  if(!origin)throw missing('Hosted restore requires --origin with the exact deployed HTTPS address.');
  const url=new URL(origin);
  if(url.protocol!=='https:'||url.origin!==origin||url.username||url.password)throw refuse('Use the exact HTTPS deployment origin without a path.');
- for await(const record of fileRecords(path)){}
+ if(direction==='import')for await(const record of fileRecords(path)){}
  const records=[];
  const {readdir}=await import('node:fs/promises');
  for(const file of await readdir(join(root,'.rer/deploy')).catch(()=>[])) {
@@ -35,11 +35,11 @@ export async function restoreRemote({root,path,origin,store,signal}) {
   await ensurePortabilitySchema(bindings.db,await portabilityPlan(split));
   const migrations=async()=>migrationReplay(await appliedMigrations(root,bindings.db,'DB',{},split),policy);
   const service=await createPortability({db:bindings.db,buckets:{originals:bindings.bucket},policy,migrations});
-  store.report('Checking and restoring the archive into the recorded empty hosted installation.');
-  const receipt=await importArchive(service,path,transient);
+  store.report(direction==='import'?'Checking and restoring the archive into the recorded empty hosted installation.':'Exporting all portable records and original bytes from the recorded hosted installation.');
+  const receipt=await (direction==='import'?importArchive:exportArchive)(service,path,transient);
   await bindings.owned();
-  store.report('Restored portable records and verified original bytes. Sign in again by email.');
-  return {target:'remote',input:path,...receipt};
+  store.report(direction==='import'?'Restored portable records and verified original bytes. Sign in again by email.':'Exported portable records and verified original bytes.');
+  return {target:'remote',[direction==='import'?'input':'output']:path,...receipt};
  }catch(error) {
   if(error instanceof PortabilityError)throw new RerError('restore_refused',`Hosted restore refused (${error.code.split(':')[0]}). The original installation and archive are retained.`,4);
   throw error;

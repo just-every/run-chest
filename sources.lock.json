@@ -1177,7 +1177,7 @@
       "executable": false
     },
     "scripts/portability/index.mjs": {
-      "sha256": "b9d0b9ef8dfa37f2ae76286e0796a630e14dbaadece65dc51328e9778f68747f",
+      "sha256": "eb239a1842a9ed6677f350da90cccb1e9f85ba67bf097e87f4474266f81ba7b0",
       "executable": false
     },
     "scripts/portability/policy.mjs": {
@@ -1189,11 +1189,11 @@
       "executable": false
     },
     "scripts/portability/remote-objects.mjs": {
-      "sha256": "16ad8bbefc21d25fd33803f788db74b5a551a0dc12a88ecb968436521b424bf8",
+      "sha256": "5b4d685bbad57b332f8f14841560be40935785aa171bdfa76dd9921c00014ec7",
       "executable": false
     },
     "scripts/portability/remote.mjs": {
-      "sha256": "0b1b388e10c1dd2651bac6587dad0209f03437099fe83254afd4c8acee35028c",
+      "sha256": "dcb2d278e08ec5d03c5e45d1c763f4af6407b44f2b6d741de316f8620f8cbdc8",
       "executable": false
     },
     "scripts/server.mjs": {
@@ -4917,7 +4917,7 @@
       "executable": false
     },
     "tests/chest/owner-migration.mjs": {
-      "sha256": "85d9566036960914bfabb4edac8187c043b3ba8455074b680265e4f8c1f81305",
+      "sha256": "4a8c77042a85a39f0ecbbb8632ffaf508a82e4c531523efce5dfc3e9639674d5",
       "executable": false
     },
     "tests/chest/owner-process.mjs": {

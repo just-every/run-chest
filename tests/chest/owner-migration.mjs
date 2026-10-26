@@ -9,6 +9,9 @@ import {cloudResources,deploymentEnvironment} from './hosted-cloud.mjs';
 import {emailSignIn,waitForMailLink} from './hosted-mail.mjs';
 import {hostedClient,createHostedData,snapshotHostedData,reconcileHostedOriginals} from './hosted-data.mjs';
 import {hostedScreens} from './hosted-screens.mjs';
+import {Readable} from 'node:stream';
+import {createReadStream} from 'node:fs';
+import {diffArchives} from '@runeditrun/rer/internal/modules/portability/diff.mjs';
 
 assert.equal(process.platform,'darwin');await receiveSecrets();
 const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
@@ -37,6 +40,12 @@ try {
  await waitForFile('exports/server.rer');
  cloudOrigin=await resources.deploy(env);
  await rerCommand(['import','--target','remote','--origin',cloudOrigin,'--input','exports/server.rer','--yes'],env);
+ await rerCommand(['export','--target','remote','--origin',cloudOrigin,'--output','exports/cloud.rer'],env);
+ const difference=await diffArchives(Readable.toWeb(createReadStream('exports/server.rer')),Readable.toWeb(createReadStream('exports/cloud.rer')));
+ assert.deepEqual(difference.tables,[],'every portable record survives the server to cloud move');
+ assert.deepEqual(difference.objects,{added:[],removed:[],changed:[]},'every original and its metadata survives the server to cloud move');
+ assert.equal(difference.schemaChanged,false);assert.equal(difference.configurationChanged,false);
+ console.log('OWN_ARCHIVE_RECONCILED all portable records and original hashes match.');
  owner=await emailSignIn({browser,origin:cloudOrigin,email:ownerEmail,from});mails.push(owner.receipt.id);
  member=await emailSignIn({browser,origin:cloudOrigin,email:memberEmail,from});mails.push(member.receipt.id);
  const cloudOwner=hostedClient(cloudOrigin,owner.context),cloudMember=hostedClient(cloudOrigin,member.context);
