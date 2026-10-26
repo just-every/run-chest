@@ -16,7 +16,7 @@ export function objectBinding(client) {
    const xml=await (await send('GET','',{'list-type':'2',prefix,'max-keys':String(limit),...(cursor?{'continuation-token':cursor}:{})})).text();
    const objects=[...xml.matchAll(/<Contents>[\s\S]*?<Key>([^<]*)<\/Key>[\s\S]*?<Size>(\d+)<\/Size>[\s\S]*?<\/Contents>/g)].map(match=>({key:decode(match[1]),size:Number(match[2])}));
    if(include.length)for(const object of objects){
-    const head=await send('HEAD',object.key);object.etag=etag(head);object.httpMetadata={};object.customMetadata={};
+    const head=await send('HEAD',object.key,{},undefined,{'accept-encoding':'identity'});object.etag=etag(head);object.httpMetadata={};object.customMetadata={};
     for(const [field,name]of Object.entries({contentType:'content-type',contentLanguage:'content-language',contentDisposition:'content-disposition',contentEncoding:'content-encoding',cacheControl:'cache-control',cacheExpiry:'expires'})){
      const value=head.headers.get(name);if(value!==null)object.httpMetadata[field]=field==='cacheExpiry'?new Date(value):value;
     }
@@ -27,7 +27,7 @@ export function objectBinding(client) {
    return {objects,truncated,...(next?{cursor:decode(next)}:{})};
   },
   async get(key,{range}={}) {
-   const response=await send('GET',key,{},undefined,range?{range:`bytes=${range.offset}-${range.offset+range.length-1}`}:{}) ;
+   const response=await send('GET',key,{},undefined,{'accept-encoding':'identity',...(range?{range:`bytes=${range.offset}-${range.offset+range.length-1}`}:{})});
    return {body:response.body,etag:etag(response),size:Number(response.headers.get('content-length')),arrayBuffer:()=>response.arrayBuffer()};
   },
   async put(key,bytes,metadata){await send('PUT',key,{},bytes,metadataHeaders(metadata));},

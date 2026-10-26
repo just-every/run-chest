@@ -1189,7 +1189,7 @@
       "executable": false
     },
     "scripts/portability/remote-objects.mjs": {
-      "sha256": "5b4d685bbad57b332f8f14841560be40935785aa171bdfa76dd9921c00014ec7",
+      "sha256": "60a35110081ce956a91c3fa31c8864059eb6aa888e1ce7ddee98674b85fa4eef",
       "executable": false
     },
     "scripts/portability/remote.mjs": {
