@@ -4,7 +4,7 @@ import {Readable} from 'node:stream';
 import {diffArchives} from '@runeditrun/rer/internal/modules/portability/diff.mjs';
 import {cloudResources,deploymentEnvironment} from './hosted-cloud.mjs';
 import {rerCommand} from './owner-process.mjs';
-import {emailSignIn} from './hosted-mail.mjs';
+import {emailSignIn,waitForMailLink} from './hosted-mail.mjs';
 import {hostedClient,snapshotHostedData,reconcileHostedOriginals} from './hosted-data.mjs';
 import {hostedScreens} from './hosted-screens.mjs';
 import {proveIndependent} from './owner-egress.mjs';
@@ -23,8 +23,19 @@ export async function cloudJourney({browser,head,ownerEmail,memberEmail,from,exp
  assert.equal(difference.schemaChanged,false);assert.equal(difference.configurationChanged,false);
  console.log('OWN_ARCHIVE_RECONCILED all portable records and original hashes match.');
  owner=await emailSignIn({browser,origin:cloudOrigin,email:ownerEmail,from});mails.push(owner.receipt.id);
+ const cloudOwner=hostedClient(cloudOrigin,owner.context);
+ assert.equal((await cloudOwner.api('/people')).some(person=>person.email===memberEmail),false,'portable people do not acquire authentication authority');
+ const since=Date.now();
+ await cloudOwner.api('/people',{action:'invite',email:memberEmail,name:'Harbor colleague'});
+ const invitation=await waitForMailLink({to:memberEmail,subject:`Chest operations test (${ownerEmail}) invited you to Chest`,since,origin:cloudOrigin,from});mails.push(invitation.receipt.id);
+ const invited=await browser.newContext(),invitePage=await invited.newPage();
+ try{
+  await invitePage.goto(invitation.url);await invitePage.getByRole('button',{name:'Confirm',exact:true}).click();await invitePage.waitForURL('**/app/files');
+  assert.equal((await (await invited.request.get(cloudOrigin+'/auth/session')).json()).operator.email,memberEmail,'the target owner explicitly admits the restored staff identity');
+ }catch{throw Error('Delivered cloud invitation did not establish the staff identity.');}
+ finally{await invited.close();}
  member=await emailSignIn({browser,origin:cloudOrigin,email:memberEmail,from});mails.push(member.receipt.id);
- const cloudOwner=hostedClient(cloudOrigin,owner.context),cloudMember=hostedClient(cloudOrigin,member.context);
+ const cloudMember=hostedClient(cloudOrigin,member.context);
  assert.deepEqual(await snapshotHostedData(cloudOwner,expected),beforeOwner);
  assert.deepEqual(await snapshotHostedData(cloudMember,expected),beforeMember);
  await reconcileHostedOriginals(cloudOwner,expected);await reconcileHostedOriginals(cloudMember,expected);
