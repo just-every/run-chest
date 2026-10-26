@@ -13,6 +13,7 @@ process.env.TEST_MAIL_TO='synthetic-chest-1@example.test';await mkdir('test-resu
 browserHome();
 const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});let server;
 try {
+ if(process.env.CHEST_DOCS_ONLY!=='1'){
  await computerJourney(browser,49719);
  const production=running(['run','server'],{...process.env,AUTH_ORIGIN:'https://files.example.com',CHEST_SERVER_PORT:'49720',MAIL_PROVIDER:'sendgrid',MAIL_FROM:'synthetic-chest-1@example.com',SENDGRID_API_KEY:'synthetic-chest-1',CHEST_OUTBOUND_HOSTS:'api.sendgrid.com'});
  try {
@@ -32,8 +33,9 @@ try {
   if(code!==0)throw Error('Touched journey '+test+' failed: '+output.replace(/https?:\/\/[^\s"<>]+/g,'[address withheld]').slice(-6000));
   console.log('OWN_TOUCHED_TEST_PASS '+test);
  }
+ }else await rerCommand(['build','--site']);
  const root=resolve('dist/site');
- server=createServer(async(req,res)=>{try{const path=new URL(req.url,'http://localhost').pathname;assert.ok(!path.includes('..'));const file=join(root,path==='/'?'index.html':path);let bytes;try{bytes=await readFile(file)}catch{bytes=await readFile(file+'.html')}res.setHeader('content-type',file.endsWith('.css')?'text/css':/\.(woff2|png|svg)$/.test(file)?'application/octet-stream':'text/html');res.end(bytes)}catch{res.statusCode=404;res.end()}});
+ server=createServer(async(req,res)=>{try{const path=new URL(req.url,'http://localhost').pathname;assert.ok(!path.includes('..'));const file=join(root,path==='/'?'index.html':path);let bytes;try{bytes=await readFile(file)}catch{bytes=await readFile(file+'.html')}res.setHeader('content-type',file.endsWith('.css')?'text/css':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.png')?'image/png':file.endsWith('.woff2')?'font/woff2':'text/html');res.end(bytes)}catch{res.statusCode=404;res.end()}});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port;
  const page=await browser.newPage();
  for(const slug of ['server','getting-started'])for(const width of [1440,390]){

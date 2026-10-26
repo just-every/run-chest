@@ -11,7 +11,7 @@ export async function remoteBindings({state,signal}) {
   let response;
   try {response=await fetch(`https://api.cloudflare.com/client/v4/accounts/${account}${path}`,{
    method,headers:{authorization:`Bearer ${token}`,'content-type':'application/json'},
-   ...(body===undefined?{}:{body:JSON.stringify(body)}),signal:signal??AbortSignal.timeout(60000),redirect:'error'});}catch{throw Error('Hosted restore provider connection failed.');}
+   ...(body===undefined?{}:{body:JSON.stringify(body)}),signal:signal?AbortSignal.any([signal,AbortSignal.timeout(60000)]):AbortSignal.timeout(60000),redirect:'error'});}catch{throw Error('Hosted restore provider connection failed.');}
   const data=await response.json().catch(()=>null);
   if(!response.ok||data?.success!==true||!Object.hasOwn(data,'result'))throw Error(`Hosted restore provider refused (${response.status}).`);
   return data.result;
@@ -43,5 +43,5 @@ export async function remoteBindings({state,signal}) {
  try {const response=await fetch(`https://api.cloudflare.com/client/v4/accounts/${account}/tokens/verify`,{headers:{authorization:`Bearer ${token}`},redirect:'error'});verification=await response.json();}catch{throw Error('Hosted restore could not verify object-store authority.');}
  if(verification?.success!==true||!verification.result?.id)throw Error('Hosted restore could not verify object-store authority.');
  const client=s3({endpoint:`https://${account}.r2.cloudflarestorage.com`,region:'auto',accessKeyId:verification.result.id,secretAccessKey:createHash('sha256').update(token).digest('hex')},bucketName);
- return {db,bucket:objectBinding(client),owned,async close(){}};
+ return {db,bucket:objectBinding(client),owned};
 }

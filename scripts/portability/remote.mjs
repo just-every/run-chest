@@ -43,6 +43,6 @@ export async function transferRemote({root,path,origin,store,signal},direction) 
  }catch(error) {
   if(error instanceof PortabilityError)throw new RerError('restore_refused',`Hosted restore refused (${error.code.split(':')[0]}). The original installation and archive are retained.`,4);
   throw error;
- }finally{await bindings.close();}
+ }
  });
 }
