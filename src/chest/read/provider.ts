@@ -6,7 +6,7 @@ import type { PageImage } from './raster'
 // The model gets page images and must answer through one fixed schema. Its answers are normalised here; text inside
 // a document is evidence, never an instruction, and nothing it proposes is written without a person's yes.
 export type Provider = 'anthropic' | 'openai'
-export type ReaderConfig = { provider: Provider; endpoint: string; model: string; key: string; workspace: string; accounting?: {env:Bindings;actor:string;object:string} }
+export type ReaderConfig = { provider: Provider; endpoint: string; model: string; key: string; workspace: string; readerRevision?: string; maxOutput?: number; authority?: string; accounting?: {env:Bindings;actor:string;object:string} }
 export const DEFAULTS: Record<Provider, { endpoint: string; model: string }> = {
  anthropic: { endpoint: 'https://api.anthropic.com/v1/messages', model: 'claude-sonnet-5-5' },
  openai: { endpoint: 'https://api.openai.com/v1/chat/completions', model: '' },
@@ -38,13 +38,13 @@ type Part = { image: PageImage } | { text: string }
 function request(c: ReaderConfig, system: string, schema: object, name: string, parts: Part[]): { headers: Record<string, string>; body: unknown; answer: (body: any) => any; usage: (body: any) => Usage } {
  if (c.provider === 'anthropic') return {
   headers: { 'x-api-key': c.key, 'anthropic-version': '2023-06-01', ...(c.workspace ? { 'anthropic-workspace-id': c.workspace } : {}) },
-  body: { model: c.model, max_tokens: 16000, system, output_config: { effort: 'low', format: { type: 'json_schema', schema } }, messages: [{ role: 'user', content: parts.map(p => 'image' in p ? { type: 'image', source: { type: 'base64', media_type: p.image.mediaType, data: b64(p.image.bytes) } } : { type: 'text', text: p.text }) }] },
+  body: { model: c.model, max_tokens: c.maxOutput ?? 16000, system, output_config: { effort: 'low', format: { type: 'json_schema', schema } }, messages: [{ role: 'user', content: parts.map(p => 'image' in p ? { type: 'image', source: { type: 'base64', media_type: p.image.mediaType, data: b64(p.image.bytes) } } : { type: 'text', text: p.text }) }] },
   answer: (body: any) => { if (body?.stop_reason === 'refusal') throw new ReaderError('The AI model declined to read this file.'); const text = body?.content?.find((p: any) => p.type === 'text')?.text; try { return typeof text === 'string' ? JSON.parse(text) : undefined } catch { return undefined } },
   usage: (body: any) => ({ input: body?.usage?.input_tokens ?? null, output: body?.usage?.output_tokens ?? null }),
  }
  return {
   headers: { authorization: `Bearer ${c.key}` },
-  body: { model: c.model, response_format: { type: 'json_schema', json_schema: { name, strict: true, schema } }, messages: [{ role: 'system', content: system }, { role: 'user', content: parts.map(p => 'image' in p ? { type: 'image_url', image_url: { url: `data:${p.image.mediaType};base64,${b64(p.image.bytes)}` } } : { type: 'text', text: p.text }) }] },
+  body: { model: c.model, max_completion_tokens: c.maxOutput ?? 16000, response_format: { type: 'json_schema', json_schema: { name, strict: true, schema } }, messages: [{ role: 'system', content: system }, { role: 'user', content: parts.map(p => 'image' in p ? { type: 'image_url', image_url: { url: `data:${p.image.mediaType};base64,${b64(p.image.bytes)}` } } : { type: 'text', text: p.text }) }] },
   answer: (body: any) => { const text = body?.choices?.[0]?.message?.content; try { return typeof text === 'string' ? JSON.parse(text) : undefined } catch { return undefined } },
   usage: (body: any) => ({ input: body?.usage?.prompt_tokens ?? null, output: body?.usage?.completion_tokens ?? null }),
  }

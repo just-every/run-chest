@@ -11,6 +11,7 @@ import { pageImage, pdfText, PdfProblem } from './pdf'
 import { imageCopy, jpeg, type PageImage } from './raster'
 import { readFields, ReaderError, transcribe, type Proposal, type ReaderConfig, type Usage } from './provider'
 import { readerState } from './settings'
+import { reserveScan } from './scan-policy'
 import { tiff, tiffPages, TiffProblem } from './tiff'
 // Reading runs in the background, one small unit at a time: open a file and read its PDF text layer, then read one
 // scanned page or photo with the AI model, then the next. Each unit saves its progress, so a page that is interrupted
@@ -28,7 +29,7 @@ export type Decision = { status: 'accepted' | 'corrected' | 'rejected'; value: u
 export type Reading = { schema?: string; schemaRevision?: string; unchanged?: number; document: string; version: string; checksum: string; state: ReadingState; proposals: (Proposal & { decision?: Decision })[]; model: string | null; problem: string | null; lease: string | null; attempts: number; usage: { input: number; output: number }; createdAt: string; updatedAt: string }
 // Per file: at most this many scanned pages are read, and this much text is kept (any cut is shown with its offset).
 export const MAX_SCAN_PAGES = 60, MAX_TEXT = 900_000, MAX_FIELD_PAGES = 5, MAX_BYTES = 50_000_000
-const LEASE = 45_000, ATTEMPTS = 3, SEP = '\f'
+const LEASE = 45_000, SEP = '\f'
 type Row<T> = { id: string; kind: string; payload: T; revision: string }
 const decode = <T>(r: any): Row<T> => ({ ...r, payload: JSON.parse(r.payload) })
 export const extractId = (checksum: string) => `extract:${checksum}`
@@ -116,6 +117,9 @@ async function readPage(env: Bindings, row: Row<Extraction>, config: ReaderConfi
  else if ('problem' in image) Object.assign(mine, { state: 'failed', problem: image.problem })
  else {
   await env.BLOBS.put(copyKey(checksum, page.n), image.bytes, { httpMetadata: { contentType: image.mediaType } })
+  const reservation = await reserveScan(env, checksum, config, 'ocr')
+  if ('unavailable' in reservation) return save(env, row, { ...x, state: 'unavailable', problem: reservation.unavailable, lease: null })
+  config = reservation.config
   try {
    const t = await attempt(env,'chest:reader','provider.ocr',row.id,{authority:'installation reader',provider:config.provider,model:config.model,page:page.n,checksum:row.id.slice(8)},()=>transcribe({...config,accounting:{env,actor:'chest:reader',object:row.id}}, image, ['application/pdf', 'image/tiff'].includes(x.mediaType) ? `page ${page.n} of ${pages.length} of a scanned ${x.mediaType === 'image/tiff' ? 'TIFF' : 'PDF'}` : 'this photo of a document'))
    Object.assign(mine, { state: 'done', chars: t.text.length, language: t.language, confidence: t.confidence, image: { mediaType: image.mediaType, width: image.width, height: image.height }, problem: t.readable ? undefined : 'No legible text on this page.', attempts: undefined })
@@ -123,7 +127,7 @@ async function readPage(env: Bindings, row: Row<Extraction>, config: ReaderConfi
    x.usage = added(x.usage, t.usage)
   } catch (e) {
    const message = e instanceof ReaderError ? e.message : 'The AI model gave no usable reading.'
-   Object.assign(mine, (mine.attempts ?? 0) >= ATTEMPTS ? { state: 'failed', problem: message } : { problem: message })
+   Object.assign(mine, { state: 'failed', problem: message })
   }
  }
  const { text, truncatedAt } = join(texts)
@@ -142,16 +146,19 @@ async function readDocument(env: Bindings, row: Row<Reading>, config: ReaderConf
  if (!config) return save(env, row, { ...r, state: blocked!.state, lease: null, problem: blocked!.line })
  const pages: { n: number; image: PageImage }[] = []
  for (const p of scanned) { const copy = await env.BLOBS.get(copyKey(r.checksum, p.n)); if (copy) pages.push({ n: p.n, image: { mediaType: p.image!.mediaType as PageImage['mediaType'], bytes: new Uint8Array(await copy.arrayBuffer()), width: p.image!.width, height: p.image!.height } }) }
+ const reservation = await reserveScan(env, r.checksum, config, 'fields')
+ if ('unavailable' in reservation) return save(env, row, { ...r, state: 'unavailable', problem: reservation.unavailable, lease: null })
+ const approved = reservation.config
  try {
-  const { proposals, usage } = await attempt(env,'chest:reader','provider.fields',r.document,{authority:'installation reader',provider:config.provider,model:config.model,version:r.version},()=>readFields({...config,accounting:{env,actor:'chest:reader',object:r.document}}, pages, wanted, schema!.payload.name))
+  const { proposals, usage } = await attempt(env,'chest:reader','provider.fields',r.document,{authority:'installation reader',provider:approved.provider,model:approved.model,version:r.version},()=>readFields({...approved,accounting:{env,actor:'chest:reader',object:r.document}}, pages, wanted, schema!.payload.name))
   const previousRows = (await env.DB.prepare("SELECT payload FROM chest_records WHERE kind='reading' AND json_extract(payload,'$.document')=? AND json_extract(payload,'$.state')='done' ORDER BY json_extract(payload,'$.createdAt') DESC").bind(r.document).all()).results as {payload:string}[]
   const versions = doc?.payload.versions ?? item!.payload.versions, retained = new Set(versions.slice(0,versions.findIndex(v => v.id === r.version)).map(v => v.id))
   const earlier = previousRows.map(x => JSON.parse(x.payload) as Reading).filter(x => retained.has(x.version) && x.schema === schema!.id)
   const changed = proposals.filter((p: Proposal) => !earlier.some(r => r.proposals.some(old => old.field === p.field && old.decision && old.found === p.found && JSON.stringify(old.value) === JSON.stringify(p.value))))
-  return save(env, row, { ...r, schema:schema!.id, schemaRevision:schema!.revision, unchanged:proposals.length-changed.length, state: 'done', proposals:changed, model: config.model, usage: added(r.usage, usage), lease: null, problem: null })
+  return save(env, row, { ...r, schema:schema!.id, schemaRevision:schema!.revision, unchanged:proposals.length-changed.length, state: 'done', proposals:changed, model: approved.model, usage: added(r.usage, usage), lease: null, problem: null })
  } catch (e) {
   const message = e instanceof ReaderError ? e.message : 'The AI model gave no usable reading.'
-  return save(env, row, { ...r, ...(r.attempts >= ATTEMPTS ? { state: 'failed' } : {}), lease: null, problem: message })
+  return save(env, row, { ...r, state: 'failed', lease: null, problem: message })
  }
 }
 // One unit of work on one record, under a lease so two Workers never read the same page at once.
@@ -163,12 +170,14 @@ async function unit(env: Bindings, found: Row<any>) {
   const row = await save<Extraction>(env, found, { ...x, pages, lease })
   if (!row) return
   if (!x.pages.length) return analyse(env, row)
-  if (waiting && (waiting.attempts ?? 0) >= ATTEMPTS) return save(env, row, { ...row.payload, pages: row.payload.pages.map(p => p.n === waiting.n ? { ...p, state: 'failed' as const, problem: p.problem ?? 'Reading this page stopped three times without finishing.' } : p), state: finished(row.payload.pages.map(p => p.n === waiting.n ? { ...p, state: 'failed' as const } : p)), lease: null })
+  if (waiting && (waiting.attempts ?? 0) >= 1) return save(env, row, { ...row.payload, pages: row.payload.pages.map(p => p.n === waiting.n ? { ...p, state: 'failed' as const, problem: p.problem ?? 'Reading this page was interrupted. A provider call may have been billed; automatic reading stopped.' } : p), state: finished(row.payload.pages.map(p => p.n === waiting.n ? { ...p, state: 'failed' as const } : p)), lease: null })
   const reader = await readerState(env)
   if (!('config' in reader)) return save(env, row, { ...row.payload, pages: x.pages, state: 'unavailable' in reader ? 'unavailable' : 'needs_key', problem: 'unavailable' in reader ? reader.unavailable : reader.missing, lease: null })
   return readPage(env, row, reader.config)
  }
- const r = found.payload as Reading, row = await save<Reading>(env, found, { ...r, state: 'reading', attempts: r.attempts + 1, lease })
+ const r = found.payload as Reading
+ if (r.attempts > 0) return save(env, found, { ...r, state: 'failed', lease: null, problem: 'Field reading was interrupted. A provider call may have been billed; automatic reading stopped.' })
+ const row = await save<Reading>(env, found, { ...r, state: 'reading', attempts: r.attempts + 1, lease })
  if (!row) return
  const reader = await readerState(env)
  return readDocument(env, row, 'config' in reader ? reader.config : null, 'config' in reader ? null : 'unavailable' in reader ? { state: 'unavailable', line: reader.unavailable } : { state: 'needs_key', line: reader.missing })
@@ -194,10 +203,10 @@ export function advance(env: Bindings, budget = 4000, fresh = false): Promise<vo
 }
 // After any signed-in request, without delaying its answer; a change (any POST) looks for new versions at once.
 export function kick(env: Bindings, request?: Request) { try { waitUntil(advance(env, 4000, request?.method === 'POST')) } catch (e) { console.error('chest reading', e) } }
-// A saved key restarts files that waited for one, and pages that failed at the provider; "Read again" on one file
-// restarts only that file.
+// Policy approval or a saved key resumes blocked reading. An explicit request on one original can also
+// resume failed work; every later provider call consumes its existing checksum allowance.
 export async function requeue(env: Bindings, checksum?: string) {
- const rows = (await env.DB.prepare(`SELECT * FROM chest_records WHERE kind IN ('extract','reading') AND json_extract(payload,'$.state') IN ('needs_key','unavailable','partial','failed')${checksum ? " AND (id=? OR json_extract(payload,'$.checksum')=?)" : ''}`).bind(...(checksum ? [extractId(checksum), checksum] : [])).all()).results.map(decode<any>)
+ const rows = (await env.DB.prepare(`SELECT * FROM chest_records WHERE kind IN ('extract','reading') AND json_extract(payload,'$.state') IN (${checksum ? "'needs_key','unavailable','partial','failed'" : "'needs_key','unavailable'"})${checksum ? " AND (id=? OR json_extract(payload,'$.checksum')=?)" : ''}`).bind(...(checksum ? [extractId(checksum), checksum] : [])).all()).results.map(decode<any>)
  for (const row of rows) {
   if (row.kind === 'extract') {
    const x = row.payload as Extraction, pages = x.pages.map(p => p.source !== 'text' && (p.state === 'failed' || p.state === 'waiting') ? { ...p, state: 'waiting' as const, attempts: 0, problem: undefined } : p)
@@ -238,5 +247,5 @@ export async function pageImageOf(env: Bindings, checksum: string, n: number): P
 export async function eraseReading(env: Bindings, checksum: string) {
  const x = await extraction(env, checksum)
  for (const p of x?.payload.pages ?? []) if (p.image) await env.BLOBS.delete(copyKey(checksum, p.n))
- await env.DB.prepare("DELETE FROM chest_records WHERE (id=? AND kind='extract') OR (kind='reading' AND json_extract(payload,'$.checksum')=?)").bind(extractId(checksum), checksum).run()
+ await env.DB.prepare("DELETE FROM chest_records WHERE (id=? AND kind='extract') OR (kind='reading' AND json_extract(payload,'$.checksum')=?) OR (kind='scan-allowance' AND id=?)").bind(extractId(checksum), checksum, `scan-allowance:${checksum}`).run()
 }

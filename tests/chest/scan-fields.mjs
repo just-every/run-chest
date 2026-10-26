@@ -19,6 +19,7 @@ export async function scanPeople(h){
  const viewer=await h.signIn('dana@example.test',true),outsider=await h.signIn('casey@example.test',true),space=await h.api('/spaces',owner,{name:'Harbor agreements'});
  await h.api(`/spaces/${space.id}/members`,owner,{members:[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:'dana@example.test',role:'viewer'}]});
  await h.api('/reading/settings',owner,{provider:'anthropic',model:'claude-sonnet-5-5',key:'synthetic-chest-42'});
+ await h.api('/reading/policy',owner,{enabled:true,maxCalls:61,maxOutput:2048,retention:'until_original_erased',providerRetention:'Verified synthetic provider: discarded after processing.',residency:'Verified synthetic provider region: US.',verified:true,confirm:true});
  return {owner,viewer,outsider,space};
 }
 export async function scannedItem(h,owner,space,{type='NDA',name='Harbor NDA.png',fields={},required=false}={}){

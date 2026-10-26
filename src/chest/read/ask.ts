@@ -9,9 +9,9 @@ import { askSources } from './ask-sources'
 import { askProvider } from './ask-provider'
 export async function askExecute(env: Bindings, s: Session, method: string, parts: string[], input: any) {
  if (parts[0] === 'ask' && parts[1] === 'policy') return method === 'GET' ? await policyView(env) : saveAskPolicy(env, s, input)
- if (parts[0] !== 'items' || !parts[1] || parts[2] !== 'ask') return undefined
- const key = parts[1]
- if (method === 'GET') { const data = await askSources(env, s, key, false); return { policy: await policyView(env), sources: data.sources.map(({ text, ...p }) => p), skipped: data.skipped } }
+ if (!['items', 'documents'].includes(parts[0]) || !parts[1] || parts[2] !== 'ask') return undefined
+ const key = parts[1], kind = parts[0] as 'items' | 'documents'
+ if (method === 'GET') { const data = await askSources(env, s, key, false, kind); return { policy: await policyView(env), sources: data.sources.map(({ text, ...p }) => p), skipped: data.skipped } }
  if (method !== 'POST') return undefined
  insist(input.approve === true, 'explicit_send_approval_required')
  insist(!input.tools && !input.actions, 'ask_tools_forbidden', 403)
@@ -24,7 +24,7 @@ export async function askExecute(env: Bindings, s: Session, method: string, part
  const state = await readerState(env); insist('config' in state, 'ask_provider_unavailable', 409)
  const rates = await maybe<CostRates>(env, 'admin-cost-rates', 'admin-cost-rates')
  insist(rates && rates.payload.aiProvider === state.config.provider && rates.payload.aiModel === state.config.model && !rates.payload.aiServiceTier && rates.payload.aiInputUsdPerMillion !== undefined && rates.payload.aiOutputUsdPerMillion !== undefined, 'matching_provider_quote_required', 409)
- const data = await askSources(env, s, key, input.includeHistory === true)
+ const data = await askSources(env, s, key, input.includeHistory === true, kind)
  insist(data.sources.length, 'no_readable_evidence', 409)
  const budget = Number(input.budgetUsd); insist(Number.isFinite(budget) && budget > 0 && budget <= policy.payload.maxUsd, 'run_budget_exceeds_policy')
  // UTF-8 bytes bound text token input conservatively; the fixed allowance covers the request schema and instructions.
@@ -40,16 +40,16 @@ export async function askExecute(env: Bindings, s: Session, method: string, part
  catch { return { run, state: 'failed', answer: '', claims: [], fields: [], uncertainty: 'The provider failed or returned unverifiable evidence. No answer was accepted. This attempt may still be billed.', cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed } }
  const providerNow = await readerState(env)
  if (!('config' in providerNow) || providerNow.config.key !== state.config.key || providerNow.config.endpoint !== state.config.endpoint || providerNow.config.model !== model) return { run, state: 'policy_changed', answer: '', claims: [], fields: [], uncertainty: 'The provider configuration changed. The answer was withheld.', cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed }
- const current = await askSources(env, s, key, input.includeHistory === true)
+ const current = await askSources(env, s, key, input.includeHistory === true, kind)
  const same = data.versions.every(v => current.versions.some(c => c.item === v.item && c.version === v.version && c.checksum === v.checksum))
  if (!same) return { run, state: 'access_changed', answer: '', claims: [], fields: [], uncertainty: 'Access or evidence changed during the request. The answer was withheld.', cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed }
  await commit(env, s, [], { fences, audits: [{ action: 'ask.completed', object: key, detail: { run, citations: result.output.claims.reduce((n, c) => n + c.citations.length, 0), policy: policyUsed } }] })
- return { run, state: 'done', ...result.output, sources: data.sources.map(({ text, ...p }) => ({ ...p, href: `/api/chest/items/${p.item}/bytes/${p.version}?download=true#page=${p.page}` })), skipped: data.skipped, usage: result.usage, cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed }
+ return { run, state: 'done', ...result.output, sources: data.sources.map(({ text, ...p }) => ({ ...p, href: `/api/chest/${p.kind}/${p.item}/bytes/${p.version}#page=${p.page}` })), skipped: data.skipped, usage: result.usage, cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed }
 }
 async function receipt(env: Bindings, run: string) {
  const row = await env.DB.prepare("SELECT detail FROM chest_audit WHERE action='provider.usage' AND object_id=? ORDER BY at DESC LIMIT 1").bind(run).first<{ detail: string }>()
  if (!row) return { usd: null, outcome: 'unknown', input: null, output: null }
- const r = JSON.parse(row.detail); return { usd: r.usd, outcome: r.outcome, input: r.input, output: r.output, provider: r.provider, model: r.model, quote: r.quote }
+ const r = JSON.parse(row.detail); return { usd: r.usd, outcome: r.outcome, status: r.status, input: r.input, output: r.output, provider: r.provider, model: r.model, quote: r.quote }
 }
 
 async function policyView(env: Bindings) { const row = await askPolicy(env); return row ? { ...row.payload, revision: row.revision } : null }

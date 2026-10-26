@@ -6,13 +6,15 @@ import {readFile} from 'node:fs/promises';
 import jpegJs from 'jpeg-js';
 import {harness} from './harness.mjs';
 import {pdf as textPdf} from './fixtures.mjs';
-const calls=[];let activeKey='test-only-model-key',providerFailure=false,providerRequests=0;
+const calls=[];let activeKey='synthetic-chest-100',providerFailure=false,providerRequests=0,outputAllowance=null;
+const scanPolicy={enabled:true,maxCalls:61,maxOutput:2048,retention:'until_original_erased',providerRetention:'Verified synthetic provider: requests discarded after processing.',residency:'Verified synthetic provider region: US.',verified:true,confirm:true};
 // The provider's side of the Messages API: it answers the schema Chest asks for. A transcription echoes the page Chest
 // names in its request, so each page's text shows it was read; a field reading reads every field it is asked for
 // except the last, which it reports as unreadable.
 async function anthropic(request){
  if(request.url!=='https://api.anthropic.com/v1/messages')return;
  providerRequests++;const body=await request.json(),content=body.messages[0].content,images=content.filter(p=>p.type==='image'),ask=content.filter(p=>p.type==='text').map(p=>p.text).join('\n');
+ if(outputAllowance!==null)assert.equal(body.max_tokens,outputAllowance,'the owner output allowance reaches each scan call');
  assert.ok(request.headers.get('x-api-key')===activeKey,'provider receives only the current configured key');assert.ok(!JSON.stringify(body).includes(activeKey),'the credential is absent from every model prompt');if(providerFailure)return Response.json({error:{message:'Reflected private request credential '+activeKey}},{status:429});assert.equal(body.model,'claude-sonnet-5-5');assert.ok(images.length>0&&images.every(p=>p.source.type==='base64'&&['image/jpeg','image/png'].includes(p.source.media_type)),'every page goes as an image');
  calls.push({schema:Object.keys(body.output_config.format.schema.properties),ask,images:images.map(p=>p.source.media_type)});
  const reply=value=>Response.json({type:'message',role:'assistant',stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify(value)}],usage:{input_tokens:1200,output_tokens:80}});
@@ -78,10 +80,17 @@ try{
   await h.api(`/documents/${record.id}/grants`,people.owner,{grants:[],private:true});assert.deepEqual(await library('ben','supplier evidence'),[]);
  });
  await check('SEARCH-001/002 scans',async()=>{
-  // The owner adds the key on the page; the waiting scan is read, and new scans and photos are read in the background.
-  await h.api('/reading/settings',people.ana,{provider:'anthropic',key:'x'},403);
-  const saved=await h.api('/reading/settings',people.owner,{provider:'anthropic',model:'claude-sonnet-5-5',key:'test-only-model-key'});assert.equal(saved.saved.keyHint,'…-key');assert.ok(!JSON.stringify(saved).includes('test-only-model-key'),'the key is never sent back');
+  // Saving a key alone grants no automatic scan authority. Only the owner can approve current provider terms.
+  await h.api('/reading/settings',people.ana,{provider:'anthropic',key:'synthetic-chest-100'},403);
+  const saved=await h.api('/reading/settings',people.owner,{provider:'anthropic',model:'claude-sonnet-5-5',key:activeKey});assert.ok(!JSON.stringify(saved).includes(activeKey),'the key is never sent back');
   const scan=(await h.api(`/items/${folder.id}`,people.ana)).children.find(c=>c.name==='NDA scan.pdf');
+  const beforeConsent=providerRequests,blocked=(await settled(`/items/${scan.id}/reading`,people.ana)).reading;
+  assert.equal(blocked.state,'unavailable');assert.match(blocked.problem,/owner approves/);assert.equal(providerRequests,beforeConsent,'a saved key never bypasses owner consent');
+  await h.api('/reading/policy',people.ana,scanPolicy,403);await h.api('/reading/policy',people.owner,{...scanPolicy,confirm:false},400);await h.api('/reading/policy',people.owner,{...scanPolicy,verified:false},400);await h.api('/reading/policy',people.owner,{...scanPolicy,retention:''},400);
+  assert.equal((await h.raw('/api/chest/reading/policy',null,scanPolicy)).status,401);
+  const crossPolicy=await h.fetch('/api/chest/reading/policy',{method:'POST',headers:{cookie:people.owner,origin:'https://synthetic-chest-origin.test','content-type':'application/json'},body:JSON.stringify(scanPolicy)});assert.equal(crossPolicy.status,403);
+  outputAllowance=scanPolicy.maxOutput;await h.api('/reading/policy',people.owner,scanPolicy);
+
   const two=await h.api('/items',people.ana,{parent:folder.id,type:'file',name:'Two pages.pdf',base64:b64(scannedPdf(2))});
   const photo=await h.api('/items',people.ana,{parent:folder.id,type:'file',name:'IMG_0412.HEIC',base64:b64(await readFile('tests/chest/photo.heic'))});
   for(const item of [scan,two,photo]){const r=(await settled(`/items/${item.id}/reading`,people.ana)).reading;assert.equal(r.state,'done',item.name);assert.ok(r.pages.every(p=>p.state==='done'&&p.image&&p.language==='en'))}
@@ -109,6 +118,25 @@ try{
   assert.ok(calls.some(c=>c.schema.includes('fields')&&c.ask.includes('- Effective date (date)')));
   // The record page shows the scan with the boxes drawn on it.
   const html=await (await h.raw(`/app/documents/${record.id}`,people.ana)).text();assert.match(html,/Fields read from this scan/);assert.match(html,new RegExp(`<image href="/api/chest/documents/${record.id}/pages/${version}/1"`));assert.match(html,/<rect x="/);
+  // OCR and schema reading share a durable allowance for identical retained bytes, including failures.
+  await h.api('/reading/policy',people.owner,{...scanPolicy,maxCalls:1});
+  const beforeFields=providerRequests,schemaBlocked=await h.api('/documents',people.owner,{title:'Allowance-blocked NDA',collection:collection.id,schema:nda.id,fields:{},owner:h.vars.OWNER_EMAIL,reviewer:h.vars.OWNER_EMAIL,filename:'same-original.pdf',base64:b64(scannedPdf(1))});
+  const blockedFields=(await settled(`/documents/${schemaBlocked.id}/reading`,people.owner)).versions[0].fields;assert.equal(blockedFields.state,'unavailable');assert.equal(blockedFields.proposals.length,0);assert.equal(providerRequests,beforeFields,'schema reads cannot bypass the checksum allowance spent on OCR');
+
+  const spentBefore=providerRequests,limitedBytes=scannedPdf(3),limited=await h.api('/items',people.ana,{parent:folder.id,name:'Limited scan.pdf',base64:b64(limitedBytes)});
+  const exhausted=(await settled(`/items/${limited.id}/reading`,people.ana)).reading;assert.equal(exhausted.state,'unavailable');assert.match(exhausted.problem,/allowance.*exhausted/);assert.equal(providerRequests,spentBefore+1);
+  await h.api(`/items/${limited.id}/reading`,people.ana,{});assert.equal((await settled(`/items/${limited.id}/reading`,people.ana)).reading.state,'unavailable');assert.equal(providerRequests,spentBefore+1,'a manual request cannot reset spent calls');
+  const duplicate=await h.api('/items',people.ana,{parent:folder.id,name:'Same retained scan.pdf',base64:b64(limitedBytes)});assert.equal((await settled(`/items/${duplicate.id}/reading`,people.ana)).reading.state,'unavailable');assert.equal(providerRequests,spentBefore+1,'identical originals share one allowance');
+  const retainedBytes=await h.raw(`/api/chest/items/${limited.id}/bytes/${limited.payload.current}`,people.ana);assert.equal(retainedBytes.status,200);assert.deepEqual(Buffer.from(await retainedBytes.arrayBuffer()),limitedBytes);
+  const oldDecisions=(await h.api(`/documents/${record.id}/reading`,people.ana)).versions[0].fields.proposals.filter(p=>p.decision);assert.equal(oldDecisions.length,3);assert.deepEqual((await h.api(`/documents/${record.id}`,people.ana)).payload.fields,after.payload.fields);
+  providerFailure=true;const failureBefore=providerRequests,failed=await h.api('/items',people.ana,{parent:folder.id,name:'Failed scan.pdf',base64:b64(scannedPdf(4))});
+  const failure=(await settled(`/items/${failed.id}/reading`,people.ana)).reading;assert.equal(failure.state,'unavailable');assert.equal(providerRequests,failureBefore+1);
+  await h.api(`/items/${failed.id}/reading`,people.ana,{});await settled(`/items/${failed.id}/reading`,people.ana);assert.equal(providerRequests,failureBefore+1,'failed calls remain charged without automatic retry');providerFailure=false;
+  // Turning off stops new scans while keeping prior text and human decisions visible.
+  await h.api('/reading/policy',people.owner,{enabled:false,confirm:true});const offBefore=providerRequests,off=await h.api('/items',people.ana,{parent:folder.id,name:'Policy off.pdf',base64:b64(scannedPdf(5))});assert.equal((await settled(`/items/${off.id}/reading`,people.ana)).reading.state,'unavailable');assert.equal(providerRequests,offBefore);
+  assert.equal((await h.api(`/documents/${record.id}/reading`,people.ana)).versions[0].fields.proposals.filter(p=>p.decision).length,oldDecisions.length);
+  outputAllowance=null;
+
  });
 
  await check('SECURITY-001 provider key custody',async()=>{

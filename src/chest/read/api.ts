@@ -3,7 +3,7 @@ import { assertContent } from '../content-security/scan'
 import { decideItemField } from './item-fields'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
-import { roles } from '../access'
+import { owner, roles } from '../access'
 import { get, recordAccess } from '../store'
 import { ChestError, insist, type Document } from '../model'
 import { allowed, context, demand, who } from '../files/access'
@@ -11,6 +11,7 @@ import { maybe } from '../files/repo'
 import { decide } from './decide'
 import { advance, extraction, kick, pageImageOf, readingId, READABLE, requestReading, requeue, type Extraction, type Reading } from './jobs'
 import { readerView, removeReader, saveReader, testReader } from './settings'
+import { saveScanPolicy, scanPolicy } from './scan-policy'
 // /api/chest routes for reading: progress and text of a version, the page images that boxes are drawn on, decisions
 // on read field values, and the owner's AI key card. Access is the same as the original's on every request.
 export type Summary = ReturnType<typeof summary>
@@ -27,6 +28,11 @@ async function pageCopy(env: Bindings, checksum: string, n: number) {
 }
 export async function readingExecute(env: Bindings, s: Session, method: string, parts: string[], input: any, url: URL): Promise<unknown> {
  const [head, key, sub, version, page] = parts, get_ = method === 'GET', post = method === 'POST'
+ if (head === 'reading' && key === 'policy' && !sub) {
+  owner(s)
+  if (get_) return (await scanPolicy(env))?.payload ?? { enabled: false }
+  if (post) { const policy = await saveScanPolicy(env, s, input); if (policy.enabled) { await requeue(env); kick(env) } return policy }
+ }
  if (head === 'reading' && key === 'settings') {
   if (get_ && !sub) return readerView(env)
   if (post && !sub) return saveReader(env, s, input)

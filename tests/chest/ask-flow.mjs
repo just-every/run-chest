@@ -34,11 +34,14 @@ export async function askSetup(h,{live=false}={}){
  await add('Unreadable attachment.bin',new Uint8Array([0,1,2,0,4]));
  const pdfFile=await h.api('/items',owner,{parent:folder.id,name:'Harbor signed summary.pdf',base64:Buffer.from(pdf('Harbor NDA effective date 2026-04-09')).toString('base64')});
  for(let n=0;n<60;n++){const r=await h.api(`/items/${pdfFile.id}/reading?work=1`,owner);if(r.reading?.state==='done')break;await new Promise(r=>setTimeout(r,50))}
+ const collection=await h.api('/collections',owner,{name:'Vendor compliance records'}),schema=await h.api('/schemas',owner,{name:'Supplier agreement record',fields:[]});
+ const record=await h.api('/documents',owner,{collection:collection.id,schema:schema.id,title:'Harbor vendor terms',owner:h.vars.OWNER_EMAIL,reviewer:h.vars.OWNER_EMAIL,filename:'Harbor record.txt',base64:Buffer.from('The effective date is 2026-04-09.').toString('base64')});
+ await h.api(`/documents/${record.id}/grants`,owner,{grants:[{principal:'dana@example.test',role:'reader'}]});
  const model=live?process.env.CHEST_LIVE_MODEL:'claude-haiku-5-5';
  await h.api('/reading/settings',owner,{provider:'anthropic',model,workspace:live?process.env.CHEST_LIVE_WORKSPACE:'',key:live?process.env.CHEST_LIVE_KEY:'synthetic-chest-41'});
  await h.api('/administration/costs',owner,{confirm:true,provider:'Owner network',quote:'Authorized synthetic test quote',storageUsdPerGbMonth:0,egressUsdPerGb:0,aiProvider:'anthropic',aiModel:model,aiInputUsdPerMillion:live?Number(process.env.CHEST_LIVE_INPUT_RATE):1,aiOutputUsdPerMillion:live?Number(process.env.CHEST_LIVE_OUTPUT_RATE):5});
  const policy=await h.api('/ask/policy',owner,{confirm:true,enabled:true,maxUsd:.05,maxOutput:1024,providerRetention:'Synthetic documents approved for this provider test; no private records',residency:'Owner-approved provider test endpoint'});
- return {owner,viewer,folder,file,hidden,pdfFile,policy};
+ return {owner,viewer,folder,file,hidden,pdfFile,record,policy};
 }
 export async function askFlow(){
  const h=await askHarness();
@@ -46,6 +49,8 @@ export async function askFlow(){
   const data=await askSetup(h),{owner,viewer,folder,file,hidden,policy}=data,send={question:'Which effective date is evidenced? Show contradictory revisions.',approve:true,includeHistory:true,budgetUsd:.05,policyAt:policy.revision};
   await h.api('/ask/policy',viewer,{confirm:true,enabled:true},403);
   const answer=await h.api(`/items/${folder.id}/ask`,viewer,send);assert.equal(answer.state,'done');assert.ok(answer.claims.length);assert.ok(answer.sources.some(p=>p.item===file.id&&p.version===file.payload.current));assert.ok(!JSON.stringify(answer).includes('Private valuation'));assert.ok(answer.skipped.some(p=>p.reason.startsWith('No access')));assert.ok(answer.skipped.some(p=>p.reason==='Unreadable'));assert.ok(answer.uncertainty);assert.ok(answer.cost.usd>0);assert.equal(answer.cost.input,700);
+  await h.api(`/documents/${data.record.id}/grants`,owner,{grants:[]});await h.api(`/documents/${data.record.id}/ask`,viewer,send,404);
+  await h.api(`/documents/${data.record.id}/grants`,owner,{grants:[{principal:'dana@example.test',role:'reader'}]});const library=await h.api(`/documents/${data.record.id}/ask`,viewer,send);assert.equal(library.state,'done');assert.ok(library.sources.every(s=>s.kind==='documents'&&s.item===data.record.id));
   const extracted=await h.api(`/items/${folder.id}/ask`,viewer,{...send,fields:['Effective date']});assert.equal(extracted.fields[0].value,'2026-04-09');assert.ok(extracted.fields[0].citations.length);
   const before=h.askRequests();await h.api(`/items/${folder.id}/ask`,viewer,{...send,budgetUsd:.000001},409);await h.api(`/items/${folder.id}/ask`,viewer,{...send,approve:false},400);await h.api(`/items/${folder.id}/ask`,viewer,{...send,tools:['delete']},403);await h.api(`/items/${hidden.id}/ask`,viewer,send,403);assert.equal(h.askRequests(),before,'refusals incur no model call');
   h.askMode('injection');const denied=await h.api(`/items/${folder.id}/ask`,viewer,send);assert.equal(denied.state,'failed');assert.equal(denied.answer,'');assert.deepEqual(denied.claims,[]);assert.ok(denied.cost.usd>0,'invalid model output still has its real provider charge');assert.ok((await h.api(`/items/${folder.id}`,viewer)).children.some(p=>p.id===file.id),'document instructions cannot delete content');
