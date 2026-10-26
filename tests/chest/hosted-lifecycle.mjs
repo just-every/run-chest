@@ -21,6 +21,8 @@ assert.notEqual(ownerEmail.toLowerCase(),memberEmail,'the owner and invited memb
 const inbox=await fetch('https://rer-qa-inbox.runeditrun.workers.dev/receipts?limit=1',{headers:{authorization:`Bearer ${process.env.QA_INBOX_RECEIPT_TOKEN}`}});
 assert.equal(inbox.status,200,'QA_INBOX_RECEIPT_TOKEN can read delivered mail');await inbox.body?.cancel();
 const environment='sx-i812-'+randomUUID().slice(0,8),resources=await cloudResources(environment);
+const runId=process.env.CHEST_HOSTED_RUN_ID??environment;
+assert.match(runId,/^[a-z0-9][a-z0-9-]{0,79}$/,'use a public journey identifier');
 const directory=await mkdtemp(join(tmpdir(),'chest-hosted-lifecycle-'));await chmod(directory,0o700);
 const backup=join(directory,'backup'),env=deploymentEnvironment(ownerEmail),mails=[];
 env.CHEST_ACCOUNTING_DIR=join(directory,'accounting');
@@ -73,10 +75,12 @@ try {
  failure=String(error.message).replace(/https?:\/\/[^\s"<>]+/g,'[address withheld]');
  for(const value of Object.values(env))if(typeof value==='string'&&value.length>6)failure=failure.replaceAll(value,'[withheld]');
 } finally {
- await owner?.context.close();await member?.context.close();await browser?.close();
- try {await resources.remove(env);console.log('Final removal read back no Worker, database or bucket.');}
- finally {await rm(directory,{recursive:true,force:true});}
+ try {await owner?.context.close();await member?.context.close();await browser?.close();}
+ finally {
+  try {await resources.remove(env);console.log('Final removal read back no Worker, database or bucket.');}
+  finally {await rm(directory,{recursive:true,force:true});}
+ }
 }
+console.log(JSON.stringify({journey:'Hosted Chest email backup restore and removal',runId,head,environment,mailReceiptIds:mails,originalBytes:expected?.size,originalSha256:expected?.checksum,resourcesRemoved:true,passed}));
 if(failure)throw Error(failure);
 assert.ok(passed);
-console.log(JSON.stringify({journey:'Hosted Chest email backup restore and removal',head,environment,mailReceiptIds:mails,originalBytes:expected.size,originalSha256:expected.checksum,resourcesRemoved:true}));

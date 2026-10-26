@@ -181,7 +181,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "e81d5358a43413da4302c6f31209136417d38bdd81c016393914040a5e444c02",
+      "sha256": "a188c0892a3bf38d6e51d86d3228416953bbd7256c81fa7ea5ef7c601bb0bd14",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -209,7 +209,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "c7344b0d43a614113ac54f9015efe11d2cd68031d895bfdfdf188d4710c1f4bc",
+      "sha256": "86f068f9e5fbf93579014ed553b80935ddfaeb165276d07ca7940181d2729b96",
       "executable": false
     },
     "DEMO.md": {
@@ -245,7 +245,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "a848754a8cca77991f97c60388ca822fe107a18d5f738dd2873d5d6fe108b7fd",
+      "sha256": "638e26cf84d74253e1bb3ee168f86d8bcb6b61042cbcbaace700de4e59e43a4e",
       "executable": false
     },
     "docs/collections.md": {
@@ -4781,7 +4781,7 @@
       "executable": false
     },
     "tests/chest/hosted-lifecycle.mjs": {
-      "sha256": "8cf82b3ec47c84ccfafe4e334bed65f24eb7cc8277015a87447aefdb3dd2663b",
+      "sha256": "aae5701c076e08ae7e672878e8aab3423f14eeda9a7509e8eaad87ae39cfb42b",
       "executable": false
     },
     "tests/chest/hosted-mail.mjs": {
