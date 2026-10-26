@@ -4,9 +4,13 @@ import {policy,transient} from './policy.mjs';
 export function chestPortability() {
  const local=localPortability({database:'foundation',buckets:{originals:'BLOBS'},policy,transient});
  return {...local,remote:true,
+  async export(context) {
+   if(context.target!=='remote')return local.export(context);
+   return (await import('./remote.mjs')).transferRemote(context,'export');
+  },
   async import(context) {
    if(context.target!=='remote')return local.import(context);
-   return (await import('./remote.mjs')).restoreRemote(context);
+   return (await import('./remote.mjs')).transferRemote(context,'import');
   },
  };
 }

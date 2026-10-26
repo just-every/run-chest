@@ -12,9 +12,16 @@ function metadataHeaders({httpMetadata={},customMetadata={}}={}) {
 export function objectBinding(client) {
  const send=client.request;
  return {
-  async list({prefix='',cursor,limit=1000}={}) {
+  async list({prefix='',cursor,limit=1000,include=[]}={}) {
    const xml=await (await send('GET','',{'list-type':'2',prefix,'max-keys':String(limit),...(cursor?{'continuation-token':cursor}:{})})).text();
    const objects=[...xml.matchAll(/<Contents>[\s\S]*?<Key>([^<]*)<\/Key>[\s\S]*?<Size>(\d+)<\/Size>[\s\S]*?<\/Contents>/g)].map(match=>({key:decode(match[1]),size:Number(match[2])}));
+   if(include.length)for(const object of objects){
+    const head=await send('HEAD',object.key);object.etag=etag(head);object.httpMetadata={};object.customMetadata={};
+    for(const [field,name]of Object.entries({contentType:'content-type',contentLanguage:'content-language',contentDisposition:'content-disposition',contentEncoding:'content-encoding',cacheControl:'cache-control',cacheExpiry:'expires'})){
+     const value=head.headers.get(name);if(value!==null)object.httpMetadata[field]=field==='cacheExpiry'?new Date(value):value;
+    }
+    for(const [name,value]of head.headers)if(name.startsWith('x-amz-meta-'))object.customMetadata[name.slice(11)]=value;
+   }
    const truncated=/<IsTruncated>true<\/IsTruncated>/.test(xml),next=/<NextContinuationToken>([^<]*)/.exec(xml)?.[1];
    if(truncated&&!next)throw Error('Hosted restore received an invalid object cursor.');
    return {objects,truncated,...(next?{cursor:decode(next)}:{})};
