@@ -4833,7 +4833,7 @@
       "executable": false
     },
     "tests/chest/hosted-screens.mjs": {
-      "sha256": "e7946f96d047dc34b337bd92357bed1ef69f97c8101ccf9b2833ad1f1ce16819",
+      "sha256": "3e14a6d771d8924341a7f2d4db43343e64a0ec3dee891c4746f80a4357c20801",
       "executable": false
     },
     "tests/chest/integration-client.mjs": {

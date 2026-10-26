@@ -18,7 +18,7 @@ export async function hostedScreens(page,origin,expected,actor) {
    await page.screenshot({path:`test-results/${width}-hosted-${actor}-${name}.png`,fullPage:true});
    await tooltips(page,width,`hosted-${actor}-${name}`);
   }
-  const request=await page.goto(expected.requestUrl);
+  const request=await page.goto(new URL(new URL(expected.requestUrl).pathname,origin).href);
   assert.equal(request.status(),200,'the restored public file request opens');
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`public file request fits ${width}`);
   await page.screenshot({path:`test-results/${width}-hosted-${actor}-public-request.png`,fullPage:true});
