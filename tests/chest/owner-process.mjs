@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {readFile,unlink,mkdir} from 'node:fs/promises';
+import {userInfo} from 'node:os';
 import {setTimeout as delay} from 'node:timers/promises';
+
+export function browserHome() {
+ process.env.CHEST_TEST_INSTALLER_HOME=process.env.HOME;
+ process.env.HOME=userInfo().homedir;
+}
 
 export async function receiveSecrets() {
  const pipe=process.argv[2];assert.match(pipe,/^\/tmp\/sx-chest-i813-[a-z-]+\.pipe$/);
@@ -12,7 +18,7 @@ export async function receiveSecrets() {
 }
 
 export function running(args,env=process.env) {
- const child=spawn('pnpm',['exec','rer',...args],{env:{...env,CI:'true',WRANGLER_SEND_METRICS:'false'},detached:true,stdio:['ignore','pipe','pipe']});
+ const child=spawn('pnpm',['exec','rer',...args],{env:{...env,HOME:env.CHEST_TEST_INSTALLER_HOME??env.HOME,CI:'true',WRANGLER_SEND_METRICS:'false'},detached:true,stdio:['ignore','pipe','pipe']});
  let output='';child.stdout.on('data',chunk=>{output=(output+chunk).slice(-4*1024*1024)});child.stderr.on('data',chunk=>{output=(output+chunk).slice(-4*1024*1024)});
  const closed=new Promise((resolve,reject)=>{child.once('error',reject);child.once('close',resolve)});
  return {child,closed,output:()=>output,async stop(){if(child.exitCode===null&&child.signalCode===null)globalThis.process.kill(-child.pid,'SIGTERM');await closed;}};

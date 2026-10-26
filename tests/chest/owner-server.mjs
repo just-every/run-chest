@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {chromium} from '@playwright/test';
-import {receiveSecrets,running,ready,rerCommand,waitForFile} from './owner-process.mjs';
+import {browserHome,receiveSecrets,running,ready,rerCommand,waitForFile} from './owner-process.mjs';
 import {computerJourney} from './owner-computer.mjs';
 import {ownerTunnel} from './owner-tunnel.mjs';
 
-assert.equal(process.platform,'linux');await receiveSecrets();
+assert.equal(process.platform,'linux');await receiveSecrets();browserHome();
 const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 let browser,tunnel,server;
 try {
