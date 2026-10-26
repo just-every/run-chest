@@ -1,3 +1,4 @@
+import { withOutboundPolicy } from './chest/outbound'
 import { wopiResponse } from './chest/office/wopi'
 import { integrationsResponse } from './chest/integrations/http'
 import { sweepIntegrations } from './chest/integrations/webhooks'
@@ -36,7 +37,7 @@ function documentResponse(response: Response): Response {
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
 }
 
-export default withDemo({
+export default withDemo(withOutboundPolicy({
   async scheduled(_controller, original) { await Promise.all([sweepIntegrations(runtimeBindings(original)),sweepBackups(runtimeBindings(original)),collectionSweep(runtimeBindings(original)),sweepLinkRepairs(runtimeBindings(original)),sweepAgents(runtimeBindings(original)),sweepSignatures(runtimeBindings(original))]) },
   async email(message, env) { await receiveIntake(runtimeBindings(env), message) },
   async fetch(request, original, execution) {
@@ -59,4 +60,4 @@ export default withDemo({
     if (product) { execution.waitUntil(sweepIntegrations(env)); return documentResponse(product) }
     return documentResponse(await dispatch(request, () => api.fetch(request, env, execution), () => start.fetch(request)))
   },
-} satisfies ExportedHandler<Bindings>, { seed: seedDemo })
+} satisfies ExportedHandler<Bindings>), { seed: seedDemo })

@@ -12,7 +12,7 @@ try {
  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
  await computerJourney(browser,49717);await browser.close();browser=null;
  tunnel=await ownerTunnel(49718);
- const env={...process.env,AUTH_ORIGIN:tunnel.origin,MAIL_PROVIDER:'sendgrid',MAIL_FROM:process.env.SENDGRID_FROM_EMAIL,CHEST_SERVER_PORT:'49718'};
+ const env={...process.env,AUTH_ORIGIN:tunnel.origin,MAIL_PROVIDER:'sendgrid',MAIL_FROM:process.env.SENDGRID_FROM_EMAIL,CHEST_SERVER_PORT:'49718',CHEST_OUTBOUND_HOSTS:'api.sendgrid.com'};
  server=running(['run','server'],env);await ready(server,'CHEST_SERVER_READY');
  assert.equal((await fetch('http://127.0.0.1:49718/health',{headers:{host:'own-test.run-chest.com'}})).status,200);
  for(const path of ['/__dev/key','/auth/dev/enter','/cdn-cgi/explorer','/exports/server.rer'])assert.equal((await fetch('http://127.0.0.1:49718'+path,{headers:{host:'own-test.run-chest.com'}})).status,404);

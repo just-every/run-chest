@@ -113,3 +113,11 @@ The server needs no Run Edit Run connection while serving. Installation and
 updates acquire published dependencies; mail goes directly to your chosen
 provider. Keep the runtime's provider access available when blocking other
 outbound destinations.
+
+To restrict outbound fetch requests, set `CHEST_OUTBOUND_HOSTS` to a comma-separated
+list of exact provider hostnames, for example `api.sendgrid.com`. Every other
+host is refused, and allowed requests refuse redirects. Leave it unset for
+ordinary provider access. The same setting works with `rer deploy` on Cloudflare.
+Keep every provider needed by your chosen capabilities in the list; a refused
+provider action reports its real failure. This boundary covers Chest's current
+fetch transports; future transports inherit OWN-001's independence obligation.

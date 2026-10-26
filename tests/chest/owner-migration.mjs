@@ -12,11 +12,13 @@ import {hostedScreens} from './hosted-screens.mjs';
 import {Readable} from 'node:stream';
 import {createReadStream} from 'node:fs';
 import {diffArchives} from '@runeditrun/rer/internal/modules/portability/diff.mjs';
+import {proveIndependent} from './owner-egress.mjs';
 
 assert.equal(process.platform,'darwin');await receiveSecrets();
 const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const ownerEmail=process.env.TEST_MAIL_TO,memberEmail='qa-inbox-2@runeditrun.com',from=process.env.SENDGRID_FROM_EMAIL;
 const origin='https://own-test.run-chest.com',environment='sx-i813-'+head.slice(0,8),env=deploymentEnvironment(ownerEmail);
+env.CHEST_OUTBOUND_HOSTS='api.sendgrid.com';
 const resources=await cloudResources(environment);let browser,owner,member,expected,beforeOwner,beforeMember,cloudOrigin,passed=false;
 const mails=[];
 try {
@@ -31,6 +33,7 @@ try {
  try{await page.goto(invitation.url);await page.getByRole('button',{name:'Confirm',exact:true}).click();await page.waitForURL('**/app/files');}catch{throw Error('Delivered server invitation did not establish the staff identity.');}
  const memberClient=hostedClient(origin,context);
  expected=await createHostedData(ownerClient,memberClient,ownerEmail,memberEmail,environment);
+ await proveIndependent(ownerClient,expected.folder,'server');
  beforeOwner=await snapshotHostedData(ownerClient,expected);beforeMember=await snapshotHostedData(memberClient,expected);
  await reconcileHostedOriginals(ownerClient,expected);await reconcileHostedOriginals(memberClient,expected);
  await hostedScreens(owner.page,origin,expected,'server-owner');await hostedScreens(member.page,origin,expected,'server-member');
@@ -53,5 +56,6 @@ try {
  assert.deepEqual(await snapshotHostedData(cloudMember,expected),beforeMember);
  await reconcileHostedOriginals(cloudOwner,expected);await reconcileHostedOriginals(cloudMember,expected);
  await hostedScreens(owner.page,cloudOrigin,expected,'cloud-owner');await hostedScreens(member.page,cloudOrigin,expected,'cloud-member');
+ await proveIndependent(cloudOwner,expected.folder,'cloud');
  console.log('OWN_CLOUD_RECONCILED '+JSON.stringify({head,environment,originalSha256:expected.checksum,mailReceiptIds:mails}));passed=true;
 }finally{await owner?.context.close();await member?.context.close();await browser?.close();await resources.remove(env);console.log('OWN_CLOUD_REMOVED '+JSON.stringify({environment,passed}));}
