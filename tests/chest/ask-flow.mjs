@@ -2,13 +2,13 @@ import assert from 'node:assert/strict';
 import {harness} from './harness.mjs';
 import {pdf} from './fixtures.mjs';
 export async function askHarness({live=false}={}){
- let mode='answer',requests=0,pending,arrived;const arrival=new Promise(resolve=>{arrived=resolve});
+ let mode='answer',requests=0,pending,arrived;const liveDiagnostics=[];const arrival=new Promise(resolve=>{arrived=resolve});
  const h=await harness({edge:async request=>{
   if(request.url!=='https://api.anthropic.com/v1/messages')return;
   requests++;
   const body=await request.clone().json();
   assert.equal(body.tools,undefined,'no provider tool capabilities');
-  if(live)return fetch(request);
+  if(live){const response=await fetch(request),r=await response.clone().json().catch(()=>null);let answer;try{answer=JSON.parse(r?.content?.find(p=>p.type==='text')?.text)}catch{};const evidence=JSON.parse(body.messages[0].content);liveDiagnostics.push({status:response.status,stop:r?.stop_reason,blocks:r?.content?.map(p=>p.type),properties:answer?Object.keys(answer):[],answerConsistent:answer?.answer===answer?.claims?.map(c=>c.text).join('\n\n'),quotesValid:answer?.claims?.every(c=>c.citations?.every(q=>evidence.passages.some(p=>p.id===q.source&&p.text.includes(q.quote)))),fieldNames:answer?.fields?.map(f=>f.name),usage:r?.usage?{input:r.usage.input_tokens,output:r.usage.output_tokens}:null});return response;}
   const evidence=JSON.parse(body.messages[0].content),sources=evidence.passages;
   assert.ok(!JSON.stringify(body).includes('Confidential acquisition price'),'inaccessible passages never reach the provider');
   if(mode==='wait'){await new Promise(resolve=>{pending=resolve;arrived()})}
@@ -19,7 +19,8 @@ export async function askHarness({live=false}={}){
   const output={answer:claims.map(c=>c.text).join('\n\n'),uncertainty:dated.some(p=>p.text.includes('2026-03-04'))&&dated.some(p=>p.text.includes('2026-04-09'))?'Retained revisions disagree; confirm which applies.':'',claims,fields:evidence.fields.map(name=>({name,value:name==='Effective date'?'2026-04-09':null,citations:name==='Effective date'?citations:[]}))};
   return Response.json({model:body.model,stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify(output)}],usage:{input_tokens:700,output_tokens:160}});
  }});
- h.askMode=value=>{mode=value};h.askRequests=()=>requests;h.releaseAsk=()=>pending?.();h.askPending=()=>!!pending;h.waitForAsk=()=>arrival;const close=h.close;h.close=async()=>{mode='answer';pending?.();await close()};
+ if(process.env.CHEST_ASK_TRACE==='1'){const api=h.api;h.api=async(...args)=>{console.log('ASK_START',args[0]);const result=await api(...args);console.log('ASK_END',args[0]);return result}}
+ h.liveDiagnostics=()=>liveDiagnostics;h.askMode=value=>{mode=value};h.askRequests=()=>requests;h.releaseAsk=()=>pending?.();h.askPending=()=>!!pending;h.waitForAsk=()=>arrival;const close=h.close;h.close=async()=>{mode='answer';pending?.();await close()};
  return h;
 }
 export async function askSetup(h,{live=false}={}){

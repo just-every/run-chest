@@ -11,6 +11,7 @@ for (const panel of document.querySelectorAll('[data-ask]')) {
  });
  const line = (tag, value, parent = output) => { const e = document.createElement(tag); e.textContent = value; parent.append(e); return e; };
  form.querySelector('[name=budgetUsd]').step = '0.001';
+ form.addEventListener('input', event => { if (event.target.name !== 'approve') form.querySelector('[name=approve]').checked = false; });
  form.addEventListener('submit', async event => {
   event.preventDefault(); output.replaceChildren(); const button = form.querySelector('button'); button.disabled = true; line('p', 'Reading approved evidence…');
   try {
@@ -26,6 +27,6 @@ for (const panel of document.querySelectorAll('[data-ask]')) {
    const cost = result.cost; if (result.state !== 'done' && cost?.status) line('p', `Provider response: ${cost.status}`); line('p', `Provider cost: ${cost?.usd === null || cost?.usd === undefined ? 'unknown; the provider may bill this attempt' : `estimated USD ${cost.usd.toFixed(6)}`} · ${cost?.input ?? 'unknown'} input tokens · ${cost?.output ?? 'unknown'} output tokens`);
    if (result.policy) line('p', `${result.policy.provider} · ${result.policy.model} · retention: ${result.policy.providerRetention} · residency: ${result.policy.residency}`);
   } catch { output.replaceChildren(); line('p', 'The request did not complete. Its provider cost may be unknown. No answer was accepted.'); }
-  finally { button.disabled = false; }
+  finally { button.disabled = false; form.querySelector('[name=approve]').checked = false; }
  });
 }
