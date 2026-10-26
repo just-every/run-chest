@@ -6,7 +6,7 @@ import {createServer} from 'node:http';
 import {join,resolve} from 'node:path';
 import {chromium} from '@playwright/test';
 import {computerJourney} from './owner-computer.mjs';
-import {browserHome,rerCommand} from './owner-process.mjs';
+import {browserHome,rerCommand,waitForFile} from './owner-process.mjs';
 
 assert.equal(process.platform,'darwin');
 process.env.TEST_MAIL_TO='synthetic-chest-1@example.test';await mkdir('test-results',{recursive:true});
@@ -31,5 +31,7 @@ try {
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'installation documentation fits its viewport');
   await page.screenshot({path:`test-results/owner-docs-${slug}-${width}.png`,fullPage:true});
  }
+ console.log('OWN_PREPARATION_PAGES '+process.cwd());
+ if(process.env.CHEST_COLLECT_SCREENS==='1')await waitForFile('test-results/owner-pages-collected',300000);
  console.log('OWN_PREPARATION_PASS macOS owner install, touched journeys and documentation at 1440 and 390.');
 }finally{await browser.close();if(server)await new Promise(resolve=>server.close(resolve));}
