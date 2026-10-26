@@ -3,6 +3,7 @@ import type { Session } from '../../modules/operator-auth/index.mjs'
 import { insist, id } from '../model'
 import { commit, maybe } from '../files/repo'
 import type { CostRates } from '../administration/costs'
+import { digest } from '../blobs'
 import { askPolicy, saveAskPolicy } from './ask-policy'
 import { readerState } from './settings'
 import { askSources } from './ask-sources'
@@ -22,6 +23,7 @@ export async function askExecute(env: Bindings, s: Session, method: string, part
  const policy = await askPolicy(env); insist(policy?.payload.enabled, 'ask_disabled_by_owner', 409)
  insist(input.policyAt === policy.revision, 'ask_policy_changed_review_again', 409)
  const state = await readerState(env); insist('config' in state, 'ask_provider_unavailable', 409)
+ insist(policy.payload.provider === state.config.provider && policy.payload.model === state.config.model && policy.payload.workspace === state.config.workspace && policy.payload.readerRevision === state.config.readerRevision && policy.payload.endpointHash === await digest(new TextEncoder().encode(state.config.endpoint)), 'ask_provider_policy_review_required', 409)
  const rates = await maybe<CostRates>(env, 'admin-cost-rates', 'admin-cost-rates')
  insist(rates && rates.payload.aiProvider === state.config.provider && rates.payload.aiModel === state.config.model && !rates.payload.aiServiceTier && rates.payload.aiInputUsdPerMillion !== undefined && rates.payload.aiOutputUsdPerMillion !== undefined, 'matching_provider_quote_required', 409)
  const data = await askSources(env, s, key, input.includeHistory === true, kind)
@@ -33,17 +35,18 @@ export async function askExecute(env: Bindings, s: Session, method: string, part
  insist(reserve <= budget, 'run_budget_too_small', 409)
  const run = `ask:${id()}`, model = state.config.model, policyUsed = { ...policy.payload, provider: state.config.provider, model, tools: 'none', localRetention: 'Questions and answers are not stored', quote: rates.payload.quote, rateAt: rates.payload.updatedAt }
  const fences = [...data.fences, policy, rates]
- await commit(env, s, [], { fences, audits: [{ action: 'ask.approved', object: key, detail: { run, versions: data.versions, budgetUsd: budget, reservedUsd: reserve, policy: policyUsed } }] })
+ const providerFence = { sql: 'INSERT INTO chest_assert(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM chest_reader WHERE id=1 AND provider=? AND endpoint=? AND model=? AND workspace=? AND updated_at=? AND key_sealed=?) THEN 1 ELSE 0 END', params: [state.config.provider, state.config.endpoint, model, state.config.workspace, state.config.readerRevision ?? null, state.config.authority ?? null] }
+ await commit(env, s, [], { fences, preconditions: [providerFence], audits: [{ action: 'ask.approved', object: key, detail: { run, versions: data.versions, budgetUsd: budget, reservedUsd: reserve, policy: policyUsed } }] })
  const accounting = { env, actor: s.operator.email, object: run }
  let result
  try { result = await askProvider({ ...state.config, accounting }, question, data.sources, fields, policy.payload.maxOutput) }
  catch { return { run, state: 'failed', answer: '', claims: [], fields: [], uncertainty: 'The provider failed or returned unverifiable evidence. No answer was accepted. This attempt may still be billed.', cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed } }
  const providerNow = await readerState(env)
- if (!('config' in providerNow) || providerNow.config.key !== state.config.key || providerNow.config.endpoint !== state.config.endpoint || providerNow.config.model !== model) return { run, state: 'policy_changed', answer: '', claims: [], fields: [], uncertainty: 'The provider configuration changed. The answer was withheld.', cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed }
+ if (!('config' in providerNow) || providerNow.config.key !== state.config.key || providerNow.config.endpoint !== state.config.endpoint || providerNow.config.model !== model || providerNow.config.workspace !== state.config.workspace || providerNow.config.readerRevision !== state.config.readerRevision) return { run, state: 'policy_changed', answer: '', claims: [], fields: [], uncertainty: 'The provider configuration changed. The answer was withheld.', cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed }
  const current = await askSources(env, s, key, input.includeHistory === true, kind)
  const same = data.versions.every(v => current.versions.some(c => c.item === v.item && c.version === v.version && c.checksum === v.checksum))
  if (!same) return { run, state: 'access_changed', answer: '', claims: [], fields: [], uncertainty: 'Access or evidence changed during the request. The answer was withheld.', cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed }
- await commit(env, s, [], { fences, audits: [{ action: 'ask.completed', object: key, detail: { run, citations: result.output.claims.reduce((n, c) => n + c.citations.length, 0), policy: policyUsed } }] })
+ await commit(env, s, [], { fences, preconditions: [providerFence], audits: [{ action: 'ask.completed', object: key, detail: { run, citations: result.output.claims.reduce((n, c) => n + c.citations.length, 0), policy: policyUsed } }] })
  return { run, state: 'done', ...result.output, sources: data.sources.map(({ text, ...p }) => ({ ...p, href: `/api/chest/${p.kind}/${p.item}/bytes/${p.version}#page=${p.page}` })), skipped: data.skipped, usage: result.usage, cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed }
 }
 async function receipt(env: Bindings, run: string) {
