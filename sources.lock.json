@@ -2305,7 +2305,7 @@
       "executable": false
     },
     "src/chest/outbound.ts": {
-      "sha256": "d155a0601ac1b6d5071d8d0f0679705d81052564c2337c69f022f69f23308b25",
+      "sha256": "a5d2326311352a89086608350dadb8d3bdaac80029a67bbe8c6e4c0b4159558e",
       "executable": false
     },
     "src/chest/quota/api.ts": {
@@ -4929,7 +4929,7 @@
       "executable": false
     },
     "tests/chest/owner-prepare.mjs": {
-      "sha256": "cebe3e57c0b9c7afb3802b0fd3b9aa12b9649e532d1e1312de2a6973112242bd",
+      "sha256": "de38fd39cb74c6a029dff0e910f08e982062fdaf8919317047183a891f88c4d5",
       "executable": false
     },
     "tests/chest/owner-process.mjs": {

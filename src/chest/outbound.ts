@@ -10,7 +10,13 @@ globalThis.fetch = (input, init) => {
  if (!allowed) return networkFetch(input, init)
  const request = new Request(input, init)
  if (!allowed.has(new URL(request.url).hostname.toLowerCase())) throw new ChestError('outbound_host_denied', 503)
- return networkFetch(request, { redirect: 'error' })
+ return networkFetch(request, { redirect: 'manual' }).then(async response => {
+  if (response.status >= 300 && response.status < 400) {
+   await response.body?.cancel()
+   throw new ChestError('outbound_redirect_denied', 503)
+  }
+  return response
+ })
 }
 
 export function withOutboundPolicy<E extends { CHEST_OUTBOUND_HOSTS?: string }>(handler: ExportedHandler<E>): ExportedHandler<E> {

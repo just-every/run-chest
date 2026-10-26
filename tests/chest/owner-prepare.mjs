@@ -6,7 +6,7 @@ import {createServer} from 'node:http';
 import {join,resolve} from 'node:path';
 import {chromium} from '@playwright/test';
 import {computerJourney} from './owner-computer.mjs';
-import {browserHome,rerCommand,waitForFile} from './owner-process.mjs';
+import {browserHome,rerCommand,waitForFile,running,ready} from './owner-process.mjs';
 
 assert.equal(process.platform,'darwin');
 process.env.TEST_MAIL_TO='synthetic-chest-1@example.test';await mkdir('test-results',{recursive:true});
@@ -14,6 +14,16 @@ browserHome();
 const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});let server;
 try {
  await computerJourney(browser,49719);
+ const production=running(['run','server'],{...process.env,AUTH_ORIGIN:'https://files.example.com',CHEST_SERVER_PORT:'49720',MAIL_PROVIDER:'sendgrid',MAIL_FROM:'synthetic-chest-1@example.com',SENDGRID_API_KEY:'synthetic-chest-1',CHEST_OUTBOUND_HOSTS:'api.sendgrid.com'});
+ try {
+  await ready(production,'CHEST_SERVER_READY');
+  const request=path=>fetch('http://127.0.0.1:49720'+path,{headers:{host:'files.example.com'},redirect:'manual'});
+  assert.equal((await request('/health')).status,200);
+  assert.equal((await request('/signin')).status,200);
+  for(const path of ['/__dev/key','/auth/dev/enter','/cdn-cgi/explorer','/exports/server.rer'])assert.equal((await request(path)).status,404);
+  assert.equal((await fetch('http://127.0.0.1:49720/health',{headers:{host:'other.example.com'}})).status,421);
+  console.log('OWN_SERVER_COMMAND_PASS built production runtime, configured origin and private-door refusal.');
+ }finally{await production.stop();}
  await rerCommand(['run','typecheck']);await rerCommand(['check','--profile','first-party']);
  for(const test of ['integrations.mjs','backup-archive.mjs','site.mjs']){
   const child=spawn(process.execPath,['tests/chest/'+test],{env:{...process.env,CI:'true',WRANGLER_SEND_METRICS:'false'},stdio:['ignore','pipe','pipe']});
