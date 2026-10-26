@@ -1,3 +1,4 @@
+import { scalePage } from './scale'
 import { editorCostCard } from './editor-ui'
 import { backupView } from '../backups/service'
 import { backupCard } from '../backups/ui'
@@ -34,11 +35,12 @@ export async function administrationPage(env:Bindings,s:Session,url:URL){
  if(!url.pathname.startsWith(back))return null
  const parts=url.pathname.slice(back.length).split('/').filter(Boolean)
  if(parts[0]==='recovery'&&parts[1])return recoveryPage(await recoveryView(env,s,parts[1]))
+ if(parts[0]==='scale')return scalePage(env,s)
  if(parts[0]==='audit')return activityReportPage(env,s,url)
  if(parts[0]==='storage')return storageReportPage(env,s,url)
  if(parts[0]==='costs')return `<header class="page-head"><h1>Provider rates</h1><p>Review and record estimated USD rates before planning provider work.</p></header>${costCard(await costSettings(env,s),await canAdmin(env,s,'service-settings'))}${await editorCostCard(env,s)}<p><a href="${back}">Administration</a></p>`
  const d=await administrationView(env,s),service=d.service?((d.serviceOrganization?readerCard(await readerView(env))+organisationCard(await ssoView(env),await scimView(env),env.AUTH_ORIGIN):'')+await quotaAdminCard(env,s)+'<p><a class="btn" href="/app/files/space-policy">Space creation and defaults</a></p>').replaceAll('/app/admin',back):'',security=d.security?((d.securityOrganization?await mfaAdminCard(env):'')+linkPolicyPanel(await linkPolicies(env,s),url.searchParams.get('policyScope')??'organisation')).replaceAll('/app/admin',back).replaceAll('/app/links',back+'/link-policy'):''
- return `<header class="page-head"><h1>Administration</h1><p>Current administrative scope is separate from access to team files.</p></header><div class="admin-col">${rolesCard(d)}${peopleCard(d)}${ownerCard(d,s)}${d.recovery.length?recoveryCard(d):''}${d.isOwner?'<p><a class="btn" href="/app/erasure">Permanent erasure</a></p>'+backupCard(await backupView(env,s)):''}${service}${security}${d.audit?card('Administrative reporting',`<p>Reports contain event metadata within your granted group scope, with no file names or contents.</p><a class="btn" href="${back}/audit">Open administrative activity</a> <a class="btn" href="${back}/storage">Storage report</a>`):''}</div>`
+ return `<header class="page-head"><h1>Administration</h1><p>Current administrative scope is separate from access to team files.</p></header><div class="admin-col">${d.roles?'<p><a class="btn" href="/app/administration/scale">Operating scale</a></p>':''}${rolesCard(d)}${peopleCard(d)}${ownerCard(d,s)}${d.recovery.length?recoveryCard(d):''}${d.isOwner?'<p><a class="btn" href="/app/erasure">Permanent erasure</a></p>'+backupCard(await backupView(env,s)):''}${service}${security}${d.audit?card('Administrative reporting',`<p>Reports contain event metadata within your granted group scope, with no file names or contents.</p><a class="btn" href="${back}/audit">Open administrative activity</a> <a class="btn" href="${back}/storage">Storage report</a>`):''}</div>`
 }
 export function administrationInput(input:any){
  if(!String(input.path).startsWith('/administration/'))return

@@ -1,3 +1,4 @@
+import { scaleReport, scaleHealth } from './scale'
 import { probeEditor } from './editor-observation'
 import { editorConfiguration, saveEditorConfiguration, administrativeEditorReport, administrativeEditorCsv } from './editor-capacity'
 import { administrativeProviderUsage, administrativeProviderUsageCsv } from './provider-usage'
@@ -26,6 +27,7 @@ export async function administrationExecute(env:Bindings,request:Request,s:Sessi
  if(parts[0]!=='administration')return undefined
  const [,section,key,verb]=parts,get=method==='GET',post=method==='POST'
  if(get&&!section)return administrationView(env,s)
+ if(section==='scale')return get&&key==='health'?scaleHealth(env,s):scaleReport(env,s,post?input:undefined)
  if(post&&section==='roles')return assignAdmin(env,s,input)
  if(post&&section==='people')return administrativePersonAction(env,request,s,input)
  if(post&&section==='groups')return administrativeGroup(env,s,input)
