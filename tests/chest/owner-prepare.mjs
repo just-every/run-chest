@@ -1,7 +1,7 @@
 // Run the independently available preparation while the Linux fleet host is held.
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
-import {mkdir,readFile} from 'node:fs/promises';
+import {mkdir,readFile,stat} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import {join,resolve} from 'node:path';
 import {chromium} from '@playwright/test';
@@ -15,6 +15,9 @@ const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','
 try {
  if(process.env.CHEST_DOCS_ONLY!=='1'){
  await computerJourney(browser,49719);
+ const wrongTarget=running(['export','--origin','https://hosted.example.com','--output','exports/wrong-target.rer']);
+ assert.equal(await wrongTarget.closed,4,'an origin cannot relabel a local export as a hosted backup');
+ await assert.rejects(stat('exports/wrong-target.rer'),{code:'ENOENT'});
  const production=running(['run','server'],{...process.env,AUTH_ORIGIN:'https://files.example.com',CHEST_SERVER_PORT:'49720',MAIL_PROVIDER:'sendgrid',MAIL_FROM:'synthetic-chest-1@example.com',SENDGRID_API_KEY:'synthetic-chest-1',CHEST_OUTBOUND_HOSTS:'api.sendgrid.com'});
  try {
   await ready(production,'CHEST_SERVER_READY');

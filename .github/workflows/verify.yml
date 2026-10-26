@@ -28,6 +28,9 @@ jobs:
         # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#android
         run: |
           set -euo pipefail
+          # Temporary files use the runner disk measured by the space guard.
+          export TMPDIR="$RUNNER_TEMP"
+          printf 'TMPDIR=%s\n' "$TMPDIR" >> "$GITHUB_ENV"
           printf 'Disk space before Android SDK removal\n'
           df -h . /tmp
           sudo rm -rf -- /usr/local/lib/android/sdk
@@ -68,6 +71,9 @@ jobs:
         # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#android
         run: |
           set -euo pipefail
+          # Temporary files use the runner disk measured by the space guard.
+          export TMPDIR="$RUNNER_TEMP"
+          printf 'TMPDIR=%s\n' "$TMPDIR" >> "$GITHUB_ENV"
           printf 'Disk space before Android SDK removal\n'
           df -h . /tmp
           sudo rm -rf -- /usr/local/lib/android/sdk
@@ -113,6 +119,9 @@ jobs:
         # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#android
         run: |
           set -euo pipefail
+          # Temporary files use the runner disk measured by the space guard.
+          export TMPDIR="$RUNNER_TEMP"
+          printf 'TMPDIR=%s\n' "$TMPDIR" >> "$GITHUB_ENV"
           printf 'Disk space before Android SDK removal\n'
           df -h . /tmp
           sudo rm -rf -- /usr/local/lib/android/sdk
