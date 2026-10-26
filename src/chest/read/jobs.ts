@@ -11,12 +11,13 @@ import { pageImage, pdfText, PdfProblem } from './pdf'
 import { imageCopy, jpeg, type PageImage } from './raster'
 import { readFields, ReaderError, transcribe, type Proposal, type ReaderConfig, type Usage } from './provider'
 import { readerState } from './settings'
+import { tiff, tiffPages, TiffProblem } from './tiff'
 // Reading runs in the background, one small unit at a time: open a file and read its PDF text layer, then read one
 // scanned page or photo with the AI model, then the next. Each unit saves its progress, so a page that is interrupted
 // (a Worker stopped, a provider timeout) is picked up again by the next unit; uploads never wait for any of it.
 // Units run after any signed-in request (waitUntil) and while a file page that shows progress is open.
 // Unknown binaries are looked at too: Word, Excel, PowerPoint and OpenDocument files are recognised from their contents.
-export const READABLE = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'application/octet-stream']
+export const READABLE = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/tiff', 'application/octet-stream']
 export type Page = { n: number; source: 'text' | 'scan' | 'photo'; state: 'done' | 'waiting' | 'failed' | 'empty' | 'skipped'; chars: number; language?: string; confidence?: number; image?: { mediaType: string; width: number; height: number }; problem?: string; attempts?: number }
 export type ExtractState = 'queued' | 'reading' | 'done' | 'partial' | 'failed' | 'unsupported' | 'needs_key' | 'unavailable'
 // The record's ID is `extract:<SHA-256>`: identical bytes are read once. The payload never repeats the hash, so it
@@ -80,6 +81,12 @@ async function analyse(env: Bindings, row: Row<Extraction>) {
   const { text, truncatedAt } = join([office.text.replaceAll(SEP, ' ')])
   return save(env, row, { ...x, format: office.kind, pages: [{ n: 1, source: 'text', state: 'done', chars: office.text.length }], text, truncatedAt, state: 'done', lease: null })
  }
+ if (x.mediaType === 'image/tiff') {
+  try {
+   const count = tiffPages(bytes), pages: Page[] = Array.from({ length: count }, (_, i) => ({ n: i + 1, source: 'scan', state: i < MAX_SCAN_PAGES ? 'waiting' : 'skipped', chars: 0 }))
+   return save(env, row, { ...x, format: 'TIFF', pages, state: 'reading', lease: null, problem: count > MAX_SCAN_PAGES ? `${count - MAX_SCAN_PAGES} TIFF pages are not read: Chest reads up to ${MAX_SCAN_PAGES} scanned pages per file today.` : null })
+  } catch (e) { return save(env, row, { ...x, state: 'failed', lease: null, problem: e instanceof TiffProblem ? e.message : 'This TIFF could not be opened.' }) }
+ }
  if (x.mediaType !== 'application/pdf') return save(env, row, { ...x, state: 'reading', lease: null, pages: [{ n: 1, source: 'photo', state: 'waiting', chars: 0 }] })
  try {
   const pdf = await pdfText(bytes), scanned = new Set(pdf.scanned)
@@ -95,6 +102,7 @@ async function analyse(env: Bindings, row: Row<Extraction>) {
 async function picture(bytes: Uint8Array, mediaType: string, n: number): Promise<PageImage | { problem: string } | null> {
  if (mediaType === 'application/pdf') { const r = await pageImage(bytes, n); return r ? jpeg(r) : null }
  if (mediaType === 'image/heic') { try { return jpeg(await heic(bytes)) } catch { return { problem: 'This HEIC photo could not be decoded.' } } }
+ if (mediaType === 'image/tiff') { try { return jpeg(await tiff(bytes, n)) } catch (e) { return { problem: e instanceof TiffProblem ? e.message : 'This TIFF page could not be decoded.' } } }
  try { return imageCopy(bytes, mediaType) } catch { return { problem: 'This image could not be decoded.' } }
 }
 async function readPage(env: Bindings, row: Row<Extraction>, config: ReaderConfig) {
@@ -109,7 +117,7 @@ async function readPage(env: Bindings, row: Row<Extraction>, config: ReaderConfi
  else {
   await env.BLOBS.put(copyKey(checksum, page.n), image.bytes, { httpMetadata: { contentType: image.mediaType } })
   try {
-   const t = await attempt(env,'chest:reader','provider.ocr',row.id,{authority:'installation reader',provider:config.provider,model:config.model,page:page.n,checksum:row.id.slice(8)},()=>transcribe({...config,accounting:{env,actor:'chest:reader',object:row.id}}, image, x.mediaType === 'application/pdf' ? `page ${page.n} of ${pages.length} of a scanned PDF` : 'this photo of a document'))
+   const t = await attempt(env,'chest:reader','provider.ocr',row.id,{authority:'installation reader',provider:config.provider,model:config.model,page:page.n,checksum:row.id.slice(8)},()=>transcribe({...config,accounting:{env,actor:'chest:reader',object:row.id}}, image, ['application/pdf', 'image/tiff'].includes(x.mediaType) ? `page ${page.n} of ${pages.length} of a scanned ${x.mediaType === 'image/tiff' ? 'TIFF' : 'PDF'}` : 'this photo of a document'))
    Object.assign(mine, { state: 'done', chars: t.text.length, language: t.language, confidence: t.confidence, image: { mediaType: image.mediaType, width: image.width, height: image.height }, problem: t.readable ? undefined : 'No legible text on this page.', attempts: undefined })
    texts[page.n - 1] = t.text.replaceAll(SEP, ' ')
    x.usage = added(x.usage, t.usage)

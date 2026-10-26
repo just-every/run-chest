@@ -31,6 +31,7 @@ import { sweep } from './files/shares'
 import { everything,who } from './files/access'
 import { filingExecute } from './filing/api'
 import { readingExecute } from './read/api'
+import { askExecute } from './read/ask'
 import { kick,textHits } from './read/jobs'
 import { StorageRefusal, QuotaConfirmation } from './quota/errors'
 import { totalStorage } from './quota/storage'
@@ -77,6 +78,7 @@ async function dispatch(env:Bindings,request:Request,s:Session,method:string,pat
  if(method==='POST'&&parts[0]==='groups'&&parts[1])return updateGroup(env,s,parts[1],input)
  if(method==='POST'&&parts[0]==='schemas'&&parts.length===2)return updateSchema(env,s,parts[1],input)
  const filing=await filingExecute(env,s,method,parts,input,url);if(filing!==undefined)return filing
+ const asked=await askExecute(env,s,method,parts,input);if(asked!==undefined)return asked
  const reading=await readingExecute(env,s,method,parts,input,url);if(reading!==undefined)return reading
  if(path==='/documents'&&method==='POST')return upload(env,s,input)
  if(parts[0]==='documents'&&parts[1]){

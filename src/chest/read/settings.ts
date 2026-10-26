@@ -8,6 +8,7 @@ import { seal, unseal } from '../seal'
 import { DEFAULTS, ReaderError, transcribe, type Provider, type ReaderConfig } from './provider'
 import { SAMPLE_PNG, SAMPLE_TEXT } from './sample'
 import { requeue } from './jobs'
+import { askPolicy } from './ask-policy'
 // Reading scans uses the installation's own AI model key. The owner enters it on People & settings; it is sealed at
 // rest and never sent back to a browser. PDF text layers are read without any key. RER Managed hosting has no
 // outbound connection for seed integrations yet, so there the card says so in one plain line. The key lives in its
@@ -34,7 +35,7 @@ export async function readerState(env: Bindings): Promise<ReaderState> {
 }
 export async function readerView(env: Bindings) {
  const row = await saved(env), state = await readerState(env)
- return { saved: row ? (({ keySealed, ...rest }) => rest)(row) : null, unavailable: 'unavailable' in state ? state.unavailable : null, missing: 'missing' in state ? state.missing : null, defaults: DEFAULTS }
+ return { saved: row ? (({ keySealed, ...rest }) => rest)(row) : null, unavailable: 'unavailable' in state ? state.unavailable : null, missing: 'missing' in state ? state.missing : null, defaults: DEFAULTS, askPolicy: (await askPolicy(env))?.payload ?? null }
 }
 const optional = (v: unknown, name: string, max: number) => { if (v === undefined || v === null || v === '') return ''; insist(typeof v === 'string' && v.length <= max && !/[\x00-\x1f]/.test(v), `invalid_${name}`); return v.trim() }
 export async function saveReader(env: Bindings, s: Session, input: any) {

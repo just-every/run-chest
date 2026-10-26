@@ -56,6 +56,9 @@ importers:
       unpdf:
         specifier: 1.9.0
         version: 1.9.0
+      utif2:
+        specifier: 4.1.0
+        version: 4.1.0
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: 1.54.5
@@ -1419,6 +1422,9 @@ packages:
     resolution: {integrity: sha512-6L+EeigHMQhdaIPNIFUKwfWJSwWFQ8gJbJ2DLOs5sDIegTwR9fRxvnM3uciHKjIZhFz+KAv2emhWMRvDmMcY8A==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  utif2@4.1.0:
+    resolution: {integrity: sha512-+oknB9FHrJ7oW7A2WZYajOcv4FcDR4CfoGB0dPNfxbi4GO05RRnFmt5oa23+9w32EanrYcSJWspUiJkLMs+37w==}
 
   vite@8.2.2:
     resolution: {integrity: sha512-cFKLV/PRgAUlIRm5WjMjJ86jrftzpqcgH+Us+DS8mI3CDNiH30Whrz8uHL3+MOLPAgqbMBAqWdAHAphOAM+z/Q==}
@@ -2793,6 +2799,10 @@ snapshots:
   use-sync-external-store@1.7.0(react@19.2.8):
     dependencies:
       react: 19.2.8
+
+  utif2@4.1.0:
+    dependencies:
+      pako: 1.0.11
 
   vite@8.2.2(@types/node@22.20.5)(esbuild@0.28.1)(jiti@2.7.0):
     dependencies:

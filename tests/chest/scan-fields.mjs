@@ -18,7 +18,7 @@ export async function scanPeople(h){
  for(const [email,name] of [['dana@example.test','Dana Flores'],['casey@example.test','Casey Chen']])await h.api('/people',owner,{action:'invite',email,name});
  const viewer=await h.signIn('dana@example.test',true),outsider=await h.signIn('casey@example.test',true),space=await h.api('/spaces',owner,{name:'Harbor agreements'});
  await h.api(`/spaces/${space.id}/members`,owner,{members:[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:'dana@example.test',role:'viewer'}]});
- await h.api('/reading/settings',owner,{provider:'anthropic',model:'claude-sonnet-5-5',key:'test-only-scan-key'});
+ await h.api('/reading/settings',owner,{provider:'anthropic',model:'claude-sonnet-5-5',key:'synthetic-chest-42'});
  return {owner,viewer,outsider,space};
 }
 export async function scannedItem(h,owner,space,{type='NDA',name='Harbor NDA.png',fields={},required=false}={}){
@@ -43,10 +43,14 @@ if(process.argv[1]===new URL(import.meta.url).pathname){
   await h.api(`/items/${w9.item.id}/fields/${w9.item.payload.current}`,owner,{field:'TIN',decision:'accept',value:'98-7654321'});assert.equal((await h.api(`/items/${w9.item.id}`,owner)).metadata.filing.fields.TIN,'***-**-4321');
   const required=await h.api('/schemas',owner,{name:'Required NDA',fields:[{name:'Party',type:'text',required:true}]}),intake=await h.api('/items',owner,{space:space.id,type:'folder',name:'Scan intake'});await h.api(`/items/${intake.id}/governance`,owner,{reviewer:h.vars.OWNER_EMAIL,schema:required.id,scanIntake:true});await h.api('/items',owner,{parent:intake.id,name:'Incomplete.txt',base64:Buffer.from('Plain upload').toString('base64')},400);const pending=await h.api('/items',owner,{parent:intake.id,name:'Required NDA.png',base64:(await readFile('tests/chest/scan-nda.png')).toString('base64')});await h.api(`/items/${pending.id}/versions/${pending.payload.current}/review`,owner,{action:'approve'},400);await settledFields(h,pending.id,owner);await h.api(`/items/${pending.id}/fields/${pending.payload.current}`,owner,{field:'Party',decision:'accept'});await h.api(`/items/${pending.id}/versions/${pending.payload.current}/review`,owner,{action:'approve'});
   const reservation=await h.api('/uploads',owner,{parent:intake.id,name:'Incomplete browser text.txt',size:5,lastModified:1});assert.equal((await h.fetch(`/api/chest/uploads/${reservation.id}/parts/1`,{method:'PUT',headers:{cookie:owner,origin:h.origin},body:'plain'})).status,200);await h.api(`/uploads/${reservation.id}/complete`,owner,{},400);assert.ok(!(await h.api(`/items/${intake.id}`,owner)).children.some(i=>i.name==='Incomplete browser text.txt'));await h.api(`/uploads/${reservation.id}/cancel`,owner,{});
+  const tiff=await h.api('/items',owner,{parent:folder.id,name:'Faxed Harbor NDA.tiff',base64:(await readFile('tests/chest/scan-nda.tiff')).toString('base64')});
+  const fax=await settledFields(h,tiff.id,owner);assert.equal(fax.reading.pages.length,2);assert.ok(fax.reading.pages.every(p=>p.state==='done'&&p.source==='scan'));assert.ok(fax.fields.proposals.some(p=>p.box&&p.page===1));
+  const faxPage=await h.raw(`/api/chest/items/${tiff.id}/pages/${tiff.payload.current}/2`,viewer);assert.equal(faxPage.status,200);assert.equal(faxPage.headers.get('content-type'),'image/jpeg');assert.ok((await faxPage.arrayBuffer()).byteLength>1000);assert.ok((await h.api('/search?q=Harbor%20Freight',viewer)).results.some(r=>r.id===tiff.id));
   // A type edit invalidates stale proposals, and a revoked viewer loses text and page images immediately.
   await h.api(`/schemas/${schema.id}`,owner,{name:'NDA',fields:[{name:'Party',type:'text',required:false}]});await h.api(`/items/${item.id}/fields/${changed.version}`,owner,{field:'Term',decision:'accept'},409);
   await h.api(`/spaces/${space.id}/members`,owner,{members:[{principal:h.vars.OWNER_EMAIL,role:'manager'}]});await h.api(`/items/${item.id}/reading`,viewer,undefined,403);await h.api(`/items/${item.id}/pages/${v}/1`,viewer,undefined,403);
   const audit=(await h.api('/audit',owner)).filter(e=>e.object_id===item.id&&e.action.startsWith('field.'));assert.ok(audit.length>=3&&audit.every(e=>JSON.parse(e.detail).version===v));
   console.log('SEARCH-002 typed-folder proposals, confirmation, immutable prior decisions, TIN masking and current ACL passed');
  }finally{await h.close()}
+ await (await import('./ask-flow.mjs')).askFlow();
 }
