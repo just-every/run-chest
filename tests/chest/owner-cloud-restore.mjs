@@ -4,7 +4,7 @@ import {execFileSync} from 'node:child_process';
 import {chromium} from '@playwright/test';
 import {browserHome,receiveSecrets,waitForFile,rerCommand} from './owner-process.mjs';
 import {cloudJourney} from './owner-cloud.mjs';
-assert.equal(process.platform,'darwin');await receiveSecrets();browserHome();
+await receiveSecrets();browserHome();
 const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 console.log('OWN_CLOUD_INPUT_READY '+JSON.stringify({root:process.cwd(),head}));
 const data=JSON.parse(await waitForFile('test-results/owner-server-data.json'));

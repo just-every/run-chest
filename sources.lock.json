@@ -4917,7 +4917,7 @@
       "executable": false
     },
     "tests/chest/owner-cloud-restore.mjs": {
-      "sha256": "8fcdd48d3c290b9f6d160291b4aa33b17a63162a6cbbf7422890620b0b1f3ecf",
+      "sha256": "e545edc9681ec775030a92ee446d10901d3018751872849698f8d7fb841d778e",
       "executable": false
     },
     "tests/chest/owner-cloud.mjs": {
