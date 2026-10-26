@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tooltips} from './tooltip-proof.mjs';
-import {running,ready,rerCommand,browserHome} from './owner-process.mjs';
+import {running,ready,rerCommand,browserHome,waitForFile} from './owner-process.mjs';
 
 // The fresh checkout and locked dependency install are supplied by remote-run.
 export async function computerJourney(browser,port) {
@@ -28,5 +28,5 @@ if(process.argv[1]===import.meta.filename){
  browserHome();process.env.TEST_MAIL_TO='synthetic-chest-1@example.test';
  const {chromium}=await import('@playwright/test');
  const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
- try{await computerJourney(browser,49719);}finally{await browser.close();}
+ try{await computerJourney(browser,49719);console.log('OWN_COMPUTER_PAGES '+process.cwd());if(process.env.CHEST_COLLECT_SCREENS==='1')await waitForFile('test-results/owner-pages-collected',300000);}finally{await browser.close();}
 }

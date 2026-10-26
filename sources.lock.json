@@ -4917,7 +4917,7 @@
       "executable": false
     },
     "tests/chest/owner-computer.mjs": {
-      "sha256": "23f241e7e91e165ea70c6935fb64899695d8c75937f550979dcde8d8a9863315",
+      "sha256": "399de9d8e7bc1acb6bef7b04c8bb0d9be9487324dcaa1b56ab1ee5c97314a010",
       "executable": false
     },
     "tests/chest/owner-egress.mjs": {
