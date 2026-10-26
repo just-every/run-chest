@@ -8,6 +8,7 @@ import {join} from 'node:path';
 export function deploymentEnvironment(owner) {
  return {...process.env,OWNER_EMAIL:owner,MAIL_PROVIDER:'sendgrid',MAIL_FROM:process.env.SENDGRID_FROM_EMAIL,
   SESSION_SECRET:randomBytes(32).toString('hex'),SETUP_TOKEN:randomBytes(32).toString('hex'),
+  SIGNING_KEY_SECRET:randomBytes(32).toString('hex'),
   CI:'true',WRANGLER_SEND_METRICS:'false'};
 }
 
