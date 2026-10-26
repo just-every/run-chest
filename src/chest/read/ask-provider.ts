@@ -77,8 +77,10 @@ function record(value: unknown): ObjectValue {
 function responseOutput(body: ObjectValue, provider: ReaderConfig['provider']): unknown {
  let content: string
  if (provider === 'anthropic') {
-  if (body.stop_reason !== 'end_turn' || !Array.isArray(body.content) || body.content.length !== 1) return invalid()
-  const block = record(body.content[0])
+  if (body.stop_reason !== 'end_turn' || !Array.isArray(body.content) || body.content.some((b: any) => !['text', 'thinking', 'redacted_thinking'].includes(b?.type))) return invalid()
+  const texts = body.content.filter((b: any) => b?.type === 'text')
+  if (texts.length !== 1) return invalid()
+  const block = record(texts[0])
   if (block.type !== 'text') return invalid()
   content = string(block.text)
  } else {
@@ -98,7 +100,7 @@ export async function askProvider(config: ReaderConfig, question: string, source
  const anthropic = config.provider === 'anthropic'
  const headers: Record<string, string> = { 'content-type': 'application/json', ...(anthropic ? { 'x-api-key': config.key, 'anthropic-version': '2023-06-01', ...(config.workspace ? { 'anthropic-workspace-id': config.workspace } : {}) } : { authorization: `Bearer ${config.key}` }) }
  const body = anthropic
-  ? { model: config.model, max_tokens: maxTokens, system: SYSTEM, output_config: { format: { type: 'json_schema', schema: format } }, messages: [{ role: 'user', content }] }
+  ? { model: config.model, max_tokens: maxTokens, system: SYSTEM, output_config: { effort: 'low', format: { type: 'json_schema', schema: format } }, messages: [{ role: 'user', content }] }
   : { model: config.model, max_completion_tokens: maxTokens, response_format: { type: 'json_schema', json_schema: { name: 'ask_evidence', strict: true, schema: format } }, messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content }] }
  const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 45_000)
  try {

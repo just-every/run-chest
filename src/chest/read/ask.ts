@@ -3,7 +3,7 @@ import type { Session } from '../../modules/operator-auth/index.mjs'
 import { insist, id } from '../model'
 import { commit, maybe } from '../files/repo'
 import type { CostRates } from '../administration/costs'
-import { digest } from '../blobs'
+import { endpointHash } from './provider-authority'
 import { askPolicy, saveAskPolicy } from './ask-policy'
 import { readerState } from './settings'
 import { askSources } from './ask-sources'
@@ -23,7 +23,7 @@ export async function askExecute(env: Bindings, s: Session, method: string, part
  const policy = await askPolicy(env); insist(policy?.payload.enabled, 'ask_disabled_by_owner', 409)
  insist(input.policyAt === policy.revision, 'ask_policy_changed_review_again', 409)
  const state = await readerState(env); insist('config' in state, 'ask_provider_unavailable', 409)
- insist(policy.payload.provider === state.config.provider && policy.payload.model === state.config.model && policy.payload.workspace === state.config.workspace && policy.payload.readerRevision === state.config.readerRevision && policy.payload.endpointHash === await digest(new TextEncoder().encode(state.config.endpoint)), 'ask_provider_policy_review_required', 409)
+ insist(policy.payload.provider === state.config.provider && policy.payload.model === state.config.model && policy.payload.workspace === state.config.workspace && policy.payload.readerRevision === state.config.readerRevision && policy.payload.endpointHash === await endpointHash(state.config.endpoint), 'ask_provider_policy_review_required', 409)
  const rates = await maybe<CostRates>(env, 'admin-cost-rates', 'admin-cost-rates')
  insist(rates && rates.payload.aiProvider === state.config.provider && rates.payload.aiModel === state.config.model && !rates.payload.aiServiceTier && rates.payload.aiInputUsdPerMillion !== undefined && rates.payload.aiOutputUsdPerMillion !== undefined, 'matching_provider_quote_required', 409)
  const data = await askSources(env, s, key, input.includeHistory === true, kind)

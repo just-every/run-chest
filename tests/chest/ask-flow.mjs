@@ -24,7 +24,7 @@ export async function askHarness({live=false}={}){
  return h;
 }
 export async function askSetup(h,{live=false}={}){
- await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const owner=await h.signIn(h.vars.OWNER_EMAIL);
+ if(process.env.CHEST_ASK_TRACE==='1')console.log('ASK_BOOTSTRAP_BEGIN');await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const owner=await h.signIn(h.vars.OWNER_EMAIL);if(process.env.CHEST_ASK_TRACE==='1')console.log('ASK_OWNER_READY');
  await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
  await h.api('/people',owner,{action:'invite',email:'dana@example.test',name:'Dana Flores'});const viewer=await h.signIn('dana@example.test',true);
  const space=await h.api('/spaces',owner,{name:'Harbor legal review'});
@@ -47,7 +47,7 @@ export async function askSetup(h,{live=false}={}){
  return {owner,viewer,folder,file,hidden,pdfFile,record,policy};
 }
 export async function askFlow(){
- const h=await askHarness();
+ if(process.env.CHEST_ASK_TRACE==='1')console.log('ASK_HARNESS_BEGIN');const h=await askHarness();if(process.env.CHEST_ASK_TRACE==='1')console.log('ASK_HARNESS_READY');
  try{
   const data=await askSetup(h),{owner,viewer,folder,file,hidden,policy}=data,send={question:'Which effective date is evidenced? Show contradictory revisions.',approve:true,includeHistory:true,budgetUsd:.05,policyAt:policy.revision};
   await h.api('/ask/policy',viewer,{confirm:true,enabled:true},403);
