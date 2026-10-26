@@ -345,7 +345,7 @@
       "executable": false
     },
     "docs/site.json": {
-      "sha256": "406b32b15fcca5114e88bc56b43e20abf7611cb37f3ba793aecd0d5c442eec24",
+      "sha256": "5d07a3578a7985164eea490affc314980645bb625fce26201a08155b51de4f73",
       "executable": false
     },
     "docs/sync-repair.md": {
@@ -4926,6 +4926,10 @@
     },
     "tests/chest/owner-migration.mjs": {
       "sha256": "9fc7686acfebd34f6142ef1eead90476ba96210177eb9e6b4a523e59fd9088d8",
+      "executable": false
+    },
+    "tests/chest/owner-prepare.mjs": {
+      "sha256": "90eb6994f187f11082b0c74cdd354f6e3c51249f50d133c432ebb754cc089d47",
       "executable": false
     },
     "tests/chest/owner-process.mjs": {

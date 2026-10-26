@@ -33,6 +33,7 @@
         { "slug": "move-in", "title": "Move in from Google Drive, Dropbox or Box", "file": "move-in.md", "summary": "Download your files from Google Drive, Dropbox or Box, or choose a folder, and bring them into Chest with their folders." },
         { "slug": "backup-and-restore", "title": "Backup and restore", "file": "backup-and-restore.md", "summary": "Export everything to one file and restore it into a fresh Chest." },
         { "slug": "content-security", "title": "Content security", "file": "content-security.md", "summary": "Quarantine, classification, separately deployed scanning and scoped mass-activity alerts." },
+        { "slug": "server", "title": "Run Chest on your Linux server", "file": "server.md", "summary": "Serve staff over HTTPS with your mail and storage, then move the installation to your Cloudflare account." },
         { "slug": "hosting", "title": "Host Chest on Cloudflare", "file": "hosting.md", "summary": "Deploy to your own Cloudflare account, choose the mail provider and sender, sign in, back up, restore and remove." }
       ]
     }
