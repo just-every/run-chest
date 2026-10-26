@@ -34,9 +34,9 @@ try {
  const memberClient=hostedClient(origin,context);
  expected=await createHostedData(ownerClient,memberClient,ownerEmail,memberEmail,environment,{originalBytes:8*1024*1024});
  await proveIndependent(ownerClient,expected.folder,'server');
- beforeOwner=await snapshotHostedData(ownerClient,expected);beforeMember=await snapshotHostedData(memberClient,expected);
  await reconcileHostedOriginals(ownerClient,expected);await reconcileHostedOriginals(memberClient,expected);
  await hostedScreens(owner.page,origin,expected,'server-owner');await hostedScreens(member.page,origin,expected,'server-member');
+ beforeOwner=await snapshotHostedData(ownerClient,expected);beforeMember=await snapshotHostedData(memberClient,expected);
  await writeFile('test-results/owner-server-data.json',JSON.stringify({expected,beforeOwner,beforeMember}),{mode:0o600});
  await owner.context.close();owner=null;await member.context.close();member=null;
  console.log('OWN_SERVER_DATA_READY '+JSON.stringify({head,root:process.cwd(),originalSha256:expected.checksum}));

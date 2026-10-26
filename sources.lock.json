@@ -4925,7 +4925,7 @@
       "executable": false
     },
     "tests/chest/owner-migration.mjs": {
-      "sha256": "48adccbd514eaa0fb5db8b60ec4ac178a22f19a3873b7f38125b6c0f97b86ceb",
+      "sha256": "384d995983f7bb73d2a1c62eda5bb638f78bbd6db3194c3cffd0b973a12363de",
       "executable": false
     },
     "tests/chest/owner-prepare.mjs": {
