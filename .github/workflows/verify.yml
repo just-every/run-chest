@@ -82,32 +82,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22.20.0'
-      - name: Recover unused Android SDK space
-        # GitHub's Ubuntu image documents this SDK path; Chest uses no Android tools.
-        # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#android
-        run: |
-          set -euo pipefail
-          # Temporary files use the runner disk measured by the space guard.
-          export TMPDIR="$RUNNER_TEMP"
-          printf 'TMPDIR=%s\n' "$TMPDIR" >> "$GITHUB_ENV"
-          printf 'Disk space before Android SDK removal\n'
-          df -h . /tmp
-          sudo rm -rf -- /usr/local/lib/android/sdk
-          printf 'Disk space after Android SDK removal\n'
-          df -h . /tmp
-          node --input-type=module <<'NODE'
-          import {statfs} from 'node:fs/promises';
-          import {tmpdir} from 'node:os';
-          const minimum = 15n * 1024n ** 3n;
-          for (const [label, path] of [['checkout', process.cwd()], ['temporary', tmpdir()]]) {
-            const state = await statfs(path, {bigint: true});
-            const free = state.bavail * state.bsize;
-            console.log(`${label}: ${(Number(free) / 1024 ** 3).toFixed(2)} GiB free; requires at least 15 GiB`);
-            if (free < minimum) throw Error(`${label} volume has insufficient free space for the real RER server`);
-          }
-          NODE
       - run: npm install --global pnpm@10.12.4
-      - run: pnpm install --frozen-lockfile && pnpm exec rer install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm exec rer check --profile first-party
       - run: pnpm exec rer verify
   browser:
@@ -127,32 +103,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22.20.0'
-      - name: Recover unused Android SDK space
-        # GitHub's Ubuntu image documents this SDK path; Chest uses no Android tools.
-        # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#android
-        run: |
-          set -euo pipefail
-          # Temporary files use the runner disk measured by the space guard.
-          export TMPDIR="$RUNNER_TEMP"
-          printf 'TMPDIR=%s\n' "$TMPDIR" >> "$GITHUB_ENV"
-          printf 'Disk space before Android SDK removal\n'
-          df -h . /tmp
-          sudo rm -rf -- /usr/local/lib/android/sdk
-          printf 'Disk space after Android SDK removal\n'
-          df -h . /tmp
-          node --input-type=module <<'NODE'
-          import {statfs} from 'node:fs/promises';
-          import {tmpdir} from 'node:os';
-          const minimum = 15n * 1024n ** 3n;
-          for (const [label, path] of [['checkout', process.cwd()], ['temporary', tmpdir()]]) {
-            const state = await statfs(path, {bigint: true});
-            const free = state.bavail * state.bsize;
-            console.log(`${label}: ${(Number(free) / 1024 ** 3).toFixed(2)} GiB free; requires at least 15 GiB`);
-            if (free < minimum) throw Error(`${label} volume has insufficient free space for the real RER server`);
-          }
-          NODE
       - run: npm install --global pnpm@10.12.4
-      - run: pnpm install --frozen-lockfile && pnpm exec rer install
+      - run: pnpm install --frozen-lockfile
       - run: node scripts/install-browser.mjs
       - run: pnpm run build
       - if: matrix.suite == 'office'
@@ -201,7 +153,7 @@ jobs:
           }
           NODE
       - run: npm install --global pnpm@10.12.4
-      - run: pnpm install --frozen-lockfile && pnpm exec rer install
+      - run: pnpm install --frozen-lockfile
       - run: node scripts/install-browser.mjs
       - run: pnpm run test:journey
         env:
@@ -284,7 +236,7 @@ jobs:
         with:
           node-version: '22.20.0'
       - run: npm install --global pnpm@10.12.4
-      - run: pnpm install --frozen-lockfile && pnpm exec rer install
+      - run: pnpm install --frozen-lockfile
       - run: node scripts/install-browser.mjs
       - run: pnpm run test:upgrade
       - uses: actions/upload-artifact@v4
