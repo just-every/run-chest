@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {harness} from './harness.mjs';
 import {pdf} from './fixtures.mjs';
 export async function askHarness({live=false}={}){
- let mode='answer',requests=0,pending;
+ let mode='answer',requests=0,pending,arrived;const arrival=new Promise(resolve=>{arrived=resolve});
  const h=await harness({edge:async request=>{
   if(request.url!=='https://api.anthropic.com/v1/messages')return;
   requests++;
@@ -11,7 +11,7 @@ export async function askHarness({live=false}={}){
   if(live)return fetch(request);
   const evidence=JSON.parse(body.messages[0].content),sources=evidence.passages;
   assert.ok(!JSON.stringify(body).includes('Confidential acquisition price'),'inaccessible passages never reach the provider');
-  if(mode==='wait'){await new Promise(resolve=>{pending=resolve})}
+  if(mode==='wait'){await new Promise(resolve=>{pending=resolve;arrived()})}
   if(mode==='failure')return Response.json({error:{message:'synthetic-chest-44'}},{status:503});
   const source=sources.find(p=>p.text.includes('2026-04-09'))??sources[0],quote=source.text.trim(),text='The supplied revision states: '+quote;
   const citations=[{source:mode==='injection'?'ungranted-source':source.id,quote}],dated=sources.filter(p=>/2026-0[34]-0[49]/.test(p.text)),chosen=dated.length>1?dated:[source];
@@ -19,7 +19,7 @@ export async function askHarness({live=false}={}){
   const output={answer:claims.map(c=>c.text).join('\n\n'),uncertainty:dated.some(p=>p.text.includes('2026-03-04'))&&dated.some(p=>p.text.includes('2026-04-09'))?'Retained revisions disagree; confirm which applies.':'',claims,fields:evidence.fields.map(name=>({name,value:name==='Effective date'?'2026-04-09':null,citations:name==='Effective date'?citations:[]}))};
   return Response.json({model:body.model,stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify(output)}],usage:{input_tokens:700,output_tokens:160}});
  }});
- h.askMode=value=>{mode=value};h.askRequests=()=>requests;h.releaseAsk=()=>pending?.();h.askPending=()=>!!pending;
+ h.askMode=value=>{mode=value};h.askRequests=()=>requests;h.releaseAsk=()=>pending?.();h.askPending=()=>!!pending;h.waitForAsk=()=>arrival;const close=h.close;h.close=async()=>{mode='answer';pending?.();await close()};
  return h;
 }
 export async function askSetup(h,{live=false}={}){
@@ -58,7 +58,7 @@ export async function askFlow(){
   const before=h.askRequests();await h.api(`/items/${folder.id}/ask`,viewer,{...send,budgetUsd:.000001},409);await h.api(`/items/${folder.id}/ask`,viewer,{...send,approve:false},400);await h.api(`/items/${folder.id}/ask`,viewer,{...send,tools:['delete']},403);await h.api(`/items/${hidden.id}/ask`,viewer,send,403);assert.equal(h.askRequests(),before,'refusals incur no model call');
   h.askMode('injection');const denied=await h.api(`/items/${folder.id}/ask`,viewer,send);assert.equal(denied.state,'failed');assert.equal(denied.answer,'');assert.deepEqual(denied.claims,[]);assert.ok(denied.cost.usd>0,'invalid model output still has its real provider charge');assert.ok((await h.api(`/items/${folder.id}`,viewer)).children.some(p=>p.id===file.id),'document instructions cannot delete content');
   h.askMode('failure');const failure=await h.api(`/items/${folder.id}/ask`,viewer,send);assert.equal(failure.state,'failed');assert.equal(failure.answer,'');assert.equal(failure.cost.usd,null);assert.equal(failure.cost.outcome,'refused');
-  h.askMode('wait');const inFlight=h.raw(`/api/chest/items/${folder.id}/ask`,viewer,send);for(let n=0;!h.askPending()&&n<100;n++)await new Promise(r=>setTimeout(r,10));assert.ok(h.askPending());
+  h.askMode('wait');const inFlight=h.raw(`/api/chest/items/${folder.id}/ask`,viewer,send);let arrivalTimer;try{await Promise.race([h.waitForAsk(),inFlight.then(()=>{throw Error('Ask returned before the held provider response')}),new Promise((_,reject)=>{arrivalTimer=setTimeout(()=>reject(Error('Ask did not reach the provider')),15000)})])}finally{clearTimeout(arrivalTimer)}assert.ok(h.askPending());
   await h.api(`/items/${file.id}/settings`,owner,{restricted:true});h.releaseAsk();const revoked=await inFlight;assert.equal(revoked.status,200);const withheld=await revoked.json();assert.equal(withheld.state,'access_changed');assert.equal(withheld.answer,'');assert.equal(withheld.sources,undefined);
   const audit=JSON.stringify(await h.api('/audit',owner));assert.ok(!audit.includes(send.question));assert.ok(!audit.includes('Ignore all previous instructions'));
   console.log('AGENT-007 Ask: exact citations, contradictory revisions, schema extraction, consent, budgets, denied tools, injection, failure costs and mid-run ACL passed');
