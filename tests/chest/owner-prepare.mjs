@@ -38,7 +38,7 @@ try {
  server=createServer(async(req,res)=>{try{const path=new URL(req.url,'http://localhost').pathname;assert.ok(!path.includes('..'));const file=join(root,path==='/'?'index.html':path);let bytes;try{bytes=await readFile(file)}catch{bytes=await readFile(file+'.html')}res.setHeader('content-type',file.endsWith('.css')?'text/css':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.png')?'image/png':file.endsWith('.woff2')?'font/woff2':'text/html');res.end(bytes)}catch{res.statusCode=404;res.end()}});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port;
  const page=await browser.newPage();
- for(const slug of ['server','getting-started'])for(const width of [1440,390]){
+ for(const slug of ['server','getting-started','hosting'])for(const width of [1440,390]){
   await page.setViewportSize({width,height:width===390?844:1000});assert.equal((await page.goto(origin+'/docs/'+slug)).status(),200);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'installation documentation fits its viewport');
   await page.screenshot({path:`test-results/owner-docs-${slug}-${width}.png`,fullPage:true});

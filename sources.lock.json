@@ -285,7 +285,7 @@
       "executable": false
     },
     "docs/hosting.md": {
-      "sha256": "e35ed103af36bd1720baa4780448f5060881d7a9f14ae169d9fa1a4eba04ddca",
+      "sha256": "c3a3f82ac7d54804a2cd548c124704965c2e50fa0e856c5111a9e72f0a99c273",
       "executable": false
     },
     "docs/independent-backups.md": {
@@ -4929,7 +4929,7 @@
       "executable": false
     },
     "tests/chest/owner-prepare.mjs": {
-      "sha256": "3723f49ac68ae6429f3e75bd07c009f6557775027ec19d08f12a530bbd434b5c",
+      "sha256": "bf6be6f0ace97e1060ce642f60ac0e577e5f86dc1a423d2a00c7fea622b282a5",
       "executable": false
     },
     "tests/chest/owner-process.mjs": {
