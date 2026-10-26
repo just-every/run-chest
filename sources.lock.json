@@ -4916,6 +4916,14 @@
       "sha256": "c4b5dfeb40ed1296981c71bf6302b68949a04db5dbeb62ed83476c6143b2aa8f",
       "executable": false
     },
+    "tests/chest/owner-cloud-restore.mjs": {
+      "sha256": "8fcdd48d3c290b9f6d160291b4aa33b17a63162a6cbbf7422890620b0b1f3ecf",
+      "executable": false
+    },
+    "tests/chest/owner-cloud.mjs": {
+      "sha256": "5928370a6dbb64ff20b5fffb3d073b055234ecd7625315eaab483ae806997ea3",
+      "executable": false
+    },
     "tests/chest/owner-computer.mjs": {
       "sha256": "399de9d8e7bc1acb6bef7b04c8bb0d9be9487324dcaa1b56ab1ee5c97314a010",
       "executable": false
@@ -4925,7 +4933,7 @@
       "executable": false
     },
     "tests/chest/owner-migration.mjs": {
-      "sha256": "8f9f3fe743d131c787daa95d052b5c4b0cd7a2bb4b160d43c1c83a81681b0fa2",
+      "sha256": "8d9d6ba5a46bf3b4daeb5c6b4b1779188d68a44feea8a18fb53e66221f39daf5",
       "executable": false
     },
     "tests/chest/owner-prepare.mjs": {

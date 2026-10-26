@@ -5,21 +5,17 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {chromium} from '@playwright/test';
 import {browserHome,receiveSecrets,waitForFile,rerCommand} from './owner-process.mjs';
 import {computerJourney} from './owner-computer.mjs';
-import {cloudResources,deploymentEnvironment} from './hosted-cloud.mjs';
 import {emailSignIn,waitForMailLink} from './hosted-mail.mjs';
 import {hostedClient,createHostedData,snapshotHostedData,reconcileHostedOriginals} from './hosted-data.mjs';
 import {hostedScreens} from './hosted-screens.mjs';
-import {Readable} from 'node:stream';
-import {createReadStream} from 'node:fs';
-import {diffArchives} from '@runeditrun/rer/internal/modules/portability/diff.mjs';
 import {proveIndependent} from './owner-egress.mjs';
+import {cloudJourney} from './owner-cloud.mjs';
 
 assert.equal(process.platform,'darwin');await receiveSecrets();browserHome();
 const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const ownerEmail=process.env.TEST_MAIL_TO,memberEmail='qa-inbox-2@runeditrun.com',from=process.env.SENDGRID_FROM_EMAIL;
-const origin='https://own-test.run-chest.com',environment='sx-i813-'+head.slice(0,8),env=deploymentEnvironment(ownerEmail);
-env.CHEST_OUTBOUND_HOSTS='api.sendgrid.com';
-const resources=await cloudResources(environment);let browser,owner,member,expected,beforeOwner,beforeMember,cloudOrigin,passed=false;
+const origin='https://own-test.run-chest.com',environment='sx-i813-'+head.slice(0,8);
+let browser,owner,member,expected,beforeOwner,beforeMember;
 const mails=[];
 try {
  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
@@ -42,24 +38,8 @@ try {
  await owner.context.close();owner=null;await member.context.close();member=null;
  console.log('OWN_SERVER_DATA_READY '+JSON.stringify({head,root:process.cwd(),originalSha256:expected.checksum}));
  await waitForFile('exports/server.rer');
- cloudOrigin=await resources.deploy(env);
- await rerCommand(['import','--target','remote','--origin',cloudOrigin,'--input','exports/server.rer','--yes'],env);
- await rerCommand(['export','--target','remote','--origin',cloudOrigin,'--output','exports/cloud.rer'],env);
- const difference=await diffArchives(Readable.toWeb(createReadStream('exports/server.rer')),Readable.toWeb(createReadStream('exports/cloud.rer')));
- assert.deepEqual(difference.tables,[],'every portable record survives the server to cloud move');
- assert.deepEqual(difference.objects,{added:[],removed:[],changed:[]},'every original and its metadata survives the server to cloud move');
- assert.equal(difference.schemaChanged,false);assert.equal(difference.configurationChanged,false);
- console.log('OWN_ARCHIVE_RECONCILED all portable records and original hashes match.');
- owner=await emailSignIn({browser,origin:cloudOrigin,email:ownerEmail,from});mails.push(owner.receipt.id);
- member=await emailSignIn({browser,origin:cloudOrigin,email:memberEmail,from});mails.push(member.receipt.id);
- const cloudOwner=hostedClient(cloudOrigin,owner.context),cloudMember=hostedClient(cloudOrigin,member.context);
- assert.deepEqual(await snapshotHostedData(cloudOwner,expected),beforeOwner);
- assert.deepEqual(await snapshotHostedData(cloudMember,expected),beforeMember);
- await reconcileHostedOriginals(cloudOwner,expected);await reconcileHostedOriginals(cloudMember,expected);
- await hostedScreens(owner.page,cloudOrigin,expected,'cloud-owner');await hostedScreens(member.page,cloudOrigin,expected,'cloud-member');
- await proveIndependent(cloudOwner,expected.folder,'cloud');
- console.log('OWN_CLOUD_RECONCILED '+JSON.stringify({head,environment,originalSha256:expected.checksum,mailReceiptIds:mails}));passed=true;
-}finally{await owner?.context.close();await member?.context.close();await browser?.close();await resources.remove(env);console.log('OWN_CLOUD_REMOVED '+JSON.stringify({environment,passed}));}
+ await cloudJourney({browser,head,ownerEmail,memberEmail,from,expected,beforeOwner,beforeMember,mails});
+}finally{await owner?.context.close();await member?.context.close();await browser?.close();}
 
 await rerCommand(['run','typecheck']);
 await rerCommand(['check','--profile','first-party']);
