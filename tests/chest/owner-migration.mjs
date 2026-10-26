@@ -26,9 +26,9 @@ try {
  await computerJourney(browser,49719);
  for(let n=0;;n++){try{const response=await fetch(origin+'/health');if(response.ok)break;await response.body?.cancel();}catch{}assert.ok(n<60,'the HTTPS server became reachable');await delay(2000);}
  owner=await emailSignIn({browser,origin,email:ownerEmail,from});mails.push(owner.receipt.id);
- const ownerClient=hostedClient(origin,owner.context),inviter=(await ownerClient.api('/files')).me,since=Date.now();
+ const ownerClient=hostedClient(origin,owner.context),since=Date.now();
  await ownerClient.api('/people',{action:'invite',email:memberEmail,name:'Harbor colleague'});
- const invitation=await waitForMailLink({to:memberEmail,subject:`${inviter.name} (${inviter.email}) invited you to Chest`,since,origin,from});mails.push(invitation.receipt.id);
+ const invitation=await waitForMailLink({to:memberEmail,subject:`${ownerEmail} invited you to Chest`,since,origin,from});mails.push(invitation.receipt.id);
  const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();member={context,page};
  try{await page.goto(invitation.url);await page.getByRole('button',{name:'Confirm',exact:true}).click();await page.waitForURL('**/app/files');}catch{throw Error('Delivered server invitation did not establish the staff identity.');}
  const memberClient=hostedClient(origin,context);
