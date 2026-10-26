@@ -4841,7 +4841,7 @@
       "executable": false
     },
     "tests/chest/integrations.mjs": {
-      "sha256": "01db14b18b15d0bcdb46c7530e5ec439297772f85b84f1a338ff55ff566d399b",
+      "sha256": "fff25f73cfb7497a587077f811ca86b55b2a20140b0d7a82ea0dc81467107900",
       "executable": false
     },
     "tests/chest/journey.mjs": {
@@ -4925,7 +4925,7 @@
       "executable": false
     },
     "tests/chest/owner-migration.mjs": {
-      "sha256": "e18b2b8b7ec28e5249e52ad6abb909849f9f92db60b21fe90a74d40286a4018a",
+      "sha256": "485458900b666767f41577dc9d4db6eca446c14d0e0b8171828029afff2e2793",
       "executable": false
     },
     "tests/chest/owner-process.mjs": {
