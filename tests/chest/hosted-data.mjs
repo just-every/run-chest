@@ -16,7 +16,7 @@ export function hostedClient(origin,context) {
  return {origin,context,request,async api(path,body,status=200){return (await request(path,body,status)).json()}};
 }
 
-export async function createHostedData(owner,member,email,memberEmail,marker) {
+export async function createHostedData(owner,member,email,memberEmail,marker,{originalBytes=150*1024*1024}={}) {
  const space=await owner.api('/spaces',{name:'Harbor delivery '+marker});
  await owner.api(`/spaces/${space.id}/members`,{members:[{principal:email,role:'manager'},{principal:memberEmail,role:'manager'}]});
  const collection=await owner.api('/collections',{name:'Harbor supplier evidence'});
@@ -46,7 +46,7 @@ export async function createHostedData(owner,member,email,memberEmail,marker) {
  assert.equal(submission.status,200,'a real hosted file request accepts the original');await submission.text();
  const receivedItem=(await owner.api(`/items/${incoming.id}`)).children.find(row=>row.name==='Supplier receipt.txt');
  assert.ok(receivedItem,'the hosted request created its file in the chosen folder');
- const size=150*1024*1024,hash=createHash('sha256');
+ const size=originalBytes,hash=createHash('sha256');
  const upload=await member.api('/uploads',{parent:folder.id,name:'Harbor production handover.bin',size});
  for(let n=1,offset=0;offset<size;n++){
   const bytes=randomBytes(Math.min(upload.partSize,size-offset));hash.update(bytes);
@@ -107,6 +107,6 @@ export async function reconcileHostedOriginals(client,expected) {
  const response=await fetch(client.origin+`/api/chest/items/${expected.large}/bytes/${expected.largeVersion}?download=true`,{headers:{cookie:cookies.map(c=>c.name+'='+c.value).join('; ')}});
  assert.equal(response.status,200);let size=0;const hash=createHash('sha256');
  for await(const bytes of response.body){size+=bytes.length;hash.update(bytes)}
- assert.equal(size,expected.size);assert.equal(hash.digest('hex'),expected.checksum,'the restored 150 MB original is byte-identical');
+ assert.equal(size,expected.size);assert.equal(hash.digest('hex'),expected.checksum,'the restored original is byte-identical');
  await client.api(`/items/${expected.trash}/trash`,{});
 }

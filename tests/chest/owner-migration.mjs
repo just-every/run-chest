@@ -32,7 +32,7 @@ try {
  const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();member={context,page};
  try{await page.goto(invitation.url);await page.getByRole('button',{name:'Confirm',exact:true}).click();await page.waitForURL('**/app/files');}catch{throw Error('Delivered server invitation did not establish the staff identity.');}
  const memberClient=hostedClient(origin,context);
- expected=await createHostedData(ownerClient,memberClient,ownerEmail,memberEmail,environment);
+ expected=await createHostedData(ownerClient,memberClient,ownerEmail,memberEmail,environment,{originalBytes:8*1024*1024});
  await proveIndependent(ownerClient,expected.folder,'server');
  beforeOwner=await snapshotHostedData(ownerClient,expected);beforeMember=await snapshotHostedData(memberClient,expected);
  await reconcileHostedOriginals(ownerClient,expected);await reconcileHostedOriginals(memberClient,expected);
