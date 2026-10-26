@@ -39,5 +39,6 @@ export async function serverSettings(root, args, inherited = process.env) {
   return { origin, port, bindings: {
     ...saved, AUTH_LOCAL: 'false', AUTH_ORIGIN: origin.origin,
     MAIL_PROVIDER: mail.provider, MAIL_FROM: mail.from, MAIL_API_KEY: mail.apiKey,
+    ...(env.CHEST_OUTBOUND_HOSTS?.trim() ? { CHEST_OUTBOUND_HOSTS: env.CHEST_OUTBOUND_HOSTS.trim() } : {}),
   } };
 }

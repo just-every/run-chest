@@ -41,6 +41,7 @@ export const deploy = lifecycle => {
     }
     const declaration = JSON.parse(await readFile(join(root, 'deploy.json'), 'utf8'));
     declaration.vars.MAIL_PROVIDER = mail.provider; declaration.vars.MAIL_FROM = mail.from;
+    if (process.env.CHEST_OUTBOUND_HOSTS?.trim()) declaration.vars.CHEST_OUTBOUND_HOSTS = process.env.CHEST_OUTBOUND_HOSTS.trim();
     process.env.MAIL_API_KEY = mail.apiKey;
     context.store.report(`Mail: ${mail.provider === 'sendgrid' ? 'SendGrid' : 'Resend'}, sending from ${mail.from}.`);
     const directory = await privateDirectory(root, ['.seed', 'installer']);

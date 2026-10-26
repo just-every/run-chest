@@ -17,6 +17,7 @@ import { namingInviter } from './chest/invitation-mail'
 const theme = { href: '/rer-theme.css', productName: branding.name, accentColor: branding.primaryColor }
 
 export interface Bindings {
+ CHEST_OUTBOUND_HOSTS?: string
  ASSETS?: { fetch(request: Request): Promise<Response> }
  RER_DEPLOY_SOURCE?: string
  RER_DEPLOY_FINGERPRINT?: string
