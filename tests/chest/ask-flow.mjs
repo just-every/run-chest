@@ -16,15 +16,14 @@ export async function askHarness({live=false}={}){
   const source=sources.find(p=>p.text.includes('2026-04-09'))??sources[0],quote=source.text.trim(),text='The supplied revision states: '+quote;
   const citations=[{source:mode==='injection'?'ungranted-source':source.id,quote}],dated=sources.filter(p=>/2026-0[34]-0[49]/.test(p.text)),chosen=dated.length>1?dated:[source];
   const claims=chosen.map(p=>({text:'This retained revision states: '+p.text.trim(),citations:[{source:mode==='injection'?'ungranted-source':p.id,quote:p.text.trim()}]}));
-  const output={answer:claims.map(c=>c.text).join('\n\n'),uncertainty:dated.some(p=>p.text.includes('2026-03-04'))&&dated.some(p=>p.text.includes('2026-04-09'))?'Retained revisions disagree; confirm which applies.':'',claims,fields:evidence.fields.map(name=>({name,value:name==='Effective date'?'2026-04-09':null,citations:name==='Effective date'?citations:[]}))};
+  const output={uncertainty:dated.some(p=>p.text.includes('2026-03-04'))&&dated.some(p=>p.text.includes('2026-04-09'))?'Retained revisions disagree; confirm which applies.':'',claims,fields:evidence.fields.map(name=>({name,value:name==='Effective date'?'2026-04-09':null,citations:name==='Effective date'?citations:[]}))};
   return Response.json({model:body.model,stop_reason:'end_turn',content:[{type:'text',text:JSON.stringify(output)}],usage:{input_tokens:700,output_tokens:160}});
  }});
- if(process.env.CHEST_ASK_TRACE==='1'){const api=h.api;h.api=async(...args)=>{console.log('ASK_START',args[0]);const result=await api(...args);console.log('ASK_END',args[0]);return result}}
  h.liveDiagnostics=()=>liveDiagnostics;h.askMode=value=>{mode=value};h.askRequests=()=>requests;h.releaseAsk=()=>pending?.();h.askPending=()=>!!pending;h.waitForAsk=()=>arrival;const close=h.close;h.close=async()=>{mode='answer';pending?.();await close()};
  return h;
 }
 export async function askSetup(h,{live=false}={}){
- if(process.env.CHEST_ASK_TRACE==='1')console.log('ASK_BOOTSTRAP_BEGIN');await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const owner=await h.signIn(h.vars.OWNER_EMAIL);if(process.env.CHEST_ASK_TRACE==='1')console.log('ASK_OWNER_READY');
+ await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const owner=await h.signIn(h.vars.OWNER_EMAIL);
  await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
  await h.api('/people',owner,{action:'invite',email:'dana@example.test',name:'Dana Flores'});const viewer=await h.signIn('dana@example.test',true);
  const space=await h.api('/spaces',owner,{name:'Harbor legal review'});
@@ -47,7 +46,7 @@ export async function askSetup(h,{live=false}={}){
  return {owner,viewer,folder,file,hidden,pdfFile,record,policy};
 }
 export async function askFlow(){
- if(process.env.CHEST_ASK_TRACE==='1')console.log('ASK_HARNESS_BEGIN');const h=await askHarness();if(process.env.CHEST_ASK_TRACE==='1')console.log('ASK_HARNESS_READY');
+ const h=await askHarness();
  try{
   const data=await askSetup(h),{owner,viewer,folder,file,hidden,policy}=data,send={question:'Which effective date is evidenced? Show contradictory revisions.',approve:true,includeHistory:true,budgetUsd:.05,policyAt:policy.revision};
   await h.api('/ask/policy',viewer,{confirm:true,enabled:true},403);
@@ -65,3 +64,5 @@ export async function askFlow(){
   console.log('AGENT-007 Ask: exact citations, contradictory revisions, schema extraction, consent, budgets, denied tools, injection, failure costs and mid-run ACL passed');
  }finally{await h.close()}
 }
+
+if(process.argv[1]===new URL(import.meta.url).pathname)await askFlow();
