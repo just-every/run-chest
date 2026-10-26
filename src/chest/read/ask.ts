@@ -8,10 +8,10 @@ import { readerState } from './settings'
 import { askSources } from './ask-sources'
 import { askProvider } from './ask-provider'
 export async function askExecute(env: Bindings, s: Session, method: string, parts: string[], input: any) {
- if (parts[0] === 'ask' && parts[1] === 'policy') return method === 'GET' ? (await askPolicy(env))?.payload ?? null : saveAskPolicy(env, s, input)
+ if (parts[0] === 'ask' && parts[1] === 'policy') return method === 'GET' ? await policyView(env) : saveAskPolicy(env, s, input)
  if (parts[0] !== 'items' || !parts[1] || parts[2] !== 'ask') return undefined
  const key = parts[1]
- if (method === 'GET') { const data = await askSources(env, s, key, false); return { policy: (await askPolicy(env))?.payload ?? null, sources: data.sources.map(({ text, ...p }) => p), skipped: data.skipped } }
+ if (method === 'GET') { const data = await askSources(env, s, key, false); return { policy: await policyView(env), sources: data.sources.map(({ text, ...p }) => p), skipped: data.skipped } }
  if (method !== 'POST') return undefined
  insist(input.approve === true, 'explicit_send_approval_required')
  insist(!input.tools && !input.actions, 'ask_tools_forbidden', 403)
@@ -20,7 +20,7 @@ export async function askExecute(env: Bindings, s: Session, method: string, part
  const fields = input.fields ?? []
  insist(Array.isArray(fields) && fields.length <= 12 && new Set(fields).size === fields.length && fields.every((f: unknown) => typeof f === 'string' && f.length > 0 && f.length <= 80), 'invalid_extraction_fields')
  const policy = await askPolicy(env); insist(policy?.payload.enabled, 'ask_disabled_by_owner', 409)
- insist(input.policyAt === policy.payload.consentAt, 'ask_policy_changed_review_again', 409)
+ insist(input.policyAt === policy.revision, 'ask_policy_changed_review_again', 409)
  const state = await readerState(env); insist('config' in state, 'ask_provider_unavailable', 409)
  const rates = await maybe<CostRates>(env, 'admin-cost-rates', 'admin-cost-rates')
  insist(rates && rates.payload.aiProvider === state.config.provider && rates.payload.aiModel === state.config.model && !rates.payload.aiServiceTier && rates.payload.aiInputUsdPerMillion !== undefined && rates.payload.aiOutputUsdPerMillion !== undefined, 'matching_provider_quote_required', 409)
@@ -38,6 +38,8 @@ export async function askExecute(env: Bindings, s: Session, method: string, part
  let result
  try { result = await askProvider({ ...state.config, accounting }, question, data.sources, fields, policy.payload.maxOutput) }
  catch { return { run, state: 'failed', answer: '', claims: [], fields: [], uncertainty: 'The provider failed or returned unverifiable evidence. No answer was accepted. This attempt may still be billed.', cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed } }
+ const providerNow = await readerState(env)
+ if (!('config' in providerNow) || providerNow.config.key !== state.config.key || providerNow.config.endpoint !== state.config.endpoint || providerNow.config.model !== model) return { run, state: 'policy_changed', answer: '', claims: [], fields: [], uncertainty: 'The provider configuration changed. The answer was withheld.', cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed }
  const current = await askSources(env, s, key, input.includeHistory === true)
  const same = data.versions.every(v => current.versions.some(c => c.item === v.item && c.version === v.version && c.checksum === v.checksum))
  if (!same) return { run, state: 'access_changed', answer: '', claims: [], fields: [], uncertainty: 'Access or evidence changed during the request. The answer was withheld.', cost: await receipt(env, run), reservedUsd: reserve, policy: policyUsed }
@@ -49,3 +51,5 @@ async function receipt(env: Bindings, run: string) {
  if (!row) return { usd: null, outcome: 'unknown', input: null, output: null }
  const r = JSON.parse(row.detail); return { usd: r.usd, outcome: r.outcome, input: r.input, output: r.output, provider: r.provider, model: r.model, quote: r.quote }
 }
+
+async function policyView(env: Bindings) { const row = await askPolicy(env); return row ? { ...row.payload, revision: row.revision } : null }

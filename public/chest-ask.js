@@ -6,7 +6,7 @@ for (const panel of document.querySelectorAll('[data-ask]')) {
   if (!panel.open) return;
   try { const response = await fetch(`/api/chest/items/${encodeURIComponent(panel.dataset.ask)}/ask`), data = await response.json(); policyBox.replaceChildren();
    if (!response.ok || !data.policy?.enabled) { line('p', 'Ask is off. The owner enables it in Settings.', policyBox); policyAt = null; return; }
-   policyAt = data.policy.consentAt; line('p', `Provider terms: ${data.policy.providerRetention}. Residency: ${data.policy.residency}. Maximum estimated USD ${data.policy.maxUsd} per run. Questions and answers are not saved.`, policyBox);
+   policyAt = data.policy.revision; line('p', `Provider terms: ${data.policy.providerRetention}. Residency: ${data.policy.residency}. Maximum estimated USD ${data.policy.maxUsd} per run. Questions and answers are not saved.`, policyBox);
   } catch { policyAt = null; line('p', 'Could not load the current data policy.', policyBox); }
  });
  const line = (tag, value, parent = output) => { const e = document.createElement(tag); e.textContent = value; parent.append(e); return e; };

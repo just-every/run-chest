@@ -16,5 +16,5 @@ export async function saveAskPolicy(env: Bindings, s: Session, input: any) {
  const payload: AskPolicy = { enabled: input.enabled === true || input.enabled === 'true', maxUsd, maxOutput, providerRetention: plain(input.providerRetention), residency: plain(input.residency), consentAt: now(), by: s.operator.email }
  const previous = await askPolicy(env), row = previous ? next(previous, payload) : fresh(key, payload, key)
  await commit(env, s, [{ row, previous: previous ?? undefined }], { audits: [{ action: 'ask.policy', object: key, detail: payload }] })
- return payload
+ return { ...payload, revision: row.revision }
 }

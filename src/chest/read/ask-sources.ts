@@ -21,7 +21,7 @@ export async function askSources(env: Bindings, s: Session, root: string, histor
   fences.push(...file.fences, row)
   for (const v of vs) {
    const x = await extraction(env, v.checksum), text = v.text || x?.payload.text || ''
-   if (!text.trim()) { skipped.push({ name: row.payload.name, reason: x?.payload.state === 'failed' || x?.payload.state === 'unsupported' ? 'Unreadable' : 'Not yet extracted' }); continue }
+   if (!text.trim()) { skipped.push({ name: row.payload.name, reason: x?.payload.state === 'failed' || x?.payload.state === 'unsupported' || x?.payload.state === 'done' ? 'Unreadable' : 'Not yet extracted' }); continue }
    if (sources.length >= 60) { skipped.push({ name: row.payload.name, reason: 'Run source limit reached' }); continue }
    versions.push({ item: row.id, version: v.id, checksum: v.checksum })
    for (const [i, passage] of text.split('\f').entries()) {
