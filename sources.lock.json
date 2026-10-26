@@ -4921,7 +4921,7 @@
       "executable": false
     },
     "tests/chest/owner-cloud.mjs": {
-      "sha256": "b54689416b9f3c674daa58abc5bae74fd77c4ce0232555b71ace3f1f61d52d2b",
+      "sha256": "7d466ffa0eac43ed789f81876455d1a5b465d8555972b3bec49645480960cc17",
       "executable": false
     },
     "tests/chest/owner-computer.mjs": {

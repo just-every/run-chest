@@ -24,7 +24,8 @@ export async function cloudJourney({browser,head,ownerEmail,memberEmail,from,exp
  console.log('OWN_ARCHIVE_RECONCILED all portable records and original hashes match.');
  owner=await emailSignIn({browser,origin:cloudOrigin,email:ownerEmail,from});mails.push(owner.receipt.id);
  const cloudOwner=hostedClient(cloudOrigin,owner.context);
- assert.equal((await cloudOwner.api('/people')).some(person=>person.email===memberEmail),false,'portable people do not acquire authentication authority');
+ const operators=await owner.context.request.get(cloudOrigin+'/auth/operators');assert.equal(operators.status(),200);
+ assert.equal((await operators.json()).some(person=>person.email===memberEmail),false,'portable people do not acquire authentication authority');
  const since=Date.now();
  await cloudOwner.api('/people',{action:'invite',email:memberEmail,name:'Harbor colleague'});
  const invitation=await waitForMailLink({to:memberEmail,subject:`Chest operations test (${ownerEmail}) invited you to Chest`,since,origin:cloudOrigin,from});mails.push(invitation.receipt.id);
