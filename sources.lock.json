@@ -1369,7 +1369,7 @@
       "executable": false
     },
     "src/chest/administration/egress.ts": {
-      "sha256": "4d61b35d2b453832e358015ac9e360f9bab6cce8b866d802a715af35456bcc4c",
+      "sha256": "fd4c5e52fdb9df1bc3830c6b0469fbd81c55d9b8100296c5995f112cfefd68b0",
       "executable": false
     },
     "src/chest/administration/invitations.ts": {
@@ -1469,7 +1469,7 @@
       "executable": false
     },
     "src/chest/blobs.ts": {
-      "sha256": "1aa22dcb6aa8284a299626122039731a8e619fa4e2c3132c70c7d5aaf9122bfe",
+      "sha256": "d2e5e94e7be7809939ac270e667510e4cde20442fbd0e7e6bd4eb064a2bf98e1",
       "executable": false
     },
     "src/chest/bulk/api.ts": {

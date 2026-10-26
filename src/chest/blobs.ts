@@ -48,8 +48,7 @@ export async function serve(env:Bindings,v:Version,download:boolean) {
  if(!download&&v.preview==='unsupported')return Response.json({error:'preview_unavailable',message:'This format is available as an original download only.'},{status:415})
  if(v.size>SMALL){
   // Too large to hold in memory: the digest is recomputed while the bytes stream, and a mismatch fails the transfer.
-  // Hash at the consumer's pace. A faster tee branch would buffer the original
-  // behind durable output checkpoints and exhaust the hosted Worker's memory.
+  // Hash each chunk at the consumer's pace without a second stream consumer.
   insist(blob.size===v.size,'blob_integrity',503);const hash=digester(),writer=hash.getWriter()
   const verified=new TransformStream<Uint8Array,Uint8Array>({
    async transform(value,controller){await writer.write(value);controller.enqueue(value)},

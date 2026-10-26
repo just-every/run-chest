@@ -28,6 +28,9 @@ export async function egressReceipt(env: Bindings, item:string, actor:string, do
 export async function meterOriginal(env: Bindings, response: Response, item: string, actor: string, door: string, expectedBytes?: number, observe?: (state:EgressCheckpoint)=>Promise<void>) {
  if (!response.ok || !response.body) return response
  const reader=response.body.getReader(),receipt=await egressReceipt(env,item,actor,door)
+ // Known originals need a bounded number of durable checkpoints within D1's
+ // invocation query budget, even when storage yields tiny chunks.
+ const batchBytes=expectedBytes===undefined?256*1024:Math.min(32*1024*1024,Math.max(256*1024,Math.ceil(expectedBytes/128)))
  let bytes=0,reservedBytes=0,recorded=false,cancelled=false,pending=Promise.resolve()
  function checkpoint(outcome:string){
   const state={bytes,reservedBytes,outcome}
@@ -44,15 +47,15 @@ export async function meterOriginal(env: Bindings, response: Response, item: str
     // Storage can yield four-kilobyte pieces. Coalesce a bounded output batch so
     // durable admission does not require one database transaction for each piece.
     const parts:Uint8Array[]=[];let size=0,ended=false
-    while(size<256*1024){const part=await reader.read();if(part.done){ended=true;break}parts.push(part.value);size+=part.value.byteLength}
+    while(size<batchBytes){const part=await reader.read();if(part.done){ended=true;break}parts.push(part.value);size+=part.value.byteLength}
     if(cancelled)return
     if(!size&&ended){insist(expectedBytes===undefined||bytes===expectedBytes,'incomplete_original',503);await record('complete');controller.close();return}
-    const value=new Uint8Array(size);let offset=0;for(const part of parts){value.set(part,offset);offset+=part.byteLength}
-    reservedBytes=bytes+value.byteLength
+    reservedBytes=bytes+size
     insist(expectedBytes===undefined||reservedBytes<=expectedBytes,'original_size_mismatch',503)
     await checkpoint('running')
     if(cancelled)return
-    controller.enqueue(value);bytes=reservedBytes
+    // Keep the original buffers instead of allocating a second full batch.
+    for(const part of parts)controller.enqueue(part);bytes=reservedBytes
     await checkpoint('running')
     if(ended||expectedBytes!==undefined&&bytes===expectedBytes){insist(expectedBytes===undefined||bytes===expectedBytes,'incomplete_original',503);if(!ended)insist((await reader.read()).done,'original_size_mismatch',503);await record('complete');controller.close()}
    } catch(error){if(cancelled)return;try{await record('failed')}finally{controller.error(error);await reader.cancel(error)}}
