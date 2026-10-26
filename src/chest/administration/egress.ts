@@ -50,12 +50,14 @@ export async function meterOriginal(env: Bindings, response: Response, item: str
     while(size<batchBytes){const part=await reader.read();if(part.done){ended=true;break}parts.push(part.value);size+=part.value.byteLength}
     if(cancelled)return
     if(!size&&ended){insist(expectedBytes===undefined||bytes===expectedBytes,'incomplete_original',503);await record('complete');controller.close();return}
+    const value=parts.length===1?parts[0]:new Uint8Array(size)
+    if(parts.length>1){let offset=0;for(const part of parts){value.set(part,offset);offset+=part.byteLength}}
+    parts.length=0
     reservedBytes=bytes+size
     insist(expectedBytes===undefined||reservedBytes<=expectedBytes,'original_size_mismatch',503)
     await checkpoint('running')
     if(cancelled)return
-    // Keep the original buffers instead of allocating a second full batch.
-    for(const part of parts)controller.enqueue(part);bytes=reservedBytes
+    controller.enqueue(value);bytes=reservedBytes
     await checkpoint('running')
     if(ended||expectedBytes!==undefined&&bytes===expectedBytes){insist(expectedBytes===undefined||bytes===expectedBytes,'incomplete_original',503);if(!ended)insist((await reader.read()).done,'original_size_mismatch',503);await record('complete');controller.close()}
    } catch(error){if(cancelled)return;try{await record('failed')}finally{controller.error(error);await reader.cancel(error)}}

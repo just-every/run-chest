@@ -1369,7 +1369,7 @@
       "executable": false
     },
     "src/chest/administration/egress.ts": {
-      "sha256": "fd4c5e52fdb9df1bc3830c6b0469fbd81c55d9b8100296c5995f112cfefd68b0",
+      "sha256": "fc5cdd6c94259543fe4420a502870ac46741d36711440ec4bb17205839c7dbe5",
       "executable": false
     },
     "src/chest/administration/invitations.ts": {
