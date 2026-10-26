@@ -59,3 +59,20 @@ lives in the `run-chest` folder on your computer.
 
 [Set up your library](/docs/set-up): invite your staff and create the first
 collection and document type.
+
+## Start from a fresh clone
+
+On macOS or Ubuntu LTS with Git and Node 22.20.0 or later, these five commands
+install the locked dependencies, claim your owner account and open Chest:
+
+```sh
+git clone https://github.com/just-every/run-chest.git
+cd run-chest
+npx -y @runeditrun/rer install
+npx -y @runeditrun/rer setup --owner-email you@example.com
+npx -y @runeditrun/rer dev
+```
+
+Open the private `RER_OPEN` link and finish setup. This computer installation
+listens on the same computer; staff on other devices cannot reach it. For team
+access on your own Linux host, follow [Linux server installation](/docs/server).

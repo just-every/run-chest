@@ -47,7 +47,8 @@
     "check:deployment-spec": "node scripts/build-deployment-spec.mjs --check",
     "test:chest:core": "rer queue test:chest -- sh -c \"node tests/chest/flows.mjs && node tests/chest/files.mjs && node tests/chest/bulk.mjs && node tests/chest/ownership.mjs && node tests/chest/space-policy.mjs && node tests/chest/new-files.mjs && node tests/chest/governance.mjs && node tests/chest/link-versions.mjs && node tests/chest/link-policy.mjs && node tests/chest/collection.mjs && node tests/chest/transfers.mjs && node tests/chest/guest-links.mjs && node tests/chest/link-discussions.mjs && node tests/chest/reading.mjs && node tests/chest/scan-fields.mjs && node tests/chest/search.mjs && node tests/chest/quota.mjs && node tests/chest/open-source.mjs && node tests/chest/filing.mjs && node tests/chest/arrival-rules.mjs && node tests/chest/agent-filing.mjs && node tests/chest/audit.mjs && node tests/chest/file-requests.mjs && node tests/chest/link-repairs.mjs && node tests/chest/duplicate-reconciliation.mjs && node tests/chest/backup-archive.mjs && node tests/chest/erasure.mjs && node tests/chest/erasure-archive.mjs && node tests/chest/integrations.mjs\"",
     "test:chest:office": "node tests/chest/office.mjs",
-    "test:browser:office": "node tests/chest/browser-new-files.mjs"
+    "test:browser:office": "node tests/chest/browser-new-files.mjs",
+    "server": "node scripts/server.mjs"
   },
   "dependencies": {
     "@node-saml/node-saml": "5.1.0",
