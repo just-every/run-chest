@@ -59,3 +59,14 @@ try {
  await proveIndependent(cloudOwner,expected.folder,'cloud');
  console.log('OWN_CLOUD_RECONCILED '+JSON.stringify({head,environment,originalSha256:expected.checksum,mailReceiptIds:mails}));passed=true;
 }finally{await owner?.context.close();await member?.context.close();await browser?.close();await resources.remove(env);console.log('OWN_CLOUD_REMOVED '+JSON.stringify({environment,passed}));}
+
+await rerCommand(['run','typecheck']);
+await rerCommand(['check','--profile','first-party']);
+const {spawn}=await import('node:child_process');
+for(const test of ['integrations.mjs','backup-archive.mjs']){
+ const child=spawn(process.execPath,['tests/chest/'+test],{env:{...process.env,CI:'true',WRANGLER_SEND_METRICS:'false'},stdio:['ignore','pipe','pipe']});
+ let output='';child.stdout.on('data',chunk=>{output=(output+chunk).slice(-8000)});child.stderr.on('data',chunk=>{output=(output+chunk).slice(-8000)});
+ const code=await new Promise(resolve=>child.once('close',resolve));
+ assert.equal(code,0,'Touched integration journey '+test+' passed; private diagnostics withheld.');
+ console.log('OWN_TOUCHED_TEST_PASS '+test);
+}
