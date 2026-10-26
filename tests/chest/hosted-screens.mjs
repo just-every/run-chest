@@ -13,10 +13,10 @@ export async function hostedScreens(page,origin,expected,actor) {
    ['request',`/app/items/${expected.incoming}`,'Supplier receipt.txt']]){
    const response=await page.goto(origin+path);
    assert.equal(response.status(),200,`restored ${name} page opens for ${actor}`);
-   await page.getByText(visible,{exact:true}).first().waitFor();
+   await page.getByText(visible,{exact:true}).filter({visible:true}).first().waitFor();
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name} fits ${width}`);
-   await tooltips(page,width,`hosted-${actor}-${name}`);
    await page.screenshot({path:`test-results/${width}-hosted-${actor}-${name}.png`,fullPage:true});
+   await tooltips(page,width,`hosted-${actor}-${name}`);
   }
   const request=await page.goto(expected.requestUrl);
   assert.equal(request.status(),200,'the restored public file request opens');

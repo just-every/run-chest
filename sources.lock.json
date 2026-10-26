@@ -4781,7 +4781,7 @@
       "executable": false
     },
     "tests/chest/hosted-lifecycle.mjs": {
-      "sha256": "ac3aaaf3d27c689202c037edbdc4527bc7d8bf099d8e5965025da22e14eb70d7",
+      "sha256": "8cf82b3ec47c84ccfafe4e334bed65f24eb7cc8277015a87447aefdb3dd2663b",
       "executable": false
     },
     "tests/chest/hosted-mail.mjs": {
@@ -4789,7 +4789,7 @@
       "executable": false
     },
     "tests/chest/hosted-screens.mjs": {
-      "sha256": "599c634a5bf2a0bbf13eac5c1b9f2182bcfe1e4a6cc8a85c0c19d62d5fdcaca1",
+      "sha256": "e7946f96d047dc34b337bd92357bed1ef69f97c8101ccf9b2833ad1f1ce16819",
       "executable": false
     },
     "tests/chest/integration-client.mjs": {

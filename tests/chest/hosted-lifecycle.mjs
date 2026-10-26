@@ -63,6 +63,7 @@ try {
  assert.deepEqual(await snapshotHostedData(restoredOwner,expected),beforeOwner,'the complete named owner graph reconciles after fresh email sign-in');
  assert.deepEqual(await snapshotHostedData(restoredMember,expected),beforeMember,'the complete named member graph and grants reconcile after fresh email sign-in');
  await reconcileHostedOriginals(restoredOwner,expected);await reconcileHostedOriginals(restoredMember,expected);
+ console.log('Both restored identities reconciled every retained original, including the full 150 MiB SHA-256.');
  await hostedScreens(owner.page,origin,expected,'owner');await hostedScreens(member.page,origin,expected,'member');
  const publicRequest=await fetch(expected.requestUrl);assert.equal(publicRequest.status,200);await publicRequest.body?.cancel();
  const publicLink=await fetch(expected.linkUrl);assert.equal(publicLink.status,200);await publicLink.body?.cancel();
