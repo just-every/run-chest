@@ -1469,7 +1469,7 @@
       "executable": false
     },
     "src/chest/blobs.ts": {
-      "sha256": "a0b6faffe379b0c7cb611465105dc3a87ba451e16d38c7918472edcbe30f828c",
+      "sha256": "1aa22dcb6aa8284a299626122039731a8e619fa4e2c3132c70c7d5aaf9122bfe",
       "executable": false
     },
     "src/chest/bulk/api.ts": {
