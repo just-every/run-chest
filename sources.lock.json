@@ -4925,19 +4925,19 @@
       "executable": false
     },
     "tests/chest/owner-migration.mjs": {
-      "sha256": "9fc7686acfebd34f6142ef1eead90476ba96210177eb9e6b4a523e59fd9088d8",
+      "sha256": "48adccbd514eaa0fb5db8b60ec4ac178a22f19a3873b7f38125b6c0f97b86ceb",
       "executable": false
     },
     "tests/chest/owner-prepare.mjs": {
-      "sha256": "90eb6994f187f11082b0c74cdd354f6e3c51249f50d133c432ebb754cc089d47",
+      "sha256": "d9b5e0e6a29b23ebc9c4a87b90250c22e37b4d9a6219a723c892f433e58bb73a",
       "executable": false
     },
     "tests/chest/owner-process.mjs": {
-      "sha256": "5e26d015a193370de4aed699fe0b89d337e2d5653015153645985bbe3ba1bdd0",
+      "sha256": "e34b7b78c4680c46b4415a1f9756b373254d5c5f1f78ffdd15b382a96e592c9e",
       "executable": false
     },
     "tests/chest/owner-server.mjs": {
-      "sha256": "c4674346121679e65aea68e9b802b223562cf951280b1968983c82c69e586426",
+      "sha256": "0120b00ece25646062e50487ab2a0259cf970d012689d2798c3f34df1919c978",
       "executable": false
     },
     "tests/chest/owner-tunnel.mjs": {

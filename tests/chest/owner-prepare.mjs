@@ -6,10 +6,11 @@ import {createServer} from 'node:http';
 import {join,resolve} from 'node:path';
 import {chromium} from '@playwright/test';
 import {computerJourney} from './owner-computer.mjs';
-import {rerCommand} from './owner-process.mjs';
+import {browserHome,rerCommand} from './owner-process.mjs';
 
 assert.equal(process.platform,'darwin');
 process.env.TEST_MAIL_TO='synthetic-chest-1@example.test';await mkdir('test-results',{recursive:true});
+browserHome();
 const browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});let server;
 try {
  await computerJourney(browser,49719);

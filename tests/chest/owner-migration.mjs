@@ -3,7 +3,7 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {setTimeout as delay} from 'node:timers/promises';
 import {chromium} from '@playwright/test';
-import {receiveSecrets,waitForFile,rerCommand} from './owner-process.mjs';
+import {browserHome,receiveSecrets,waitForFile,rerCommand} from './owner-process.mjs';
 import {computerJourney} from './owner-computer.mjs';
 import {cloudResources,deploymentEnvironment} from './hosted-cloud.mjs';
 import {emailSignIn,waitForMailLink} from './hosted-mail.mjs';
@@ -14,7 +14,7 @@ import {createReadStream} from 'node:fs';
 import {diffArchives} from '@runeditrun/rer/internal/modules/portability/diff.mjs';
 import {proveIndependent} from './owner-egress.mjs';
 
-assert.equal(process.platform,'darwin');await receiveSecrets();
+assert.equal(process.platform,'darwin');await receiveSecrets();browserHome();
 const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const ownerEmail=process.env.TEST_MAIL_TO,memberEmail='qa-inbox-2@runeditrun.com',from=process.env.SENDGRID_FROM_EMAIL;
 const origin='https://own-test.run-chest.com',environment='sx-i813-'+head.slice(0,8),env=deploymentEnvironment(ownerEmail);
