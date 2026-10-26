@@ -2,11 +2,20 @@ import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {readFile,unlink,mkdir} from 'node:fs/promises';
 import {userInfo} from 'node:os';
+import {request as httpRequest} from 'node:http';
 import {setTimeout as delay} from 'node:timers/promises';
 
 export function browserHome() {
  process.env.CHEST_TEST_INSTALLER_HOME=process.env.HOME;
  process.env.HOME=userInfo().homedir;
+}
+
+export function loopback(port,path,host) {
+ return new Promise((resolve,reject)=>{
+  const request=httpRequest({host:'127.0.0.1',port,path,headers:{host}},response=>{
+   response.resume();response.once('end',()=>resolve({status:response.statusCode}));
+  });request.once('error',reject);request.end();
+ });
 }
 
 export async function receiveSecrets() {
