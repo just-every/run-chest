@@ -4917,7 +4917,7 @@
       "executable": false
     },
     "tests/chest/owner-computer.mjs": {
-      "sha256": "d8cbb4bf8ca0e4b45f6261063b65e32c9d12797b2252914ceca8ee8cb86ba1b8",
+      "sha256": "23f241e7e91e165ea70c6935fb64899695d8c75937f550979dcde8d8a9863315",
       "executable": false
     },
     "tests/chest/owner-egress.mjs": {
@@ -4929,7 +4929,7 @@
       "executable": false
     },
     "tests/chest/owner-prepare.mjs": {
-      "sha256": "19ace8dbfe8c290a44e45452b0113a407f863ef458ea8237369ea831ac4553b0",
+      "sha256": "3723f49ac68ae6429f3e75bd07c009f6557775027ec19d08f12a530bbd434b5c",
       "executable": false
     },
     "tests/chest/owner-process.mjs": {
