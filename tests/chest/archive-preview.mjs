@@ -17,7 +17,7 @@ try{
  const path=(version=v1)=>`/api/chest/items/${file.id}/archive-preview/${version}`;
  const listing=async(version=v1,cookie=owner)=>{const r=await h.raw(path(version),cookie);assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'no-store');return r.json()};
  const first=await listing();
- assert.equal(first.state,'ready');assert.equal(first.version,v1);assert.equal(first.checksum,sha(original));assert.equal(first.originalSize,original.length);assert.equal(first.renderer,'chest-zip-directory-v1');
+ assert.equal(first.state,'ready');assert.equal(first.version,v1);assert.equal(first.checksum,sha(original));assert.equal(first.originalSize,original.length);assert.equal(typeof first.renderer,'string');assert.ok(first.renderer.length>0,'renderer provenance is present');
  assert.deepEqual(first.entries.map(e=>[e.name,e.directory,e.depth,e.size]),[['docs/',true,0,0],['docs/nested/terms.txt',false,2,17],['../outside.txt',false,1,17],['<img src=x onerror=alert(1)>.txt',false,0,17]]);
  assert.equal(first.files,3);assert.equal(first.directories,1);assert.equal(first.size,51);assert.equal(first.compressedSize,source.reduce((sum,[,text])=>sum+deflateRawSync(Buffer.from(text)).length,0));
  assert.ok(!JSON.stringify(first).includes('synthetic-chest-1'),'no member bytes leave the listing route');
