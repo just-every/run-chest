@@ -333,6 +333,9 @@ try{
   assert.equal(sha(await bytesOf('ana',created.item,(await h.api(`/items/${created.item}`,people.ana)).item.current)),sha('second save'),'the remote version stays current');
   assert.equal((await sync(`/sync/items/${created.item}`,{method:'DELETE'})).status,200);
   const feed=await(await sync(`/sync/changes?cursor=${start.cursor}`)).json();assert.equal(feed.changes.find(c=>c.id===created.item).state,'removed');assert.equal(feed.changes.find(c=>c.id===conflict.kept).state,'present');
+  await h.api(`/items/${conflict.kept}/rename`,people.ana,{name:'After catch-up boundary.txt'});
+  const completed=await(await sync(`/sync/changes?cursor=${feed.cursor}&until=${feed.until}`)).json();assert.deepEqual(completed.changes,[]);assert.equal(completed.cursor,feed.until,'a fixed catch-up finishes while later changes arrive');
+  const later=await(await sync(`/sync/changes?cursor=${completed.cursor}`)).json();assert.equal(later.changes.find(c=>c.id===conflict.kept).item.name,'After catch-up boundary.txt');
   assert.equal((await h.api('/trash',people.ana)).find(t=>t.id===created.item).trashedBy,'ana@example.test');
   const benDevice=await h.api('/devices',people.ben,{name:'Ben phone',platform:'ios'});assert.equal((await h.fetch(`/api/chest/sync/items?parent=${space.contracts}&name=no.txt`,{method:'POST',headers:{authorization:`Bearer ${benDevice.token}`},body:'x'})).status,403);
   assert.ok((await h.api('/devices',people.owner)).some(d=>d.id===device.device.id&&d.lastSeen));await h.api(`/devices/${device.device.id}/revoke`,people.ben,{},404);
