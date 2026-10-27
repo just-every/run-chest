@@ -26,12 +26,18 @@ try{
  const wide=await h.api(`/items/${data.folders[0]}`,owner),deep=await h.api(`/items/${data.folders.at(-1)}`,owner);assert.equal(data.counts.largestFolder,Math.max(wide.children.length,deep.children.length),'recorded folder size equals admitted direct children');
  const device=await h.api('/devices',member,{name:'Offline measurement device',platform:'linux'});await h.api('/devices',owner,{name:'Enumeration device',platform:'linux'});data.counts.devices+=2;
  const registered=await h.api('/devices',owner);assert.equal(registered.length,data.counts.devices);assert.equal(new Set(registered.map(d=>d.id)).size,data.counts.devices);
- if(data.membersSpace){const last=data.membersSpace.members.at(-1).principal,lastSession=await h.signIn(last,true),roster=await h.api(`/spaces/${data.membersSpace.id}`,lastSession);assert.equal(roster.role,'viewer');assert.equal(roster.members.length,Number(process.env.CHEST_SCALE_DIRECT_MEMBERS))}
+ if(data.membersSpace){
+  assert.equal(data.membersSpace.id,data.space.id,'direct grants and generated items occupy the same space');
+  const direct=data.membersSpace.members.filter(m=>m.principal.includes('@')),last=direct.at(-1).principal,lastSession=await h.signIn(last,true),roster=await h.api(`/spaces/${data.space.id}`,lastSession);
+  assert.equal(roster.role,'viewer');assert.equal(roster.members.filter(m=>m.principal.includes('@')).length,Number(process.env.CHEST_SCALE_DIRECT_MEMBERS));
+  assert.deepEqual(roster.children.map(i=>i.id),[data.folders[0]],'a direct member can open the populated reference tree');
+ }
  const sync=async path=>{const r=await h.fetch('/api/chest/sync'+path,{headers:{authorization:`Bearer ${device.token}`}});assert.equal(r.status,200);return r.json()};
  const start=await timed('enumeration',()=>enumerate(sync,data));
  assert.equal(data.counts.depth,Number(process.env.CHEST_SCALE_DEPTH||8)+1);
- if(data.membersSpace)assert.equal(data.membersSpace.members.length,Number(process.env.CHEST_SCALE_DIRECT_MEMBERS));
- for(let n=0;n<10;n++){await timed('listing',async()=>{const d=await h.api(`/items/${data.folders[0]}`,member);assert.ok(d.children.length)});await timed('deepOpen',async()=>{const d=await h.api(`/items/${data.folders.at(-1)}`,member);assert.ok(d.children.some(i=>i.id===data.originals[0].id))})}
+ assert.equal(data.counts.items,Number(process.env.CHEST_SCALE_FILES||60)+Number(process.env.CHEST_SCALE_DEPTH||8),'all requested files and folders were admitted');
+ assert.equal(data.counts.members,3+Math.max(0,Number(process.env.CHEST_SCALE_DIRECT_MEMBERS||0)-1),'group-only people are distinct from the direct roster');
+ for(let n=0;n<10;n++){await timed('listing',async()=>{const d=await h.api(`/items/${data.folders[0]}`,member);assert.deepEqual(d.children.map(i=>i.id).sort(),[...(data.folders.length>1?[data.folders[1]]:[]),...data.originals.slice(1).map(i=>i.id),...(data.folders.length===1?[data.originals[0].id]:[])].sort(),'listing returns the exact live siblings')});await timed('deepOpen',async()=>{const d=await h.api(`/items/${data.folders.at(-1)}`,member);assert.deepEqual(d.path.map(i=>i.id),data.folders.slice(0,-1),'deep open retains every ancestor');assert.ok(d.children.some(i=>i.id===data.originals[0].id))})}
  for(let n=0;n<50;n++)await timed('search',async()=>{const result=await h.api(`/search?q=${encodeURIComponent(`invoice ${n%data.originals.length}`)}`,member);assert.ok(result.count>0)});
  const changeCount=Number(process.env.CHEST_SCALE_CHANGES||20),changed=await data.applyChanges(changeCount);
  assert.equal(data.counts.changes,changeCount);
