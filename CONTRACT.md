@@ -2,10 +2,6 @@
 
 Target approved **16 October 2026**. Chest is an owned **business cloud file system: storage, sync and sharing** for a US operations lead at a 10–100 person business. A team can replace Google Drive (Google Workspace), Dropbox Business, Box or Microsoft OneDrive / SharePoint for its everyday store, sync, open, search, edit, share and recover work. Egnyte, LucidLink and Nextcloud set the bar for governed collaboration, streamed creative assets and owner-controlled deployment. Exact-version approvals remain a useful option inside that complete job.
 
-This is the product we are building towards. The status table measures current implementation, not a release promise. Existing `CHEST-01` through `CHEST-13` IDs are retained. Round 1 of the independent buyer review (16 October 2026) added ROLE-001, BULK-001, SYNC-006, SHARE-004/005, POLICY-001, ADMIN-003/004, SECURITY-003, SCALE-001 and CONNECT-008/009 and sharpened CHEST-01/10/13, TRANSFER-001, SYNC-001/003, MOBILE-001, SHARE-001, PREVIEW-001, SEARCH-001, RECOVER-001, MIGRATE-002 and OPS-001. Round 2 of that review (16 October 2026) added VERSION-001, SPACE-002, QUOTA-001, SYNC-007, SIGN-001, MIGRATE-007 and OPS-002 and sharpened CHEST-07/13, ROLE-001, SHARE-001, SHARE-004, POLICY-001, RECOVER-001, ADMIN-002/003, TRANSFER-001, CONNECT-004, MIGRATE-001/002 and OPS-001. Round 3 of that review (16 October 2026) added EDIT-004 and CONNECT-010 and sharpened SPACE-001, MOBILE-001, EDIT-001, SYNC-003, SECURITY-002, AUDIT-001, CONNECT-003, CONNECT-005, CONNECT-007, POLICY-001 and FOLLOW-001. Round 4 of that review (16 October 2026) named Collabora Online as the shipped editor in EDIT-001 with a no-Microsoft, no-Google acceptance journey, named the SEARCH-001 filters, and sharpened EDIT-004, SHARE-005, MOBILE-001, ADMIN-002, CONNECT-007, CONNECT-010 and FOLLOW-001. Round 5 of that review (16 October 2026) gave EDIT-001 the review loop inside the shipped editor (attributed comments, @mentions with grant-or-refuse, assigned comments, one thread across the editor, file page and email, and commenter suggestions as tracked changes that contributors decide), a CODE production warning and download-as conversion, and sharpened EDIT-003, ROLE-001, FOLLOW-001 (personal notification settings and resolve from email) and CONNECT-010. Round 6 of that review (17 October 2026) gave MIGRATE-002 the move-in of open review work (Drive comments, replies, assigned action items and pending suggestions arrive as live EDIT-003 threads, tasks and tracked changes, with a named author-matching method, no move-in notifications and per-file reconciliation), carried the same rules through MIGRATE-001, MIGRATE-003–005, EDIT-002, EDIT-003 and FOLLOW-001, and added in-editor assignment and Chest file links to EDIT-001 and file and folder Ask panels to AGENT-007. The homepage claims pass (17 October 2026) gave every capability claim on the approved homepage a clause: it added SEARCH-002, OPEN-001 and OWN-001 and sharpened SHARE-001, TRANSFER-001, SYNC-001, EDIT-001, MIGRATE-007, AGENT-001 and AGENT-005 (## Homepage claims). On 19 October 2026 two clause boundaries were drawn on the planning defaults accepted for the builders: the macOS/Windows tray and mobile upload-queue display of a storage-limit refusal moved from QUOTA-001 to SYNC-003 and MOBILE-001, and the provider-only cost view that OPEN-001 relies on is ADMIN-002's. New stable IDs use area numbering. Current implementation and gaps are recorded in the Status table below and mirrored in ACCEPTANCE.md; later source and test coverage supersedes the 16 October audit baseline. Existing manifests, homepage and installation limits describe the current edition and are not changed by this document.
-
-The primary journey is: create a team space, migrate originals and rights, install staff clients, upload/open/edit ordinary files, collaborate and share outside the team, find the right version, and recover it independently. Each named clause states an observable outcome and its acceptance journey through a public UI, HTTP, client, command or provider door. `done` requires implementing source and an existing exercising test; `partial` names the delivered subset and remaining work; `missing` has no delivered product workflow. Acceptance journeys for future work are requirements, not tests claimed to have run.
-
 ## Product target
 
 Chest is the owned business cloud file system a US operations lead at a 10–100 person business buys instead of Google Drive, Dropbox Business, Box or OneDrive / SharePoint, and it must also beat Egnyte, LucidLink and Nextcloud on governed collaboration, streamed creative assets and owner-controlled deployment.
@@ -17,240 +13,389 @@ Chest is the owned business cloud file system a US operations lead at a 10–100
 | Up-and-comers it must also beat | Egnyte, LucidLink, Nextcloud |
 | First buyer | A US operations lead at a 10–100 person business replacing its everyday file store, sync and sharing; costs in USD |
 
-## Identity, original custody and governed records
+The primary journey: create a team space, migrate originals and rights, install staff clients, upload/open/edit ordinary files, collaborate and share outside the team, find the right version, and recover it independently. Each named clause states an observable outcome and its acceptance journey through a public UI, HTTP, client, command or provider door. `done` requires implementing source and an existing exercising test; `partial` names the delivered subset and remaining work; `missing` has no delivered product workflow. Acceptance journeys for future work are requirements, not tests claimed to have run.
 
-### CHEST-01 — Owner and ordinary staff identity.
+## How to read this contract
 
-An installation has one initial owner claim, invited staff, email-link return and revocable sessions. Development personas are separately gated and confer no production authority. The initial claim is a setup step, not a single point of failure: several admins, delegated admin roles and owner transfer are ADMIN-003, and enforced multi-factor sign-in is ADMIN-004.
+- This follows the RER contract standard.
+- Core, Agent surface and Later are reported separately.
+- Done means every acceptance point has recorded proof.
+- Field proof is kept in its register.
+- ACCEPTANCE.md and the homepage claims document are generated from this file.
 
-**Acceptance evidence:** Through setup, invitation, sign-in and the library API, reject a second claim, revoke a live session, deactivate/reactivate staff and prove prior sessions stay invalid. Exercise owner and reviewer in the built browser journey.
+## Shared duties (Base)
 
-### CHEST-02 — Typed filing without lost values.
+| Base duty | Duty | Delta clauses | Base journey |
+| --- | --- | --- | --- |
 
-Owners manage collections, editable typed schemas, required fields, accountable people and groups. Schema edits preserve authoritative stored values, diagnose missing/invalid fields only on accessible records, and validate new filings and uploads against current definitions.
+## Published clauses
 
-**Acceptance evidence:** Create and edit a type through the owner form/API; preserve an old record unchanged while diagnosing it, reject invalid new values and hide diagnostics from an outsider.
+- `CHEST-01`: *Tier:* Core
+- `CHEST-02`: *Tier:* Core
+- `CHEST-03`: *Tier:* Core
+- `CHEST-04`: *Tier:* Core
+- `CHEST-05`: *Tier:* Core
+- `CHEST-06`: *Tier:* Core
+- `CHEST-07`: *Tier:* Core
+- `CHEST-08`: *Tier:* Core
+- `CHEST-09`: *Tier:* Core
+- `CHEST-10`: *Tier:* Core
+- `CHEST-11`: *Tier:* Core
+- `CHEST-12`: *Tier:* Core
+- `CHEST-13`: *Tier:* Core
+- `CHEST-14`: *Tier:* Core
+- `CHEST-15`: *Tier:* Core
+- `CHEST-16`: *Tier:* Core
+- `CHEST-17`: *Tier:* Core
+- `CHEST-18`: *Tier:* Core
+- `CHEST-19`: *Tier:* Core
+- `CHEST-20`: *Tier:* Core
+- `CHEST-21`: *Tier:* Core
+- `CHEST-22`: *Tier:* Core
+- `CHEST-23`: *Tier:* Core
+- `CHEST-24`: *Tier:* Core
 
-### CHEST-03 — Validate before publishing originals.
+### Identity, original custody and governed records
 
-Uploads validate actual bytes, SHA-256 and size. Durable original-object custody precedes atomic record admission; invalid or failed uploads never appear as successful library files.
+#### CHEST-01 — Owner and ordinary staff identity
 
-**Acceptance evidence:** Upload an original through the document API, compare its retained hash/size and download bytes, and submit bad checksum, size and filing values without creating a visible record.
+**Requirement.** An installation has one initial owner claim, invited staff, email-link return and revocable sessions. Development personas are separately gated and confer no production authority. The initial claim is a setup step, not a single point of failure: several admins, delegated admin roles and owner transfer are ADMIN-003, and enforced multi-factor sign-in is ADMIN-004.
 
-### CHEST-04 — Accountable filing and safe moves.
+**Acceptance.**
+1. Through setup, invitation, sign-in and the library API, reject a second claim, revoke a live session, deactivate/reactivate staff and prove prior sessions stay invalid.
+2. Exercise owner and reviewer in the built browser journey.
 
-Supplier, customer and project filing retains original names, typed values and responsibility. Moves require current source-record and destination-collection editor access; inherited access follows the destination while versions and review history remain intact.
+#### CHEST-02 — Typed filing without lost values
 
-**Acceptance evidence:** Move a reviewed file through the filing API between differently shared collections; reject a source-only editor, then prove new readers gain access and former readers lose search/download access without changed versions.
+**Requirement.** Owners manage collections, editable typed schemas, required fields, accountable people and groups. Schema edits preserve authoritative stored values, diagnose missing/invalid fields only on accessible records, and validate new filings and uploads against current definitions.
 
-### CHEST-05 — Safe basic previews.
+**Acceptance.**
+1. Create and edit a type through the owner form/API; preserve an old record unchanged while diagnosing it, reject invalid new values and hide diagnostics from an outsider.
 
-Signature-classified PDF/raster and escaped UTF-8 text can be previewed. Unknown formats remain downloadable; active HTML/SVG is sandboxed plain text. Broader rendering is PREVIEW-001.
+#### CHEST-03 — Validate before publishing originals
 
-**Acceptance evidence:** Open text, PDF and raster previews from the built document page at 1440 and 390; download an unknown original, and verify sandbox/no-store/nosniff headers and inactive SVG.
+**Requirement.** Uploads validate actual bytes, SHA-256 and size. Durable original-object custody precedes atomic record admission; invalid or failed uploads never appear as successful library files.
 
-### CHEST-06 — Current access governs every private door.
+**Acceptance.**
+1. Upload an original through the document API, compare its retained hash/size and download bytes, and submit bad checksum, size and filing values without creating a visible record.
 
-Current access filters lists, counts, title/metadata/admitted-text search, detail, preview, download and mutations. Derived text records parser provenance and exact version identity; it never creates access of its own.
+#### CHEST-04 — Accountable filing and safe moves
 
-**Acceptance evidence:** Search distinctive admitted text as owner, reviewer and outsider, then revoke a group grant and repeat list/count/detail/preview/download/mutation requests, including old version URLs.
+**Requirement.** Supplier, customer and project filing retains original names, typed values and responsibility. Moves require current source-record and destination-collection editor access; inherited access follows the destination while versions and review history remain intact.
 
-### CHEST-07 — Immutable versions and precise approved pointers.
+**Acceptance.**
+1. Move a reviewed file through the filing API between differently shared collections; reject a source-only editor, then prove new readers gain access and former readers lose search/download access without changed versions.
 
-Every replacement is a new immutable original. For a governed file, approved A remains current while B/C await review; approving B never selects pending C. Ordinary file editing also retains history without requiring a review workflow (SPACE-001). Browsing, naming and restoring earlier versions as current by every contributor and editor is VERSION-001; restoring on a governed file never moves the approved pointer without approval.
+#### CHEST-05 — Safe basic previews
 
-**Acceptance evidence:** Upload A, B and C through the versions API, approve B explicitly and download each original, proving the approved pointer and earlier bytes never silently change.
+**Requirement.** Signature-classified PDF/raster and escaped UTF-8 text can be previewed. Unknown formats remain downloadable; active HTML/SVG is sandboxed plain text. Broader rendering is PREVIEW-001.
 
-### CHEST-08 — Exact-version human decisions.
+**Acceptance.**
+1. Open text, PDF and raster previews from the built document page at 1440 and 390; download an unknown original, and verify sandbox/no-store/nosniff headers and inactive SVG.
 
-Assignment, comments, requested changes and approval record actor and version. Assignment grants no access. Requested changes require a new immutable submission; only the assigned reviewer with current reviewer access can approve it.
+#### CHEST-06 — Current access governs every private door
 
-**Acceptance evidence:** Request changes, reject approval of the rejected version and an unassigned actor, submit corrected bytes, and approve that exact version while preserving prior events and the earlier approved pointer until approval.
+**Requirement.** Current access filters lists, counts, title/metadata/admitted-text search, detail, preview, download and mutations. Derived text records parser provenance and exact version identity; it never creates access of its own.
 
-### CHEST-09 — Review and expiry work retain evidence.
+**Acceptance.**
+1. Search distinctive admitted text as owner, reviewer and outsider, then revoke a group grant and repeat list/count/detail/preview/download/mutation requests, including old version URLs.
 
-Separate review and expiry dates create due/upcoming work. Completion records its actor, date and investigation evidence without destroying the file or treating an expiry as a deletion instruction. Automated follow-up is FOLLOW-001.
+#### CHEST-07 — Immutable versions and precise approved pointers
 
-**Acceptance evidence:** Create both dates, inspect the work list, reject an empty completion and complete only review with evidence; expiry and originals remain.
+**Requirement.** Every replacement is a new immutable original. For a governed file, approved A remains current while B/C await review; approving B never selects pending C. Ordinary file editing also retains history without requiring a review workflow (SPACE-001). Browsing, naming and restoring earlier versions as current by every contributor and editor is VERSION-001; restoring on a governed file never moves the approved pointer without approval.
 
-### CHEST-10 — People and group grants.
+**Acceptance.**
+1. Upload A, B and C through the versions API, approve B explicitly and download each original, proving the approved pointer and earlier bytes never silently change.
 
-The owner grants/revokes reader, editor and reviewer access for people/groups. Effective readers need active local identities; current group membership governs access, and imported people alone have no authentication authority. The full five-level space role model, delegated granting by space managers and policy-bound sharing by editors are ROLE-001 and SHARE-004; these grant rules continue to hold under them.
+#### CHEST-08 — Exact-version human decisions
 
-**Acceptance evidence:** Grant a group, inspect effective readers, remove its member and revoke collection access through the API; prove denial of details, search, previews, downloads and review mutations.
+**Requirement.** Assignment, comments, requested changes and approval record actor and version. Assignment grants no access. Requested changes require a new immutable submission; only the assigned reviewer with current reviewer access can approve it.
 
-### CHEST-11 — Reviewed reversible archive admission.
+**Acceptance.**
+1. Request changes, reject approval of the rejected version and an unassigned actor, submit corrected bytes, and approve that exact version while preserving prior events and the earlier approved pointer until approval.
 
-Archive preview writes no documents and lists every item, hash, duplicate, mapping and gap. Apply binds the reviewed fingerprint and current authority; Base D1 journal/native target publish inert records, resume after restart and undo only untouched batches. Unsafe paths or corrupt bytes publish no documents.
+#### CHEST-09 — Review and expiry work retain evidence
 
-**Acceptance evidence:** Preview/apply a bounded archive through the archive API, reject changed fingerprint/traversal/corruption, restart and resume, undo untouched records and preserve a conflicting native edit. Source decisions never become new Chest approvals.
+**Requirement.** Separate review and expiry dates create due/upcoming work. Completion records its actor, date and investigation evidence without destroying the file or treating an expiry as a deletion instruction. Automated follow-up is FOLLOW-001.
 
-### CHEST-12 — Complete independent local recovery.
+**Acceptance.**
+1. Create both dates, inspect the work list, reject an empty completion and complete only review with evidence; expiry and originals remain.
 
-Local RER export and empty-target restore retain the semantic graph, portable people/groups/roles/grants, all original version bytes, derived provenance, decisions, completions, trash, audit and import custody. Credentials and dispatch outbox are excluded; setup regenerates secrets and old credentials fail. Nonempty/corrupt restore is atomic refusal. Private archives cannot be exported into served assets and archive-bearing public assets block build/setup.
+#### CHEST-10 — People and group grants
 
-**Acceptance evidence:** Use real RER export/import in a fresh target, compare all portable cells and original chunks, reject corrupt/nonempty/tampered metadata restores and public-asset exposure, then sign in afresh and recheck private imported records and trash.
+**Requirement.** The owner grants/revokes reader, editor and reviewer access for people/groups. Effective readers need active local identities; current group membership governs access, and imported people alone have no authentication authority. The full five-level space role model, delegated granting by space managers and policy-bound sharing by editors are ROLE-001 and SHARE-004; these grant rules continue to hold under them.
 
-### CHEST-13 — Self-service reversible trash and mutation audit.
+**Acceptance.**
+1. Grant a group, inspect effective readers, remove its member and revoke collection access through the API; prove denial of details, search, previews, downloads and review mutations.
 
-Every user has a trash view of the items they trashed and restores any of them, files or whole folder trees, with no owner or admin involved, provided they still hold the role that let them trash it. Space managers and content managers (ROLE-001) see and restore every trashed item in their space whoever trashed it; admins with content-recovery scope (ADMIN-003) restore across spaces. Viewers, commenters and contributors cannot trash shared-space items and cannot restore someone else's. A restored folder returns with its tree, versions, stable IDs, comments and inherited permissions; restoring never re-enables a revoked link or identity. Trash retains originals and history indefinitely until a separately authorized erasure; no age or expiry silently destroys them. Permanent removal from trash belongs only to space managers and admins under ERASE-001 for shared-space items, and to the owning user for items in their own personal area; trashed bytes keep counting towards storage limits until erased (QUOTA-001). Mutations are audited, and current access filters activity views. Point-in-time folder and personal-area rewind is RECOVER-001; admin account rewind is ADMIN-003.
+#### CHEST-11 — Reviewed reversible archive admission
 
-**Acceptance evidence:** Through the API and browser at 1440 and 390, a staff editor trashes a nested folder of their own in a team space and restores it from their own trash view, tree, hashes, version IDs and stable links identical, with no owner session involved. A space reader is refused restore (403) of that folder and a contributor is refused trash; a space manager restores an item another member trashed; a manager's permanent-delete request goes through ERASE-001 while an editor's is refused. The trashed item disappears from a reviewer's list/search/download, and each trash/restore appears once in the audit with actor and outcome.
+**Requirement.** Archive preview writes no documents and lists every item, hash, duplicate, mapping and gap. Apply binds the reviewed fingerprint and current authority; Base D1 journal/native target publish inert records, resume after restart and undo only untouched batches. Unsafe paths or corrupt bytes publish no documents.
 
-## Everyday files, sharing and hosted operation (0.2.0)
+**Acceptance.**
+1. Preview/apply a bounded archive through the archive API, reject changed fingerprint/traversal/corruption, restart and resume, undo untouched records and preserve a conflicting native edit.
+2. Source decisions never become new Chest approvals.
 
-These clauses are what Chest 0.2.0 promises. Each states only what the 0.2.0 release gate (18 October 2026) saw working, in a browser at 1440 and 390 pixels on a local copy and in a Chest deployed to its own Cloudflare account with real email. Broader target behavior stays in the target clauses below.
+#### CHEST-12 — Complete independent local recovery
 
-### CHEST-14 — Team spaces, nested folders and phone uploads.
+**Requirement.** Local RER export and empty-target restore retain the semantic graph, portable people/groups/roles/grants, all original version bytes, derived provenance, decisions, completions, trash, audit and import custody. Credentials and dispatch outbox are excluded; setup regenerates secrets and old credentials fail. Nonempty/corrupt restore is atomic refusal. Private archives cannot be exported into served assets and archive-bearing public assets block build/setup.
 
-The owner creates a team space and nested folders inside it (for example Clients › Harbor Freight › Contracts), shown with a breadcrumb, and uploads files into any folder with the file picker. On a phone-width screen the folder page also offers **Take a photo**, which opens the camera picker and uploads the photo into that folder.
+**Acceptance.**
+1. Use real RER export/import in a fresh target, compare all portable cells and original chunks, reject corrupt/nonempty/tampered metadata restores and public-asset exposure, then sign in afresh and recheck private imported records and trash.
 
-**Acceptance evidence:** Create a team space and two nested folders in the browser, upload a PDF and a text file into the innermost folder, and at 390 pixels upload an image through **Take a photo**; each file opens on its own page inside the breadcrumb.
+#### CHEST-13 — Self-service reversible trash and mutation audit
 
-### CHEST-15 — Large uploads resume where they stopped.
+**Requirement.** Every user has a trash view of the items they trashed and restores any of them, files or whole folder trees, with no owner or admin involved, provided they still hold the role that let them trash it. Space managers and content managers (ROLE-001) see and restore every trashed item in their space whoever trashed it; admins with content-recovery scope (ADMIN-003) restore across spaces. Viewers, commenters and contributors cannot trash shared-space items and cannot restore someone else's. A restored folder returns with its tree, versions, stable IDs, comments and inherited permissions; restoring never re-enables a revoked link or identity. Trash retains originals and history indefinitely until a separately authorized erasure; no age or expiry silently destroys them. Permanent removal from trash belongs only to space managers and admins under ERASE-001 for shared-space items, and to the owning user for items in their own personal area; trashed bytes keep counting towards storage limits until erased (QUOTA-001). Mutations are audited, and current access filters activity views. Point-in-time folder and personal-area rewind is RECOVER-001; admin account rewind is ADMIN-003.
 
-A large file goes up in parts with its progress shown. If the page is reloaded or the connection drops, the folder lists it under **Unfinished uploads** with the share already received; choosing the same file again continues from the parts already stored instead of starting over. The finished file's stored SHA-256 and downloaded bytes equal the original.
+**Acceptance.**
+1. Through the API and browser at 1440 and 390, a staff editor trashes a nested folder of their own in a team space and restores it from their own trash view, tree, hashes, version IDs and stable links identical, with no owner session involved.
+2. A space reader is refused restore (403) of that folder and a contributor is refused trash; a space manager restores an item another member trashed; a manager's permanent-delete request goes through ERASE-001 while an editor's is refused.
+3. The trashed item disappears from a reviewer's list/search/download, and each trash/restore appears once in the audit with actor and outcome.
 
-**Acceptance evidence:** Upload a 150 MB file, reload the page once progress passes a quarter, see "Unfinished uploads · N% of 150.0 MB received", choose the same file again, see progress resume above zero, and compare the stored and downloaded SHA-256 with the original's.
+### Everyday files, sharing and hosted operation (0.2.0)
 
-### CHEST-16 — Restore a file to an earlier version.
+#### CHEST-14 — Team spaces, nested folders and phone uploads
 
-Each upload of a new version is kept in the file's version history with its number, author, time, size and SHA-256. **Restore as current version** on an earlier version adds a new version marked "restore of version N" whose bytes equal that version; the later versions stay in the history.
+**Requirement.** The owner creates a team space and nested folders inside it (for example Clients › Harbor Freight › Contracts), shown with a breadcrumb, and uploads files into any folder with the file picker. On a phone-width screen the folder page also offers **Take a photo**, which opens the camera picker and uploads the photo into that folder.
 
-**Acceptance evidence:** Upload three versions of a file, restore version 1, and check that version 4 reads "restore of version 1", its downloaded bytes equal version 1, and versions 1 to 3 are still listed.
+**Acceptance.**
+1. Create a team space and two nested folders in the browser, upload a PDF and a text file into the innermost folder, and at 390 pixels upload an image through **Take a photo**; each file opens on its own page inside the breadcrumb.
 
-### CHEST-17 — Restore a folder to a date, and undo it.
+#### CHEST-15 — Large uploads resume where they stopped
 
-**Restore to a date** on a folder takes a date and time with its time zone and first shows a preview listing each change it would make (a renamed file renamed back, a trashed file brought back, a file added since moved to trash). Nothing changes until **Restore selected items**. The receipt offers **Undo this restore**, which returns the folder to how it was just before the restore.
+**Requirement.** A large file goes up in parts with its progress shown. If the page is reloaded or the connection drops, the folder lists it under **Unfinished uploads** with the share already received; choosing the same file again continues from the parts already stored instead of starting over. The finished file's stored SHA-256 and downloaded bytes equal the original.
 
-**Acceptance evidence:** Note a minute, then rename one file, trash another and add a third in a folder; preview a restore to that minute and see the three changes with the folder unchanged; apply it and see the folder's contents as they were; undo it and see the renamed, trashed and added state again.
+**Acceptance.**
+1. Upload a 150 MB file, reload the page once progress passes a quarter, see "Unfinished uploads · N% of 150.0 MB received", choose the same file again, see progress resume above zero, and compare the stored and downloaded SHA-256 with the original's.
 
-### CHEST-18 — Links for anyone with a password, expiry and download limit, and revoke.
+#### CHEST-16 — Restore a file to an earlier version
 
-A file's **Link for anyone** can carry a password (8 characters or more), an expiry date and a download limit, and its row shows "Expires … · N of M downloads". Someone without an account who opens it is asked for the password; a wrong password is refused. Once the limit is used, the link shows "Download limit reached". **Revoke** turns a link off at once: it then shows "Link turned off".
+**Requirement.** Each upload of a new version is kept in the file's version history with its number, author, time, size and SHA-256. **Restore as current version** on an earlier version adds a new version marked "restore of version N" whose bytes equal that version; the later versions stay in the history.
 
-**Acceptance evidence:** Create a link with a password, tomorrow's expiry and a limit of 2; in a browser with no account, a wrong password is refused, the right one opens the file, two downloads succeed and the next visit shows "Download limit reached". Create a second link, open it, revoke it, and see "Link turned off".
+**Acceptance.**
+1. Upload three versions of a file, restore version 1, and check that version 4 reads "restore of version 1", its downloaded bytes equal version 1, and versions 1 to 3 are still listed.
 
-### CHEST-19 — Shared too widely, and Make private.
+#### CHEST-17 — Restore a folder to a date, and undo it
 
-**Links › Shared too widely** lists items with a link anyone can open without signing in that never expires, or one past its expiry or download limit, with the reason. **Make private** on such an item turns off every link on it; the item leaves the list and its links stop opening.
+**Requirement.** **Restore to a date** on a folder takes a date and time with its time zone and first shows a preview listing each change it would make (a renamed file renamed back, a trashed file brought back, a file added since moved to trash). Nothing changes until **Restore selected items**. The receipt offers **Undo this restore**, which returns the folder to how it was just before the restore.
 
-**Acceptance evidence:** Create a link for anyone with no expiry on a folder, see the folder under Shared too widely with "Never expires", press Make private, and see it leave the list and the link stop opening.
+**Acceptance.**
+1. Note a minute, then rename one file, trash another and add a third in a folder; preview a restore to that minute and see the three changes with the folder unchanged; apply it and see the folder's contents as they were; undo it and see the renamed, trashed and added state again.
 
-### CHEST-20 — File requests from anyone.
+#### CHEST-18 — Links for anyone with a password, expiry and download limit, and revoke
 
-A folder's **File request** gives a link that someone with no account opens to upload files into that folder, with their name and email if they give them. The upload lands in the folder, and on a hosted Chest the person who made the request is emailed "New files from your file request" naming the uploader, the file and the folder.
+**Requirement.** A file's **Link for anyone** can carry a password (8 characters or more), an expiry date and a download limit, and its row shows "Expires … · N of M downloads". Someone without an account who opens it is asked for the password; a wrong password is refused. Once the limit is used, the link shows "Download limit reached". **Revoke** turns a link off at once: it then shows "Link turned off".
 
-**Acceptance evidence:** Create a file request on a folder, open its link in a browser with no account, upload a PDF with a name and email, see "Files received", find the file in the folder, and on a hosted Chest receive the notice email.
+**Acceptance.**
+1. Create a link with a password, tomorrow's expiry and a limit of 2; in a browser with no account, a wrong password is refused, the right one opens the file, two downloads succeed and the next visit shows "Download limit reached".
+2. Create a second link, open it, revoke it, and see "Link turned off".
 
-### CHEST-21 — Search finds words inside PDFs, only where you have access.
+#### CHEST-19 — Shared too widely, and Make private
 
-Search finds files by words inside their PDF text, including files that arrived through a file request. It shows only files the searcher can open: words inside a file in a space they are not a member of are not found.
+**Requirement.** **Links › Shared too widely** lists items with a link anyone can open without signing in that never expires, or one past its expiry or download limit, with the reason. **Make private** on such an item turns off every link on it; the item leaves the list and its links stop opening.
 
-**Acceptance evidence:** Search a word that appears only inside an uploaded PDF and inside a PDF received through a file request, and find both; as a member outside a space, search a word inside one of its files and find nothing, while the owner's same search finds it.
+**Acceptance.**
+1. Create a link for anyone with no expiry on a folder, see the folder under Shared too widely with "Never expires", press Make private, and see it leave the list and the link stop opening.
 
-### CHEST-22 — Space viewers read and download only.
+#### CHEST-20 — File requests from anyone
 
-A person added to a team space as a viewer sees that space and opens its folders and files, but has no upload, new folder, share, rename or trash action, and the server refuses those actions (403). A file in a space they are not in shows **Request access** without its name, and People & settings is refused (403).
+**Requirement.** A folder's **File request** gives a link that someone with no account opens to upload files into that folder, with their name and email if they give them. The upload lands in the folder, and on a hosted Chest the person who made the request is emailed "New files from your file request" naming the uploader, the file and the folder.
 
-**Acceptance evidence:** Add a second person to a space as viewer; as them, check the actions are absent and a rename request is refused with 403, open a file of another space and see Request access with no name, and open People & settings and get 403.
+**Acceptance.**
+1. Create a file request on a folder, open its link in a browser with no account, upload a PDF with a name and email, see "Files received", find the file in the folder, and on a hosted Chest receive the notice email.
 
-### CHEST-23 — Hosted Chest on your own Cloudflare account, with email sign-in, backup, restore and removal.
+#### CHEST-21 — Search finds words inside PDFs, only where you have access
 
-`rer deploy` puts Chest on the owner's Cloudflare account (a Worker, a D1 database and an R2 bucket) with the owner's own mail provider (the gate used SendGrid). People sign in by an emailed link, and invited people get an invitation email. `rer run hosted-backup` saves the hosted database and every original into a private folder; `rer run hosted-restore` puts them into a freshly deployed Chest, after which the owner and invited people sign in by email again and find their spaces, folders, files, versions, links, file requests, trash and grants. `rer deploy --remove --yes` deletes the Worker, database and bucket and reads back that none remains.
+**Requirement.** Search finds files by words inside their PDF text, including files that arrived through a file request. It shows only files the searcher can open: words inside a file in a space they are not a member of are not found.
 
-**Acceptance evidence:** Deploy, sign in as the owner by email, invite a second person who accepts from the email, and use the jobs above; back up and check the backup holds data made only on the hosted Chest; remove, redeploy and restore; sign in again as both people by email and read back the folders, the trashed file with its versions, the link's download count, the file request and the 150 MB original byte for byte; remove and find no Worker, database or bucket left.
+**Acceptance.**
+1. Search a word that appears only inside an uploaded PDF and inside a PDF received through a file request, and find both; as a member outside a space, search a word inside one of its files and find nothing, while the owner's same search finds it.
 
-### CHEST-24 — Upgrading from 0.1.0 keeps every record and original.
+#### CHEST-22 — Space viewers read and download only
 
-A Chest 0.1.0 copy moved to 0.2.0 in place (check out the new release, `rer install`, `rer dev`) applies migrations 0016 to 0020, which only add tables, and keeps every earlier database row and stored original unchanged. Its Library documents open with every version's bytes, its people stay, and Files works.
+**Requirement.** A person added to a team space as a viewer sees that space and opens its folders and files, but has no upload, new folder, share, rename or trash action, and the server refuses those actions (403). A file in a space they are not in shows **Request access** without its name, and People & settings is refused (403).
 
-**Acceptance evidence:** Install 0.1.0, add people, a collection, a document type and two documents with two versions each, snapshot every table and stored object, upgrade in place, and check every earlier row and object is unchanged, every version downloads with its SHA-256, and a team space can be created.
+**Acceptance.**
+1. Add a second person to a space as viewer; as them, check the actions are absent and a rename request is refused with 403, open a file of another space and see Request access with no name, and open People & settings and get 403.
+
+#### CHEST-23 — Hosted Chest on your own Cloudflare account, with email sign-in, backup, restore and removal
+
+**Requirement.** `rer deploy` puts Chest on the owner's Cloudflare account (a Worker, a D1 database and an R2 bucket) with the owner's own mail provider (the gate used SendGrid). People sign in by an emailed link, and invited people get an invitation email. `rer run hosted-backup` saves the hosted database and every original into a private folder; `rer run hosted-restore` puts them into a freshly deployed Chest, after which the owner and invited people sign in by email again and find their spaces, folders, files, versions, links, file requests, trash and grants. `rer deploy --remove --yes` deletes the Worker, database and bucket and reads back that none remains.
+
+**Acceptance.**
+1. Deploy, sign in as the owner by email, invite a second person who accepts from the email, and use the jobs above; back up and check the backup holds data made only on the hosted Chest; remove, redeploy and restore; sign in again as both people by email and read back the folders, the trashed file with its versions, the link's download count, the file request and the 150 MB original byte for byte; remove and find no Worker, database or bucket left.
+
+#### CHEST-24 — Upgrading from 0.1.0 keeps every record and original
+
+**Requirement.** A Chest 0.1.0 copy moved to 0.2.0 in place (check out the new release, `rer install`, `rer dev`) applies migrations 0016 to 0020, which only add tables, and keeps every earlier database row and stored original unchanged. Its Library documents open with every version's bytes, its people stay, and Files works.
+
+**Acceptance.**
+1. Install 0.1.0, add people, a collection, a document type and two documents with two versions each, snapshot every table and stored object, upgrade in place, and check every earlier row and object is unchanged, every version downloads with its SHA-256, and a team space can be created.
 
 ## Target clauses
 
 ### The everyday business file system
 
-#### SPACE-001 — Team spaces and ordinary files.
+#### SPACE-001 — Team spaces and ordinary files
 
-Staff store everyday files in personal areas and team-owned hierarchical shared folders, create/rename/move/copy folders and mixed Office/PDF/Google content, create new documents, spreadsheets and presentations from blank or a template in any folder (EDIT-004), star/recently open files and transfer content ownership when staff leave. Outside offboarding, a user can hand ownership of a single file or folder in their personal area to a colleague: the colleague gets an in-app and email request and accepts or declines; until acceptance the sender stays owner, and on acceptance the item moves to the recipient's personal area with its stable ID, versions, links and grants intact and the sender kept as editor unless they choose otherwise. Stable IDs survive moves. Ordinary upload/edit/open works without mandatory schema, reviewer or approval; owners opt selected folders into CHEST-02/07/08 governance. Space managers set membership and inherited/restricted subfolder roles from the ROLE-001 levels with an effective-access explanation. Each space serves at least the SCALE-001 reference size (500,000 items, 100 nested folder levels, 600 direct members) without changed behavior. Who may create a space, and the settings a new space starts with, are SPACE-002.
+*Tier:* Core
 
-**Acceptance evidence:** As two staff and an admin, build a nested project tree, upload an ordinary file with no review configuration, edit/move it, restrict a subfolder and offboard its creator; the team retains content and stable links while the former user is denied. A staff member offers ownership of a personal-area file to a colleague: before acceptance the sender is still owner; after acceptance the file sits in the recipient's area with the same stable ID, versions and share link, the sender is editor, and a declined offer changes nothing; each step is audited. Repeat browser navigation at 1440 and 390, then repeat listing, move and restriction in a space loaded to the SCALE-001 reference size and record the SCALE-001 timings.
+**Requirement.** Staff store everyday files in personal areas and team-owned hierarchical shared folders, create/rename/move/copy folders and mixed Office/PDF/Google content, create new documents, spreadsheets and presentations from blank or a template in any folder (EDIT-004), star/recently open files and transfer content ownership when staff leave. Outside offboarding, a user can hand ownership of a single file or folder in their personal area to a colleague: the colleague gets an in-app and email request and accepts or declines; until acceptance the sender stays owner, and on acceptance the item moves to the recipient's personal area with its stable ID, versions, links and grants intact and the sender kept as editor unless they choose otherwise. Stable IDs survive moves. Ordinary upload/edit/open works without mandatory schema, reviewer or approval; owners opt selected folders into CHEST-02/07/08 governance. Space managers set membership and inherited/restricted subfolder roles from the ROLE-001 levels with an effective-access explanation. Each space serves at least the SCALE-001 reference size (500,000 items, 100 nested folder levels, 600 direct members) without changed behavior. Who may create a space, and the settings a new space starts with, are SPACE-002.
 
-#### SPACE-002 — Space creation control and new-space defaults.
+**Acceptance.**
+1. As two staff and an admin, build a nested project tree, upload an ordinary file with no review configuration, edit/move it, restrict a subfolder and offboard its creator; the team retains content and stable links while the former user is denied.
+2. A staff member offers ownership of a personal-area file to a colleague: before acceptance the sender is still owner; after acceptance the file sits in the recipient's area with the same stable ID, versions and share link, the sender is editor, and a declined offer changes nothing; each step is audited.
+3. Repeat browser navigation at 1440 and 390, then repeat listing, move and restriction in a space loaded to the SCALE-001 reference size and record the SCALE-001 timings.
 
-Admins with service-settings scope (ADMIN-003) choose who may create team spaces: **everyone**, **named groups only** or **admins only**. A user who may not create one sees no create action, is refused with the rule named in the UI and API, and can send a space request that reaches admins with that scope and is audited. Admins also set the **defaults for new spaces**, organization-wide with overrides per creator group: whether people outside the organization may be given access (POLICY-001 external sharing for the space); whether people who are not space members may be added to its files and folders; whether content managers may share folders, not only files; whether viewers and commenters may download, print and copy (the ROLE-001 no-download setting); the space's default link audience (SHARE-001/POLICY-001); and its starting storage limit (QUOTA-001). A further default, **allow space managers to override these settings**, decides whether a manager may change any defaulted setting in their own space. With it off, a manager's change to a defaulted setting is refused with the rule named in the UI and API, while admins can still change it per space. Defaults apply only to spaces created after the change; existing spaces keep their current settings, and the console says so before saving. Organization POLICY-001 restrictions still win over any space setting. Every change to the creation rule, a default or the override switch is audited with before and after values.
+#### SPACE-002 — Space creation control and new-space defaults
 
-**Acceptance evidence:** Limit space creation to the group "Ops leads". A staff member outside it sees no create action, and a direct form post and an API call are each refused with the rule named; their space request reaches an admin. A group member creates a space. Set the defaults to external access off, non-member file access off, viewer and commenter download off and manager override off, then create a new space: it starts with those settings, and a space created earlier is unchanged. That space's manager tries to turn external access on through the UI and the API and is refused with the rule named; an admin changes it successfully. Turn manager override on and see the manager's change succeed. Inspect the audit with before and after values. Run the browser steps at 1440 and 390.
+*Tier:* Core
 
-#### ROLE-001 — Five-level roles and delegated sharing.
+**Requirement.** Admins with service-settings scope (ADMIN-003) choose who may create team spaces: **everyone**, **named groups only** or **admins only**. A user who may not create one sees no create action, is refused with the rule named in the UI and API, and can send a space request that reaches admins with that scope and is audited. Admins also set the **defaults for new spaces**, organization-wide with overrides per creator group: whether people outside the organization may be given access (POLICY-001 external sharing for the space); whether people who are not space members may be added to its files and folders; whether content managers may share folders, not only files; whether viewers and commenters may download, print and copy (the ROLE-001 no-download setting); the space's default link audience (SHARE-001/POLICY-001); and its starting storage limit (QUOTA-001). A further default, **allow space managers to override these settings**, decides whether a manager may change any defaulted setting in their own space. With it off, a manager's change to a defaulted setting is refused with the rule named in the UI and API, while admins can still change it per space. Defaults apply only to spaces created after the change; existing spaces keep their current settings, and the console says so before saving. Organization POLICY-001 restrictions still win over any space setting. Every change to the creation rule, a default or the override switch is audited with before and after values.
 
-Spaces, folders and files grant one of five cumulative roles to people, groups and guests (SHARE-005): **viewer** (open, preview, see version history, download unless restricted, and open office files read-only in the EDIT-001 editor); **commenter** (viewer plus comment, mention, assign comments and annotate under EDIT-003, and suggest edits in an EDIT-001 comment-and-suggest session, recorded as tracked changes in documents and never as direct edits); **contributor** (add files and new versions, name versions and restore an earlier version as current under VERSION-001, edit content, and accept or reject suggestions, but not move, trash or share); **content manager** (contributor plus move, copy out, trash/restore and share items within policy); **manager** (content manager plus membership and role changes, permanent delete under ERASE-001, space settings and deleting the space). The CHEST-10 reviewer duty is an attribute that combines with any level from commenter up and never implies more access. File-level grants on personal-area items use viewer, commenter and editor (editor = contributor plus move/trash/share of that item). Editors and content managers share items to people and groups when POLICY-001 allows it, and a manager can switch editor sharing off per space. A per-space and per-file setting stops viewers and commenters from downloading, printing and copying; previews then stream rendered pages only and every original door (download, range, sync, API, archive, link) refuses them. Role changes take effect on the next request through every door.
+**Acceptance.**
+1. Limit space creation to the group "Ops leads".
+2. A staff member outside it sees no create action, and a direct form post and an API call are each refused with the rule named; their space request reaches an admin.
+3. A group member creates a space.
+4. Set the defaults to external access off, non-member file access off, viewer and commenter download off and manager override off, then create a new space: it starts with those settings, and a space created earlier is unchanged.
+5. That space's manager tries to turn external access on through the UI and the API and is refused with the rule named; an admin changes it successfully.
+6. Turn manager override on and see the manager's change succeed.
+7. Inspect the audit with before and after values.
+8. Run the browser steps at 1440 and 390.
 
-**Acceptance evidence:** For each role, one public-door test through the HTTP API and one through the browser UI attempts open, download, comment, open in the editor, suggest a change, accept a suggestion, view version history, upload a new version, restore an earlier version, move, copy out, trash, restore, share and change membership on a space folder and a file; each permitted action succeeds and each other is refused with 403 and no state change. Turn on the no-download setting and prove viewer and commenter downloads, range requests, archive inclusion (BULK-001), sync hydration and API reads of the original are refused while pages still preview. Switch editor sharing off and prove an editor's share is refused while a manager's succeeds. In the EDIT-001 editor, the commenter's DOCX session records their typing as tracked changes attributed to them and a save carrying a direct edit is refused with `suggest_only`; the viewer's session is read-only and its save is refused; a contributor accepts the commenter's suggestion as an attributed version. Downgrade a role mid-session and prove the next request uses the new role.
+#### ROLE-001 — Five-level roles and delegated sharing
 
-#### VERSION-001 — File version history and restore by editors.
+*Tier:* Core
 
-Every file has a version history listing each retained version with its author, time, size, SHA-256, how it arrived (upload, sync client, editor save, restore, migration or signature) and an optional name. Anyone with viewer access or above sees the history, and anyone allowed to download the file downloads any retained version; the ROLE-001 no-download setting refuses older versions as it does the current one. **Contributors, content managers and managers** on a space item, and **file editors** on a personal-area item can:
+**Requirement.** Spaces, folders and files grant one of five cumulative roles to people, groups and guests (SHARE-005): **viewer** (open, preview, see version history, download unless restricted, and open office files read-only in the EDIT-001 editor); **commenter** (viewer plus comment, mention, assign comments and annotate under EDIT-003, and suggest edits in an EDIT-001 comment-and-suggest session, recorded as tracked changes in documents and never as direct edits); **contributor** (add files and new versions, name versions and restore an earlier version as current under VERSION-001, edit content, and accept or reject suggestions, but not move, trash or share); **content manager** (contributor plus move, copy out, trash/restore and share items within policy); **manager** (content manager plus membership and role changes, permanent delete under ERASE-001, space settings and deleting the space). The CHEST-10 reviewer duty is an attribute that combines with any level from commenter up and never implies more access. File-level grants on personal-area items use viewer, commenter and editor (editor = contributor plus move/trash/share of that item). Editors and content managers share items to people and groups when POLICY-001 allows it, and a manager can switch editor sharing off per space. A per-space and per-file setting stops viewers and commenters from downloading, printing and copying; previews then stream rendered pages only and every original door (download, range, sync, API, archive, link) refuses them. Role changes take effect on the next request through every door.
+
+**Acceptance.**
+1. For each role, one public-door test through the HTTP API and one through the browser UI attempts open, download, comment, open in the editor, suggest a change, accept a suggestion, view version history, upload a new version, restore an earlier version, move, copy out, trash, restore, share and change membership on a space folder and a file; each permitted action succeeds and each other is refused with 403 and no state change.
+2. Turn on the no-download setting and prove viewer and commenter downloads, range requests, archive inclusion (BULK-001), sync hydration and API reads of the original are refused while pages still preview.
+3. Switch editor sharing off and prove an editor's share is refused while a manager's succeeds.
+4. In the EDIT-001 editor, the commenter's DOCX session records their typing as tracked changes attributed to them and a save carrying a direct edit is refused with `suggest_only`; the viewer's session is read-only and its save is refused; a contributor accepts the commenter's suggestion as an attributed version.
+5. Downgrade a role mid-session and prove the next request uses the new role.
+
+#### VERSION-001 — File version history and restore by editors
+
+*Tier:* Core
+
+**Requirement.** Every file has a version history listing each retained version with its author, time, size, SHA-256, how it arrived (upload, sync client, editor save, restore, migration or signature) and an optional name. Anyone with viewer access or above sees the history, and anyone allowed to download the file downloads any retained version; the ROLE-001 no-download setting refuses older versions as it does the current one. **Contributors, content managers and managers** on a space item, and **file editors** on a personal-area item can:
 - restore any retained version as the current one;
 - upload a replacement as the current version;
 - name and rename versions.
 
 Viewers and commenters are refused all three. A restore creates a new attributed version whose bytes equal the chosen version. It never deletes or rewrites later versions, and it keeps the file's stable ID, links, grants and comment threads, so existing links serve the restored content. Versions are retained indefinitely until a separately authorized erasure (CHEST-07, ERASE-001), so no version silently ages out. On a governed file (CHEST-07/08) the restored version enters as a new submission awaiting review, and the approved pointer moves only by approval. Restores reach open EDIT-001 sessions as a remote change. Each restore, upload and rename is audited and shown in the file's activity. Restoring many files or a whole folder to a point in time is RECOVER-001, and incident-wide restore is SECURITY-003. Guest version operations: SHARE-005; sync clients receiving restores: SYNC-001.
 
-**Acceptance evidence:** In a team space, staff A uploads an XLSX as version 1 and edits it to version 2; colleague B replaces it with version 3. Through the API and the browser at 1440 and 390, contributor C opens the version history and sees the author, time and size of each version. C downloads version 2 and checks its SHA-256, names it "Before Q3 edits" and restores it. Version 4 is created by C with bytes equal to version 2; versions 1, 2 and 3 remain downloadable; the stable ID and an existing share link are unchanged and now serve version 4. A viewer and a commenter see the history and download version 1, but their restore and rename are refused with 403 and no new version. With the no-download setting on, the viewer's download of version 1 is refused. On a governed file whose version 2 is approved, a restore of version 1 enters as a new submitted version while the approved pointer stays on version 2 until approval. The audit records each restore once with actor and source version.
+**Acceptance.**
+1. In a team space, staff A uploads an XLSX as version 1 and edits it to version 2; colleague B replaces it with version 3.
+2. Through the API and the browser at 1440 and 390, contributor C opens the version history and sees the author, time and size of each version.
+3. C downloads version 2 and checks its SHA-256, names it "Before Q3 edits" and restores it.
+4. Version 4 is created by C with bytes equal to version 2; versions 1, 2 and 3 remain downloadable; the stable ID and an existing share link are unchanged and now serve version 4.
+5. A viewer and a commenter see the history and download version 1, but their restore and rename are refused with 403 and no new version.
+6. With the no-download setting on, the viewer's download of version 1 is refused.
+7. On a governed file whose version 2 is approved, a restore of version 1 enters as a new submitted version while the approved pointer stays on version 2 until approval.
+8. The audit records each restore once with actor and source version.
 
-#### TRANSFER-001 — Resumable files and whole-folder uploads.
+#### TRANSFER-001 — Resumable files and whole-folder uploads
 
-Browser, desktop and mobile upload whole folder trees and multi-GB originals with durable progress, pause/cancel/resume and per-item results. The maximum single file is **5 TB** (5,000,000,000,000 bytes) through the desktop client, mobile app, public API and resumable browser upload; one folder upload accepts at least 100,000 items. Resumption survives network/process loss, verifies bytes before publication and never duplicates a completed file. Invalid names, case collisions, path lengths, QUOTA-001 storage limits, files above 5 TB and unsupported files have actionable item-level errors without losing other successes.
+*Tier:* Core
 
-**Acceptance evidence:** Upload a nested folder containing a 50 GB video and duplicate names, interrupt connectivity and restart the client, then resume and compare hashes/tree/counts; cancel another transfer and prove no false success or half-visible file. Through the public API, upload a 5 TB sparse-pattern test object with resumable parts and verify its SHA-256; a 5 TB + 1 byte declaration is refused before any bytes are stored. Upload a 100,000-item folder and reconcile the per-item results. Test a QUOTA-001 storage-limit refusal and retain completed files. In the browser at 1440 and 390 and in the iOS and Android apps, the upload panel shows each file's percentage of bytes received and verified (for example "Uploading 62%"); reload the page or kill the app mid-upload and see the same file resume from its stored percentage, not from zero.
+**Requirement.** Browser, desktop and mobile upload whole folder trees and multi-GB originals with durable progress, pause/cancel/resume and per-item results. The maximum single file is **5 TB** (5,000,000,000,000 bytes) through the desktop client, mobile app, public API and resumable browser upload; one folder upload accepts at least 100,000 items. Resumption survives network/process loss, verifies bytes before publication and never duplicates a completed file. Invalid names, case collisions, path lengths, QUOTA-001 storage limits, files above 5 TB and unsupported files have actionable item-level errors without losing other successes.
 
-#### BULK-001 — Multi-select actions and archive download.
+**Acceptance.**
+1. Upload a nested folder containing a 50 GB video and duplicate names, interrupt connectivity and restart the client, then resume and compare hashes/tree/counts; cancel another transfer and prove no false success or half-visible file.
+2. Through the public API, upload a 5 TB sparse-pattern test object with resumable parts and verify its SHA-256; a 5 TB + 1 byte declaration is refused before any bytes are stored.
+3. Upload a 100,000-item folder and reconcile the per-item results.
+4. Test a QUOTA-001 storage-limit refusal and retain completed files.
+5. In the browser at 1440 and 390 and in the iOS and Android apps, the upload panel shows each file's percentage of bytes received and verified (for example "Uploading 62%"); reload the page or kill the app mid-upload and see the same file resume from its stored percentage, not from zero.
 
-In the browser, desktop client and mobile app, users multi-select files and folders, including across subfolders and search results, and move, copy, share, trash, restore or download them in one action. Each item is checked against the actor's current role (ROLE-001) and POLICY-001; refused items are reported per item without blocking the rest, and a partial result is never shown as complete. Downloading a folder or selection streams one ZIP archive (ZIP64 for archives over 4 GB, original names and folder tree preserved) containing only items the actor may download, with a manifest listing each path, version ID, size and SHA-256 and each excluded item with its reason. Guests on a folder link (SHARE-001/005) and request recipients get the same archive download within their grant. Bulk operations are durable jobs that survive restart and are audited once per item.
+#### BULK-001 — Multi-select actions and archive download
 
-**Acceptance evidence:** Multi-select 200 files across two subfolders, including 5 the actor may not download under a no-download setting, and download one archive in the browser at 1440 and on the mobile app; unzip it and reconcile tree, names and SHA-256 hashes against the manifest, with the 5 listed as excluded and absent. Bulk-move and bulk-share the same selection where 3 items are refused by role or policy and see 197 successes plus 3 per-item refusals. Restart the server mid-job and see it complete once without duplicate moves or audit entries. Download a 6 GB folder as a guest through a folder link and verify the ZIP64 archive.
+*Tier:* Core
 
-#### SYNC-001 — Windows and macOS filesystem clients.
+**Requirement.** In the browser, desktop client and mobile app, users multi-select files and folders, including across subfolders and search results, and move, copy, share, trash, restore or download them in one action. Each item is checked against the actor's current role (ROLE-001) and POLICY-001; refused items are reported per item without blocking the rest, and a partial result is never shown as complete. Downloading a folder or selection streams one ZIP archive (ZIP64 for archives over 4 GB, original names and folder tree preserved) containing only items the actor may download, with a manifest listing each path, version ID, size and SHA-256 and each excluded item with its reason. Guests on a folder link (SHARE-001/005) and request recipients get the same archive download within their grant. Bulk operations are durable jobs that survive restart and are audited once per item.
 
-Signed, installable macOS and Windows clients mount Chest in Finder/Explorer for existing applications. Users choose on-demand virtual files or mirrored folders per space; selective offline pinning, local cache budgets and visible hydration state let them open/save/rename/move files as local files. On-demand files take no local disk space for their content until opened: each shows its name, size and state, opening one downloads only that file, and **Free up space** returns a downloaded file to online-only while it stays in place. A restore under VERSION-001 reaches each signed-in client as a remote change to the same file, with the restored bytes and new version ID. Client updates, sign-out and uninstall preserve unsent work and expose what remains locally. Supported matrix: **macOS 13 Ventura or later on Apple silicon (arm64) and Intel (x86_64)** through Apple's File Provider framework, and **Windows 10 22H2 and Windows 11 23H2 or later on x64 and ARM64** through the Windows Cloud Files API; each new major OS release joins the matrix within 90 days of general availability. Installers are signed and notarized (Apple Developer ID) or Authenticode-signed, and deploy silently through MDM (Jamf, Microsoft Intune).
+**Acceptance.**
+1. Multi-select 200 files across two subfolders, including 5 the actor may not download under a no-download setting, and download one archive in the browser at 1440 and on the mobile app; unzip it and reconcile tree, names and SHA-256 hashes against the manifest, with the 5 listed as excluded and absent.
+2. Bulk-move and bulk-share the same selection where 3 items are refused by role or policy and see 197 successes plus 3 per-item refusals.
+3. Restart the server mid-job and see it complete once without duplicate moves or audit entries.
+4. Download a 6 GB folder as a guest through a folder link and verify the ZIP64 archive.
 
-**Acceptance evidence:** Run the full journey on every matrix cell: macOS 13 and the current macOS release on Apple silicon, macOS 13 on Intel, Windows 10 22H2 x64, Windows 11 x64 and Windows 11 ARM64. On each, install (including one silent MDM install per OS), sign in, open an online-only Office file from Finder/Explorer, save and observe its new server version from a second device. In the browser, restore version 2 of that file as version 4 under VERSION-001; each client receives version 4 as a remote change, keeps the same file identity and downloads bytes whose SHA-256 equals version 2. Switch mirror/stream modes, pin a folder, sign out and uninstall with unsent edits; show exact disposition of local work. Add a 10 GB folder online-only and see every file listed in Finder/Explorer with its name and size while the client's local disk use grows by less than 100 MB; open one 1 GB file and see only that file downloaded, then choose Free up space on it and see local disk use fall back while the file stays listed.
+#### SYNC-001 — Windows and macOS filesystem clients
 
-#### SYNC-002 — Offline edits and lossless conflict reconciliation.
+*Tier:* Core
 
-Pinned files open/edit offline and reconcile automatically on reconnect. Divergent local/cloud copies, case-only renames, moved parents, delete-versus-edit and mirror/stream cutover preserve both conflicting byte versions with named conflicts for human resolution. A reconnect never uses an outdated permission grant; denied uploads preserve a private local recovery copy without republishing remotely.
+**Requirement.** Signed, installable macOS and Windows clients mount Chest in Finder/Explorer for existing applications. Users choose on-demand virtual files or mirrored folders per space; selective offline pinning, local cache budgets and visible hydration state let them open/save/rename/move files as local files. On-demand files take no local disk space for their content until opened: each shows its name, size and state, opening one downloads only that file, and **Free up space** returns a downloaded file to online-only while it stays in place. A restore under VERSION-001 reaches each signed-in client as a remote change to the same file, with the restored bytes and new version ID. Client updates, sign-out and uninstall preserve unsent work and expose what remains locally. Supported matrix: **macOS 13 Ventura or later on Apple silicon (arm64) and Intel (x86_64)** through Apple's File Provider framework, and **Windows 10 22H2 and Windows 11 23H2 or later on x64 and ARM64** through the Windows Cloud Files API; each new major OS release joins the matrix within 90 days of general availability. Installers are signed and notarized (Apple Developer ID) or Authenticode-signed, and deploy silently through MDM (Jamf, Microsoft Intune).
 
-**Acceptance evidence:** Edit a pinned file offline while another staff member changes it remotely, switch sync mode and reconnect; inspect both originals and resolve explicitly. Repeat delete-versus-edit, case rename and permission revocation, proving no silent overwrite or unauthorized remote write.
+**Acceptance.**
+1. Run the full journey on every matrix cell: macOS 13 and the current macOS release on Apple silicon, macOS 13 on Intel, Windows 10 22H2 x64, Windows 11 x64 and Windows 11 ARM64.
+2. On each, install (including one silent MDM install per OS), sign in, open an online-only Office file from Finder/Explorer, save and observe its new server version from a second device.
+3. In the browser, restore version 2 of that file as version 4 under VERSION-001; each client receives version 4 as a remote change, keeps the same file identity and downloads bytes whose SHA-256 equals version 2.
+4. Switch mirror/stream modes, pin a folder, sign out and uninstall with unsent edits; show exact disposition of local work.
+5. Add a 10 GB folder online-only and see every file listed in Finder/Explorer with its name and size while the client's local disk use grows by less than 100 MB; open one 1 GB file and see only that file downloaded, then choose Free up space on it and see local disk use fall back while the file stays listed.
 
-#### SYNC-003 — Visible sync operations and device control.
+#### SYNC-002 — Offline edits and lossless conflict reconciliation
 
-Users see queued/uploading/downloading/conflicted/paused/failed/up-to-date states, byte progress, last successful contact and an actionable reason per file. Admins see stale devices, client versions and unresolved errors; they can revoke a device, pause a folder and request a scoped cache wipe. Wipe status distinguishes requested, acknowledged and unreachable; downloaded copies cannot be promised remotely erased. **Network settings:** the client uses the system proxy by default and accepts a manual HTTP(S) proxy or PAC URL with basic, NTLM or Kerberos proxy authentication; users set upload and download bandwidth limits (unlimited, automatic or a fixed KB/s), and admins can set or cap them per group through MDM-managed configuration, which the user cannot exceed. The client shows the active proxy and limits and names a proxy failure as the reason a file is waiting. **Storage limits:** when a QUOTA-001 limit refuses an upload, the tray and each held file show the refusal naming the limit's scope, the limit and the current usage; unsent changes stay queued locally and upload automatically, without user action, once usage is under the limit. At the SCALE-001 reference size, a device that was offline for 7 days catches up on 10,000 remote changes within the SCALE-001 sync target, and the admin console lists every device in the installation.
+*Tier:* Core
 
-**Acceptance evidence:** Disconnect a device during transfer, exceed its cache/disk quota and revoke it; its tray and admin console show accurate unfinished work and last contact. Resolve the cause and verify hashes before showing up-to-date; an unreachable wipe stays unconfirmed. On macOS and Windows behind an authenticating proxy with direct egress blocked, the client syncs through the proxy; a wrong proxy password shows the proxy as the reason. Set an upload limit of 1,000 KB/s and measure sustained upload at or below it; an MDM cap of 500 KB/s overrides a user setting of 2,000 KB/s. On macOS and Windows, put the signed-in user over a QUOTA-001 limit and save a new file: the upload is refused, the tray and the held file name the limit's scope, the limit and the usage, and the file stays queued; after a space manager erases content under ERASE-001 (or an admin raises the limit), the queued upload completes without user action and its hash matches. In the SCALE-001 reference installation, take a device offline, apply 10,000 remote changes, reconnect and record catch-up time against the SCALE-001 target with final hashes matching.
+**Requirement.** Pinned files open/edit offline and reconcile automatically on reconnect. Divergent local/cloud copies, case-only renames, moved parents, delete-versus-edit and mirror/stream cutover preserve both conflicting byte versions with named conflicts for human resolution. A reconnect never uses an outdated permission grant; denied uploads preserve a private local recovery copy without republishing remotely.
 
-#### SYNC-004 — Creative assets stream and lock safely.
+**Acceptance.**
+1. Edit a pinned file offline while another staff member changes it remotely, switch sync mode and reconnect; inspect both originals and resolve explicitly.
+2. Repeat delete-versus-edit, case rename and permission revocation, proving no silent overwrite or unauthorized remote write.
 
-Byte-range streaming opens/seeks multi-GB video/design assets without full predownload, with explicit pinned ranges and cache use. Adobe Creative Cloud, AutoCAD and Final Cut Pro work through the mounted filespace with tested save/rename semantics and app-aware locks; a second writer sees the lock, and stale leases require explicit recovery with unsent changes retained. Browser open-in-native-app saves a new version to the same identity.
+#### SYNC-003 — Visible sync operations and device control
 
-**Acceptance evidence:** Open and seek a large video in Final Cut Pro, save a Photoshop asset and AutoCAD drawing from two clients, record transferred ranges and verify final checksums/version IDs. Compete for a lock, kill its holder and recover without losing either writer; open the same file from its browser page.
+*Tier:* Core
 
-#### SYNC-005 — Hybrid local cache and storage.
+**Requirement.** Users see queued/uploading/downloading/conflicted/paused/failed/up-to-date states, byte progress, last successful contact and an actionable reason per file. Admins see stale devices, client versions and unresolved errors; they can revoke a device, pause a folder and request a scoped cache wipe. Wipe status distinguishes requested, acknowledged and unreachable; downloaded copies cannot be promised remotely erased. **Network settings:** the client uses the system proxy by default and accepts a manual HTTP(S) proxy or PAC URL with basic, NTLM or Kerberos proxy authentication; users set upload and download bandwidth limits (unlimited, automatic or a fixed KB/s), and admins can set or cap them per group through MDM-managed configuration, which the user cannot exceed. The client shows the active proxy and limits and names a proxy failure as the reason a file is waiting. **Storage limits:** when a QUOTA-001 limit refuses an upload, the tray and each held file show the refusal naming the limit's scope, the limit and the current usage; unsent changes stay queued locally and upload automatically, without user action, once usage is under the limit. At the SCALE-001 reference size, a device that was offline for 7 days catches up on 10,000 remote changes within the SCALE-001 sync target, and the admin console lists every device in the installation.
 
-An owner can deploy an on-premises cache/storage connector for branch-office shared files, with encrypted credentials, configured folder scope, quotas and health reporting. LAN and cloud clients use the same IDs, permissions and history; an offline cache does not turn stale ACLs into unlimited authority, and conflicts survive reconnection.
+**Acceptance.**
+1. Disconnect a device during transfer, exceed its cache/disk quota and revoke it; its tray and admin console show accurate unfinished work and last contact.
+2. Resolve the cause and verify hashes before showing up-to-date; an unreachable wipe stays unconfirmed.
+3. On macOS and Windows behind an authenticating proxy with direct egress blocked, the client syncs through the proxy; a wrong proxy password shows the proxy as the reason.
+4. Set an upload limit of 1,000 KB/s and measure sustained upload at or below it; an MDM cap of 500 KB/s overrides a user setting of 2,000 KB/s.
+5. On macOS and Windows, put the signed-in user over a QUOTA-001 limit and save a new file: the upload is refused, the tray and the held file name the limit's scope, the limit and the usage, and the file stays queued; after a space manager erases content under ERASE-001 (or an admin raises the limit), the queued upload completes without user action and its hash matches.
+6. In the SCALE-001 reference installation, take a device offline, apply 10,000 remote changes, reconnect and record catch-up time against the SCALE-001 target with final hashes matching.
 
-**Acceptance evidence:** Connect two office clients and a remote client to a scoped cache, disconnect WAN and expire offline authorization, edit permitted pinned files, then reconcile conflicts and verify all final hashes and access. Replace the cache and recover from owner storage.
+#### SYNC-004 — Creative assets stream and lock safely
 
-#### SYNC-006 — Computer folder backup.
+*Tier:* Core
 
-The SYNC-001 client also backs up folders that already live on the computer: Desktop, Documents, Pictures, Downloads and any other local folder the user adds, as Google Drive for desktop and OneDrive Known Folder Move do. Each backed-up folder becomes a folder in the user's personal area named for the device, keeps its local path, and syncs two ways or uploads only, as the user or policy chooses. Admins enforce known-folder backup for a group, prevent it, or leave it to users, and can block named paths or file types; the client shows per-folder status (scanning, backing up, up to date, paused, error with reason) and the admin console shows each device's enrolled folders and last success. Local deletions follow CHEST-13 trash rules and stay recoverable; versions follow CHEST-07. On a new or wiped computer, the user signs in and restores any device's backed-up folders to their original paths or to a chosen location.
+**Requirement.** Byte-range streaming opens/seeks multi-GB video/design assets without full predownload, with explicit pinned ranges and cache use. Adobe Creative Cloud, AutoCAD and Final Cut Pro work through the mounted filespace with tested save/rename semantics and app-aware locks; a second writer sees the lock, and stale leases require explicit recovery with unsent changes retained. Browser open-in-native-app saves a new version to the same identity.
 
-**Acceptance evidence:** On macOS 13+ and Windows 11 from the SYNC-001 matrix, enroll Desktop and Documents (one by user choice, one by an enforced admin policy), create, edit and delete local files and see new versions and trashed items on the server with the device-named folder. Try to un-enroll the enforced folder as the user and be refused; block `*.tmp` and prove it is not uploaded. Wipe the laptop, sign in on a second computer, restore both folders to their original paths and reconcile tree and SHA-256 hashes, and restore a deleted file from trash. The admin console shows enrolled folders and last success for both devices.
+**Acceptance.**
+1. Open and seek a large video in Final Cut Pro, save a Photoshop asset and AutoCAD drawing from two clients, record transferred ranges and verify final checksums/version IDs.
+2. Compete for a lock, kill its holder and recover without losing either writer; open the same file from its browser page.
 
-#### SYNC-007 — Office desktop presence, newer-version alerts and locks.
+#### SYNC-005 — Hybrid local cache and storage
 
-When staff open Word, Excel or PowerPoint files (DOCX/XLSX/PPTX and legacy DOC/XLS/PPT) from the SYNC-001 mount, Chest warns them before two people's edits collide. This covers **Microsoft 365 Apps and Office 2016, 2019, 2021 and LTSC 2024 desktop on Windows and macOS**, on every SYNC-001 matrix cell, through a Chest Office presence add-in that installs with the client and deploys silently by MDM.
+*Tier:* Core
+
+**Requirement.** An owner can deploy an on-premises cache/storage connector for branch-office shared files, with encrypted credentials, configured folder scope, quotas and health reporting. LAN and cloud clients use the same IDs, permissions and history; an offline cache does not turn stale ACLs into unlimited authority, and conflicts survive reconnection.
+
+**Acceptance.**
+1. Connect two office clients and a remote client to a scoped cache, disconnect WAN and expire offline authorization, edit permitted pinned files, then reconcile conflicts and verify all final hashes and access.
+2. Replace the cache and recover from owner storage.
+
+#### SYNC-006 — Computer folder backup
+
+*Tier:* Core
+
+**Requirement.** The SYNC-001 client also backs up folders that already live on the computer: Desktop, Documents, Pictures, Downloads and any other local folder the user adds, as Google Drive for desktop and OneDrive Known Folder Move do. Each backed-up folder becomes a folder in the user's personal area named for the device, keeps its local path, and syncs two ways or uploads only, as the user or policy chooses. Admins enforce known-folder backup for a group, prevent it, or leave it to users, and can block named paths or file types; the client shows per-folder status (scanning, backing up, up to date, paused, error with reason) and the admin console shows each device's enrolled folders and last success. Local deletions follow CHEST-13 trash rules and stay recoverable; versions follow CHEST-07. On a new or wiped computer, the user signs in and restores any device's backed-up folders to their original paths or to a chosen location.
+
+**Acceptance.**
+1. On macOS 13+ and Windows 11 from the SYNC-001 matrix, enroll Desktop and Documents (one by user choice, one by an enforced admin policy), create, edit and delete local files and see new versions and trashed items on the server with the device-named folder.
+2. Try to un-enroll the enforced folder as the user and be refused; block `*.tmp` and prove it is not uploaded.
+3. Wipe the laptop, sign in on a second computer, restore both folders to their original paths and reconcile tree and SHA-256 hashes, and restore a deleted file from trash.
+4. The admin console shows enrolled folders and last success for both devices.
+
+#### SYNC-007 — Office desktop presence, newer-version alerts and locks
+
+*Tier:* Core
+
+**Requirement.** When staff open Word, Excel or PowerPoint files (DOCX/XLSX/PPTX and legacy DOC/XLS/PPT) from the SYNC-001 mount, Chest warns them before two people's edits collide. This covers **Microsoft 365 Apps and Office 2016, 2019, 2021 and LTSC 2024 desktop on Windows and macOS**, on every SYNC-001 matrix cell, through a Chest Office presence add-in that installs with the client and deploys silently by MDM.
 - **Presence:** while a file is open, Office shows "Also open by" with the names of every other person who has the same file open, whether in desktop Office on any client or in an EDIT-001 browser session. The list updates within 10 seconds of someone opening or closing the file, and a holder who stops sending heartbeats drops off within 2 minutes. Names are shown only to people who can see the file.
 - **Newer-version alert:** when another holder's save becomes a new server version, everyone else who has the file open is told within 30 seconds, naming who saved, before they save. They can reload the new version (with their unsaved changes kept as a named copy) or keep editing.
 - **Choices on open:** a user can open the file read-only, move to co-authoring in the browser through EDIT-001, or take an **edit lock**. While the lock is held, other holders' saves are refused in Office with the lock holder's name, and no conflict copy is created. The lock releases on close, or by lease expiry with the SYNC-004 stale-lock recovery that keeps unsent changes.
@@ -258,61 +403,130 @@ When staff open Word, Excel or PowerPoint files (DOCX/XLSX/PPTX and legacy DOC/X
 
 If someone saves without a lock after a newer version arrived, SYNC-002 still keeps both versions as a named conflict, never a silent overwrite. Presence and lock state also show on the file's browser page and in the mobile app.
 
-**Acceptance evidence:** Two staff open the same XLSX from the mount, one on macOS (Microsoft 365 Apps) and one on Windows (Office 2016), and each run is repeated with the operating systems swapped. The second sees the first named under "Also open by" within 10 seconds. The first saves; the second is told a newer version exists, naming the first, before saving, and reloading keeps the second's unsaved changes as a named copy. On the lock path, the first takes the lock and the second's save is refused naming the holder, with no conflict copy created. Kill the holder's client: the lock lapses through SYNC-004 recovery with the holder's unsent changes retained. Open the file in an EDIT-001 browser session and see that person in desktop presence. Under the "lock on first open" policy, the second opener is offered read-only or browser co-authoring only.
+**Acceptance.**
+1. Two staff open the same XLSX from the mount, one on macOS (Microsoft 365 Apps) and one on Windows (Office 2016), and each run is repeated with the operating systems swapped.
+2. The second sees the first named under "Also open by" within 10 seconds.
+3. The first saves; the second is told a newer version exists, naming the first, before saving, and reloading keeps the second's unsaved changes as a named copy.
+4. On the lock path, the first takes the lock and the second's save is refused naming the holder, with no conflict copy created.
+5. Kill the holder's client: the lock lapses through SYNC-004 recovery with the holder's unsent changes retained.
+6. Open the file in an EDIT-001 browser session and see that person in desktop presence.
+7. Under the "lock on first open" policy, the second opener is offered read-only or browser co-authoring only.
 
-#### MOBILE-001 — Native iOS and Android file access.
+#### MOBILE-001 — Native iOS and Android file access
 
-Native iOS/Android apps browse/search team folders, preview/share, scan with camera, upload photos automatically from selected albums and receive the user-approved background upload queue. They integrate system Files/document pickers, open files in other apps and save new versions. Every folder the user may add to has the **New** menu that creates a blank or templated document, spreadsheet or presentation (EDIT-004), and Office files open for co-authoring in the app in Collabora Online's touch editing interface (or Microsoft 365 where that is the user's EDIT-001 provider), and Google files under EDIT-002, through the same session, grants and versioning as the browser. When a QUOTA-001 limit refuses an upload, the upload queue shows the refusal on each held item, naming the limit's scope, the limit and the current usage. Users pin selected files for offline edits; device locks, local encryption, revocation and explicit offline-grant expiry protect cached business data. Supported matrix: **iOS and iPadOS 17 or later** (arm64, iPhone and iPad) with a File Provider extension, and **Android 10 (API level 29) or later** on arm64-v8a with a Storage Access Framework DocumentsProvider; each new major OS release joins the matrix within 90 days of general availability. Apps ship through the Apple App Store and Google Play, with managed configuration through Microsoft Intune and Jamf. On Chromebooks with Google Play (current ChromeOS stable), the Android app installs and its DocumentsProvider appears in the ChromeOS Files app, so ChromeOS apps open and save Chest files; Chromebook users otherwise use the browser. Chest ships no separate ChromeOS client.
+*Tier:* Core
 
-**Acceptance evidence:** Run the journey on an iPhone on iOS 17, an iPhone on the current iOS release, an iPad on the current iPadOS, an Android 10 device and an Android device on the current release. On each, capture a multi-page scan, upload photos, share with a permitted recipient, open/save through a system picker, create a blank spreadsheet from the New menu and co-edit it in Collabora Online with a browser user (EDIT-001), with no participant holding a Microsoft or Google license, until both edits appear as attributed versions, and edit a pinned file offline while another device changes it. Put the user over a QUOTA-001 limit and upload a photo: the upload queue shows it refused, naming the limit's scope, the limit and the usage. Reconnect, resolve the conflict and revoke the device; show the limit of an unreachable cache wipe. On a Play-enabled Chromebook on current ChromeOS stable, install the Android app, open a Chest file from the ChromeOS Files app in a ChromeOS app, save it and see the new attributed version.
+**Requirement.** Native iOS/Android apps browse/search team folders, preview/share, scan with camera, upload photos automatically from selected albums and receive the user-approved background upload queue. They integrate system Files/document pickers, open files in other apps and save new versions. Every folder the user may add to has the **New** menu that creates a blank or templated document, spreadsheet or presentation (EDIT-004), and Office files open for co-authoring in the app in Collabora Online's touch editing interface (or Microsoft 365 where that is the user's EDIT-001 provider), and Google files under EDIT-002, through the same session, grants and versioning as the browser. When a QUOTA-001 limit refuses an upload, the upload queue shows the refusal on each held item, naming the limit's scope, the limit and the current usage. Users pin selected files for offline edits; device locks, local encryption, revocation and explicit offline-grant expiry protect cached business data. Supported matrix: **iOS and iPadOS 17 or later** (arm64, iPhone and iPad) with a File Provider extension, and **Android 10 (API level 29) or later** on arm64-v8a with a Storage Access Framework DocumentsProvider; each new major OS release joins the matrix within 90 days of general availability. Apps ship through the Apple App Store and Google Play, with managed configuration through Microsoft Intune and Jamf. On Chromebooks with Google Play (current ChromeOS stable), the Android app installs and its DocumentsProvider appears in the ChromeOS Files app, so ChromeOS apps open and save Chest files; Chromebook users otherwise use the browser. Chest ships no separate ChromeOS client.
+
+**Acceptance.**
+1. Run the journey on an iPhone on iOS 17, an iPhone on the current iOS release, an iPad on the current iPadOS, an Android 10 device and an Android device on the current release.
+2. On each, capture a multi-page scan, upload photos, share with a permitted recipient, open/save through a system picker, create a blank spreadsheet from the New menu and co-edit it in Collabora Online with a browser user (EDIT-001), with no participant holding a Microsoft or Google license, until both edits appear as attributed versions, and edit a pinned file offline while another device changes it.
+3. Put the user over a QUOTA-001 limit and upload a photo: the upload queue shows it refused, naming the limit's scope, the limit and the usage.
+4. Reconnect, resolve the conflict and revoke the device; show the limit of an unreachable cache wipe.
+5. On a Play-enabled Chromebook on current ChromeOS stable, install the Android app, open a Chest file from the ChromeOS Files app in a ChromeOS app, save it and see the new attributed version.
 
 ### External exchange, previews and collaboration
 
-#### SHARE-001 — Policy-controlled external links.
+#### SHARE-001 — Policy-controlled external links
 
-Create file and folder links for named invited guests, **everyone in the organization with the link**, authenticated domains or a public audience, each only where the POLICY-001 sharing policy in force for that space and sharer allows it. An organization link admits any signed-in staff member of the installation at viewer, commenter or editor (editor = file editor under ROLE-001) without adding them by name, and refuses guests and signed-out browsers. It obeys the ROLE-001 no-download setting. Opening it records the item in the colleague's recent items but creates no grant, so changing or removing the link removes their access on the next request. Each organization link is either **discoverable** or not, within POLICY-001. A discoverable link lets any staff member find the item in search. A non-discoverable one lets a colleague find it in search, recent items and Shared with me only after they have opened the link. Every new link starts at the default audience and role POLICY-001 sets for the sharer's group; changing that default affects only links created afterwards. Sharers choose password, expiry, allowed versions (current, approved-only or pinned), the link's role (viewer with or without download, commenter, or for named guests the SHARE-005 editor and contributor roles) and download-count limits; revocation and policy changes apply to every request, including old preview URLs. Folder changes cannot expose restricted descendants. Only password hashes are stored; link capabilities never appear in logs, public exports or chat previews. Each item's link list and the sharer's Links view show every link's audience, role, expiry date and downloads used against its limit (for example "Expires Nov 30 · 3 of 10 downloads"), and offer **Revoke** as one action that ends the link on the next request.
+*Tier:* Core
 
-**Acceptance evidence:** Share a restricted folder and pinned approved file with an external recipient; try wrong password, wrong domain, guessed child URLs, expired/revoked links and parallel downloads at the count limit. Confirm approved-only never reveals pending replacements and a revoked link fails on the next request. A staff member sets a team-space file to organization-with-link at commenter, not discoverable. A colleague with no grant opens it and comments, while a guest and a signed-out browser are refused. Before opening the link, that colleague's search does not show the file; after opening, it does. Switch the link to discoverable and see a third colleague find it by search. With the no-download setting on, the colleague's download is refused while the preview works. Remove the link and see the colleague refused on the next request. Change the admin default link audience from restricted to organization and see the next new link start at organization while existing links keep their audience. Give a link a 10-download limit and a 30 November expiry and download through it three times: the sharer's link list shows "Expires Nov 30 · 3 of 10 downloads". One Revoke click in that list, with no further step, makes the next request through the link fail. Run the browser steps at 1440 and 390.
+**Requirement.** Create file and folder links for named invited guests, **everyone in the organization with the link**, authenticated domains or a public audience, each only where the POLICY-001 sharing policy in force for that space and sharer allows it. An organization link admits any signed-in staff member of the installation at viewer, commenter or editor (editor = file editor under ROLE-001) without adding them by name, and refuses guests and signed-out browsers. It obeys the ROLE-001 no-download setting. Opening it records the item in the colleague's recent items but creates no grant, so changing or removing the link removes their access on the next request. Each organization link is either **discoverable** or not, within POLICY-001. A discoverable link lets any staff member find the item in search. A non-discoverable one lets a colleague find it in search, recent items and Shared with me only after they have opened the link. Every new link starts at the default audience and role POLICY-001 sets for the sharer's group; changing that default affects only links created afterwards. Sharers choose password, expiry, allowed versions (current, approved-only or pinned), the link's role (viewer with or without download, commenter, or for named guests the SHARE-005 editor and contributor roles) and download-count limits; revocation and policy changes apply to every request, including old preview URLs. Folder changes cannot expose restricted descendants. Only password hashes are stored; link capabilities never appear in logs, public exports or chat previews. Each item's link list and the sharer's Links view show every link's audience, role, expiry date and downloads used against its limit (for example "Expires Nov 30 · 3 of 10 downloads"), and offer **Revoke** as one action that ends the link on the next request.
 
-#### SHARE-002 — Upload-only file requests.
+**Acceptance.**
+1. Share a restricted folder and pinned approved file with an external recipient; try wrong password, wrong domain, guessed child URLs, expired/revoked links and parallel downloads at the count limit.
+2. Confirm approved-only never reveals pending replacements and a revoked link fails on the next request.
+3. A staff member sets a team-space file to organization-with-link at commenter, not discoverable.
+4. A colleague with no grant opens it and comments, while a guest and a signed-out browser are refused.
+5. Before opening the link, that colleague's search does not show the file; after opening, it does.
+6. Switch the link to discoverable and see a third colleague find it by search.
+7. With the no-download setting on, the colleague's download is refused while the preview works.
+8. Remove the link and see the colleague refused on the next request. Change the admin default link audience from restricted to organization and see the next new link start at organization while existing links keep their audience. Give a link a 10-download limit and a 30 November expiry and download through it three times: the sharer's link list shows "Expires Nov 30 · 3 of 10 downloads". One Revoke click in that list, with no further step, makes the next request through the link fail. Run the browser steps at 1440 and 390.
 
-Staff issue upload-only request links for a destination, checklist, allowed types/sizes, deadline and submitter verification policy. A recipient without a Chest seat can send resumable large files, receive a receipt and replace their own submission when allowed, without listing/downloading others or choosing a destination outside the grant. Quarantine and late/duplicate handling are visible; closing the request stops new acceptance.
+#### SHARE-002 — Upload-only file requests
 
-**Acceptance evidence:** Send a vendor request, submit from a signed-out phone, interrupt/resume a large upload and receive its receipt. Try another submitter’s files, path traversal, disallowed content and an expired/closed request; verify none grants library access.
+*Tier:* Core
 
-#### SHARE-003 — Delivery receipts and large-file transfers.
+**Requirement.** Staff issue upload-only request links for a destination, checklist, allowed types/sizes, deadline and submitter verification policy. A recipient without a Chest seat can send resumable large files, receive a receipt and replace their own submission when allowed, without listing/downloading others or choosing a destination outside the grant. Quarantine and late/duplicate handling are visible; closing the request stops new acceptance.
 
-Create a version-pinned large-file transfer package with resumable downloads, expiry, count limits and optional receipt confirmation. Link owners see attributed authenticated views, anonymous views, completed byte transfers and explicit recipient confirmations as distinct events. Notifications never label provider acknowledgment or a preview-bot request as proof a human received the file.
+**Acceptance.**
+1. Send a vendor request, submit from a signed-out phone, interrupt/resume a large upload and receive its receipt.
+2. Try another submitter’s files, path traversal, disallowed content and an expired/closed request; verify none grants library access.
 
-**Acceptance evidence:** Send a multi-GB package to an invited recipient and a public recipient; interrupt/resume download, exercise the limit and inspect view/download/confirmation events. A mail scanner GET and successful email API response must not set human receipt; expiry stops new range requests.
+#### SHARE-003 — Delivery receipts and large-file transfers
 
-#### SHARE-004 — Item sharing, Shared with me and access requests.
+*Tier:* Core
 
-Any staff member shares a file or folder from their personal area, and any editor or content manager shares a space item (ROLE-001), with named colleagues or groups at viewer, commenter or editor, with an optional message, subject to POLICY-001. Recipients get an in-app notice and an email, and Slack/Teams where connected (FOLLOW-001), and find the item under **Shared with me**, filterable by sharer and date, with add-to-my-area shortcuts that grant nothing further. A signed-in person who opens a link they cannot use sees **Request access** with an optional message and requested role, never the item's name or contents beyond what the link already reveals. The request goes to the item's sharers with share rights (owner, file editors, then space managers); each can approve at the requested or a lower role, or decline, from the email, the in-app notice or the share dialog, and the requester is told the outcome. A request whose owner has left or been deactivated routes to the new content owner set at offboarding (SPACE-001), then to the space managers, then to admins with content-recovery scope (ADMIN-003); it never stalls silently. Requests expire after 30 days with the requester notified, and each request, decision and grant is audited. **Grant expiry:** any person or group grant made here, on a personal-area or space item, can carry an optional expiry date, set when sharing or later, with admins able to set a maximum. The sharer and the grantee get an in-app and email notice one day before expiry. Either notice offers the sharer a one-step extend, within the maximum. From the first request after expiry, every door refuses the grant: list, Shared with me, search, preview, download, sync hydration, editor sessions, comment and API. The expiry is audited, and the grantee keeps any other grant they hold.
+**Requirement.** Create a version-pinned large-file transfer package with resumable downloads, expiry, count limits and optional receipt confirmation. Link owners see attributed authenticated views, anonymous views, completed byte transfers and explicit recipient confirmations as distinct events. Notifications never label provider acknowledgment or a preview-bot request as proof a human received the file.
 
-**Acceptance evidence:** Share a personal-area file with a colleague at commenter; they receive the notice and email, find it under Shared with me and can comment but not edit. An unauthorized colleague opens the link, sees Request access without the title, requests editor; the owner approves at viewer from the email link and the requester is told and can now view. A second request is declined from the share dialog and the requester is told. Deactivate the owner of a third file and request access; the request reaches the new content owner, and with none, a space manager. Grant a colleague commenter on a space file with a 2-day expiry and advance a controlled clock. The one-day notice reaches the sharer and the grantee, and an extend from the notice moves the date once; let the new date pass. List, preview, download, sync hydration on the colleague's client, and comment are each refused on the next request, and the audit records the expiry. Repeat at 1440 and 390 and inspect the audit entries.
+**Acceptance.**
+1. Send a multi-GB package to an invited recipient and a public recipient; interrupt/resume download, exercise the limit and inspect view/download/confirmation events.
+2. A mail scanner GET and successful email API response must not set human receipt; expiry stops new range requests.
 
-#### SHARE-005 — External collaborators who edit, comment and upload.
+#### SHARE-004 — Item sharing, Shared with me and access requests
 
-Named guests outside the organization, with or without a Google or Microsoft account, receive viewer, commenter, editor or contributor roles on a file or folder (ROLE-001) where POLICY-001 allows external sharing to their domain. Guests sign in with a one-time PIN sent to the invited email address or with a verified Google or Microsoft identity matching it, and re-verify after an admin-set interval (default 7 days, range 1–30); a forwarded invitation alone admits no one else. Sharers set a guest expiry date per grant and admins set a maximum; on expiry every door refuses the guest on the next request. Guests cannot re-share or invite others; onward sharing is off and has no setting in this delivery. Guests co-edit Office files in the shipped Collabora Online editor (EDIT-001), which needs no Microsoft or Google account or license, and upload into folders they hold contributor or editor on, and every guest edit, upload, comment and version carries the guest's verified email in version history, comments and audit. Guest editors on a file and guest contributors on a folder can browse and download retained versions within their download grant, restore any retained version as current, upload replacements and name or rename versions under VERSION-001. A restore creates a new version attributed to the guest's verified email, retains all later versions and keeps the stable ID, links, grants and comment threads; on a governed file it is a new submission and never moves the approved pointer without approval. Guest viewers and commenters cannot restore, replace or name versions. Guests hold no seat, see only what they are granted and cannot browse, search or list anything else.
+*Tier:* Core
 
-**Acceptance evidence:** Invite a guest at another domain with no Google or Microsoft account as editor on a DOCX and contributor on a folder, with a 3-day expiry and re-sharing off. The guest signs in by PIN, co-edits the DOCX with a staff member in Collabora Online under EDIT-001, on an installation with no Microsoft or Google provider configured, and uploads two files into the folder; version history and audit attribute each change to the guest's email. For both the guest editor and the guest contributor, retain three versions, download version 2 and compare its SHA-256, name it and restore it as version 4; its bytes equal version 2, all earlier versions remain downloadable and the stable ID and existing link now serve version 4. Version history and audit name the guest's verified email and source version once. On a governed file, the guest's restore is a new submission and the approved pointer is unchanged. Guest viewers and commenters are refused restore, replacement and version naming with no new version or renamed history. Revoke the editor and refuse their next restore, replacement and rename. The guest's attempts to share onward, open a sibling folder, search the library and use the PIN from a second email address are refused. Advance a controlled clock past re-verification and see a new PIN required, then past expiry and see every door, including an open editor session's next save and a range request, refused.
+**Requirement.** Any staff member shares a file or folder from their personal area, and any editor or content manager shares a space item (ROLE-001), with named colleagues or groups at viewer, commenter or editor, with an optional message, subject to POLICY-001. Recipients get an in-app notice and an email, and Slack/Teams where connected (FOLLOW-001), and find the item under **Shared with me**, filterable by sharer and date, with add-to-my-area shortcuts that grant nothing further. A signed-in person who opens a link they cannot use sees **Request access** with an optional message and requested role, never the item's name or contents beyond what the link already reveals. The request goes to the item's sharers with share rights (owner, file editors, then space managers); each can approve at the requested or a lower role, or decline, from the email, the in-app notice or the share dialog, and the requester is told the outcome. A request whose owner has left or been deactivated routes to the new content owner set at offboarding (SPACE-001), then to the space managers, then to admins with content-recovery scope (ADMIN-003); it never stalls silently. Requests expire after 30 days with the requester notified, and each request, decision and grant is audited. **Grant expiry:** any person or group grant made here, on a personal-area or space item, can carry an optional expiry date, set when sharing or later, with admins able to set a maximum. The sharer and the grantee get an in-app and email notice one day before expiry. Either notice offers the sharer a one-step extend, within the maximum. From the first request after expiry, every door refuses the grant: list, Shared with me, search, preview, download, sync hydration, editor sessions, comment and API. The expiry is audited, and the grantee keeps any other grant they hold.
 
-#### POLICY-001 — Organization sharing policy.
+**Acceptance.**
+1. Share a personal-area file with a colleague at commenter; they receive the notice and email, find it under Shared with me and can comment but not edit.
+2. An unauthorized colleague opens the link, sees Request access without the title, requests editor; the owner approves at viewer from the email link and the requester is told and can now view.
+3. A second request is declined from the share dialog and the requester is told.
+4. Deactivate the owner of a third file and request access; the request reaches the new content owner, and with none, a space manager.
+5. Grant a colleague commenter on a space file with a 2-day expiry and advance a controlled clock.
+6. The one-day notice reaches the sharer and the grantee, and an extend from the notice moves the date once; let the new date pass.
+7. List, preview, download, sync hydration on the colleague's client, and comment are each refused on the next request, and the audit records the expiry.
+8. Repeat at 1440 and 390 and inspect the audit entries.
 
-Admins with sharing-policy scope (ADMIN-003) set an organization sharing policy, with overrides per space and per group, that states: whether sharing outside the organization is allowed at all; a trusted-domain allowlist that, when on, limits external grants and links to listed domains; whether public (anyone-with-the-link) links are allowed; whether shared-space content may be shared with people who are not members of that space; whether editors (not only managers) may share; and whether users see a warning naming the external recipients before sharing outside the organization. It also states the **default audience and role for new links** (restricted to people added by name, organization-with-link, or public where public links are allowed) per organization and per organizational group, which the share dialog, API and every connector start from; and whether organization links may be **discoverable** in colleagues' search (SHARE-001). A changed default applies only to links created afterwards. Who may create team spaces, and the settings new spaces start with, are SPACE-002. The most restrictive applicable rule wins where space and group overrides conflict, and the share dialog explains which rule refused or warned. Policy is enforced at every share door: share dialog, API, SHARE-001–005, Slack/Teams (CONNECT-001/002), email add-ins (CONNECT-008), automation apps (CONNECT-009), Google Meet filing, the Calendar add-on and the Chat app (CONNECT-010) and agents. Tightening the policy applies to existing grants and links on their next request: out-of-policy links stop working with a policy-refusal page, out-of-policy guests are suspended rather than deleted, and the admin sees the list of suspended grants to remove or re-allow. Every policy change is audited with before and after values.
+#### SHARE-005 — External collaborators who edit, comment and upload
 
-**Acceptance evidence:** Set an allowlist of one partner domain with public links off. As staff, a share to a non-allowlisted domain and a public link are refused in the UI and API with the policy named; a share to the allowlisted domain succeeds after the external-recipient warning. Create a public link and a non-allowlisted guest grant under a looser policy, tighten the policy and prove both are refused on the next request and listed as suspended. Set a space override that blocks sharing outside its members while the organization allows it, and see a member's share to another colleague refused. Confirm the same refusals through the CONNECT-007 API and a CONNECT-009 action. Set the organization default link audience to restricted and a group default to organization-with-link at viewer. A group member's new link starts at organization viewer and a non-member's at restricted; links created before the change keep their audience. Turn organization-link discovery off and see a request for a discoverable organization link refused with the policy named.
+*Tier:* Core
 
-#### PREVIEW-001 — Office, Google, video and design previews.
+**Requirement.** Named guests outside the organization, with or without a Google or Microsoft account, receive viewer, commenter, editor or contributor roles on a file or folder (ROLE-001) where POLICY-001 allows external sharing to their domain. Guests sign in with a one-time PIN sent to the invited email address or with a verified Google or Microsoft identity matching it, and re-verify after an admin-set interval (default 7 days, range 1–30); a forwarded invitation alone admits no one else. Sharers set a guest expiry date per grant and admins set a maximum; on expiry every door refuses the guest on the next request. Guests cannot re-share or invite others; onward sharing is off and has no setting in this delivery. Guests co-edit Office files in the shipped Collabora Online editor (EDIT-001), which needs no Microsoft or Google account or license, and upload into folders they hold contributor or editor on, and every guest edit, upload, comment and version carries the guest's verified email in version history, comments and audit. Guest editors on a file and guest contributors on a folder can browse and download retained versions within their download grant, restore any retained version as current, upload replacements and name or rename versions under VERSION-001. A restore creates a new version attributed to the guest's verified email, retains all later versions and keeps the stable ID, links, grants and comment threads; on a governed file it is a new submission and never moves the approved pointer without approval. Guest viewers and commenters cannot restore, replace or name versions. Guests hold no seat, see only what they are granted and cannot browse, search or list anything else.
 
-Permission-checked browser/mobile previews, with pages, thumbnails and seek controls where applicable, cover this named matrix: **documents** PDF, DOC/DOCX, XLS/XLSX, PPT/PPTX, ODT/ODS/ODP, RTF, Apple Pages/Numbers/Keynote, Google Docs/Sheets/Slides/Drawings, EML/MSG; **text** TXT, CSV, TSV, MD, JSON, XML and common source code; **images** JPEG, PNG, GIF, WebP, HEIC/HEIF, TIFF, BMP, SVG (rendered as a sanitized raster) and camera RAW (DNG, CR2/CR3, NEF, ARW); **video** MP4 and MOV in H.264, HEVC/H.265 and Apple ProRes 422/4444, plus WebM (VP9/AV1) and AVI, played through a transcoded H.264 streaming proxy with seek; **audio** MP3, WAV, AAC/M4A, FLAC, AIFF and OGG; **design and CAD** PSD/PSB, AI, EPS, INDD (embedded preview), Sketch, DWG and DXF (AutoCAD 2000 through 2018 formats), STL and OBJ; **archives** ZIP listing without extraction. Formats outside the matrix show a named unsupported state. Separate bounded processing services retain original bytes, exact source-version identity, renderer provenance and visible pending/failed/unsupported states; rendering does not execute file macros or widen permissions.
+**Acceptance.**
+1. Invite a guest at another domain with no Google or Microsoft account as editor on a DOCX and contributor on a folder, with a 3-day expiry and re-sharing off.
+2. The guest signs in by PIN, co-edits the DOCX with a staff member in Collabora Online under EDIT-001, on an installation with no Microsoft or Google provider configured, and uploads two files into the folder; version history and audit attribute each change to the guest's email.
+3. For both the guest editor and the guest contributor, retain three versions, download version 2 and compare its SHA-256, name it and restore it as version 4; its bytes equal version 2, all earlier versions remain downloadable and the stable ID and existing link now serve version 4.
+4. Version history and audit name the guest's verified email and source version once.
+5. On a governed file, the guest's restore is a new submission and the approved pointer is unchanged.
+6. Guest viewers and commenters are refused restore, replacement and version naming with no new version or renamed history.
+7. Revoke the editor and refuse their next restore, replacement and rename.
+8. The guest's attempts to share onward, open a sibling folder, search the library and use the PIN from a second email address are refused. Advance a controlled clock past re-verification and see a new PIN required, then past expiry and see every door, including an open editor session's next save and a range request, refused.
 
-**Acceptance evidence:** Open one fixture per matrix format from the file page in the browser at 1440 and 390 and in both mobile apps, checking page count, first-page thumbnail and, for video/audio, seek to a mid-file timestamp; a format outside the matrix shows the unsupported state with download. Revoke access while a preview is open and request fresh pages/ranges; deny them. Test corrupt/malicious files and processor outage, expose the exact failure and keep the original downloadable to an authorized user.
+#### POLICY-001 — Organization sharing policy
 
-#### SEARCH-001 — Full-text and scanned-content search.
+*Tier:* Core
 
-Extract searchable text from every admitted file in this named matrix, retaining source version, parser/language, confidence and extraction state: **OCR** of image-only PDF pages and JPEG, PNG, TIFF, HEIC and WebP images in English and Spanish (other languages indexed with their detected language recorded); **text extraction** from PDF text layers, DOC/DOCX, XLS/XLSX, PPT/PPTX, ODT/ODS/ODP, RTF, Apple Pages/Numbers/Keynote, Google Docs/Sheets/Slides via export, EML/MSG bodies and attachments, TXT, CSV, MD, HTML, JSON and XML; **transcripts** of English and Spanish speech in MP4, MOV, MP3, WAV and M4A. The full extracted text of each version is indexed; any truncation is shown as partially indexed with the offset reached. Search spans names, content, typed metadata, owners, dates, folders and versions with snippets, and meets the SCALE-001 search target at the reference size. Unsupported or encrypted files visibly remain unindexed. Current permissions govern hits, snippets, counts, suggestions and AI retrieval; revocation supersedes stale indexes.
+**Requirement.** Admins with sharing-policy scope (ADMIN-003) set an organization sharing policy, with overrides per space and per group, that states: whether sharing outside the organization is allowed at all; a trusted-domain allowlist that, when on, limits external grants and links to listed domains; whether public (anyone-with-the-link) links are allowed; whether shared-space content may be shared with people who are not members of that space; whether editors (not only managers) may share; and whether users see a warning naming the external recipients before sharing outside the organization. It also states the **default audience and role for new links** (restricted to people added by name, organization-with-link, or public where public links are allowed) per organization and per organizational group, which the share dialog, API and every connector start from; and whether organization links may be **discoverable** in colleagues' search (SHARE-001). A changed default applies only to links created afterwards. Who may create team spaces, and the settings new spaces start with, are SPACE-002. The most restrictive applicable rule wins where space and group overrides conflict, and the share dialog explains which rule refused or warned. Policy is enforced at every share door: share dialog, API, SHARE-001–005, Slack/Teams (CONNECT-001/002), email add-ins (CONNECT-008), automation apps (CONNECT-009), Google Meet filing, the Calendar add-on and the Chat app (CONNECT-010) and agents. Tightening the policy applies to existing grants and links on their next request: out-of-policy links stop working with a policy-refusal page, out-of-policy guests are suspended rather than deleted, and the admin sees the list of suspended grants to remove or re-allow. Every policy change is audited with before and after values.
+
+**Acceptance.**
+1. Set an allowlist of one partner domain with public links off.
+2. As staff, a share to a non-allowlisted domain and a public link are refused in the UI and API with the policy named; a share to the allowlisted domain succeeds after the external-recipient warning.
+3. Create a public link and a non-allowlisted guest grant under a looser policy, tighten the policy and prove both are refused on the next request and listed as suspended.
+4. Set a space override that blocks sharing outside its members while the organization allows it, and see a member's share to another colleague refused.
+5. Confirm the same refusals through the CONNECT-007 API and a CONNECT-009 action.
+6. Set the organization default link audience to restricted and a group default to organization-with-link at viewer.
+7. A group member's new link starts at organization viewer and a non-member's at restricted; links created before the change keep their audience.
+8. Turn organization-link discovery off and see a request for a discoverable organization link refused with the policy named.
+
+#### PREVIEW-001 — Office, Google, video and design previews
+
+*Tier:* Core
+
+**Requirement.** Permission-checked browser/mobile previews, with pages, thumbnails and seek controls where applicable, cover this named matrix: **documents** PDF, DOC/DOCX, XLS/XLSX, PPT/PPTX, ODT/ODS/ODP, RTF, Apple Pages/Numbers/Keynote, Google Docs/Sheets/Slides/Drawings, EML/MSG; **text** TXT, CSV, TSV, MD, JSON, XML and common source code; **images** JPEG, PNG, GIF, WebP, HEIC/HEIF, TIFF, BMP, SVG (rendered as a sanitized raster) and camera RAW (DNG, CR2/CR3, NEF, ARW); **video** MP4 and MOV in H.264, HEVC/H.265 and Apple ProRes 422/4444, plus WebM (VP9/AV1) and AVI, played through a transcoded H.264 streaming proxy with seek; **audio** MP3, WAV, AAC/M4A, FLAC, AIFF and OGG; **design and CAD** PSD/PSB, AI, EPS, INDD (embedded preview), Sketch, DWG and DXF (AutoCAD 2000 through 2018 formats), STL and OBJ; **archives** ZIP listing without extraction. Formats outside the matrix show a named unsupported state. Separate bounded processing services retain original bytes, exact source-version identity, renderer provenance and visible pending/failed/unsupported states; rendering does not execute file macros or widen permissions.
+
+**Acceptance.**
+1. Open one fixture per matrix format from the file page in the browser at 1440 and 390 and in both mobile apps, checking page count, first-page thumbnail and, for video/audio, seek to a mid-file timestamp; a format outside the matrix shows the unsupported state with download.
+2. Revoke access while a preview is open and request fresh pages/ranges; deny them.
+3. Test corrupt/malicious files and processor outage, expose the exact failure and keep the original downloadable to an authorized user.
+
+#### SEARCH-001 — Full-text and scanned-content search
+
+*Tier:* Core
+
+**Requirement.** Extract searchable text from every admitted file in this named matrix, retaining source version, parser/language, confidence and extraction state: **OCR** of image-only PDF pages and JPEG, PNG, TIFF, HEIC and WebP images in English and Spanish (other languages indexed with their detected language recorded); **text extraction** from PDF text layers, DOC/DOCX, XLS/XLSX, PPT/PPTX, ODT/ODS/ODP, RTF, Apple Pages/Numbers/Keynote, Google Docs/Sheets/Slides via export, EML/MSG bodies and attachments, TXT, CSV, MD, HTML, JSON and XML; **transcripts** of English and Spanish speech in MP4, MOV, MP3, WAV and M4A. The full extracted text of each version is indexed; any truncation is shown as partially indexed with the offset reached. Search spans names, content, typed metadata, owners, dates, folders and versions with snippets, and meets the SCALE-001 search target at the reference size. Unsupported or encrypted files visibly remain unindexed. Current permissions govern hits, snippets, counts, suggestions and AI retrieval; revocation supersedes stale indexes.
 
 **Filters** appear as chips under the search box. Each can be used alone, with others, or with text:
 - **Type:** folders; documents (DOC/DOCX, ODT, RTF, Pages, Google Docs, TXT, MD); spreadsheets (XLS/XLSX, ODS, CSV, TSV, Numbers, Google Sheets); presentations (PPT/PPTX, ODP, Keynote, Google Slides); PDFs; images; videos; audio; archives; and other. Type is matched on the file type detected from content, not the extension alone, so a PDF renamed `.txt` counts as a PDF. Several types can be chosen at once.
@@ -323,23 +537,35 @@ Extract searchable text from every admitted file in this named matrix, retaining
 
 Filters combine with AND across filters and OR within one filter's choices. A search with filters and no text lists the matching files, newest first. Filters work in the browser at 1440 and 390, in the iOS and Android apps, and through the CONNECT-007 search API as named parameters (`type`, `owner`, `creator`, `sharedBy`, `modifiedFrom`, `modifiedTo`, `location`, `versions`). Filter counts and folder suggestions follow current access exactly as hits do: a file the user cannot open is never counted, suggested or used to suggest a person.
 
-**Acceptance evidence:** Upload one fixture per matrix format, each holding a distinctive phrase (including a scanned English invoice, a scanned Spanish receipt, an Office spreadsheet, a Google document, an MSG with a DOCX attachment, a spoken-phrase MP4 and an encrypted PDF), find every phrase and filter by folder/version. Then seed files that all contain one shared phrase: PDFs, spreadsheets and images; files owned by two different people; files modified 3 days and 40 days ago; one PDF renamed `.txt`; and one matching PDF in a folder a test user cannot open.
-- Search the phrase with Type = PDF, People = owned by the second owner and Modified = last 30 days. Only the matching files come back, including the renamed PDF.
-- Combine each of Type, People, Modified and Version with Location = Shared with me, and again with Location = one space; check each result set against the seed. Use a custom date range, and a filter-only search with no text.
-- The test user never sees the PDF they cannot open, or a count or suggestion that includes it.
-- Repeat in the browser at 1440 and 390, in the iOS and Android apps and through the search API.
+**Acceptance.**
+1. Upload one fixture per matrix format, each holding a distinctive phrase (including a scanned English invoice, a scanned Spanish receipt, an Office spreadsheet, a Google document, an MSG with a DOCX attachment, a spoken-phrase MP4 and an encrypted PDF), find every phrase and filter by folder/version.
+2. Then seed files that all contain one shared phrase: PDFs, spreadsheets and images; files owned by two different people; files modified 3 days and 40 days ago; one PDF renamed `.txt`; and one matching PDF in a folder a test user cannot open. - Search the phrase with Type = PDF, People = owned by the second owner and Modified = last 30 days.
+3. Only the matching files come back, including the renamed PDF. - Combine each of Type, People, Modified and Version with Location = Shared with me, and again with Location = one space; check each result set against the seed.
+4. Use a custom date range, and a filter-only search with no text. - The test user never sees the PDF they cannot open, or a count or suggestion that includes it. - Repeat in the browser at 1440 and 390, in the iOS and Android apps and through the search API.
+5. Show OCR provenance and the encrypted-file gap; revoke a group before index refresh and prove zero leaked snippets/counts/autocomplete through search API and UI.
+6. Repeat a fixed query set in the SCALE-001 reference installation and record latency against the SCALE-001 search target.
 
-Show OCR provenance and the encrypted-file gap; revoke a group before index refresh and prove zero leaked snippets/counts/autocomplete through search API and UI. Repeat a fixed query set in the SCALE-001 reference installation and record latency against the SCALE-001 search target.
+#### SEARCH-002 — Typed fields read from scans and shown where they were found
 
-#### SEARCH-002 — Typed fields read from scans and shown where they were found.
+*Tier:* Core
 
-When a scanned or photographed document arrives (an image-only PDF page, or a JPEG, PNG, TIFF, HEIC or WebP image, read by SEARCH-001 OCR), Chest reads the values of the CHEST-02 typed fields defined for its type: for an NDA, the parties, effective date, term and governing state; for a W-9, the legal name, business type and the last four digits of the TIN, shown masked; for an invoice, the vendor, number, date and USD total. The file page shows the scan with a box drawn around the words each value came from, with its page, the value and a confidence, in the browser at desktop and phone widths and in the iOS and Android apps. Read values are proposals until a person who can edit the file confirms, corrects or rejects each one. Confirmed values become ordinary typed fields, with provenance naming the version, page, region and reader. Chest never overwrites a value a person entered: a differing reading is shown beside it. It never fills a required field without confirmation, and it reads again only when a new version arrives, keeping earlier confirmations on their own version. Low-confidence and unreadable fields are shown as such, never guessed. Read values are visible only to people who can open the file and follow CHEST-06 in lists, counts and search. The reading service, its spend and its data retention are owner-selected under AGENT-007, and text inside a document is data, never an instruction.
+**Requirement.** When a scanned or photographed document arrives (an image-only PDF page, or a JPEG, PNG, TIFF, HEIC or WebP image, read by SEARCH-001 OCR), Chest reads the values of the CHEST-02 typed fields defined for its type: for an NDA, the parties, effective date, term and governing state; for a W-9, the legal name, business type and the last four digits of the TIN, shown masked; for an invoice, the vendor, number, date and USD total. The file page shows the scan with a box drawn around the words each value came from, with its page, the value and a confidence, in the browser at desktop and phone widths and in the iOS and Android apps. Read values are proposals until a person who can edit the file confirms, corrects or rejects each one. Confirmed values become ordinary typed fields, with provenance naming the version, page, region and reader. Chest never overwrites a value a person entered: a differing reading is shown beside it. It never fills a required field without confirmation, and it reads again only when a new version arrives, keeping earlier confirmations on their own version. Low-confidence and unreadable fields are shown as such, never guessed. Read values are visible only to people who can open the file and follow CHEST-06 in lists, counts and search. The reading service, its spend and its data retention are owner-selected under AGENT-007, and text inside a document is data, never an instruction.
 
-**Acceptance evidence:** Upload a two-page scanned NDA (image-only PDF) into a folder whose type defines Party, Effective date, Term and Governing state, and a phone photo of a W-9. On each file page at 1440 and 390 and in the iOS and Android apps, every proposed value shows its page, a box around its source words and a confidence. An editor confirms two NDA values, corrects one and rejects one; the typed fields, a SEARCH-001 search and the audit then show the confirmed values with version, page and region provenance, and the rejected one is not stored. A value a person had already typed is left unchanged, with the differing reading shown beside it. A deliberately blurred field is shown as unreadable and left empty. A viewer sees the confirmed values but has no confirm control, and their API confirm is refused with 403. An outsider's search for a read value returns nothing. Upload a new version with a changed effective date: only that field is proposed again, and the earlier confirmations stay on the earlier version.
+**Acceptance.**
+1. Upload a two-page scanned NDA (image-only PDF) into a folder whose type defines Party, Effective date, Term and Governing state, and a phone photo of a W-9.
+2. On each file page at 1440 and 390 and in the iOS and Android apps, every proposed value shows its page, a box around its source words and a confidence.
+3. An editor confirms two NDA values, corrects one and rejects one; the typed fields, a SEARCH-001 search and the audit then show the confirmed values with version, page and region provenance, and the rejected one is not stored.
+4. A value a person had already typed is left unchanged, with the differing reading shown beside it.
+5. A deliberately blurred field is shown as unreadable and left empty.
+6. A viewer sees the confirmed values but has no confirm control, and their API confirm is refused with 403.
+7. An outsider's search for a read value returns nothing.
+8. Upload a new version with a changed effective date: only that field is proposed again, and the earlier confirmations stay on the earlier version.
 
-#### EDIT-001 — Office and independent browser co-authoring.
+#### EDIT-001 — Office and independent browser co-authoring
 
-Chest ships **Collabora Online** as its included independent office editor, so staff and guests co-author DOCX, XLSX and PPTX (and ODT, ODS and ODP) when no one holds a Microsoft 365 or Google Workspace license. Chest's installer deploys Collabora Online as a separately run service and Chest is its WOPI host. Once the owner confirms it at setup, it is the default provider for opening and creating office files. **Microsoft 365** (Office for the web and desktop Office) is an optional second provider through the Microsoft Cloud Storage Partner Program WOPI integration. An admin with service-settings scope (ADMIN-003) enables it for the organization or named groups. Google types are EDIT-002. A file is open for editing in one provider at a time, and Chest never rebuilds an office engine.
+*Tier:* Core
+
+**Requirement.** Chest ships **Collabora Online** as its included independent office editor, so staff and guests co-author DOCX, XLSX and PPTX (and ODT, ODS and ODP) when no one holds a Microsoft 365 or Google Workspace license. Chest's installer deploys Collabora Online as a separately run service and Chest is its WOPI host. Once the owner confirms it at setup, it is the default provider for opening and creating office files. **Microsoft 365** (Office for the web and desktop Office) is an optional second provider through the Microsoft Cloud Storage Partner Program WOPI integration. An admin with service-settings scope (ADMIN-003) enables it for the organization or named groups. Google types are EDIT-002. A file is open for editing in one provider at a time, and Chest never rebuilds an office engine.
 - **Sessions:** current file grants, including SHARE-005 guest editor and contributor grants, scope every editing session. Saves keep format fidelity and the file's stable identity, and each save is an immutable version attributed to its author (VERSION-001, arrival "editor save"). Revoking a grant refuses that person's next save and ends their session. Everyone in a session sees the names of the others editing, on the document and on the file page. Co-authors edit the one file: a session never creates a copy, a conflict file or a second stable ID.
 - **Browser and mobile:** co-authoring works in the browser at desktop and phone widths and in the iOS and Android apps (MOBILE-001). The apps open Collabora Online's touch editing interface inside the app, on the same WOPI session, grants and attributed saves as the browser. Where Microsoft 365 is the user's provider, they open the Microsoft 365 mobile apps or Office for the web instead.
 - **Microsoft licenses:** Chest uses the CSPP business-user flow with WOPI license checking on, so Office for the web verifies that each editor holds a Microsoft 365 license that includes Office for the web. A user without one gets the read-only Office for the web view, with "Editing needs a Microsoft 365 license that includes Office for the web" shown as the reason. They never get a broken editor or an unlicensed editing session. Where Collabora Online is also enabled, that view offers **Edit in Collabora Online** whenever no Microsoft session holds the file.
@@ -363,59 +589,66 @@ Chest ships **Collabora Online** as its included independent office editor, so s
 
 New files start in the user's editor from the New menu (EDIT-004).
 
-**Acceptance evidence:** On an installation with no Microsoft or Google provider configured, where no participant holds a Microsoft 365 or Google Workspace license, using the shipped Collabora Online:
-- At setup, the console shows Collabora Online's edition, its document and connection limits and its USD cost before the owner confirms enabling it. Choosing CODE shows the not-for-production notice and what a subscription adds, and enabling it is refused until the owner acknowledges the notice.
-- Two staff and one PIN-verified SHARE-005 guest co-edit a DOCX, an XLSX and a PPTX in the browser at 1440 and 390. Concurrent changes reach every participant, and each save is a version attributed to its author, the guest by verified email. While they co-edit, each participant sees the other two named as present in the editor and on the file page. Afterwards the folder holds one file with one stable ID and no copy or conflict file, and its version history attributes each person's saves. Revoke the guest mid-session and see their next save refused.
-- Repeat one co-edit with one participant in the iOS app and one in the Android app on the MOBILE-001 current-release devices, each save attributed to that participant. Revoke the Android participant mid-session and see their next save refused.
-- Round-trip tables, formulas and comments in all three formats, then open the saved versions in desktop Word, Excel and PowerPoint and in LibreOffice with them intact. Edit a review-gated file and see its approved version unchanged. Stop the Collabora Online service and see the outage named, with the original still downloadable.
-- A contributor creates a blank spreadsheet from the EDIT-004 New menu, and it opens in Collabora Online.
-- A uses Insert Chest link in the DOCX, searches for a contract in a restricted folder A can open and inserts it; a search for a file A cannot open returns nothing. A is told that staff member B, who can open the DOCX but not that folder, cannot open the link, and is offered a viewer grant; A declines, and B following the link sees Request access. Repeat at 390 and in the iOS and Android apps.
-- A viewer downloads the DOCX as PDF and as ODT from the file page, the iOS app and the API, each named for its source version, with no new version created. With the ROLE-001 no-download setting on, each format is refused.
-- Review loop, on the same installation:
-  - Staff A opens a DOCX and comments "@B please check clause 4". B gets the in-app and email notifications with the comment text, and the comment shows A and B by Chest name in the editor and on the file page.
-  - A mentions C, who has no access to the file. A is offered a commenter grant, and C is sent nothing until A accepts it; C is then notified and opens the file. A contributor in a space with editor sharing switched off mentions D, who has no access: the refusal names the rule, and the offered access request reaches the file's managers. A mention of an address on a domain outside the POLICY-001 allowlist is refused with the policy named, and autocomplete never offered it.
-  - Inside the Collabora Online comment box, A mentions B in a new comment and chooses Assign, and the comment appears in B's task list. B replies to the notification email: within 60 seconds the reply appears inside A's open session, attributed to B, and the file gains a "comment reply" version. B resolves the comment on the file page and it shows resolved inside the document. A replies inside the document and the thread on the file page shows it within 60 seconds.
-  - A PIN-verified SHARE-005 guest commenter opens the DOCX and types a change. It is recorded as a tracked change attributed to their verified email, and the file's owner is notified of the suggestion. Saves from that session carrying a direct edit, and one adding a comment under B's name, are refused with `suggest_only` and `author_mismatch` and create no version. A contributor accepts one of the guest's suggestions and rejects another, and each decision is its own version attributed to the contributor, naming the guest and the decision.
-  - A viewer's session is read-only, and a save from it is refused.
-  - Repeat the @mention step with an XLSX comment, a PPTX comment and an ODT, and the guest suggestion step with the ODT. In the XLSX and the PPTX, the commenter's comment posts and their cell or slide edit is refused with `suggest_only`. Run every review-loop step in the browser at 1440 and 390 and in the iOS and Android apps on the MOBILE-001 current-release devices.
-- Set the connection limit to 3 and open a fourth editing session: it is refused with `editor_capacity_reached`, naming the limit and current use, in the browser, a mobile app and the API. The file opens read-only, and the three open sessions continue.
+**Acceptance.**
+1. On an installation with no Microsoft or Google provider configured, where no participant holds a Microsoft 365 or Google Workspace license, using the shipped Collabora Online: - At setup, the console shows Collabora Online's edition, its document and connection limits and its USD cost before the owner confirms enabling it.
+2. Choosing CODE shows the not-for-production notice and what a subscription adds, and enabling it is refused until the owner acknowledges the notice. - Two staff and one PIN-verified SHARE-005 guest co-edit a DOCX, an XLSX and a PPTX in the browser at 1440 and 390.
+3. Concurrent changes reach every participant, and each save is a version attributed to its author, the guest by verified email.
+4. While they co-edit, each participant sees the other two named as present in the editor and on the file page.
+5. Afterwards the folder holds one file with one stable ID and no copy or conflict file, and its version history attributes each person's saves.
+6. Revoke the guest mid-session and see their next save refused. - Repeat one co-edit with one participant in the iOS app and one in the Android app on the MOBILE-001 current-release devices, each save attributed to that participant.
+7. Revoke the Android participant mid-session and see their next save refused. - Round-trip tables, formulas and comments in all three formats, then open the saved versions in desktop Word, Excel and PowerPoint and in LibreOffice with them intact.
+8. Edit a review-gated file and see its approved version unchanged. Stop the Collabora Online service and see the outage named, with the original still downloadable. - A contributor creates a blank spreadsheet from the EDIT-004 New menu, and it opens in Collabora Online. - A uses Insert Chest link in the DOCX, searches for a contract in a restricted folder A can open and inserts it; a search for a file A cannot open returns nothing. A is told that staff member B, who can open the DOCX but not that folder, cannot open the link, and is offered a viewer grant; A declines, and B following the link sees Request access. Repeat at 390 and in the iOS and Android apps. - A viewer downloads the DOCX as PDF and as ODT from the file page, the iOS app and the API, each named for its source version, with no new version created. With the ROLE-001 no-download setting on, each format is refused. - Review loop, on the same installation:   - Staff A opens a DOCX and comments "@B please check clause 4". B gets the in-app and email notifications with the comment text, and the comment shows A and B by Chest name in the editor and on the file page.   - A mentions C, who has no access to the file. A is offered a commenter grant, and C is sent nothing until A accepts it; C is then notified and opens the file. A contributor in a space with editor sharing switched off mentions D, who has no access: the refusal names the rule, and the offered access request reaches the file's managers. A mention of an address on a domain outside the POLICY-001 allowlist is refused with the policy named, and autocomplete never offered it.   - Inside the Collabora Online comment box, A mentions B in a new comment and chooses Assign, and the comment appears in B's task list. B replies to the notification email: within 60 seconds the reply appears inside A's open session, attributed to B, and the file gains a "comment reply" version. B resolves the comment on the file page and it shows resolved inside the document. A replies inside the document and the thread on the file page shows it within 60 seconds.   - A PIN-verified SHARE-005 guest commenter opens the DOCX and types a change. It is recorded as a tracked change attributed to their verified email, and the file's owner is notified of the suggestion. Saves from that session carrying a direct edit, and one adding a comment under B's name, are refused with `suggest_only` and `author_mismatch` and create no version. A contributor accepts one of the guest's suggestions and rejects another, and each decision is its own version attributed to the contributor, naming the guest and the decision.   - A viewer's session is read-only, and a save from it is refused.   - Repeat the @mention step with an XLSX comment, a PPTX comment and an ODT, and the guest suggestion step with the ODT. In the XLSX and the PPTX, the commenter's comment posts and their cell or slide edit is refused with `suggest_only`. Run every review-loop step in the browser at 1440 and 390 and in the iOS and Android apps on the MOBILE-001 current-release devices. - Set the connection limit to 3 and open a fourth editing session: it is refused with `editor_capacity_reached`, naming the limit and current use, in the browser, a mobile app and the API. The file opens read-only, and the three open sessions continue. Then enable Microsoft 365 for one group in a CSPP test tenant: - Two licensed users co-edit a DOCX, an XLSX and a PPTX through Office for the web and desktop Office, with attributed saves. Revoke one mid-session and see their next save refused. - A group member without a qualifying license opens the same DOCX and gets the read-only view with the license named as the reason. No editing session is created, and no save from them is accepted. With no Microsoft session open on the file, they choose Edit in Collabora Online, and their saves are attributed to them.
 
-Then enable Microsoft 365 for one group in a CSPP test tenant:
-- Two licensed users co-edit a DOCX, an XLSX and a PPTX through Office for the web and desktop Office, with attributed saves. Revoke one mid-session and see their next save refused.
-- A group member without a qualifying license opens the same DOCX and gets the read-only view with the license named as the reason. No editing session is created, and no save from them is accepted. With no Microsoft session open on the file, they choose Edit in Collabora Online, and their saves are attributed to them.
+#### EDIT-002 — Google-format collaboration without hidden loss
 
-#### EDIT-002 — Google-format collaboration without hidden loss.
+*Tier:* Core
 
-Google Workspace Docs, Sheets and Slides integration opens/co-edits native content with explicit source custody and granted scopes, saves revision provenance and exports portable Office/PDF derivatives. Migration can convert to Chest-hosted editable formats with a fidelity report; a shortcut alone never counts as a migrated original. Provider-required features remain disclosed until the owner accepts conversion or continued provider use. A conversion, at migration or later, carries the file's open review work under MIGRATE-002's open-review-work rules: comments become EDIT-003 threads with their authors, open or resolved states and assignees, and pending suggestions become tracked changes. A file kept native keeps its comments and suggestions in Google, and Chest shows them as provider-held without duplicating them.
+**Requirement.** Google Workspace Docs, Sheets and Slides integration opens/co-edits native content with explicit source custody and granted scopes, saves revision provenance and exports portable Office/PDF derivatives. Migration can convert to Chest-hosted editable formats with a fidelity report; a shortcut alone never counts as a migrated original. Provider-required features remain disclosed until the owner accepts conversion or continued provider use. A conversion, at migration or later, carries the file's open review work under MIGRATE-002's open-review-work rules: comments become EDIT-003 threads with their authors, open or resolved states and assignees, and pending suggestions become tracked changes. A file kept native keeps its comments and suggestions in Google, and Chest shows them as provider-held without duplicating them.
 
-**Acceptance evidence:** Create and co-edit each Google type from Chest with two accounts, then export/convert a file containing comments, formulas and embedded content. The converted file's comments are EDIT-003 threads attributed to the mapped people under MIGRATE-002's author rule, open or resolved as in the source, its assigned comments are open tasks for their assignees, and its pending suggestions are tracked changes that a contributor accepts or rejects as EDIT-001 decision versions; the fidelity report counts each against the source. Reconcile unsupported features, revoke source access and prove that accepted Chest-held originals/derivatives remain accessible with accurate source and revision labels.
+**Acceptance.**
+1. Create and co-edit each Google type from Chest with two accounts, then export/convert a file containing comments, formulas and embedded content.
+2. The converted file's comments are EDIT-003 threads attributed to the mapped people under MIGRATE-002's author rule, open or resolved as in the source, its assigned comments are open tasks for their assignees, and its pending suggestions are tracked changes that a contributor accepts or rejects as EDIT-001 decision versions; the fidelity report counts each against the source.
+3. Reconcile unsupported features, revoke source access and prove that accepted Chest-held originals/derivatives remain accessible with accurate source and revision labels.
 
-#### EDIT-003 — Contextual comments and collaborative tasks.
+#### EDIT-003 — Contextual comments and collaborative tasks
 
-Files support threaded comments, mentions, resolved tasks and PDF page/region annotations, bound to the exact version. Users can compare versions, navigate unresolved comments and carry a thread forward only with an explicit link to its original. Comments made inside office files in the shipped EDIT-001 editor are EDIT-003 threads too: one thread per in-document comment, kept in step both ways under EDIT-001's review loop, with the same mentions, assignments and resolution, on the file page and in the mobile apps. An assigned comment is a task in the assignee's list until it is resolved. Mentioning or assigning a person never grants them access. Threads migrated from an incumbent (MIGRATE-001/002) keep their original timestamps, source IDs and open or resolved state, show an author who could not be matched as "Former collaborator (name as in source)" and keep the quoted text of a comment whose anchor was not found; they then behave as any other thread.
+*Tier:* Core
 
-**Acceptance evidence:** Annotate page 2 of a PDF, mention an authorized colleague and an outsider, resolve a thread and upload a changed-page replacement. The old annotation remains anchored to its original, notifications contain no forbidden text and the outsider gains no access. Then, in Collabora Online, comment inside a DOCX with a mention and an assignment: the thread appears on the file page and in the iOS and Android apps, anchored to the version and the commented text, and the task appears in the assignee's list. Resolve it on the file page and see it resolved inside the document and gone from the task list (EDIT-001). Open a file migrated under MIGRATE-002: its migrated threads show their original timestamps and states, a former collaborator's comment is attributed to no current person and cannot be re-attributed by a save, an "anchor not found" thread shows its quoted text, and replying to and resolving a migrated thread work as on any other.
+**Requirement.** Files support threaded comments, mentions, resolved tasks and PDF page/region annotations, bound to the exact version. Users can compare versions, navigate unresolved comments and carry a thread forward only with an explicit link to its original. Comments made inside office files in the shipped EDIT-001 editor are EDIT-003 threads too: one thread per in-document comment, kept in step both ways under EDIT-001's review loop, with the same mentions, assignments and resolution, on the file page and in the mobile apps. An assigned comment is a task in the assignee's list until it is resolved. Mentioning or assigning a person never grants them access. Threads migrated from an incumbent (MIGRATE-001/002) keep their original timestamps, source IDs and open or resolved state, show an author who could not be matched as "Former collaborator (name as in source)" and keep the quoted text of a comment whose anchor was not found; they then behave as any other thread.
 
-#### EDIT-004 — New documents, spreadsheets and presentations from blank or templates.
+**Acceptance.**
+1. Annotate page 2 of a PDF, mention an authorized colleague and an outsider, resolve a thread and upload a changed-page replacement.
+2. The old annotation remains anchored to its original, notifications contain no forbidden text and the outsider gains no access.
+3. Then, in Collabora Online, comment inside a DOCX with a mention and an assignment: the thread appears on the file page and in the iOS and Android apps, anchored to the version and the commented text, and the task appears in the assignee's list.
+4. Resolve it on the file page and see it resolved inside the document and gone from the task list (EDIT-001).
+5. Open a file migrated under MIGRATE-002: its migrated threads show their original timestamps and states, a former collaborator's comment is attributed to no current person and cannot be re-attributed by a save, an "anchor not found" thread shows its quoted text, and replying to and resolving a migrated thread work as on any other.
 
-Every folder a user may add to shows a **New** menu, beside New folder and Upload, in the browser at desktop and phone widths and in the iOS and Android apps (MOBILE-001). It creates a blank **document, spreadsheet or presentation** in that folder, or one from a template, and the new file opens at once in the user's EDIT-001 editor: the shipped Collabora Online by default, or Microsoft 365 for the web where it is enabled for the user's group and the user holds a qualifying license (an unlicensed user's new file opens in Collabora Online when it is enabled, and otherwise read-only with the license reason). It may also open as a Google Doc, Sheet or Slides file under EDIT-002 when the organization uses that provider for new files. The same create is in the CONNECT-007 API ("create file from blank or template"), idempotent on a caller key.
+#### EDIT-004 — New documents, spreadsheets and presentations from blank or templates
+
+*Tier:* Core
+
+**Requirement.** Every folder a user may add to shows a **New** menu, beside New folder and Upload, in the browser at desktop and phone widths and in the iOS and Android apps (MOBILE-001). It creates a blank **document, spreadsheet or presentation** in that folder, or one from a template, and the new file opens at once in the user's EDIT-001 editor: the shipped Collabora Online by default, or Microsoft 365 for the web where it is enabled for the user's group and the user holds a qualifying license (an unlicensed user's new file opens in Collabora Online when it is enabled, and otherwise read-only with the license reason). It may also open as a Google Doc, Sheet or Slides file under EDIT-002 when the organization uses that provider for new files. The same create is in the CONNECT-007 API ("create file from blank or template"), idempotent on a caller key.
 - **Creation format:** admins with service-settings scope (ADMIN-003) set the format for new files for the organization, with group overrides: **DOCX, XLSX and PPTX by default**, ODT, ODS and ODP as an option, or native Google types where EDIT-002 is enabled. A blank file is a valid empty file of that format that opens without repair in desktop Microsoft Office and LibreOffice through the SYNC-001 mount.
 - **Templates:** a built-in gallery in each creation format (at least letter, memo, meeting notes, project proposal, invoice, budget, project tracker, schedule and two presentation designs), plus **organization templates**. An admin with service-settings scope, or a space manager for their own space, publishes any DOCX, XLSX, PPTX or ODF file they can view (or a Google file under EDIT-002) as a template to the whole organization, to named groups or to one space, with a name, category and thumbnail. Only users in that audience see the template, in the New menu, the template gallery and the API listing. Publishing gives template users no access to the source file. Unpublishing hides the template and leaves files made from it untouched.
 - **Copy, not link:** creating from a template makes an independent copy. Its version 1 holds the template's current bytes, with provenance naming the template and its version, and nothing links back: editing the new file never changes the template, and editing the template never changes files already made from it.
 - **The new file** gets a default name ("Untitled document", "Untitled spreadsheet", "Untitled presentation") the user can change before or after opening. It is version 1 under VERSION-001, attributed to the creator with arrival "created", and each editor save adds a version. It is owned by the folder's space, or by the creator's personal area, and inherits the folder's access, including restricted subfolders and the ROLE-001 no-download setting. It appears at once in the creator's recent items, in listings and SEARCH-001 for everyone with current access, and on SYNC-001 clients as a new file.
 - **Who may create:** contributors, content managers and managers on a space folder, owners and file editors of a personal-area folder, and SHARE-005 guests holding contributor or editor on the folder (attributed to their verified email). Viewers and commenters see no New action, and their create through the API is refused with 403 and no file. QUOTA-001 applies: a create in an over-limit area is refused with `storage_limit_exceeded`. POLICY-001 and GOVERN-001 rules on the folder apply to a new file as to an upload. Every create, template publish and unpublish is audited.
 
-**Acceptance evidence:** Run these journeys on an installation with no Microsoft or Google provider configured, where new files open in the shipped Collabora Online (EDIT-001), through the browser at 1440 and 390 and in the iOS and Android apps on the MOBILE-001 current-release devices. Then enable Microsoft 365 for the web and repeat the first journey with a licensed contributor.
-- A contributor creates a blank spreadsheet in a restricted team-space folder. It opens in the EDIT-001 editor at once, and after two saved edits its version history shows versions 1–3 (created, then two editor saves) attributed to them. A colleague with folder access finds it in search and opens it; a staff member outside the folder finds nothing in search and gets 403 on its URL.
-- Create a blank document and a blank presentation; download each version 1 and open it in desktop Word, Excel or PowerPoint and in LibreOffice without a repair prompt. Switch the organization creation format to ODF and see the next new document created as ODT; set a group override to Google types under EDIT-002 and see a group member's new document open as a Google Doc.
-- An admin publishes a DOCX organization template to one group. A group member creates a document from it; a user outside the group does not see the template in the New menu, the gallery or the API listing. Editing the new document leaves the template's bytes and version unchanged, editing the template afterwards leaves the new document unchanged, and the new document's version 1 names the template and its version. A space manager publishes a space template that only that space's members see. Unpublish the organization template and see documents made from it unchanged.
-- A viewer and a commenter see no New action, and their direct API create returns 403 with no file created. A guest contributor on a folder creates a blank document there, attributed to the guest's email.
-- An over-limit user's create in their personal area is refused with `storage_limit_exceeded` naming the limit in the browser, the mobile app and the API.
-- Repeat an API create with the same caller key and get one file. Inspect the audit entry for each create, publish and unpublish.
+**Acceptance.**
+1. Run these journeys on an installation with no Microsoft or Google provider configured, where new files open in the shipped Collabora Online (EDIT-001), through the browser at 1440 and 390 and in the iOS and Android apps on the MOBILE-001 current-release devices.
+2. Then enable Microsoft 365 for the web and repeat the first journey with a licensed contributor. - A contributor creates a blank spreadsheet in a restricted team-space folder.
+3. It opens in the EDIT-001 editor at once, and after two saved edits its version history shows versions 1–3 (created, then two editor saves) attributed to them.
+4. A colleague with folder access finds it in search and opens it; a staff member outside the folder finds nothing in search and gets 403 on its URL. - Create a blank document and a blank presentation; download each version 1 and open it in desktop Word, Excel or PowerPoint and in LibreOffice without a repair prompt.
+5. Switch the organization creation format to ODF and see the next new document created as ODT; set a group override to Google types under EDIT-002 and see a group member's new document open as a Google Doc. - An admin publishes a DOCX organization template to one group.
+6. A group member creates a document from it; a user outside the group does not see the template in the New menu, the gallery or the API listing.
+7. Editing the new document leaves the template's bytes and version unchanged, editing the template afterwards leaves the new document unchanged, and the new document's version 1 names the template and its version.
+8. A space manager publishes a space template that only that space's members see. Unpublish the organization template and see documents made from it unchanged. - A viewer and a commenter see no New action, and their direct API create returns 403 with no file created. A guest contributor on a folder creates a blank document there, attributed to the guest's email. - An over-limit user's create in their personal area is refused with `storage_limit_exceeded` naming the limit in the browser, the mobile app and the API. - Repeat an API create with the same caller key and get one file. Inspect the audit entry for each create, publish and unpublish.
 
-#### SIGN-001 — Built-in eSignature on PDF and DOCX files.
+#### SIGN-001 — Built-in eSignature on PDF and DOCX files
 
-A staff member requests signatures on the exact current version of a PDF or DOCX from its file page in the browser or the mobile app. This needs no third-party signature account. They need contributor, content-manager or manager access on a space file, or editor access on a personal-area file, with download allowed. A DOCX is rendered to PDF for signing; the rendition records its source version and comes with a fidelity report the requester sees before sending. The requester:
+*Tier:* Core
+
+**Requirement.** A staff member requests signatures on the exact current version of a PDF or DOCX from its file page in the browser or the mobile app. This needs no third-party signature account. They need contributor, content-manager or manager access on a space file, or editor access on a personal-area file, with download allowed. A DOCX is rendered to PDF for signing; the rendition records its source version and comes with a fidelity report the requester sees before sending. The requester:
 - adds signers by email: staff, or external people who need no Chest or Google/Microsoft account;
 - sets a signing order, or lets everyone sign at once;
 - places signature, initials, date-signed, text and checkbox fields for each signer;
@@ -427,31 +660,57 @@ On completion Chest files two new immutable versions linked to the source versio
 
 **Evidential standard claimed:** the flow is built to satisfy the US ESIGN Act (15 U.S.C. §7001 et seq.) and UETA. That means intent to sign through an explicit adopt-and-sign action, consumer consent to electronic records before signing, the signature associated with the exact record, and retention with accurate reproduction. Chest warns when a document appears to fall in ESIGN's excluded categories (for example wills and court notices), and it makes no claim of legal sufficiency for a particular document. Firms that standardize on Docusign keep CONNECT-004. Remote online notarization and EU qualified signatures are not offered here; they go through CONNECT-004.
 
-**Acceptance evidence:** Through the browser at 1440 and 390 and the mobile app, send a two-signer PDF in order: first an external signer with no Chest or Google/Microsoft account, then a staff member. A reminder reaches the first signer on the set cadence. The external signer verifies by PIN, sees the consent disclosure and is refused any other file. Both sign. The signed PDF and the certificate appear as new versions linked to the source version, with before and after hashes and the full event log; the PAdES signature validates, and validation fails after one byte of the signed PDF is altered. Reminders stop. Send a DOCX request and see the fidelity report before sending. A declined request and an expired request each leave the source version unchanged and unsigned, with no signed version filed and the outcome recorded. A voided request stops further signing.
+**Acceptance.**
+1. Through the browser at 1440 and 390 and the mobile app, send a two-signer PDF in order: first an external signer with no Chest or Google/Microsoft account, then a staff member.
+2. A reminder reaches the first signer on the set cadence.
+3. The external signer verifies by PIN, sees the consent disclosure and is refused any other file.
+4. Both sign.
+5. The signed PDF and the certificate appear as new versions linked to the source version, with before and after hashes and the full event log; the PAdES signature validates, and validation fails after one byte of the signed PDF is altered.
+6. Reminders stop.
+7. Send a DOCX request and see the fidelity report before sending.
+8. A declined request and an expired request each leave the source version unchanged and unsigned, with no signed version filed and the outcome recorded. A voided request stops further signing.
 
 ### Recovery, administration and operational trust
 
-#### RECOVER-001 — Folder and account point-in-time recovery.
+#### RECOVER-001 — Folder and account point-in-time recovery
 
-Restoring one file's earlier version is VERSION-001, open to every contributor and editor of that file. Point-in-time rewind covers many files at once: a user rewinds their own files and folders; a space manager rewinds any file, folder tree or the whole space they manage. Each previews and restores to a chosen recorded point after accidental deletion, overwrite or ransomware, with no installation owner required. Bulk restore after a detected incident is SECURITY-003. The preview lists changed originals, names, hierarchy, memberships and sharing effects; restoring content cannot silently re-enable revoked shares or users. Recovery creates an attributed new state while retaining later recoverable history and conflict copies. Admin account rewind: ADMIN-003.
+*Tier:* Core
 
-**Acceptance evidence:** Make a folder with multiple versions, rename/delete it and overwrite sibling files, then, as the space manager (not the installation owner), preview a time-based rewind and restore selected content. Compare every restored byte/path, retain later history and prove a formerly revoked external link and staff identity remain denied. A space viewer is refused the rewind. An editor's folder rewind is limited to their own files, while the same editor restores a single earlier version of a colleague's file under VERSION-001.
+**Requirement.** Restoring one file's earlier version is VERSION-001, open to every contributor and editor of that file. Point-in-time rewind covers many files at once: a user rewinds their own files and folders; a space manager rewinds any file, folder tree or the whole space they manage. Each previews and restores to a chosen recorded point after accidental deletion, overwrite or ransomware, with no installation owner required. Bulk restore after a detected incident is SECURITY-003. The preview lists changed originals, names, hierarchy, memberships and sharing effects; restoring content cannot silently re-enable revoked shares or users. Recovery creates an attributed new state while retaining later recoverable history and conflict copies. Admin account rewind: ADMIN-003.
 
-#### RECOVER-002 — Scheduled independent backups and upgrade recovery.
+**Acceptance.**
+1. Make a folder with multiple versions, rename/delete it and overwrite sibling files, then, as the space manager (not the installation owner), preview a time-based rewind and restore selected content.
+2. Compare every restored byte/path, retain later history and prove a formerly revoked external link and staff identity remain denied.
+3. A space viewer is refused the rewind.
+4. An editor's folder rewind is limited to their own files, while the same editor restores a single earlier version of a colleague's file under VERSION-001.
 
-Owners schedule encrypted independent backups to Amazon S3, Cloudflare R2 or an S3-compatible owner account outside the live sync authority, with retention, last success, failure alerts and a recovery drill. Archives cover all new product records, originals, comments, links as inert definitions, rules, migration mappings and sanitized execution history; secrets/devices/sessions never transfer and sending jobs never replay. Upgrades preserve configured settings and data; a failed upgrade has a documented rollback from a private backup.
+#### RECOVER-002 — Scheduled independent backups and upgrade recovery
 
-**Acceptance evidence:** Back up a populated installation, corrupt the live store and restore into a clean instance, reconcile the complete graph and hashes, reauthorize providers and prove no old device/link authority or queued message replays. Upgrade a copy of a populated prior release, inspect identity/settings/history, and recover from an interrupted upgrade.
+*Tier:* Core
 
-#### ADMIN-001 — Federation and lifecycle provisioning.
+**Requirement.** Owners schedule encrypted independent backups to Amazon S3, Cloudflare R2 or an S3-compatible owner account outside the live sync authority, with retention, last success, failure alerts and a recovery drill. Archives cover all new product records, originals, comments, links as inert definitions, rules, migration mappings and sanitized execution history; secrets/devices/sessions never transfer and sending jobs never replay. Upgrades preserve configured settings and data; a failed upgrade has a documented rollback from a private backup.
 
-Okta, Microsoft Entra ID (Azure AD) and Google Workspace identity support SAML/OIDC SSO with enforced domain policy, group mapping and SCIM or the provider’s supported directory lifecycle API. Owners preview destructive group changes, retain a protected break-glass path and transfer content/assignments before deprovisioning; disabling a user revokes web/mobile/editor/device/agent authority and external grants that depend on that identity. A destructive group change from the provider denies the removed members' access immediately; the complete desired group snapshot is queued for the owner to preview and confirm, and the additions and renames in it wait for that confirmation. Declining the review never silently restores access already revoked.
+**Acceptance.**
+1. Back up a populated installation, corrupt the live store and restore into a clean instance, reconcile the complete graph and hashes, reauthorize providers and prove no old device/link authority or queued message replays.
+2. Upgrade a copy of a populated prior release, inspect identity/settings/history, and recover from an interrupted upgrade.
 
-**Acceptance evidence:** Against a real identity provider, provision a user/group, sign in, change membership and deactivate the user. Per the owner's direction of 17 October 2026, Run Edit Run's own Auth product (run-auth), run locally as the live OIDC/SAML/SCIM provider, proves the protocol and lifecycle; certification in each vendor's test tenant (Okta, Microsoft Entra ID, Google Workspace) is not claimed by that journey and remains to be done. Confirm all public doors/devices/editor sessions lose authority, team content remains owned, and a bad mapping/IdP outage does not strand the protected owner recovery path. A provider group change that removes one member and adds another denies the removed member at once while the added member gains nothing until the owner confirms the previewed snapshot; declining the review leaves the removed member denied.
+#### ADMIN-001 — Federation and lifecycle provisioning
 
-#### ADMIN-002 — Admin reporting and legible USD costs.
+*Tier:* Core
 
-Admins filter/export user/content activity, access and sharing changes, external guests, downloads, storage by team/version/trash, sync failures, transfer usage and extraction/AI spend. Capacity/seat limits, retention and US-dollar storage/egress/provider charges are explicit before enabling paid work; estimates are distinguished from invoices. The cost view is provider-only: costs from the owner's own providers (hosting, storage, mail, editor subscriptions or licenses, AI spend) are shown in USD with each provider named, and never as a Chest charge (OPEN-001). Before an office editor is enabled (EDIT-001), the console shows its edition, its concurrent-document and connection limits and its USD cost, and reports show usage against those limits and every `editor_capacity_reached` refusal. Reports show each user's and space's usage against its storage limit; setting limits, their scope and precedence, and over-limit behavior are QUOTA-001.
+**Requirement.** Okta, Microsoft Entra ID (Azure AD) and Google Workspace identity support SAML/OIDC SSO with enforced domain policy, group mapping and SCIM or the provider’s supported directory lifecycle API. Owners preview destructive group changes, retain a protected break-glass path and transfer content/assignments before deprovisioning; disabling a user revokes web/mobile/editor/device/agent authority and external grants that depend on that identity. A destructive group change from the provider denies the removed members' access immediately; the complete desired group snapshot is queued for the owner to preview and confirm, and the additions and renames in it wait for that confirmation. Declining the review never silently restores access already revoked.
+
+**Acceptance.**
+1. Against a real identity provider, provision a user/group, sign in, change membership and deactivate the user.
+2. Per the owner's direction of 17 October 2026, Run Edit Run's own Auth product (run-auth), run locally as the live OIDC/SAML/SCIM provider, proves the protocol and lifecycle; certification in each vendor's test tenant (Okta, Microsoft Entra ID, Google Workspace) is not claimed by that journey and remains to be done.
+3. Confirm all public doors/devices/editor sessions lose authority, team content remains owned, and a bad mapping/IdP outage does not strand the protected owner recovery path.
+4. A provider group change that removes one member and adds another denies the removed member at once while the added member gains nothing until the owner confirms the previewed snapshot; declining the review leaves the removed member denied.
+
+#### ADMIN-002 — Admin reporting and legible USD costs
+
+*Tier:* Core
+
+**Requirement.** Admins filter/export user/content activity, access and sharing changes, external guests, downloads, storage by team/version/trash, sync failures, transfer usage and extraction/AI spend. Capacity/seat limits, retention and US-dollar storage/egress/provider charges are explicit before enabling paid work; estimates are distinguished from invoices. The cost view is provider-only: costs from the owner's own providers (hosting, storage, mail, editor subscriptions or licenses, AI spend) are shown in USD with each provider named, and never as a Chest charge (OPEN-001). Before an office editor is enabled (EDIT-001), the console shows its edition, its concurrent-document and connection limits and its USD cost, and reports show usage against those limits and every `editor_capacity_reached` refusal. Reports show each user's and space's usage against its storage limit; setting limits, their scope and precedence, and over-limit behavior are QUOTA-001.
 
 For reporting, activity dates are inclusive UTC instants; CSV exports include every matching page under current administrative scope. Storage is a current retained-original snapshot, deduplicated by SHA-256 across selected areas. An original is assigned once to live current, otherwise live previous, otherwise trash (including descendants of trashed folders), otherwise quarantined/rejected request custody; per-area totals can overlap and are never summed into an organization total. Provider rates are explicitly confirmed owner-entered USD estimates, using decimal GB (1,000,000,000 bytes), a current monthly storage run rate rounded to six decimal places, and a named quote/source; they are not invoices, live prices or authority to enable paid work.
 
@@ -461,25 +720,49 @@ Portability receipts preserve operation-specific confirmed quotes and separate p
 
 External-guest reporting is a current snapshot of shared-link audiences and retained file-request submission evidence under the same content-custody administrative scope. Configured recipient addresses prove no visit; completed email verification is historical evidence, never a live-session count. Domain and anonymous audiences have no known person count, and self-reported submitter addresses remain unverified. Existing view-history privacy choices and identity-erasure redaction apply; activity date filters do not apply to this snapshot.
 
-**Acceptance evidence:** Create activity from staff, guest, client and agent; reconcile a permission-scoped CSV report with source events and bytes including old versions/trash. Enable Collabora Online and see its edition, limits and USD cost before confirming; drive it to its connection limit and see the refusal counted in the report. Reach a QUOTA-001 test limit and trigger an estimated provider cost; show the warning and preserved originals, with no invented savings or live-price claim. The cost view lists only provider costs, each labeled with its provider, and no Chest charge.
+**Acceptance.**
+1. Create activity from staff, guest, client and agent; reconcile a permission-scoped CSV report with source events and bytes including old versions/trash.
+2. Enable Collabora Online and see its edition, limits and USD cost before confirming; drive it to its connection limit and see the refusal counted in the report.
+3. Reach a QUOTA-001 test limit and trigger an estimated provider cost; show the warning and preserved originals, with no invented savings or live-price claim.
+4. The cost view lists only provider costs, each labeled with its provider, and no Chest charge.
 
-#### ADMIN-003 — Several admins, delegated admin roles and owner transfer.
+#### ADMIN-003 — Several admins, delegated admin roles and owner transfer
 
-The installation owner promotes any number of staff to **super admin** (every admin action, including other admins' roles) and assigns delegated admin roles, alone or combined, each scoped to the whole organization or to named groups: **user management** (invite, deactivate, reactivate, change groups, transfer content at offboarding); **help desk** (resend invitations, revoke sessions and devices, reset a user's sign-in factors under ADMIN-004); **sharing and security policy** (POLICY-001, SECURITY-002/003 settings); **service settings** (integrations, backup, sync and mobile policy, space creation and new-space defaults under SPACE-002, and storage limits under QUOTA-001); **content recovery** (restore across spaces under CHEST-13/RECOVER-001); and **audit and reporting** (read-only ADMIN-002/AUDIT-001). Admins can also define custom roles from these privileges. An admin role confers no access to file contents, names, previews or search results unless that person also holds a content role (ROLE-001); content recovery restores items without opening them. The owner role transfers to another super admin with the recipient's acceptance and a fresh sign-in; afterwards the former owner keeps only the roles explicitly left to them. At least two super admins are recommended and the console warns while only one exists; the last super admin cannot be demoted or deactivated. Every role grant, change and use is audited.
+*Tier:* Core
+
+**Requirement.** The installation owner promotes any number of staff to **super admin** (every admin action, including other admins' roles) and assigns delegated admin roles, alone or combined, each scoped to the whole organization or to named groups: **user management** (invite, deactivate, reactivate, change groups, transfer content at offboarding); **help desk** (resend invitations, revoke sessions and devices, reset a user's sign-in factors under ADMIN-004); **sharing and security policy** (POLICY-001, SECURITY-002/003 settings); **service settings** (integrations, backup, sync and mobile policy, space creation and new-space defaults under SPACE-002, and storage limits under QUOTA-001); **content recovery** (restore across spaces under CHEST-13/RECOVER-001); and **audit and reporting** (read-only ADMIN-002/AUDIT-001). Admins can also define custom roles from these privileges. An admin role confers no access to file contents, names, previews or search results unless that person also holds a content role (ROLE-001); content recovery restores items without opening them. The owner role transfers to another super admin with the recipient's acceptance and a fresh sign-in; afterwards the former owner keeps only the roles explicitly left to them. At least two super admins are recommended and the console warns while only one exists; the last super admin cannot be demoted or deactivated. Every role grant, change and use is audited.
 
 An admin with content-recovery scope rewinds a departed user's account or any space to a chosen recorded point after accidental deletion, overwrite or ransomware, without the installation owner. The preview lists changed originals, names, hierarchy, memberships and sharing effects; the admin restores selected content without opening it or gaining a content role. Recovery creates attributed new states, retains later recoverable history and conflict copies, and never re-enables revoked shares or identities (RECOVER-001).
 
-**Acceptance evidence:** As owner, promote a second super admin and grant a staff member help desk scoped to one group. The help-desk admin revokes a group member's sessions and resets their second factor, then is refused that member's file list, previews, downloads and search hits, a reset for a user outside the group, and a policy change. Transfer ownership to the second super admin; the former owner is refused owner-only actions (installation settings, owner transfer, super-admin changes) on the next request while the new owner succeeds. Try to demote the last super admin and be refused. Give a different staff member content-recovery scope and no content role. In a departed user's account and in a team space, create multiple versions, rename, move, delete and overwrite items, then have that admin preview a recorded point and restore selected content without the owner. Compare every restored byte and path as a content-authorized colleague, retaining later history and conflict copies. The preview accounts for membership and sharing changes; revoked links and the departed identity remain denied, and the admin still cannot list names, preview, search or download the restored content. Remove content-recovery scope and refuse the next preview and restore. Inspect the audit of each step.
+**Acceptance.**
+1. As owner, promote a second super admin and grant a staff member help desk scoped to one group.
+2. The help-desk admin revokes a group member's sessions and resets their second factor, then is refused that member's file list, previews, downloads and search hits, a reset for a user outside the group, and a policy change.
+3. Transfer ownership to the second super admin; the former owner is refused owner-only actions (installation settings, owner transfer, super-admin changes) on the next request while the new owner succeeds.
+4. Try to demote the last super admin and be refused.
+5. Give a different staff member content-recovery scope and no content role.
+6. In a departed user's account and in a team space, create multiple versions, rename, move, delete and overwrite items, then have that admin preview a recorded point and restore selected content without the owner.
+7. Compare every restored byte and path as a content-authorized colleague, retaining later history and conflict copies.
+8. The preview accounts for membership and sharing changes; revoked links and the departed identity remain denied, and the admin still cannot list names, preview, search or download the restored content. Remove content-recovery scope and refuse the next preview and restore. Inspect the audit of each step.
 
-#### ADMIN-004 — Enforced multi-factor sign-in without an identity provider.
+#### ADMIN-004 — Enforced multi-factor sign-in without an identity provider
 
-Installations that do not federate through ADMIN-001 enforce two-step verification natively. Factors are TOTP authenticator apps, WebAuthn security keys (FIDO2) and passkeys, with one-time recovery codes; SMS is not offered. Admins enforce MFA for the organization or chosen groups, set an enrollment grace period for new staff (0–30 days) during which each sign-in requires enrollment before content opens, may require phishing-resistant factors (security keys or passkeys) for admins, and set session length and idle timeout for web, desktop and mobile. When MFA is enforced an email sign-in link alone never opens a session: the second factor is always required, and a stolen link fails without it. A user who loses every factor recovers through a recovery code or through a help-desk admin (ADMIN-003) who verifies them and issues a single-use enrollment link that expires in 24 hours; every reset is audited and notifies the user. Federated sign-ins rely on the IdP's MFA, which admins can require.
+*Tier:* Core
 
-**Acceptance evidence:** Enforce MFA for everyone with a 0-day grace period. An unenrolled staff member's next email-link sign-in is held at enrollment, enrolls a TOTP factor and then opens the library; a second user enrolls a passkey. Replay a captured valid email link from another browser without the factor and be refused. Require security keys for admins and prove an admin with only TOTP is refused the console. Set a 1-hour session length and see a session end. A user who has lost their factor is reset by a help-desk admin, enrolls again through the single-use link, and the link fails on second use and after 24 hours.
+**Requirement.** Installations that do not federate through ADMIN-001 enforce two-step verification natively. Factors are TOTP authenticator apps, WebAuthn security keys (FIDO2) and passkeys, with one-time recovery codes; SMS is not offered. Admins enforce MFA for the organization or chosen groups, set an enrollment grace period for new staff (0–30 days) during which each sign-in requires enrollment before content opens, may require phishing-resistant factors (security keys or passkeys) for admins, and set session length and idle timeout for web, desktop and mobile. When MFA is enforced an email sign-in link alone never opens a session: the second factor is always required, and a stolen link fails without it. A user who loses every factor recovers through a recovery code or through a help-desk admin (ADMIN-003) who verifies them and issues a single-use enrollment link that expires in 24 hours; every reset is audited and notifies the user. Federated sign-ins rely on the IdP's MFA, which admins can require.
 
-#### QUOTA-001 — Storage limits for users and spaces.
+**Acceptance.**
+1. Enforce MFA for everyone with a 0-day grace period.
+2. An unenrolled staff member's next email-link sign-in is held at enrollment, enrolls a TOTP factor and then opens the library; a second user enrolls a passkey.
+3. Replay a captured valid email link from another browser without the factor and be refused.
+4. Require security keys for admins and prove an admin with only TOTP is refused the console.
+5. Set a 1-hour session length and see a session end.
+6. A user who has lost their factor is reset by a help-desk admin, enrolls again through the single-use link, and the link fails on second use and after 24 hours.
 
-Admins with service-settings scope (ADMIN-003) set storage limits in bytes at two scopes.
+#### QUOTA-001 — Storage limits for users and spaces
+
+*Tier:* Core
+
+**Requirement.** Admins with service-settings scope (ADMIN-003) set storage limits in bytes at two scopes.
 - **Per-user limits** cover a person's personal area. There is an organization default and per-group limits. A group limit overrides the organization default; a user in several limited groups gets the largest of those limits; a per-user override beats both. The console shows each user's effective limit and the rule it came from.
 - **Per-space limits** have an organization default for spaces, inherited by every space unless an admin sets a per-space override; SPACE-002 can set a different starting limit for new spaces.
 
@@ -491,96 +774,172 @@ Admins with service-settings scope (ADMIN-003) set storage limits in bytes at tw
 
 **Freeing space:** in a personal area, the user trashes items and empties their own trash. In a space, content managers trash items and space managers erase them under ERASE-001. Admins can raise the limit. Writes resume on the next request once usage is under the limit. Every limit change is audited with before and after values.
 
-**Acceptance evidence:** Set a group user limit and a space limit below current usage; before saving, the console lists the affected users and spaces with their usage, and saving needs confirmation. Show that a group limit beats the organization default, and that a user in two limited groups gets the larger. For the over-limit user, an upload is refused in the browser at 1440 and 390 and through the API with `storage_limit_exceeded`, each naming the limit; view, preview and download still work. In the over-limit space, a content manager trashes content and usage does not drop until a space manager erases it under ERASE-001; writes then resume on the next request. Inspect the 90% warning emails and the audit entries for each limit change. The client tray and held-file display, with the queued upload completing without user action, is accepted under SYNC-003, and the mobile upload-queue display under MOBILE-001.
+**Acceptance.**
+1. Set a group user limit and a space limit below current usage; before saving, the console lists the affected users and spaces with their usage, and saving needs confirmation.
+2. Show that a group limit beats the organization default, and that a user in two limited groups gets the larger.
+3. For the over-limit user, an upload is refused in the browser at 1440 and 390 and through the API with `storage_limit_exceeded`, each naming the limit; view, preview and download still work.
+4. In the over-limit space, a content manager trashes content and usage does not drop until a space manager erases it under ERASE-001; writes then resume on the next request.
+5. Inspect the 90% warning emails and the audit entries for each limit change.
+6. The client tray and held-file display, with the queued upload completing without user action, is accepted under SYNC-003, and the mobile upload-queue display under MOBILE-001.
 
-#### SECURITY-001 — Scoped encryption and secret custody.
+#### SECURITY-001 — Scoped encryption and secret custody
 
-Transport, owner-selected storage and device caches use encryption with explicit installation/provider key custody, rotation and recovery procedures. Provider credentials, link capabilities and signing keys remain secret, encrypted at rest and absent from source, served assets, product archives, logs and AI prompts. Server-side current-session/origin checks cover every mutation; integrations use least scopes and revocation, and exported portable grants confer no login authority.
+*Tier:* Core
 
-**Acceptance evidence:** Inspect public API, logs and archive output using a test canary credential, rotate/revoke a provider and device key, and retry old access. Submit a cross-origin mutation, unauthenticated request and stale grant race; all fail closed while authorized originals remain recoverable under the documented key policy.
+**Requirement.** Transport, owner-selected storage and device caches use encryption with explicit installation/provider key custody, rotation and recovery procedures. Provider credentials, link capabilities and signing keys remain secret, encrypted at rest and absent from source, served assets, product archives, logs and AI prompts. Server-side current-session/origin checks cover every mutation; integrations use least scopes and revocation, and exported portable grants confer no login authority.
 
-#### SECURITY-002 — Content threats and classification policy.
+**Acceptance.**
+1. Inspect public API, logs and archive output using a test canary credential, rotate/revoke a provider and device key, and retry old access.
+2. Submit a cross-origin mutation, unauthenticated request and stale grant race; all fail closed while authorized originals remain recoverable under the documented key policy.
 
-Separately deployed malware scanning and classification detect infected uploads, suspicious mass downloads/deletes and sensitive content. Owners configure classification-based access, external sharing restrictions and quarantine/release roles, see reasons and false-positive handling, and can pause a device/token without destroying evidence. Original bytes never bypass a pending quarantine via an alternate preview, range or sync door. Mass-activity alerts have stated defaults that admins with security scope (ADMIN-003) tune per organization and group: one account, device or token downloading more than **500 files or 5 GB**, or trashing or deleting more than **200 items**, within **10 minutes**. The default alerts admins; admins can also choose to pause the account's downloads or the device/token at the threshold. Every threshold change is audited with before and after values.
+#### SECURITY-002 — Content threats and classification policy
+
+*Tier:* Core
+
+**Requirement.** Separately deployed malware scanning and classification detect infected uploads, suspicious mass downloads/deletes and sensitive content. Owners configure classification-based access, external sharing restrictions and quarantine/release roles, see reasons and false-positive handling, and can pause a device/token without destroying evidence. Original bytes never bypass a pending quarantine via an alternate preview, range or sync door. Mass-activity alerts have stated defaults that admins with security scope (ADMIN-003) tune per organization and group: one account, device or token downloading more than **500 files or 5 GB**, or trashing or deleting more than **200 items**, within **10 minutes**. The default alerts admins; admins can also choose to pause the account's downloads or the device/token at the threshold. Every threshold change is audited with before and after values.
 
 The adopted policy requires explicit owner confirmation before processing and owner-only configuration of reader and reviewer groups. A release needs a recorded reason and either the owner or a selected reviewer with current security scope over the uploader. Ordinary content roles still apply. Pending or failed verdicts and sensitive external sharing deny access. Processing admits originals up to 1 GiB; larger originals stay quarantined. Future doors in SYNC-001, MOBILE-001, CONNECT-001, CONNECT-002, CONNECT-008, CONNECT-009 and CONNECT-010 inherit these gates before shipping.
 
-**Acceptance evidence:** Submit a standard harmless malware-test specimen and a labeled sensitive document, simulate a burst through a test client and inspect quarantine/alert history. With the defaults, download 501 files in 10 minutes from one account and see the alert; trash 199 items and see none. Lower a group's download threshold to 100 files with pause on and see the 101st download in the window refused while the alert names the rule. Try all preview/download/link/device doors, release only as an authorized reviewer and prove policy changes do not erase originals or silently expand access.
+**Acceptance.**
+1. Submit a standard harmless malware-test specimen and a labeled sensitive document, simulate a burst through a test client and inspect quarantine/alert history.
+2. With the defaults, download 501 files in 10 minutes from one account and see the alert; trash 199 items and see none.
+3. Lower a group's download threshold to 100 files with pause on and see the 101st download in the window refused while the alert names the rule.
+4. Try all preview/download/link/device doors, release only as an authorized reviewer and prove policy changes do not erase originals or silently expand access.
 
-#### SECURITY-003 — Ransomware and mass-corruption protection.
+#### SECURITY-003 — Ransomware and mass-corruption protection
 
-The SYNC-001/006 clients watch outgoing changes for mass encryption or corruption: bursts of rewrites whose content entropy jumps toward random, file signatures that no longer match their extensions, mass renames to new extensions and known ransom-note files. On detection the client pauses upload from that device before the server's current versions change, keeps downloading paused for affected folders, and holds the suspect changes locally. The same detection runs server-side on public API and browser uploads, pausing the token or session. The user and admins with security scope (ADMIN-003) are alerted at once in the client, by email and in the admin console, which names the device, account, first detection time and affected files. One action restores every affected file to its last version before the incident (or a chosen point under RECOVER-001), keeps the suspect versions as quarantined history, and leaves later legitimate edits by other devices untouched; a false positive is released with one action and uploads resume. The device stays paused until a user or admin resumes it.
+*Tier:* Core
 
-**Acceptance evidence:** From a test client, rewrite 500 synced files with high-entropy content in under a minute. Upload pauses before any server current-version ID changes; the client, email and admin console show the event with device and file list. While paused, another device's legitimate edit to a different file syncs normally. Run the one-action restore and verify every affected file's current version and SHA-256 equals its last pre-incident version, with the 500 suspect versions retained as quarantined history. Repeat through the public API with a token and see the token paused. Release a deliberate false positive and see uploads resume with no loss.
+**Requirement.** The SYNC-001/006 clients watch outgoing changes for mass encryption or corruption: bursts of rewrites whose content entropy jumps toward random, file signatures that no longer match their extensions, mass renames to new extensions and known ransom-note files. On detection the client pauses upload from that device before the server's current versions change, keeps downloading paused for affected folders, and holds the suspect changes locally. The same detection runs server-side on public API and browser uploads, pausing the token or session. The user and admins with security scope (ADMIN-003) are alerted at once in the client, by email and in the admin console, which names the device, account, first detection time and affected files. One action restores every affected file to its last version before the incident (or a chosen point under RECOVER-001), keeps the suspect versions as quarantined history, and leaves later legitimate edits by other devices untouched; a false positive is released with one action and uploads resume. The device stays paused until a user or admin resumes it.
 
-#### GOVERN-001 — Retention, legal hold and discovery integrations.
+**Acceptance.**
+1. From a test client, rewrite 500 synced files with high-entropy content in under a minute.
+2. Upload pauses before any server current-version ID changes; the client, email and admin console show the event with device and file list.
+3. While paused, another device's legitimate edit to a different file syncs normally.
+4. Run the one-action restore and verify every affected file's current version and SHA-256 equals its last pre-incident version, with the 500 suspect versions retained as quarantined history.
+5. Repeat through the public API with a token and see the token paused.
+6. Release a deliberate false positive and see uploads resume with no loss.
 
-Owners configure retention classes, holds and erasure conflicts with a qualified immutable archive/eDiscovery service such as Amazon S3 Object Lock and Microsoft Purview. Export includes scoped originals, versions, chain of custody and activity; hold status names the provider’s acknowledgment, policy and retained scope. Chest does not call ordinary R2 storage certified WORM or invent legal sufficiency.
+#### GOVERN-001 — Retention, legal hold and discovery integrations
 
-**Acceptance evidence:** Place a test project on provider-confirmed hold, request deletion, export a discovery package and reconcile hashes, versions and audit at the provider. Attempt deletion before release; show the hold/refusal and then an authorized release/erasure with the provider outcome.
+*Tier:* Core
 
-#### AUDIT-001 — Durable complete action history.
+**Requirement.** Owners configure retention classes, holds and erasure conflicts with a qualified immutable archive/eDiscovery service such as Amazon S3 Object Lock and Microsoft Purview. Export includes scoped originals, versions, chain of custody and activity; hold status names the provider’s acknowledgment, policy and retained scope. Chest does not call ordinary R2 storage certified WORM or invent legal sufficiency.
 
-A searchable, exportable audit attributes reads/downloads, sharing/admin mutations, device actions and every automation/provider attempt to actor, exact version, authority and outcome. Failed/uncertain/crashed jobs retain durable outcomes and cannot disappear on restart or become success by timeout. Pagination/export includes all retained history beyond UI limits; audit payloads omit secrets and anonymize erased identities without deleting the action record. **File activity for collaborators:** each file's activity panel shows everyone with viewer access or above its edits, versions, comments, moves and sharing changes, and shows people who can edit it (contributor, file editor and above) which colleagues viewed it and when, as Drive's activity dashboard does. Admins turn view history on or off for the organization or a group, and each user can hide their own views; guests' and link visitors' views appear only as counts unless the viewer is a manager. The panel is filtered by current access and never reveals a viewer of an item the requester cannot see.
+**Acceptance.**
+1. Place a test project on provider-confirmed hold, request deletion, export a discovery package and reconcile hashes, versions and audit at the provider.
+2. Attempt deletion before release; show the hold/refusal and then an authorized release/erasure with the provider outcome.
 
-**Acceptance evidence:** Create success, refusal, provider failure and interrupted execution through public doors, restart and inspect/export more events than one UI page. Reconcile action/version IDs and outcomes and then erase an actor without losing the fact of their actions or exposing personal/secret fields. On a space file, two colleagues view it; a contributor sees both names and times in the file's activity panel and a viewer sees edits but no view history. A colleague who hides their views disappears from the list, and turning view history off for the group removes it from the panel.
+#### AUDIT-001 — Durable complete action history
 
-#### ERASE-001 — Deliberate erasure separate from trash.
+*Tier:* Core
 
-Authorized permanent erasure removes selected originals, all versions, derived text/thumbnails/embeddings, guest/link authority, import staging/custody and affected backup copies under disclosed provider retention. It revokes identities and credentials where requested, writes a durable per-store receipt and source erasure fence, and preserves a minimized anonymized action audit. Legal holds produce explicit refusal/pending provider outcomes. Offline historical copies cannot be recalled: restores must apply the later source journal or disclose the inability to know later erasures.
+**Requirement.** A searchable, exportable audit attributes reads/downloads, sharing/admin mutations, device actions and every automation/provider attempt to actor, exact version, authority and outcome. Failed/uncertain/crashed jobs retain durable outcomes and cannot disappear on restart or become success by timeout. Pagination/export includes all retained history beyond UI limits; audit payloads omit secrets and anonymize erased identities without deleting the action record. **File activity for collaborators:** each file's activity panel shows everyone with viewer access or above its edits, versions, comments, moves and sharing changes, and shows people who can edit it (contributor, file editor and above) which colleagues viewed it and when, as Drive's activity dashboard does. Admins turn view history on or off for the organization or a group, and each user can hide their own views; guests' and link visitors' views appear only as counts unless the viewer is a manager. The panel is filtered by current access and never reveals a viewer of an item the requester cannot see.
 
-**Acceptance evidence:** Through an owner erasure workflow remove a populated file and a staff identity, inspect each storage/index/import/backup target and audit anonymization, restart and attempt search/download and restore of an older archive with the later erasure journal. Refuse resurrection; show an unreachable backup or held object as pending rather than complete.
+**Acceptance.**
+1. Create success, refusal, provider failure and interrupted execution through public doors, restart and inspect/export more events than one UI page.
+2. Reconcile action/version IDs and outcomes and then erase an actor without losing the fact of their actions or exposing personal/secret fields.
+3. On a space file, two colleagues view it; a contributor sees both names and times in the file's activity panel and a viewer sees edits but no view history.
+4. A colleague who hides their views disappears from the list, and turning view history off for the group removes it from the panel.
 
-#### OPS-001 — Responsive accessible and observable operation.
+#### ERASE-001 — Deliberate erasure separate from trash
 
-Browser, native and admin paths expose loading, empty, failed and permission-denied states in words, preserve unfinished input and support keyboard/screen-reader operation with WCAG 2.2 AA as a tested target. Operators see health and stale/background jobs, configured US time zones, capacity, backup failures and measured deployment limits. The availability target, durability of originals and incident notices are OPS-002. Hosted mail, clients, processing and storage use named real accounts and reproducible install/update steps; no demo or provider stub counts as production acceptance.
+*Tier:* Core
 
-**Acceptance evidence:** Use realistic nested project data through store/open/share/search/recover at 1440 and 390, keyboard and a screen reader; disconnect each service and recover without fake success or lost edits. Install the documented stack in an owner test account and record its measured limits and actionable health signals; the SCALE-001 run supplies the size and timings.
+**Requirement.** Authorized permanent erasure removes selected originals, all versions, derived text/thumbnails/embeddings, guest/link authority, import staging/custody and affected backup copies under disclosed provider retention. It revokes identities and credentials where requested, writes a durable per-store receipt and source erasure fence, and preserves a minimized anonymized action audit. Legal holds produce explicit refusal/pending provider outcomes. Offline historical copies cannot be recalled: restores must apply the later source journal or disclose the inability to know later erasures.
 
-#### SCALE-001 — Stated operating scale and responsiveness.
+**Acceptance.**
+1. Through an owner erasure workflow remove a populated file and a staff identity, inspect each storage/index/import/backup target and audit anonymization, restart and attempt search/download and restore of an older archive with the later erasure journal.
+2. Refuse resurrection; show an unreachable backup or held object as pending rather than complete.
 
-Chest serves a **reference installation** of 150 users, 300 synced devices, 10 TB of current originals plus version history, 2,000,000 items in total, a largest space of 500,000 items with 100 nested folder levels and 600 direct members, and a largest folder of 20,000 direct children. When a buyer's MIGRATE-001 inventory is larger in any dimension, acceptance runs at that inventory plus 25% growth headroom instead. At that size, measured at the 95th percentile from a US region on a 100 Mbps connection: the first page of a folder listing returns within 1 second and a 20,000-child folder scrolls without a full reload; full-text search across the user's accessible items returns first results within 2 seconds; a permission change is enforced on the next request through every door; a device offline for 7 days catches up on 10,000 remote changes within 15 minutes; a new device's initial on-demand enumeration of a 500,000-item space completes within 30 minutes without hydrating file bytes. Measured figures are published in the operator console, and a deployment that misses a target reports it as a failing health check rather than silently degrading.
+#### OPS-001 — Responsive accessible and observable operation
 
-**Acceptance evidence:** Generate the reference installation (or the buyer's inventory plus 25%) with a seeded generator that records item, byte, depth, member and device counts. Run a fixed script of folder listings, deep-path opens, 50 search queries, a revocation and an offline-device catch-up, and publish the counts and p50/p95 timings for each against the targets above. Revoke a group during the run and prove the next request through list, search, download and sync is refused. Rerun against a buyer's MIGRATE-001 inventory and show the size used.
+*Tier:* Core
 
-#### OPS-002 — Availability target, durability of originals and incident status.
+**Requirement.** Browser, native and admin paths expose loading, empty, failed and permission-denied states in words, preserve unfinished input and support keyboard/screen-reader operation with WCAG 2.2 AA as a tested target. Operators see health and stale/background jobs, configured US time zones, capacity, backup failures and measured deployment limits. The availability target, durability of originals and incident notices are OPS-002. Hosted mail, clients, processing and storage use named real accounts and reproducible install/update steps; no demo or provider stub counts as production acceptance.
 
-**Availability:** Chest targets **99.9% monthly availability**, separately for each door: web, API, sync (the client service endpoint) and links (SHARE-001–003). External probes from at least two US regions exercise each door every minute with a real signed-in or link request, not just a health ping. A minute counts as down for a door when probes from two regions fail it. Planned maintenance is announced at least 72 hours ahead in the incident notice and counts as downtime. The operator console publishes each door's monthly percentage and minute history against the target, and a month heading below target raises a failing health check and an admin alert. On a hosted installation, service credits are set by the operator's service terms; the target and how it is measured are fixed here.
+**Acceptance.**
+1. Use realistic nested project data through store/open/share/search/recover at 1440 and 390, keyboard and a screen reader; disconnect each service and recover without fake success or lost edits.
+2. Install the documented stack in an owner test account and record its measured limits and actionable health signals; the SCALE-001 run supplies the size and timings.
+
+#### SCALE-001 — Stated operating scale and responsiveness
+
+*Tier:* Core
+
+**Requirement.** Chest serves a **reference installation** of 150 users, 300 synced devices, 10 TB of current originals plus version history, 2,000,000 items in total, a largest space of 500,000 items with 100 nested folder levels and 600 direct members, and a largest folder of 20,000 direct children. When a buyer's MIGRATE-001 inventory is larger in any dimension, acceptance runs at that inventory plus 25% growth headroom instead. At that size, measured at the 95th percentile from a US region on a 100 Mbps connection: the first page of a folder listing returns within 1 second and a 20,000-child folder scrolls without a full reload; full-text search across the user's accessible items returns first results within 2 seconds; a permission change is enforced on the next request through every door; a device offline for 7 days catches up on 10,000 remote changes within 15 minutes; a new device's initial on-demand enumeration of a 500,000-item space completes within 30 minutes without hydrating file bytes. Measured figures are published in the operator console, and a deployment that misses a target reports it as a failing health check rather than silently degrading.
+
+**Acceptance.**
+1. Generate the reference installation (or the buyer's inventory plus 25%) with a seeded generator that records item, byte, depth, member and device counts.
+2. Run a fixed script of folder listings, deep-path opens, 50 search queries, a revocation and an offline-device catch-up, and publish the counts and p50/p95 timings for each against the targets above.
+3. Revoke a group during the run and prove the next request through list, search, download and sync is refused.
+4. Rerun against a buyer's MIGRATE-001 inventory and show the size used.
+
+#### OPS-002 — Availability target, durability of originals and incident status
+
+*Tier:* Core
+
+**Requirement.** **Availability:** Chest targets **99.9% monthly availability**, separately for each door: web, API, sync (the client service endpoint) and links (SHARE-001–003). External probes from at least two US regions exercise each door every minute with a real signed-in or link request, not just a health ping. A minute counts as down for a door when probes from two regions fail it. Planned maintenance is announced at least 72 hours ahead in the incident notice and counts as downtime. The operator console publishes each door's monthly percentage and minute history against the target, and a month heading below target raises a failing health check and an admin alert. On a hosted installation, service credits are set by the operator's service terms; the target and how it is measured are fixed here.
 
 **Durability:** every original version is held as at least **two independent copies in separate failure domains**, a primary object store such as Cloudflare R2 plus a copy with a different provider or region such as Amazon S3. The second copy is written within 15 minutes of admission, and any admitted version still waiting for it is shown in the console. A **scrub** re-reads every stored copy at least every 30 days and checks its SHA-256 against the checksum recorded at admission (CHEST-03). A mismatched or missing copy is repaired from a verified good copy, with an audit entry. If no good copy exists, the file is shown as damaged to its owner and admins and is never served as intact. A monthly durability report gives the objects and bytes verified, mismatches found, repairs made and anything unrecoverable. RECOVER-002 backups are additional to these copies.
 
 **Incident status:** automated probes open an incident, and operators open or update one. It names the affected doors, start time and updates. A banner appears in the browser, the desktop client tray, the mobile app and the admin console within 2 minutes of automated detection, and admins get an email. The status is also published on a status page served independently of the main application. Clearing the incident removes the banners and records its duration against the availability figures. A client that cannot reach Chest shows "Chest unreachable" with its last successful contact (SYNC-003), distinct from a local network failure where the client can tell.
 
-**Acceptance evidence:** Run the probes for 30 days against the SCALE-001 reference installation and publish each door's availability and minute history against the 99.9% target. Take one door down for a measured interval and see it counted. Corrupt one stored copy of an original and delete the second copy of another: the next scrub detects both, repairs each from its good copy, and records audit entries and the durability report. Make one object unrecoverable in both copies and see it shown as damaged, never served. Stop the API: an incident opens automatically, the banner shows in the browser at 1440 and 390, the macOS and Windows clients and both mobile apps within 2 minutes, the independent status page reports it and admins receive the email. Restore the API and see the banners clear and the duration recorded.
+**Acceptance.**
+1. Run the probes for 30 days against the SCALE-001 reference installation and publish each door's availability and minute history against the 99.9% target.
+2. Take one door down for a measured interval and see it counted.
+3. Corrupt one stored copy of an original and delete the second copy of another: the next scrub detects both, repairs each from its good copy, and records audit entries and the durability report.
+4. Make one object unrecoverable in both copies and see it shown as damaged, never served.
+5. Stop the API: an incident opens automatically, the banner shows in the browser at 1440 and 390, the macOS and Windows clients and both mobile apps within 2 minutes, the independent status page reports it and admins receive the email.
+6. Restore the API and see the banners clear and the duration recorded.
 
-#### OPEN-001 — Free MIT-licensed source with no seat or feature charges.
+#### OPEN-001 — Free MIT-licensed source with no seat or feature charges
 
-Chest is free, open-source software. The whole product, every capability in this contract, ships as MIT-licensed source in this repository, with the license text at the repository root and in every release. Chest has no license key, seat count, user cap, paid edition, trial expiry or feature gate, and it never charges for or meters people, storage or features. Costs that come from the owner's own providers (hosting, storage, mail, a Collabora Online subscription or Microsoft 365 licenses under EDIT-001, AI spend under AGENT-007) belong to those providers and are never a Chest charge; showing them in USD with each provider named is ADMIN-002's provider-only cost view. Bundled third-party components keep their own licenses: every production dependency, direct and transitive, is listed with its license in each release.
+*Tier:* Core
 
-**Acceptance evidence:** Build a release from a fresh clone: the MIT license text is at its root, and a third-party license list names every production dependency, direct and transitive, with its version and license. Install it, invite 150 staff (the SCALE-001 reference user count) and use every delivered capability through the browser, the API and the clients: no license key, payment, seat prompt, user cap or feature lock appears, and a source scan of the release finds no license-key, seat-limit or paywall check. The cost view that lists only provider costs, each labeled with its provider, is accepted under ADMIN-002.
+**Requirement.** Chest is free, open-source software. The whole product, every capability in this contract, ships as MIT-licensed source in this repository, with the license text at the repository root and in every release. Chest has no license key, seat count, user cap, paid edition, trial expiry or feature gate, and it never charges for or meters people, storage or features. Costs that come from the owner's own providers (hosting, storage, mail, a Collabora Online subscription or Microsoft 365 licenses under EDIT-001, AI spend under AGENT-007) belong to those providers and are never a Chest charge; showing them in USD with each provider named is ADMIN-002's provider-only cost view. Bundled third-party components keep their own licenses: every production dependency, direct and transitive, is listed with its license in each release.
 
-#### OWN-001 — Owner-run installation on a computer, a server or the owner's cloud account.
+**Acceptance.**
+1. Build a release from a fresh clone: the MIT license text is at its root, and a third-party license list names every production dependency, direct and transitive, with its version and license.
+2. Install it, invite 150 staff (the SCALE-001 reference user count) and use every delivered capability through the browser, the API and the clients: no license key, payment, seat prompt, user cap or feature lock appears, and a source scan of the release finds no license-key, seat-limit or paywall check.
+3. The cost view that lists only provider costs, each labeled with its provider, is accepted under ADMIN-002.
 
-The owner runs Chest on infrastructure they control, with no Chest-operated service in the path, on any of three targets:
+#### OWN-001 — Owner-run installation on a computer, a server or the owner's cloud account
+
+*Tier:* Core
+
+**Requirement.** The owner runs Chest on infrastructure they control, with no Chest-operated service in the path, on any of three targets:
 - **Their own computer** (macOS, Linux, or Windows with WSL2), with one line, `npx -y @runeditrun/rer dev just-every/run-chest`, which clones, installs, sets up a local owner and starts Chest; `rer dev` inside the checkout starts it again.
 - **Their own server**: a Linux host or VM they operate, on premises or rented, serving staff over HTTPS on the owner's domain with the owner's mail provider and object storage.
 - **Their own cloud account**: Cloudflare, as `deploy.json` describes.
 
 Every target keeps original bytes and metadata in owner-controlled storage and needs no account other than the owner's chosen providers. The owner moves an installation between targets by CHEST-12 export and restore without loss. A computer install says when other devices cannot reach it, rather than implying team availability. Install, update and rollback steps are reproducible from the documentation (OPS-001, RECOVER-002).
 
-**Acceptance evidence:** From a fresh clone on macOS and on Ubuntu LTS, run the five documented commands and reach the signed-in owner library in the browser. On a Linux VM the owner controls, install Chest with the documented server steps and sign in from a second computer over HTTPS on the owner's domain. Invite a staff member whose email link arrives through the owner's mail provider, then upload, share and download a file whose bytes are in the owner's storage. Deploy the same release to the owner's Cloudflare account. Export the server install with `rer export`, restore it into the cloud install with `rer import`, and reconcile every original's SHA-256 and every record (CHEST-12). Block outbound access to every Run Edit Run host and see each running install keep serving staff.
+**Acceptance.**
+1. From a fresh clone on macOS and on Ubuntu LTS, run the five documented commands and reach the signed-in owner library in the browser.
+2. On a Linux VM the owner controls, install Chest with the documented server steps and sign in from a second computer over HTTPS on the owner's domain.
+3. Invite a staff member whose email link arrives through the owner's mail provider, then upload, share and download a file whose bytes are in the owner's storage.
+4. Deploy the same release to the owner's Cloudflare account.
+5. Export the server install with `rer export`, restore it into the cloud install with `rer import`, and reconcile every original's SHA-256 and every record (CHEST-12).
+6. Block outbound access to every Run Edit Run host and see each running install keep serving staff.
 
 ### Move-in from incumbents and challenger filespaces
 
-#### MIGRATE-001 — Reconciled migration and controlled cutover.
+#### MIGRATE-001 — Reconciled migration and controlled cutover
 
-Every source adapter inventories all files/folders, owners, principals, versions, timestamps, comments, links and unsupported records with counts/bytes/hashes and a reason for each gap. Open review work is live state, not history: every adapter inventories, per file, comments, replies, open and resolved threads, assigned comments or tasks and pending suggestions or tracked changes, and moves whatever the source exposes through its API or export into EDIT-003 threads, tasks and tracked changes under the same thread, author, assignee, suggestion, notification and reconciliation rules that MIGRATE-002 states for Google Drive. Anything a source cannot expose is a named per-file gap in the migration report, never a silent drop. The owner previews identity/permission mappings, approves the exact plan and runs resumable idempotent batches plus a delta catch-up before cutover. Unmapped rights fail closed; imported approvals remain source history. Links inside migrated content are rewritten to the migrated items, and old vendor URLs pasted from mail, calendars or other systems resolve through a staff resolver (MIGRATE-007). Chest never claims an ability to own the vendors' domains; redirects on those domains remain source-controlled. A cutover manifest tracks replacement URLs and collaborator tests; rollback retains source read access and an independent archive.
+*Tier:* Core
 
-**Acceptance evidence:** Through the migration wizard, inventory a representative source, change the source after preview, reject stale plans, resume an interrupted batch and reconcile every item and version. Approve delta/cutover, test internal and external collaborators and old-to-new links (rewritten links and the resolver, under MIGRATE-007), then undo untouched work and preserve native edits as conflicts. The inventory and the migration report give per-file counts of comments, replies, open, resolved and assigned items and pending suggestions in the source and in Chest, every difference carries a reason, and no notification is sent for migrated review work during any batch or delta.
+**Requirement.** Every source adapter inventories all files/folders, owners, principals, versions, timestamps, comments, links and unsupported records with counts/bytes/hashes and a reason for each gap. Open review work is live state, not history: every adapter inventories, per file, comments, replies, open and resolved threads, assigned comments or tasks and pending suggestions or tracked changes, and moves whatever the source exposes through its API or export into EDIT-003 threads, tasks and tracked changes under the same thread, author, assignee, suggestion, notification and reconciliation rules that MIGRATE-002 states for Google Drive. Anything a source cannot expose is a named per-file gap in the migration report, never a silent drop. The owner previews identity/permission mappings, approves the exact plan and runs resumable idempotent batches plus a delta catch-up before cutover. Unmapped rights fail closed; imported approvals remain source history. Links inside migrated content are rewritten to the migrated items, and old vendor URLs pasted from mail, calendars or other systems resolve through a staff resolver (MIGRATE-007). Chest never claims an ability to own the vendors' domains; redirects on those domains remain source-controlled. A cutover manifest tracks replacement URLs and collaborator tests; rollback retains source read access and an independent archive.
 
-#### MIGRATE-002 — Google Drive and Shared Drives migration.
+**Acceptance.**
+1. Through the migration wizard, inventory a representative source, change the source after preview, reject stale plans, resume an interrupted batch and reconcile every item and version.
+2. Approve delta/cutover, test internal and external collaborators and old-to-new links (rewritten links and the resolver, under MIGRATE-007), then undo untouched work and preserve native edits as conflicts.
+3. The inventory and the migration report give per-file counts of comments, replies, open, resolved and assigned items and pending suggestions in the source and in Chest, every difference carries a reason, and no notification is sent for migrated review work during any batch or delta.
 
-Import Google Drive personal/shared drives using authorized APIs/export, preserving folder IDs/mapping, team ownership, file and revision bytes, shortcuts, native Google types and explicit user/group/domain ACLs. Reconcile imported approvals and unavailable revisions as sourced history/gaps; open review work moves as live review state under the block below. Google conversion fidelity and the MIGRATE-007 link rewrite and unresolved-link report require owner acceptance before declaring Drive replaced. The adapter also carries:
+#### MIGRATE-002 — Google Drive and Shared Drives migration
+
+*Tier:* Core
+
+**Requirement.** Import Google Drive personal/shared drives using authorized APIs/export, preserving folder IDs/mapping, team ownership, file and revision bytes, shortcuts, native Google types and explicit user/group/domain ACLs. Reconcile imported approvals and unavailable revisions as sourced history/gaps; open review work moves as live review state under the block below. Google conversion fidelity and the MIGRATE-007 link rewrite and unresolved-link report require owner acceptance before declaring Drive replaced. The adapter also carries:
 
 - **Drive labels:** each label becomes a CHEST-02 type and each field a typed field (text, number, date, selection with its options, user), with applied values copied per file and the label/field IDs kept as provenance; badged labels and disabled options are inventoried, and any field type without an equivalent is a named gap.
 - **Shared-drive roles:** Manager, Content manager, Contributor, Commenter and Viewer map one-to-one to the ROLE-001 manager, content manager, contributor, commenter and viewer roles; My Drive file roles Editor/Commenter/Viewer map to file editor/commenter/viewer; the shared-drive "allow viewers and commenters to download" and "sharing outside the drive" settings map to the ROLE-001 no-download and POLICY-001 space overrides. No mapping widens a role.
@@ -595,42 +954,61 @@ Import Google Drive personal/shared drives using authorized APIs/export, preserv
   - **No notifications on move-in:** the migration and every delta pass send no mention, assignment, reply or reminder notification. A delta pass carries the comments, replies, resolves, reopens and reassignments made in Google since the previous pass, idempotently by source ID, with no duplicate thread. FOLLOW-001 reminders for migrated tasks start one full reminder interval after cutover, never on cutover day. The owner may instead choose one summary email per assignee at cutover listing their moved tasks; it is off by default.
   - **Reconciliation:** the migration report counts, per file, comments, replies, open, resolved and assigned items and pending suggestions in the source and in Chest, and lists every difference with its reason (author not matched, anchor not found, assignee without access, provider-held, deleted in source). Drive is not declared replaced while any difference lacks a reason.
 
-**Acceptance evidence:** Migrate a real test Workspace with Shared Drives, a departed owner, native Docs/Sheets/Slides, shortcuts, nested restricted folders and historical versions, plus: a labeled file with a date field and a selection field; a shared drive with one member at each of the five roles and download-restricted viewers; a Vault hold and a retention rule over one shared drive; and an externally owned file shared into a shared drive and another in a staff member's Shared with me. Compare inventory, byte hashes, exported/native fidelity, principals and links; verify the label values as typed fields, run the ROLE-001 role tests against each migrated member, see the held content blocked until a GOVERN-001 policy is acknowledged, and see both external files reconciled by the chosen option or reported as named gaps requiring owner sign-off. Prove an external collaborator can use the replacement without access to forbidden folders. Include the MIGRATE-007 link fixtures in the same tenant and pass that clause's acceptance. Seed the same tenant with open review work: a Doc with three open threads, one of them with two replies and one assigned to staff member B; a resolved thread; two pending suggestions by staff member C; a comment by an external collaborator; a comment by a departed, deleted user; a Sheet with a cell comment; and a PDF with a region comment made in Drive's preview. Migrate with the Doc converted to DOCX:
-- The DOCX opens in Collabora Online with the three open threads and the resolved thread in their states, anchored to their text. On the file page and in the iOS and Android apps they are EDIT-003 threads with their original timestamps, attributed to the mapped Chest users. The external comment carries the guest's email, and the departed user's comment shows as "Former collaborator (name as in source)".
-- B finds the assigned comment in their task list. The notification log shows nothing sent to anyone during the migration or the delta pass, and no reminder on cutover day.
-- C's two suggestions are tracked changes attributed to C. A contributor accepts one and rejects the other, and each decision is an EDIT-001 decision version.
-- The Sheet's cell comment and the PDF's region comment are EDIT-003 threads on the right cell and on the right page and region.
-- Add a reply and resolve a thread in Google, run the delta pass, and see each arrive once, with no notification.
-- The report's per-file counts match the source. An injected author with no match shows as a former collaborator and is listed with its reason, never as another person; an injected comment whose quoted text was removed is flagged "anchor not found" with its quoted text kept; an assignment to a user who cannot open the file goes to the file's owner and is listed, with no access granted.
-- Repeat with the Doc kept native under EDIT-002: its comments stay in Google, Chest reports them as provider-held with counts and a link, and no thread is duplicated.
+**Acceptance.**
+1. Migrate a real test Workspace with Shared Drives, a departed owner, native Docs/Sheets/Slides, shortcuts, nested restricted folders and historical versions, plus: a labeled file with a date field and a selection field; a shared drive with one member at each of the five roles and download-restricted viewers; a Vault hold and a retention rule over one shared drive; and an externally owned file shared into a shared drive and another in a staff member's Shared with me.
+2. Compare inventory, byte hashes, exported/native fidelity, principals and links; verify the label values as typed fields, run the ROLE-001 role tests against each migrated member, see the held content blocked until a GOVERN-001 policy is acknowledged, and see both external files reconciled by the chosen option or reported as named gaps requiring owner sign-off.
+3. Prove an external collaborator can use the replacement without access to forbidden folders.
+4. Include the MIGRATE-007 link fixtures in the same tenant and pass that clause's acceptance.
+5. Seed the same tenant with open review work: a Doc with three open threads, one of them with two replies and one assigned to staff member B; a resolved thread; two pending suggestions by staff member C; a comment by an external collaborator; a comment by a departed, deleted user; a Sheet with a cell comment; and a PDF with a region comment made in Drive's preview.
+6. Migrate with the Doc converted to DOCX: - The DOCX opens in Collabora Online with the three open threads and the resolved thread in their states, anchored to their text.
+7. On the file page and in the iOS and Android apps they are EDIT-003 threads with their original timestamps, attributed to the mapped Chest users.
+8. The external comment carries the guest's email, and the departed user's comment shows as "Former collaborator (name as in source)". - B finds the assigned comment in their task list. The notification log shows nothing sent to anyone during the migration or the delta pass, and no reminder on cutover day. - C's two suggestions are tracked changes attributed to C. A contributor accepts one and rejects the other, and each decision is an EDIT-001 decision version. - The Sheet's cell comment and the PDF's region comment are EDIT-003 threads on the right cell and on the right page and region. - Add a reply and resolve a thread in Google, run the delta pass, and see each arrive once, with no notification. - The report's per-file counts match the source. An injected author with no match shows as a former collaborator and is listed with its reason, never as another person; an injected comment whose quoted text was removed is flagged "anchor not found" with its quoted text kept; an assignment to a user who cannot open the file goes to the file's owner and is listed, with no access granted. - Repeat with the Doc kept native under EDIT-002: its comments stay in Google, Chest reports them as provider-held with counts and a link, and no thread is duplicated.
 
-#### MIGRATE-003 — Dropbox Business migration.
+#### MIGRATE-003 — Dropbox Business migration
 
-Import member folders and team spaces through Dropbox APIs/export with revisions, deleted-file history where available, metadata, shared-folder membership and external links mapped under current Chest policy. Preserve distinct file IDs for equal hashes, account for selective-sync placeholders and report missing revision/transfer history explicitly. File comments move as EDIT-003 threads under the MIGRATE-001 open-review-work rules wherever the Dropbox API or export exposes them; where it exposes none for a file, the report names that file's comments as a gap.
+*Tier:* Core
 
-**Acceptance evidence:** Migrate a real Dropbox Business test team containing a team folder, personal folder, revisions, deleted file and expiring links, plus a file with an open comment thread: it arrives as an attributed EDIT-003 thread with no notification sent, or is listed in the report as a named gap. Reconcile every source item/version and rights, perform a delta import, reissue controlled links and validate recipient workflows before cutover.
+**Requirement.** Import member folders and team spaces through Dropbox APIs/export with revisions, deleted-file history where available, metadata, shared-folder membership and external links mapped under current Chest policy. Preserve distinct file IDs for equal hashes, account for selective-sync placeholders and report missing revision/transfer history explicitly. File comments move as EDIT-003 threads under the MIGRATE-001 open-review-work rules wherever the Dropbox API or export exposes them; where it exposes none for a file, the report names that file's comments as a gap.
 
-#### MIGRATE-004 — Box migration.
+**Acceptance.**
+1. Migrate a real Dropbox Business test team containing a team folder, personal folder, revisions, deleted file and expiring links, plus a file with an open comment thread: it arrives as an attributed EDIT-003 thread with no notification sent, or is listed in the report as a named gap.
+2. Reconcile every source item/version and rights, perform a delta import, reissue controlled links and validate recipient workflows before cutover.
 
-Import Box folders, original/version bytes, metadata templates, collaborators, shared links and comments/tasks through authorized APIs/export. Preserve source legal-hold/retention/approval provenance separately and require an acknowledged receiving governance policy where relevant; never turn a source role into broader Chest rights. Box comments become EDIT-003 threads, and Box tasks become EDIT-003 tasks with their assignees, due dates and completion state, under the MIGRATE-001 open-review-work rules, with no notification on move-in.
+#### MIGRATE-004 — Box migration
 
-**Acceptance evidence:** Migrate a real Box test space with custom metadata, a limited collaborator, versioned file and shared link, plus a file with a comment thread and an open task assigned to a collaborator: the thread arrives attributed, and the task is in the assignee's list with its due date, with no notification sent. Reconcile counts/hash/history and rights, report provider-held or unavailable items, test a guest and reconcile signed-off cutover/rollback.
+*Tier:* Core
 
-#### MIGRATE-005 — OneDrive and SharePoint migration.
+**Requirement.** Import Box folders, original/version bytes, metadata templates, collaborators, shared links and comments/tasks through authorized APIs/export. Preserve source legal-hold/retention/approval provenance separately and require an acknowledged receiving governance policy where relevant; never turn a source role into broader Chest rights. Box comments become EDIT-003 threads, and Box tasks become EDIT-003 tasks with their assignees, due dates and completion state, under the MIGRATE-001 open-review-work rules, with no notification on move-in.
 
-Import OneDrive for Business and SharePoint document libraries through Microsoft Graph/export, preserving sites/library folder structure, originals/revisions, owners, groups, unique item permissions, metadata/content types and sharing-link mappings. Pages/lists and suite-specific workflows are inventoried with explicit handoff rather than silently called files or dropped. Comments stored in Office files become EDIT-003 threads under the MIGRATE-001 open-review-work rules, with authors matched from the Microsoft Entra ID identity Office records on each comment, through Graph, and confirmed in the mapping preview.
+**Acceptance.**
+1. Migrate a real Box test space with custom metadata, a limited collaborator, versioned file and shared link, plus a file with a comment thread and an open task assigned to a collaborator: the thread arrives attributed, and the task is in the assignee's list with its due date, with no notification sent.
+2. Reconcile counts/hash/history and rights, report provider-held or unavailable items, test a guest and reconcile signed-off cutover/rollback.
 
-**Acceptance evidence:** Migrate a real Microsoft 365 test tenant with a SharePoint library, OneDrive user, restricted subfolder, versions and guest link, plus a DOCX with an open and a resolved comment by different users, which arrive as EDIT-003 threads attributed to the mapped people, in their states, with no notification sent. Reconcile records/bytes/ACLs and unsupported pages/workflows, run a delta, offboard the source owner and validate the replacement links as staff and guest.
+#### MIGRATE-005 — OneDrive and SharePoint migration
 
-#### MIGRATE-006 — Egnyte, LucidLink, Nextcloud and file shares.
+*Tier:* Core
 
-Move Egnyte folders, LucidLink filespaces, Nextcloud/WebDAV libraries and SMB/NAS trees through documented APIs or mounted originals with a source manifest. Preserve names, bytes, times, rights and available history and report unavailable streamed ranges, encrypted content or vendor-only data. Hybrid cache and creative-workflow acceptance must succeed before retiring those source systems.
+**Requirement.** Import OneDrive for Business and SharePoint document libraries through Microsoft Graph/export, preserving sites/library folder structure, originals/revisions, owners, groups, unique item permissions, metadata/content types and sharing-link mappings. Pages/lists and suite-specific workflows are inventoried with explicit handoff rather than silently called files or dropped. Comments stored in Office files become EDIT-003 threads under the MIGRATE-001 open-review-work rules, with authors matched from the Microsoft Entra ID identity Office records on each comment, through Graph, and confirmed in the mapping preview.
 
-**Acceptance evidence:** Inventory a test filespace from each named challenger plus a NAS share, hydrate placeholders, migrate and reconcile hashes and rights; open a large creative file from the replacement mount and test a revoked collaborator. Any unexportable history remains a named gap requiring owner sign-off.
+**Acceptance.**
+1. Migrate a real Microsoft 365 test tenant with a SharePoint library, OneDrive user, restricted subfolder, versions and guest link, plus a DOCX with an open and a resolved comment by different users, which arrive as EDIT-003 threads attributed to the mapped people, in their states, with no notification sent.
+2. Reconcile records/bytes/ACLs and unsupported pages/workflows, run a delta, offboard the source owner and validate the replacement links as staff and guest.
 
-#### MIGRATE-007 — Embedded link rewriting and old-URL resolution.
+#### MIGRATE-006 — Egnyte, LucidLink, Nextcloud and file shares
 
-**Source-to-Chest map:** every migration (MIGRATE-002–006) records a persistent map from each source ID (file, folder, shared drive or site, and revision where available) to its Chest stable ID. The map is kept after cutover and included in CHEST-12 and RECOVER-002 archives.
+*Tier:* Core
+
+**Requirement.** Move Egnyte folders, LucidLink filespaces, Nextcloud/WebDAV libraries and SMB/NAS trees through documented APIs or mounted originals with a source manifest. Preserve names, bytes, times, rights and available history and report unavailable streamed ranges, encrypted content or vendor-only data. Hybrid cache and creative-workflow acceptance must succeed before retiring those source systems.
+
+**Acceptance.**
+1. Inventory a test filespace from each named challenger plus a NAS share, hydrate placeholders, migrate and reconcile hashes and rights; open a large creative file from the replacement mount and test a revoked collaborator.
+2. Any unexportable history remains a named gap requiring owner sign-off.
+
+#### MIGRATE-007 — Embedded link rewriting and old-URL resolution
+
+*Tier:* Core
+
+**Requirement.** **Source-to-Chest map:** every migration (MIGRATE-002–006) records a persistent map from each source ID (file, folder, shared drive or site, and revision where available) to its Chest stable ID. The map is kept after cutover and included in CHEST-12 and RECOVER-002 archives.
 
 **Rewriting:** during the job, and again in a final pass after the last delta, Chest rewrites source URLs that point at migrated items so they open the Chest items. Covered URLs:
 - Google Drive, Docs, Sheets, Slides and Forms file, folder and `open?id=` URLs, and shared-drive URLs;
@@ -651,76 +1029,119 @@ A rewrite creates a new attributed "migration link rewrite" version, with the so
 
 **Resolver:** a staff-only resolver page and API, also used by the CONNECT-008 add-ins and Slack/Teams unfurls (CONNECT-001/002), turns an old source URL pasted from an email, calendar invite or other system into the migrated item. A user with current access gets the item. A user without access gets Request access (SHARE-004) and never sees the title. An unmigrated URL is reported as not migrated. Guests and signed-out browsers are refused. Historical mail and calendar content are not rewritten in place, because the source vendor controls them; the resolver covers them.
 
-**Acceptance evidence:** The MIGRATE-002 test tenant includes:
-- a Doc linking to a Sheet in another shared drive;
-- a Sheet with `IMPORTRANGE`, kept native in one run and converted to XLSX in another;
-- a PPTX and a PDF with Drive links;
-- a Drive shortcut and a `.url` file;
-- a link to a file excluded from the migration.
-
-After migration, every link except the excluded one opens the matching Chest item, and each rewritten file's prior version still matches the source hash. The excluded link appears in the unresolved report with file, location, target and reason, and the summary's rewritten-link count equals the rewritten fixtures, per vendor. Migrate a newly linked file in a delta and see the final pass rewrite its link. An old Drive URL pasted into the resolver opens the item for a member, shows Request access without the title to a non-member, and is refused for a guest. Run an equivalent Dropbox, Box and SharePoint link fixture through MIGRATE-003–005.
+**Acceptance.**
+1. The MIGRATE-002 test tenant includes: - a Doc linking to a Sheet in another shared drive; - a Sheet with `IMPORTRANGE`, kept native in one run and converted to XLSX in another; - a PPTX and a PDF with Drive links; - a Drive shortcut and a `.url` file; - a link to a file excluded from the migration.
+2. After migration, every link except the excluded one opens the matching Chest item, and each rewritten file's prior version still matches the source hash.
+3. The excluded link appears in the unresolved report with file, location, target and reason, and the summary's rewritten-link count equals the rewritten fixtures, per vendor.
+4. Migrate a newly linked file in a delta and see the final pass rewrite its link.
+5. An old Drive URL pasted into the resolver opens the item for a member, shows Request access without the title to a non-member, and is refused for a guest.
+6. Run an equivalent Dropbox, Box and SharePoint link fixture through MIGRATE-003–005.
 
 ### Integrations, rules and follow-up
 
-#### CONNECT-001 — Slack file collaboration.
+#### CONNECT-001 — Slack file collaboration
 
-A scoped Slack app finds Chest files, shares policy-checked links and delivers subscribed comments, requests and review notifications in approved channels/DMs. Searches and link previews use the requesting user’s current access; channel membership is not a library grant. Admins control installation, scopes and revocation.
+*Tier:* Core
 
-**Acceptance evidence:** Connect a real Slack test workspace, search/share as two users with different rights, change a folder grant and inspect channel unfurls/notifications. Revoke the app and prove it can no longer search/send; existing Chest links still enforce their own audience.
+**Requirement.** A scoped Slack app finds Chest files, shares policy-checked links and delivers subscribed comments, requests and review notifications in approved channels/DMs. Searches and link previews use the requesting user’s current access; channel membership is not a library grant. Admins control installation, scopes and revocation.
 
-#### CONNECT-002 — Microsoft Teams file collaboration.
+**Acceptance.**
+1. Connect a real Slack test workspace, search/share as two users with different rights, change a folder grant and inspect channel unfurls/notifications.
+2. Revoke the app and prove it can no longer search/send; existing Chest links still enforce their own audience.
 
-A Microsoft Teams app supports file search/pick/open, controlled links and collaboration notifications under Entra-linked user identity and current Chest grants. Channel/private-chat content does not inherit broad storage access; tenant admins can restrict and revoke the app.
+#### CONNECT-002 — Microsoft Teams file collaboration
 
-**Acceptance evidence:** Connect a real Teams test tenant, share a restricted file into a mixed-membership channel, open/edit as an authorized user and deny another. Revoke a group/app and verify search, cards, previews and queued notifications stop exposing content.
+*Tier:* Core
 
-#### CONNECT-003 — Salesforce and HubSpot record-linked files.
+**Requirement.** A Microsoft Teams app supports file search/pick/open, controlled links and collaboration notifications under Entra-linked user identity and current Chest grants. Channel/private-chat content does not inherit broad storage access; tenant admins can restrict and revoke the app.
 
-Salesforce account/contact/opportunity records and HubSpot company/contact/deal records link to scoped Chest folders and versions through a Salesforce app and a HubSpot app (a CRM record card listing the linked folder's files); authorized users file arrivals and see current approved content without duplicating CRM ownership. Mapping changes retain provenance and never grant every CRM user Chest access.
+**Acceptance.**
+1. Connect a real Teams test tenant, share a restricted file into a mixed-membership channel, open/edit as an authorized user and deny another.
+2. Revoke a group/app and verify search, cards, previews and queued notifications stop exposing content.
 
-**Acceptance evidence:** Connect a Salesforce test org, attach a file to an opportunity, replace/approve it, change record/folder access and delete the CRM link; the original and provenance remain while unauthorized CRM users see no file content. Repeat with a HubSpot test portal on a deal: the record card lists the linked folder's files for a user with Chest access and shows none to a HubSpot user without it.
+#### CONNECT-003 — Salesforce and HubSpot record-linked files
 
-#### CONNECT-004 — Docusign execution and return custody.
+*Tier:* Core
 
-Send a human-selected exact version to Docusign, track envelope state and receive signed originals plus completion evidence as new immutable linked versions. Verify callback authenticity, reconcile uncertain submissions and deduplicate repeated callbacks; Chest approval is distinct from legal signature validity. Built-in signing that needs no third-party account is SIGN-001; this clause serves firms that standardize on Docusign or need its notarization and qualified signatures.
+**Requirement.** Salesforce account/contact/opportunity records and HubSpot company/contact/deal records link to scoped Chest folders and versions through a Salesforce app and a HubSpot app (a CRM record card listing the linked folder's files); authorized users file arrivals and see current approved content without duplicating CRM ownership. Mapping changes retain provenance and never grant every CRM user Chest access.
 
-**Acceptance evidence:** Send an approved test agreement in a Docusign sandbox, complete and decline envelopes, replay a signed callback and simulate an uncertain send. Retain signed bytes/certificate, verify no duplicate envelope/version and never mark the pending source file signed on provider acknowledgment alone.
+**Acceptance.**
+1. Connect a Salesforce test org, attach a file to an opportunity, replace/approve it, change record/folder access and delete the CRM link; the original and provenance remain while unauthorized CRM users see no file content.
+2. Repeat with a HubSpot test portal on a deal: the record card lists the linked folder's files for a user with Chest access and shows none to a HubSpot user without it.
 
-#### CONNECT-005 — Zoom meeting file exchange.
+#### CONNECT-004 — Docusign execution and return custody
 
-Zoom integration lets authorized meeting participants pick permitted Chest files, share controlled links and file authorized cloud recordings/transcripts into a selected folder with source consent/provenance. A meeting invitation alone grants no file access; recording retention follows configured owner policy. Google Meet recordings, transcripts and notes are filed the same way under CONNECT-010.
+*Tier:* Core
 
-**Acceptance evidence:** In a Zoom test account, share a restricted deck with a guest and file an authorized recording/transcript after the meeting. Deny an unrelated participant and a revoked integration, inspect exact version/provenance and ensure a canceled recording job reports its real state.
+**Requirement.** Send a human-selected exact version to Docusign, track envelope state and receive signed originals plus completion evidence as new immutable linked versions. Verify callback authenticity, reconcile uncertain submissions and deduplicate repeated callbacks; Chest approval is distinct from legal signature validity. Built-in signing that needs no third-party account is SIGN-001; this clause serves firms that standardize on Docusign or need its notarization and qualified signatures.
 
-#### CONNECT-006 — Email and app intake.
+**Acceptance.**
+1. Send an approved test agreement in a Docusign sandbox, complete and decline envelopes, replay a signed callback and simulate an uncertain send.
+2. Retain signed bytes/certificate, verify no duplicate envelope/version and never mark the pending source file signed on provider acknowledgment alone.
 
-Gmail/Google Workspace and Microsoft Outlook/Exchange Online connectors ingest only owner-approved mailboxes, labels/folders, senders and attachments into selected Chest destinations. Authorized Salesforce/Slack/Teams/Zoom app arrivals use the same provenance and deduplication rules. Reply/forward or external collection messages require a preview or narrowly granted standing recipient/cadence policy; revocation stops subsequent reads and sends.
+#### CONNECT-005 — Zoom meeting file exchange
 
-**Acceptance evidence:** Connect real test Gmail and Microsoft 365 mailboxes, ingest an attachment once despite duplicate delivery, inspect source message/version provenance and reject a disallowed folder/sender. Revoke one source and verify queued jobs and sends stop at the authorization boundary.
+*Tier:* Core
 
-#### CONNECT-007 — Public API, webhooks and scoped agents.
+**Requirement.** Zoom integration lets authorized meeting participants pick permitted Chest files, share controlled links and file authorized cloud recordings/transcripts into a selected folder with source consent/provenance. A meeting invitation alone grants no file access; recording retention follows configured owner policy. Google Meet recordings, transcripts and notes are filed the same way under CONNECT-010.
 
-Documented file/folder/version/search/share/request APIs and an MCP server provide user/agent-scoped access, pagination, stable IDs, idempotent mutations and signed event delivery. Grants name allowed resources/actions and budgets; secrets are installation-local. A documented, embeddable Chest file picker (a JavaScript component with an OAuth grant flow) lets third-party web apps offer "attach from Chest" under the user's current access, as they offer Drive's picker; it returns stable IDs and policy-checked links only. Webhook consumers deduplicate event IDs, see delivery failure/uncertainty and control replay; imported events do not send automatically.
+**Acceptance.**
+1. In a Zoom test account, share a restricted deck with a guest and file an authorized recording/transcript after the meeting.
+2. Deny an unrelated participant and a revoked integration, inspect exact version/provenance and ensure a canceled recording job reports its real state.
+
+#### CONNECT-006 — Email and app intake
+
+*Tier:* Core
+
+**Requirement.** Gmail/Google Workspace and Microsoft Outlook/Exchange Online connectors ingest only owner-approved mailboxes, labels/folders, senders and attachments into selected Chest destinations. Authorized Salesforce/Slack/Teams/Zoom app arrivals use the same provenance and deduplication rules. Reply/forward or external collection messages require a preview or narrowly granted standing recipient/cadence policy; revocation stops subsequent reads and sends.
+
+**Acceptance.**
+1. Connect real test Gmail and Microsoft 365 mailboxes, ingest an attachment once despite duplicate delivery, inspect source message/version provenance and reject a disallowed folder/sender.
+2. Revoke one source and verify queued jobs and sends stop at the authorization boundary.
+
+#### CONNECT-007 — Public API, webhooks and scoped agents
+
+*Tier:* Core
+
+**Requirement.** Documented file/folder/version/search/share/request APIs and an MCP server provide user/agent-scoped access, pagination, stable IDs, idempotent mutations and signed event delivery. Grants name allowed resources/actions and budgets; secrets are installation-local. A documented, embeddable Chest file picker (a JavaScript component with an OAuth grant flow) lets third-party web apps offer "attach from Chest" under the user's current access, as they offer Drive's picker; it returns stable IDs and policy-checked links only. Webhook consumers deduplicate event IDs, see delivery failure/uncertainty and control replay; imported events do not send automatically.
 
 **Third-party app control:** an admin with sharing and security policy scope (ADMIN-003) sets, for the organization or named groups, whether staff may authorize any app, only allowlisted apps, or none. Each app (OAuth client, MCP agent, picker origin, or the CONNECT-009 Zapier and Make apps) can be trusted, limited to read-only scopes, or blocked. Staff cannot authorize an app the policy does not allow; the consent screen names the policy. Blocking an app or tightening the policy revokes its existing grants on the next request. The console lists every authorized app with its users, scopes and last use, and each policy change is audited.
 
-**Acceptance evidence:** Authorize a third-party test client and MCP agent for one folder, exercise paginated reads and idempotent upload, then attempt another folder and permission expansion. Revoke the grant mid-job, fail a signed webhook and inspect its durable outcome/manual replay without duplicated product mutations. Embed the file picker in a test web app: a user picks an accessible file and the app receives its stable ID and a link; a file the user cannot open never appears, and a revoked picker grant fails the next pick. Set the policy to allowlist only: a staff member's attempt to authorize an app off the list is refused naming the policy, an app limited to read-only cannot upload, and blocking an already authorized app refuses its next call; the console lists each app with its users and scopes.
+**Acceptance.**
+1. Authorize a third-party test client and MCP agent for one folder, exercise paginated reads and idempotent upload, then attempt another folder and permission expansion.
+2. Revoke the grant mid-job, fail a signed webhook and inspect its durable outcome/manual replay without duplicated product mutations.
+3. Embed the file picker in a test web app: a user picks an accessible file and the app receives its stable ID and a link; a file the user cannot open never appears, and a revoked picker grant fails the next pick.
+4. Set the policy to allowlist only: a staff member's attempt to authorize an app off the list is refused naming the policy, an app limited to read-only cannot upload, and blocking an already authorized app refuses its next call; the console lists each app with its users and scopes.
 
-#### CONNECT-008 — Gmail and Outlook compose and save add-ins.
+#### CONNECT-008 — Gmail and Outlook compose and save add-ins
 
-A Google Workspace add-on for Gmail and a Microsoft 365 add-in for Outlook (web, Windows, Mac and mobile) let each user, under their own Chest identity: pick a Chest file or folder while composing and insert it as a link at a chosen role; have any attachment over a set size (default 25 MB) turned into a SHARE-003 transfer link automatically; and save an incoming attachment, or the whole message as EML, to a Chest folder they choose. Before sending, the add-in checks every recipient against each inserted item's current access and warns naming who cannot open it, offering a one-step grant at viewer or commenter that POLICY-001 permits (or explaining the refusal); the user can also send without granting. Saves are idempotent per message and attachment, carry the message ID, sender and date as provenance, and are audited. Admins install, scope and revoke the add-ins for the organization; the admin intake pipeline remains CONNECT-006.
+*Tier:* Core
 
-**Acceptance evidence:** In real Google Workspace and Microsoft 365 test tenants, insert a restricted file into a message to an allowlisted external recipient; see the warning naming them, grant viewer in one step, send, and find the grant and audit entry; repeat to a non-allowlisted recipient and see the grant refused with the policy named. Attach a 200 MB file and see it replaced by a transfer link that the recipient downloads. Save the same attachment twice from Gmail and from Outlook and find one Chest file each with message provenance. Revoke the add-in and see the next insert and save refused.
+**Requirement.** A Google Workspace add-on for Gmail and a Microsoft 365 add-in for Outlook (web, Windows, Mac and mobile) let each user, under their own Chest identity: pick a Chest file or folder while composing and insert it as a link at a chosen role; have any attachment over a set size (default 25 MB) turned into a SHARE-003 transfer link automatically; and save an incoming attachment, or the whole message as EML, to a Chest folder they choose. Before sending, the add-in checks every recipient against each inserted item's current access and warns naming who cannot open it, offering a one-step grant at viewer or commenter that POLICY-001 permits (or explaining the refusal); the user can also send without granting. Saves are idempotent per message and attachment, carry the message ID, sender and date as provenance, and are audited. Admins install, scope and revoke the add-ins for the organization; the admin intake pipeline remains CONNECT-006.
 
-#### CONNECT-009 — Zapier and Make automation apps.
+**Acceptance.**
+1. In real Google Workspace and Microsoft 365 test tenants, insert a restricted file into a message to an allowlisted external recipient; see the warning naming them, grant viewer in one step, send, and find the grant and audit entry; repeat to a non-allowlisted recipient and see the grant refused with the policy named.
+2. Attach a 200 MB file and see it replaced by a transfer link that the recipient downloads.
+3. Save the same attachment twice from Gmail and from Outlook and find one Chest file each with message provenance.
+4. Revoke the add-in and see the next insert and save refused.
 
-Published Zapier and Make apps let non-developers automate Chest without code, authorized through a CONNECT-007 grant naming the allowed spaces/folders and actions. Triggers: new file, new file in folder (including subfolders by option), updated file (new version), new folder, file moved or trashed, new file-request submission (SHARE-002) and new comment. Actions: upload file, create folder, move, copy, rename, share with a person or create a link (POLICY-001 enforced), remove permission, update typed metadata, find file or folder by path or search, and download file content for a later step. Triggers deliver each event once with a stable event ID; actions are idempotent on a caller key. Revoking or narrowing the grant stops triggers and refuses actions on the next call, and each Zap/scenario run appears in the audit under the grant.
+#### CONNECT-009 — Zapier and Make automation apps
 
-**Acceptance evidence:** In real Zapier and Make test accounts, connect Chest with a grant for one folder and build "new file in folder → move to a subfolder and share with a colleague"; drop a file in and see it moved and shared once, with audit entries under the grant. Replay the trigger and see no duplicate move. Point an action at a folder outside the grant and see it refused; attempt a public link with public links off under POLICY-001 and see the policy refusal. Revoke the grant and see the next trigger stop and the next action fail.
+*Tier:* Core
 
-#### CONNECT-010 — Google Meet, Calendar, Chat and Forms file companion.
+**Requirement.** Published Zapier and Make apps let non-developers automate Chest without code, authorized through a CONNECT-007 grant naming the allowed spaces/folders and actions. Triggers: new file, new file in folder (including subfolders by option), updated file (new version), new folder, file moved or trashed, new file-request submission (SHARE-002) and new comment. Actions: upload file, create folder, move, copy, rename, share with a person or create a link (POLICY-001 enforced), remove permission, update typed metadata, find file or folder by path or search, and download file content for a later step. Triggers deliver each event once with a stable event ID; actions are idempotent on a caller key. Revoking or narrowing the grant stops triggers and refuses actions on the next call, and each Zap/scenario run appears in the audit under the grant.
 
-Organizations that keep Google Workspace for mail and meetings get Chest as the file store behind Google Meet, Google Calendar, Google Chat and Google Forms, as CONNECT-001/002/005 do for Slack, Teams and Zoom and CONNECT-008 does for Gmail. A super admin or an admin with service-settings scope (ADMIN-003) authorizes one Workspace connection through a Google Workspace Marketplace install with the named Meet, Calendar, Chat, Forms and Drive scopes, chooses which organizers, form owners or groups it covers, and installs, scopes and revokes each of the four parts separately.
+**Acceptance.**
+1. In real Zapier and Make test accounts, connect Chest with a grant for one folder and build "new file in folder → move to a subfolder and share with a colleague"; drop a file in and see it moved and shared once, with audit entries under the grant.
+2. Replay the trigger and see no duplicate move.
+3. Point an action at a folder outside the grant and see it refused; attempt a public link with public links off under POLICY-001 and see the policy refusal.
+4. Revoke the grant and see the next trigger stop and the next action fail.
+
+#### CONNECT-010 — Google Meet, Calendar, Chat and Forms file companion
+
+*Tier:* Core
+
+**Requirement.** Organizations that keep Google Workspace for mail and meetings get Chest as the file store behind Google Meet, Google Calendar, Google Chat and Google Forms, as CONNECT-001/002/005 do for Slack, Teams and Zoom and CONNECT-008 does for Gmail. A super admin or an admin with service-settings scope (ADMIN-003) authorizes one Workspace connection through a Google Workspace Marketplace install with the named Meet, Calendar, Chat, Forms and Drive scopes, chooses which organizers, form owners or groups it covers, and installs, scopes and revokes each of the four parts separately.
 - **Meet recordings, transcripts and notes.** For each covered organizer, every Meet recording, transcript and Gemini "take notes for me" document is filed **once** into a mapped Chest folder. The folder is the one the event is linked to through the Calendar add-on, or one set by an admin rule per calendar or group; otherwise it is a "Meet recordings" folder in the organizer's personal area. Chest detects new artifacts from Workspace event notifications, with a reconciliation sweep at least hourly. Both are keyed on the conference record and artifact ID, so a replayed event or the sweep never files twice. Each filed file carries provenance: meeting code, conference record ID, organizer, start and end times, Calendar event ID and title, and the source Drive file ID. Notes and transcripts are filed as native Google files under EDIT-002 or converted to DOCX, following the organization's EDIT-002 choice. **Access:** the organizer becomes file editor. Attendees whom Meet would have given access, under the Workspace recording-sharing setting, get viewer as named grants: internal attendees as staff, and external attendees as SHARE-005 guests only where POLICY-001 allows their domain. Anyone POLICY-001 excludes is listed in the filing report as not granted. Access is never widened beyond Meet's audience and the destination folder's own members. **Source copy:** the admin chooses whether the Drive copy is kept or moved to Drive trash once the Chest copy's SHA-256 matches the downloaded original; removal never happens before that check and is audited. A filing refused by QUOTA-001 or POLICY-001 keeps the Drive copy and is reported to the organizer and admins with the reason, never silently dropped. Recordings already in Drive before cutover move under MIGRATE-002, keyed on the same artifact IDs so they are never filed twice.
 - **Calendar add-on.** A Google Workspace add-on for Google Calendar on the web lets a user attach a Chest file or folder to an event as a link at a chosen role, and link the event to a Chest folder for its Meet files. When the event is saved, the add-on checks each guest against each attached item's current access, as CONNECT-008 checks recipients. It names the guests who cannot open an item and offers a one-step viewer or commenter grant that POLICY-001 permits, or explains the refusal; the user can also save without granting. Guests added later are checked at the next save through the add-on. A guest who gets the invitation some other way, such as by forwarding, gains nothing and sees Request access (SHARE-004).
 - **Chat app.** A Google Chat app for spaces and direct messages, on the web and in the Chat mobile apps, gives the CONNECT-001 behaviors:
@@ -734,74 +1155,133 @@ Organizations that keep Google Workspace for mail and meetings get Chest as the 
 
 Every filing, attachment check, grant and refusal is audited with the Workspace actor. Revoking one part, or the whole connection, refuses the next filing, attachment check, share or search. Files already filed keep their Chest permissions.
 
-**Acceptance evidence:** In a real Google Workspace test tenant with the connection covering one group:
-- A group member schedules an event linked through the Calendar add-on to a restricted team-space folder, with one internal attendee and one external attendee from an allowlisted domain, and records the Meet with transcript and notes on. The recording, transcript and notes document each appear once in the folder with meeting code, organizer, event ID and source Drive file ID. The internal attendee opens them, the external attendee opens them as a guest viewer, and a staff member who was not invited and has no folder access gets 403.
-- Replay the Workspace event notification and run the reconciliation sweep: there is no duplicate.
-- With "remove source after verification" on, the Drive copy goes to Drive trash only after the SHA-256 check passes. With the destination over its QUOTA-001 limit, the filing is refused with `storage_limit_exceeded`, the organizer and an admin are told, and the Drive copy is kept. An organizer outside the covered group has nothing filed.
-- Through the Calendar add-on, attach a restricted Chest file to an event with one guest who has access and one who doesn't. On save, the guest without access is named, gets viewer in one step, and the audit entry exists. Add a guest from a domain that isn't on the POLICY-001 allowlist: the grant is refused with the policy named.
-- Through the Chat app, share a restricted file into a space with mixed membership. The card shows no title. A member with access presses Preview and sees the file; a member without access sees Request access without the title. The sharer's private prompt names the members without access, and a one-step grant lets them open it. A subscribed comment notification reaches the space. Search through the app as two users returns only what each can open. Repeat the share in the Chat mobile app.
-- A covered user maps a form with a file-upload question to a restricted folder. Two respondents each submit a file; each file appears once in the folder with form, response and source Drive file provenance, and neither respondent can open it in Chest. Replay the response notification and run the sweep: there is no duplicate. The form's Chest folder links the responses Sheet, which opens under EDIT-002, and no response rows are copied into Chest.
-- Revoke Meet filing, the Calendar add-on, the Chat app and Forms filing one at a time, then the whole connection. The next filing, attachment check, share and search are each refused, and files already filed keep their Chest permissions.
+**Acceptance.**
+1. In a real Google Workspace test tenant with the connection covering one group: - A group member schedules an event linked through the Calendar add-on to a restricted team-space folder, with one internal attendee and one external attendee from an allowlisted domain, and records the Meet with transcript and notes on.
+2. The recording, transcript and notes document each appear once in the folder with meeting code, organizer, event ID and source Drive file ID.
+3. The internal attendee opens them, the external attendee opens them as a guest viewer, and a staff member who was not invited and has no folder access gets 403. - Replay the Workspace event notification and run the reconciliation sweep: there is no duplicate. - With "remove source after verification" on, the Drive copy goes to Drive trash only after the SHA-256 check passes.
+4. With the destination over its QUOTA-001 limit, the filing is refused with `storage_limit_exceeded`, the organizer and an admin are told, and the Drive copy is kept.
+5. An organizer outside the covered group has nothing filed. - Through the Calendar add-on, attach a restricted Chest file to an event with one guest who has access and one who doesn't.
+6. On save, the guest without access is named, gets viewer in one step, and the audit entry exists.
+7. Add a guest from a domain that isn't on the POLICY-001 allowlist: the grant is refused with the policy named. - Through the Chat app, share a restricted file into a space with mixed membership.
+8. The card shows no title. A member with access presses Preview and sees the file; a member without access sees Request access without the title. The sharer's private prompt names the members without access, and a one-step grant lets them open it. A subscribed comment notification reaches the space. Search through the app as two users returns only what each can open. Repeat the share in the Chat mobile app. - A covered user maps a form with a file-upload question to a restricted folder. Two respondents each submit a file; each file appears once in the folder with form, response and source Drive file provenance, and neither respondent can open it in Chest. Replay the response notification and run the sweep: there is no duplicate. The form's Chest folder links the responses Sheet, which opens under EDIT-002, and no response rows are copied into Chest. - Revoke Meet filing, the Calendar add-on, the Chat app and Forms filing one at a time, then the whole connection. The next filing, attachment check, share and search are each refused, and files already filed keep their Chest permissions.
 
-#### RULE-001 — Reversible arrival rules.
+#### RULE-001 — Reversible arrival rules
 
-Owners preview naming, sorting, tagging, conversion and safe-unzip rules over selected arrivals/folders. Rules execute idempotently with original bytes, conversion lineage, policy version, item results and an undo plan; changed permissions, unsafe archives or conflicts stop affected items visibly. Rules cannot broaden sharing, bypass exact-version approval or delete originals.
+*Tier:* Core
 
-**Acceptance evidence:** Preview a rename/tag/move/convert/unzip rule over real-format test files, approve it, replay the same event and inspect one result per original. Submit a traversal/archive bomb and alter a destination grant between preview and execution; retain originals and show blocked items, then undo an untouched move.
+**Requirement.** Owners preview naming, sorting, tagging, conversion and safe-unzip rules over selected arrivals/folders. Rules execute idempotently with original bytes, conversion lineage, policy version, item results and an undo plan; changed permissions, unsafe archives or conflicts stop affected items visibly. Rules cannot broaden sharing, bypass exact-version approval or delete originals.
 
-#### FOLLOW-001 — Persistent collaboration follow-up.
+**Acceptance.**
+1. Preview a rename/tag/move/convert/unzip rule over real-format test files, approve it, replay the same event and inspect one result per original.
+2. Submit a traversal/archive bomb and alter a destination grant between preview and execution; retain originals and show blocked items, then undo an untouched move.
 
-Subscriptions and assigned tasks notify through email, Slack, Teams, Google Chat (CONNECT-010) and mobile push for comments, review/change requests, approaching review/expiry dates, file-request deadlines, transfer receipts and unresolved sync failures. Owners choose US timezone, cadence, escalation recipient and quiet hours; completion, revoked access or canceled work suppresses future reminders. Job history separates queued, submitted, provider-acknowledged, failed, uncertain and person-confirmed outcomes with authorized retry/reconciliation. Replying to a comment or mention notification email posts the reply to that thread as the replier. Each notification has its own signed reply address, and Chest accepts a reply only from the notified address with an aligned SPF or DKIM pass and only while that person still holds commenter access. Quoted history and signatures are stripped. A reply from someone who has lost access, from another address, or to a forwarded copy posts nothing, and the sender gets a bounce saying why. Comment notification emails also carry a **Resolve** action, which opens a signed-in confirmation and applies only while that person can still comment. Comments, replies, @mentions, assignments and suggestions made inside office files in the EDIT-001 editor are threads like any other: they notify through these channels, and a reply or resolve from the email reaches the comment inside the document as EDIT-001's review loop states. Comments, mentions and tasks created by a migration batch or delta pass (MIGRATE-001/002) notify no one, and reminders for migrated tasks start one full reminder interval after cutover.
+#### FOLLOW-001 — Persistent collaboration follow-up
+
+*Tier:* Core
+
+**Requirement.** Subscriptions and assigned tasks notify through email, Slack, Teams, Google Chat (CONNECT-010) and mobile push for comments, review/change requests, approaching review/expiry dates, file-request deadlines, transfer receipts and unresolved sync failures. Owners choose US timezone, cadence, escalation recipient and quiet hours; completion, revoked access or canceled work suppresses future reminders. Job history separates queued, submitted, provider-acknowledged, failed, uncertain and person-confirmed outcomes with authorized retry/reconciliation. Replying to a comment or mention notification email posts the reply to that thread as the replier. Each notification has its own signed reply address, and Chest accepts a reply only from the notified address with an aligned SPF or DKIM pass and only while that person still holds commenter access. Quoted history and signatures are stripped. A reply from someone who has lost access, from another address, or to a forwarded copy posts nothing, and the sender gets a bounce saying why. Comment notification emails also carry a **Resolve** action, which opens a signed-in confirmation and applies only while that person can still comment. Comments, replies, @mentions, assignments and suggestions made inside office files in the EDIT-001 editor are threads like any other: they notify through these channels, and a reply or resolve from the email reaches the comment inside the document as EDIT-001's review loop states. Comments, mentions and tasks created by a migration batch or delta pass (MIGRATE-001/002) notify no one, and reminders for migrated tasks start one full reminder interval after cutover.
 
 **Personal notification settings:** each person chooses, per channel (email, mobile push, Slack, Teams, Google Chat), which comment notifications they get: all comments on files they own or follow, only mentions, assignments and replies to their comments, or none. They can mute a file or a thread and switch email to a daily digest at a chosen US time. Mentions and assignments that arrive while a file is muted still appear in their in-app task list. Admins with service-settings scope (ADMIN-003) set organization and group defaults, which each person can change for themselves.
 
-**Acceptance evidence:** Assign a dated request and review, subscribe a collaborator, advance a controlled clock through due/reminder/escalation states and complete the exact task. Fail a provider, restart the worker and inspect the durable result; there is no duplicate reminder or forbidden content after completion/revocation. Reply by email to a comment notification and see the reply in the thread, attributed and without the quoted history; send the same reply from a different address, and from the original address after their access is revoked, and see neither posted and a bounce returned. Resolve a comment from its email and see it resolved on the file page. Mention B in a DOCX comment inside Collabora Online and assign it: B's email reply appears inside the document, attributed to B, and resolving from B's email resolves it there. Set one person to "only mentions, assignments and replies" and have them mute a second file: a plain comment on their file sends them nothing, a mention does, and a mention on the muted file sends nothing but appears in their task list. Switch another person to the daily digest and see one email at their chosen time listing the day's comments. Migrate an assigned comment under MIGRATE-002 and advance the clock: nothing is sent during the migration, the delta pass or on cutover day, and the first reminder arrives one reminder interval after cutover.
+**Acceptance.**
+1. Assign a dated request and review, subscribe a collaborator, advance a controlled clock through due/reminder/escalation states and complete the exact task.
+2. Fail a provider, restart the worker and inspect the durable result; there is no duplicate reminder or forbidden content after completion/revocation.
+3. Reply by email to a comment notification and see the reply in the thread, attributed and without the quoted history; send the same reply from a different address, and from the original address after their access is revoked, and see neither posted and a bounce returned.
+4. Resolve a comment from its email and see it resolved on the file page.
+5. Mention B in a DOCX comment inside Collabora Online and assign it: B's email reply appears inside the document, attributed to B, and resolving from B's email resolves it there.
+6. Set one person to "only mentions, assignments and replies" and have them mute a second file: a plain comment on their file sends them nothing, a mention does, and a mention on the muted file sends nothing but appears in their task list.
+7. Switch another person to the daily digest and see one email at their chosen time listing the day's comments.
+8. Migrate an assigned comment under MIGRATE-002 and advance the clock: nothing is sent during the migration, the delta pass or on cutover day, and the first reminder arrives one reminder interval after cutover.
 
-## Push further: agents that maintain the file system
+### Agent surface
 
-### AGENT-001 — File and classify authorized arrivals.
+Inherits BASE-AGENT-001 to BASE-AGENT-013. The company's policy decides every call.
 
-An agent reads granted file contents, OCR/extracted text, email/app provenance and project metadata to propose taxonomy, identify responsible people and file arrivals. It explains each suggestion with exact-version evidence and uncertainty. Standing folder grants allow reversible rename/tag/move only; new external access, destructive cleanup and uncertain classification require human approval. Document instructions are untrusted data and cannot expand tools or scope. Each filing the agent makes shows as a notice to the people who can see the file, naming the file and its new path (for example "Filed W-9 Acme Supply.pdf → Vendors / Acme / Tax"), with **Undo**, which returns the file to where it arrived with the same stable ID, versions and grants. The agent's activity view counts the files it filed this week and lists each with its evidence and Undo.
+| Tool | Core clauses | Classes this call can carry |
+| --- | --- | --- |
 
-**Acceptance evidence:** Give the agent a project inbox containing ambiguous and malicious-instruction documents, preview its cited classification plan, allow one scoped move and reject another. Revoke source/destination access before execution; preserve originals and prove the denied/ambiguous action waits without extra reads or messages. Under a standing folder grant, let the agent file a W-9 that arrived by email (CONNECT-006): the notice names the file and its destination path, Undo returns it to the inbox with the same stable ID and versions, and the activity view's count of files filed this week includes it, listed as undone.
+## Push further
 
-### AGENT-002 — Reconcile duplicates and superseded versions.
+### Push further: agents that maintain the file system
 
-An agent correlates hashes, source IDs, content changes, version history and approvals to find exact/near duplicates and stale copies, propose canonical files and repair authorized internal references. Equal bytes never imply equal access or identity. Owners approve merges, overwrites, external link repointing and deletion; reversible consolidation retains originals, old-version references and separate source approvals.
+#### AGENT-001 — File and classify authorized arrivals
 
-**Acceptance evidence:** Seed duplicate bytes under different ACLs and a near-duplicate with a different signature/date; inspect the proposed version lineage and references. Approve a safe canonical-link change, reject a merge and verify no access union, lost original or reassigned approval.
+*Tier:* Core
 
-### AGENT-003 — Repair permitted synchronization and verify bytes.
+**Requirement.** An agent reads granted file contents, OCR/extracted text, email/app provenance and project metadata to propose taxonomy, identify responsible people and file arrivals. It explains each suggestion with exact-version evidence and uncertainty. Standing folder grants allow reversible rename/tag/move only; new external access, destructive cleanup and uncertain classification require human approval. Document instructions are untrusted data and cannot expand tools or scope. Each filing the agent makes shows as a notice to the people who can see the file, naming the file and its new path (for example "Filed W-9 Acme Supply.pdf → Vendors / Acme / Tax"), with **Undo**, which returns the file to where it arrived with the same stable ID, versions and grants. The agent's activity view counts the files it filed this week and lists each with its evidence and Undo.
 
-An agent correlates device sync queues, hashes, conflict copies, cache health and permission changes to diagnose incomplete files and repair explicitly granted device/folder settings. It compares both ends before declaring recovery, quarantines uncertain conflicts and requests approval before overwrite, cache deletion or permission expansion.
+**Acceptance.**
+1. Give the agent a project inbox containing ambiguous and malicious-instruction documents, preview its cited classification plan, allow one scoped move and reject another.
+2. Revoke source/destination access before execution; preserve originals and prove the denied/ambiguous action waits without extra reads or messages.
+3. Under a standing folder grant, let the agent file a W-9 that arrived by email (CONNECT-006): the notice names the file and its destination path, Undo returns it to the inbox with the same stable ID and versions, and the activity view's count of files filed this week includes it, listed as undone.
 
-**Acceptance evidence:** Interrupt a device transfer, create a divergent offline copy and revoke a folder grant. The agent explains the cause, repairs a permitted paused queue, proves final hashes on both ends and leaves conflict/denied work waiting for the human rather than overwriting or widening access.
+#### AGENT-002 — Reconcile duplicates and superseded versions
 
-### AGENT-004 — Finish collection and prove the right version arrived.
+*Tier:* Core
 
-For an owner-defined checklist the agent matches request submissions, approvals, transfer receipts and explicit collaborator confirmations to exact requirements/versions. It identifies missing/superseded evidence, drafts or sends narrowly authorized reminders to approved recipients at the approved cadence, and stops when the correct material is accepted. A later replacement or permission change reopens the mismatch; views/provider receipts alone do not prove the intended human has the right version.
+**Requirement.** An agent correlates hashes, source IDs, content changes, version history and approvals to find exact/near duplicates and stale copies, propose canonical files and repair authorized internal references. Equal bytes never imply equal access or identity. Owners approve merges, overwrites, external link repointing and deletion; reversible consolidation retains originals, old-version references and separate source approvals.
 
-**Acceptance evidence:** Request two vendor records, receive a stale file and then the correct approved replacement, confirm it as the intended recipient and inspect reminders stopping. Later revoke access or supersede the version; show the reopened issue and a proposed new delivery, without broadening recipients or auto-approving evidence.
+**Acceptance.**
+1. Seed duplicate bytes under different ACLs and a near-duplicate with a different signature/date; inspect the proposed version lineage and references.
+2. Approve a safe canonical-link change, reject a merge and verify no access union, lost original or reassigned approval.
 
-### AGENT-005 — Continuously repair broken and over-shared links.
+#### AGENT-003 — Repair permitted synchronization and verify bytes
 
-An agent checks current ACLs, guest lifecycle, link policies, intended collaborator lists and actual link outcomes to identify broken, orphaned, stale or excessive shares. It proposes exact version/audience repairs and explains affected people. Owners approve new/expanded access and external messages; preauthorized restrictive revocations can run with a reversible record and notification. Each over-shared item it flags names the link or grant and its audience and offers **Make private**, which, on one click by a person allowed to share the item, removes the broad link or audience and keeps named grants. It cannot rewrite a vendor-owned URL without control of that source.
+*Tier:* Core
 
-**Acceptance evidence:** Create an expired link, departed guest, overshared subfolder and inaccessible approved replacement; run a scan as a restricted agent. Approve one repair and one restrictive revoke, deny an expansion and confirm destination access and the intended version while unrelated files stay unread. Flag a public link on a folder that two named staff use: the owner's one Make private click removes the public link, the two staff keep access, and a signed-out browser is refused on the next request.
+**Requirement.** An agent correlates device sync queues, hashes, conflict copies, cache health and permission changes to diagnose incomplete files and repair explicitly granted device/folder settings. It compares both ends before declaring recovery, quarantines uncertain conflicts and requests approval before overwrite, cache deletion or permission expansion.
 
-### AGENT-006 — Build and validate a trustworthy move-in.
+**Acceptance.**
+1. Interrupt a device transfer, create a divergent offline copy and revoke a folder grant.
+2. The agent explains the cause, repairs a permitted paused queue, proves final hashes on both ends and leaves conflict/denied work waiting for the human rather than overwriting or widening access.
 
-An agent constructs source-to-Chest identity/folder/version/link mappings using authorized incumbent inventories, reconciles every item/hash/gap and drafts a cutover plan with collaborator journeys. It can run approved read-only sampling and reversible staging; the owner signs permission mapping, conversion losses, delta boundary and cutover. It retains source read access and rollback archive until the owner accepts the move.
+#### AGENT-004 — Finish collection and prove the right version arrived
 
-**Acceptance evidence:** Run against a representative incumbent test tenant with unavailable history, unmapped groups and native files. Inspect the generated mapping and unresolved gaps, reject an unsafe mapping, approve staging and validate staff/guest open-edit-share workflows before explicitly accepting cutover; exercise rollback.
+*Tier:* Core
 
-### AGENT-007 — Evidence-grounded questions and custom jobs.
+**Requirement.** For an owner-defined checklist the agent matches request submissions, approvals, transfer receipts and explicit collaborator confirmations to exact requirements/versions. It identifies missing/superseded evidence, drafts or sends narrowly authorized reminders to approved recipients at the approved cadence, and stops when the correct material is accepted. A later replacement or permission change reopens the mismatch; views/provider receipts alone do not prove the intended human has the right version.
 
-Users ask questions, extract fields and define bounded custom document agents over expressly granted folders/versions. Answers cite accessible original passages and extraction provenance, distinguish missing/uncertain evidence and retain the model/tool/data policy used. Owners select provider, data retention/residency, spend budget and human approval points; tool calls obey the same current ACLs and never autonomously approve/sign/delete or expand permissions. Questions are also asked where the file is, as Gemini in Drive offers: an **Ask** panel on every file and folder page, in the browser at both widths and in the iOS and Android apps, summarizes the file or folder or answers a question about it. It uses only files the asker can currently open, cites them, and lists the files a folder summary skipped with the reason (no access, unreadable, not yet extracted).
+**Acceptance.**
+1. Request two vendor records, receive a stale file and then the correct approved replacement, confirm it as the intended recipient and inspect reminders stopping.
+2. Later revoke access or supersede the version; show the reopened issue and a proposed new delivery, without broadening recipients or auto-approving evidence.
 
-**Acceptance evidence:** Ask a cross-file question with a contradictory revision and an inaccessible answer-bearing file, inspect exact citations and uncertainty, then run a schema extraction under a small approved budget. Change access mid-run and inject document tool instructions; deny forbidden retrieval/actions and expose provider failure/cost without fabricated answers or fallback success. From a folder page at 1440 and 390 and in the iOS and Android apps, ask for a folder summary: it cites only files the asker can open and lists the skipped files with reasons; ask a question from a PDF's file page and see the answer cite its pages.
+#### AGENT-005 — Continuously repair broken and over-shared links
 
-## Honest boundaries and delivery responsibilities
+*Tier:* Core
+
+**Requirement.** An agent checks current ACLs, guest lifecycle, link policies, intended collaborator lists and actual link outcomes to identify broken, orphaned, stale or excessive shares. It proposes exact version/audience repairs and explains affected people. Owners approve new/expanded access and external messages; preauthorized restrictive revocations can run with a reversible record and notification. Each over-shared item it flags names the link or grant and its audience and offers **Make private**, which, on one click by a person allowed to share the item, removes the broad link or audience and keeps named grants. It cannot rewrite a vendor-owned URL without control of that source.
+
+**Acceptance.**
+1. Create an expired link, departed guest, overshared subfolder and inaccessible approved replacement; run a scan as a restricted agent.
+2. Approve one repair and one restrictive revoke, deny an expansion and confirm destination access and the intended version while unrelated files stay unread.
+3. Flag a public link on a folder that two named staff use: the owner's one Make private click removes the public link, the two staff keep access, and a signed-out browser is refused on the next request.
+
+#### AGENT-006 — Build and validate a trustworthy move-in
+
+*Tier:* Core
+
+**Requirement.** An agent constructs source-to-Chest identity/folder/version/link mappings using authorized incumbent inventories, reconciles every item/hash/gap and drafts a cutover plan with collaborator journeys. It can run approved read-only sampling and reversible staging; the owner signs permission mapping, conversion losses, delta boundary and cutover. It retains source read access and rollback archive until the owner accepts the move.
+
+**Acceptance.**
+1. Run against a representative incumbent test tenant with unavailable history, unmapped groups and native files.
+2. Inspect the generated mapping and unresolved gaps, reject an unsafe mapping, approve staging and validate staff/guest open-edit-share workflows before explicitly accepting cutover; exercise rollback.
+
+#### AGENT-007 — Evidence-grounded questions and custom jobs
+
+*Tier:* Core
+
+**Requirement.** Users ask questions, extract fields and define bounded custom document agents over expressly granted folders/versions. Answers cite accessible original passages and extraction provenance, distinguish missing/uncertain evidence and retain the model/tool/data policy used. Owners select provider, data retention/residency, spend budget and human approval points; tool calls obey the same current ACLs and never autonomously approve/sign/delete or expand permissions. Questions are also asked where the file is, as Gemini in Drive offers: an **Ask** panel on every file and folder page, in the browser at both widths and in the iOS and Android apps, summarizes the file or folder or answers a question about it. It uses only files the asker can currently open, cites them, and lists the files a folder summary skipped with the reason (no access, unreadable, not yet extracted).
+
+**Acceptance.**
+1. Ask a cross-file question with a contradictory revision and an inaccessible answer-bearing file, inspect exact citations and uncertainty, then run a schema extraction under a small approved budget.
+2. Change access mid-run and inject document tool instructions; deny forbidden retrieval/actions and expose provider failure/cost without fabricated answers or fallback success.
+3. From a folder page at 1440 and 390 and in the iOS and Android apps, ask for a folder summary: it cites only files the asker can open and lists the skipped files with reasons; ask a question from a PDF's file page and see the answer cite its pages.
+
+## Field proof register
+
+No field proof is recorded yet.
+
+## Boundaries
 
 The target makes Chest responsible for the file-system job, native clients, sync, external exchange, search, integration experience and recovery. Under that target, native filesystem drivers run in maintained signed macOS/Windows clients; heavy OCR, rendering, media conversion and malware scanning, and the shipped Collabora Online editor (EDIT-001), run in separately deployed bounded services. Worker limits are an engineering deployment boundary, not a reason to omit these capabilities (SYNC-001/004, PREVIEW-001, SEARCH-001, SECURITY-002). iOS/Android distribution, OS entitlements, provider app registrations, API scopes, licensing, agreements and real-account acceptance are delivery work in the named clauses.
 
@@ -819,62 +1299,52 @@ CHEST-12 and RECOVER-002 specify Chest's product-specific Base portability repla
 
 ## Homepage claims
 
-Every capability claim on the approved homepage maps to the clauses that promise it. The homepage is the owner-approved page-s1 structure (the hero, then one supplier's folder from the move-in on Sat, Sep 26 to the renewal, then the closing; `src/site/landing/`), and this table was rebuilt for it on 19 October 2026 from `docs/CLAIMS.md`, which carries the same rows with each claim's evidence files. A claim's status is `done` when every mapped clause is done, `missing` when every one is missing, and `partial` otherwise. SEARCH-002, OPEN-001 and OWN-001 were added and judged from the code at `22da3fcdc21765b16c26362a20f3d1f1a24cd530` (17 October 2026) for this table; every status is from the Status table below. The page's one limit ("Not in Chest yet.") states what the contract leaves out and is not a claim.
-
-| # | Section | Claim | Clause(s) | Status |
-| --- | --- | --- | --- | --- |
-| 1 | Hero | "Chest stores … your team's files" | SPACE-001, CHEST-03 | partial |
-| 2 | Hero | "syncs" | SYNC-001, SYNC-002 | partial |
-| 3 | Hero | "shares your team's files" | SHARE-004, SHARE-001, CHEST-10 | done |
-| 4 | Hero | "reads every scan" | SEARCH-001 | partial |
-| 5 | Hero | "quietly files what arrives" | AGENT-001, RULE-001, CONNECT-006 | partial |
-| 6 | Hero | "100% free, open source" | OPEN-001 | done |
-| 7 | Hero | "alternative to Google Drive, Dropbox and Box" | SPACE-001, SYNC-001, SHARE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 | partial |
-| 8 | Hero collage | Contract co-edited by Dana and Luis | EDIT-001 | partial |
-| 9 | Hero collage | Receipt 2026-10-09.jpg "Uploading 62%" | TRANSFER-001, MOBILE-001 | partial |
-| 10 | Hero collage | Share link "expires Oct 31 · 3 of 10 downloads" | SHARE-001 | done |
-| 11 | Hero collage | Version stack v7 (approved), v6, v5 | CHEST-07, VERSION-001 | done |
-| 12 | Hero collage | Scanned NDA with its date, party and amount boxed | SEARCH-002 | partial |
-| 13 | Hero collage | "Filed W-9 Acme Supply.pdf → Vendors / Acme Supply / Tax · Undo" | AGENT-001, RULE-001 | done |
-| 14 | Move in | "Move from Dropbox, Google Drive or Box. Folders, permissions, versions and shared links come across." (import ledger: 48,212 files, 3,906 folders, 1,104 permissions kept, 61,870 versions) | MIGRATE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 | partial |
-| 15 | Move in | Import ledger "Links inside files · 312 rewritten" | MIGRATE-007 | missing |
-| 16 | Move in | "7 file names too long for Windows" · "Renamed and retried · 7 of 7 imported" | MIGRATE-001 | partial |
-| 17 | Move in | Terminal: `rer setup` · "Chest is ready" | OWN-001 | done |
-| 18 | Follow one folder | The company drive: My files, Shared with me, Recent, team spaces Finance, Ops, Sales, Vendors | SPACE-001, SHARE-004 | partial |
-| 19 | Follow one folder | Role chips "Dana · manager", "Luis · contributor", "Priya · guest"; "Shared with 4 people" | ROLE-001, SHARE-005 | partial |
-| 20 | Files that file themselves | "The Chest agent reads what arrives by email and from apps, names it, files it" (NDA.pdf from legal@acme.example, insurance certificate, Invoice-0042, scan_0931.pdf renamed W-9 Acme Supply.pdf; each with Undo) | AGENT-001, CONNECT-006, SEARCH-002 | partial |
-| 21 | Files that file themselves | Insurance certificate "expires Sep 30, 2027 · reminder set" | CHEST-09 | done |
-| 22 | Files that file themselves | "and closes links shared too widely" (Rate card.xlsx public link "limited to the Acme team", Undo) | AGENT-005 | done |
-| 23 | On every desk and phone | "Files open on demand on Mac and Windows" (Finder with Chest, on-demand and downloaded states, "Free up space") | SYNC-001 | partial |
-| 24 | On every desk and phone | "photos upload from the phone" ("45 of 48 uploaded · 3 waiting for Wi-Fi") | MOBILE-001, TRANSFER-001 | partial |
-| 25 | On every desk and phone | "edits made offline come home safely" ("Conflict: Dana changed it too" · "Kept both · Luis chose v5") | SYNC-002 | partial |
-| 26 | Open it and edit together | "Word, Excel and PowerPoint files open in the browser" | PREVIEW-001, EDIT-001 | partial |
-| 27 | Open it and edit together | "Edit at the same time, comment" (Pricing.xlsx with Dana and Luis, a resolved thread, "Saved · 2 people editing") | EDIT-001, EDIT-003 | partial |
-| 28 | Open it and edit together | "and keep one copy" | EDIT-001 | partial |
-| 29 | Share out. Collect in. | "Send a link with a password and an expiry" (Contract pack: password on, expires Oct 31, 3 of 10 downloads, opened by priya@acme.example, Revoke) | SHARE-001 | done |
-| 30 | Share out. Collect in. | "and ask for files back without an account" (file request to Vendors / Acme Supply / Onboarding, 2 of 2 received) | SHARE-002 | done |
-| 31 | Share out. Collect in. | Site survey.mp4 · 4.2 GB: "Connection dropped at 61%" · "Resumed where it stopped" | TRANSFER-001 | partial |
-| 32 | Every version, kept. | "Restore any earlier version in one click." (Restore v7; "v7 is current again · v8 kept in history") | CHEST-16, VERSION-001 | done |
-| 33 | Every version, kept. | "A sign-off stays with the exact version that was approved." (v7 signed off by Dana and Priya; v8 not approved) | CHEST-07, CHEST-08 | done |
-| 34 | The right version reached everyone. | "The agent checks that everyone has the signed version" (v7 reached Dana, Luis, Priya, accounts@acme.example and the warehouse; the warehouse sent v7) | AGENT-004 | done |
-| 35 | The right version reached everyone. | "and that nothing is left open" (2 links open to a former contractor revoked; broken link in Ops handbook.docx points to v7; 63 files · 0 public links) | AGENT-005 | done |
-| 36 | The right version reached everyone. | "3 invoices filed · 0 duplicates" | AGENT-002 | done |
-| 37 | Find the sentence inside the file. | "Chest reads every document and scan, so search finds the words inside" ("net 30 acme": 3 results) | SEARCH-001 | partial |
-| 38 | Find the sentence inside the file. | "and only shows what you are allowed to see" | CHEST-06 | done |
-| 39 | Closing | "Open source file storage for your whole team." | OPEN-001, SPACE-001 | partial |
-| 40 | Closing | "Free and open source, MIT licensed." | OPEN-001 | done |
+| # | Section | Claim | Clauses |
+| --- | --- | --- | --- |
+| 1 | Hero | "Chest stores … your team's files" | SPACE-001, CHEST-03 |
+| 2 | Hero | "syncs" | SYNC-001, SYNC-002 |
+| 3 | Hero | "shares your team's files" | SHARE-004, SHARE-001, CHEST-10 |
+| 4 | Hero | "reads every scan" | SEARCH-001 |
+| 5 | Hero | "quietly files what arrives" | AGENT-001, RULE-001, CONNECT-006 |
+| 6 | Hero | "100% free, open source" | OPEN-001 |
+| 7 | Hero | "alternative to Google Drive, Dropbox and Box" | SPACE-001, SYNC-001, SHARE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 |
+| 8 | Hero collage | Contract co-edited by Dana and Luis | EDIT-001 |
+| 9 | Hero collage | Receipt 2026-10-09.jpg "Uploading 62%" | TRANSFER-001, MOBILE-001 |
+| 10 | Hero collage | Share link "expires Oct 31 · 3 of 10 downloads" | SHARE-001 |
+| 11 | Hero collage | Version stack v7 (approved), v6, v5 | CHEST-07, VERSION-001 |
+| 12 | Hero collage | Scanned NDA with its date, party and amount boxed | SEARCH-002 |
+| 13 | Hero collage | "Filed W-9 Acme Supply.pdf → Vendors / Acme Supply / Tax · Undo" | AGENT-001, RULE-001 |
+| 14 | Move in | "Move from Dropbox, Google Drive or Box. Folders, permissions, versions and shared links come across." (import ledger: 48,212 files, 3,906 folders, 1,104 permissions kept, 61,870 versions) | MIGRATE-001, MIGRATE-002, MIGRATE-003, MIGRATE-004 |
+| 15 | Move in | Import ledger "Links inside files · 312 rewritten" | MIGRATE-007 |
+| 16 | Move in | "7 file names too long for Windows" · "Renamed and retried · 7 of 7 imported" | MIGRATE-001 |
+| 17 | Move in | Terminal: `rer setup` · "Chest is ready" | OWN-001 |
+| 18 | Follow one folder | The company drive: My files, Shared with me, Recent, team spaces Finance, Ops, Sales, Vendors | SPACE-001, SHARE-004 |
+| 19 | Follow one folder | Role chips "Dana · manager", "Luis · contributor", "Priya · guest"; "Shared with 4 people" | ROLE-001, SHARE-005 |
+| 20 | Files that file themselves | "The Chest agent reads what arrives by email and from apps, names it, files it" (NDA.pdf from legal@acme.example, insurance certificate, Invoice-0042, scan_0931.pdf renamed W-9 Acme Supply.pdf; each with Undo) | AGENT-001, CONNECT-006, SEARCH-002 |
+| 21 | Files that file themselves | Insurance certificate "expires Sep 30, 2027 · reminder set" | CHEST-09 |
+| 22 | Files that file themselves | "and closes links shared too widely" (Rate card.xlsx public link "limited to the Acme team", Undo) | AGENT-005 |
+| 23 | On every desk and phone | "Files open on demand on Mac and Windows" (Finder with Chest, on-demand and downloaded states, "Free up space") | SYNC-001 |
+| 24 | On every desk and phone | "photos upload from the phone" ("45 of 48 uploaded · 3 waiting for Wi-Fi") | MOBILE-001, TRANSFER-001 |
+| 25 | On every desk and phone | "edits made offline come home safely" ("Conflict: Dana changed it too" · "Kept both · Luis chose v5") | SYNC-002 |
+| 26 | Open it and edit together | "Word, Excel and PowerPoint files open in the browser" | PREVIEW-001, EDIT-001 |
+| 27 | Open it and edit together | "Edit at the same time, comment" (Pricing.xlsx with Dana and Luis, a resolved thread, "Saved · 2 people editing") | EDIT-001, EDIT-003 |
+| 28 | Open it and edit together | "and keep one copy" | EDIT-001 |
+| 29 | Share out. Collect in. | "Send a link with a password and an expiry" (Contract pack: password on, expires Oct 31, 3 of 10 downloads, opened by priya@acme.example, Revoke) | SHARE-001 |
+| 30 | Share out. Collect in. | "and ask for files back without an account" (file request to Vendors / Acme Supply / Onboarding, 2 of 2 received) | SHARE-002 |
+| 31 | Share out. Collect in. | Site survey.mp4 · 4.2 GB: "Connection dropped at 61%" · "Resumed where it stopped" | TRANSFER-001 |
+| 32 | Every version, kept. | "Restore any earlier version in one click." (Restore v7; "v7 is current again · v8 kept in history") | CHEST-16, VERSION-001 |
+| 33 | Every version, kept. | "A sign-off stays with the exact version that was approved." (v7 signed off by Dana and Priya; v8 not approved) | CHEST-07, CHEST-08 |
+| 34 | The right version reached everyone. | "The agent checks that everyone has the signed version" (v7 reached Dana, Luis, Priya, accounts@acme.example and the warehouse; the warehouse sent v7) | AGENT-004 |
+| 35 | The right version reached everyone. | "and that nothing is left open" (2 links open to a former contractor revoked; broken link in Ops handbook.docx points to v7; 63 files · 0 public links) | AGENT-005 |
+| 36 | The right version reached everyone. | "3 invoices filed · 0 duplicates" | AGENT-002 |
+| 37 | Find the sentence inside the file. | "Chest reads every document and scan, so search finds the words inside" ("net 30 acme": 3 results) | SEARCH-001 |
+| 38 | Find the sentence inside the file. | "and only shows what you are allowed to see" | CHEST-06 |
+| 39 | Closing | "Open source file storage for your whole team." | OPEN-001, SPACE-001 |
+| 40 | Closing | "Free and open source, MIT licensed." | OPEN-001 |
 
 ## Status
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026).
-
-The clause rows below include the 18 October filing, sharing, audit and file-request work. ACCEPTANCE.md mirrors these rows. RECOVER-001 and VERSION-001 were re-judged at their own scope against main `27ee65afd77da074650d16f4501166166ed3eb49`; the moved requirements remain in ADMIN-003, SHARE-005 and SYNC-001.
-
-Published clauses CHEST-14 to CHEST-24 were added for Chest 0.2.0 from its release gate on commit `3c4e0660ee31121eb3cec22053eff21b329a1e9c` (18 October 2026).
-
-ADMIN-001 was updated on 19 October 2026 with the real Auth provider acceptance directed by the owner and the lifecycle journeys named in its row.
-
-Ownership, new-file creation, folder version review, link version and link-policy rows updated on 18 October 2026. Delivery-package and exact-version collection rows were built and exercised on 18 October 2026. Office preview, editing and comment rows updated on 17 October 2026; see `docs/office.md`.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
