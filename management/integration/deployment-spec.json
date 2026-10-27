@@ -166,6 +166,12 @@
       "name": "0026_content_security.sql",
       "sha256": "c30b07bcc7afdb7c63b687cb5939e947f55968e053b2994ad1c66ff60bee98dd",
       "sql": "CREATE TABLE chest_activity_events (id TEXT PRIMARY KEY, actor TEXT NOT NULL, source TEXT NOT NULL, kind TEXT NOT NULL, bytes INTEGER NOT NULL, at INTEGER NOT NULL, items INTEGER NOT NULL DEFAULT 1);\nCREATE INDEX chest_activity_actor_window ON chest_activity_events(actor,kind,at);\nCREATE INDEX chest_activity_source_window ON chest_activity_events(source,kind,at);\nCREATE TABLE chest_activity_alerts (id TEXT PRIMARY KEY, batch TEXT NOT NULL, subject TEXT NOT NULL, actor TEXT NOT NULL, rule TEXT NOT NULL, kind TEXT NOT NULL, detail TEXT NOT NULL, at INTEGER NOT NULL);\nCREATE INDEX chest_activity_alert_window ON chest_activity_alerts(subject,rule,kind,at);\nCREATE TABLE chest_activity_pauses (subject TEXT PRIMARY KEY, actor TEXT NOT NULL, rule TEXT NOT NULL, at INTEGER NOT NULL);\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0027_item_enumeration.sql",
+      "sha256": "f28c71eec23057577793014e439feac57af1e0dd613e5eb5060c864b45b2f78f",
+      "sql": "-- Bound metadata scans by kind and stable item identifier.\nCREATE INDEX chest_item_enumeration ON chest_records(kind, id);\nCREATE INDEX chest_space_enumeration ON chest_records(json_extract(payload,'$.space'), id) WHERE kind='item';\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
