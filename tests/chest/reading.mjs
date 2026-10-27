@@ -3,6 +3,8 @@
 // finds the words inside, and every door filters what was read by current access.
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {rtf,rtfPhrase} from './rtf-fixtures.mjs';
 import jpegJs from 'jpeg-js';
 import {harness} from './harness.mjs';
 import {pdf as textPdf} from './fixtures.mjs';
@@ -62,6 +64,23 @@ try{
   assert.equal((await settled(`/items/${memo.id}/reading`,people.ana)).reading.method,'text of the Word document');assert.deepEqual(await search('ben','dock schedule'),['Memo.docx']);
   assert.deepEqual(await search('ana','supplier evidence'),['MSA.pdf']);assert.deepEqual(await search('ben','SUPPLIER EVIDENCE'),['MSA.pdf']);
   const waiting=(await settled(`/items/${scan.id}/reading`,people.ana)).reading;assert.equal(waiting.state,'needs_key');assert.match(waiting.problem,/AI model key/);
+
+  // Real RTF bytes are read natively, with exact original identity and no hidden payload text.
+  const rtfBytes=rtf(),rich=await h.api('/items',people.ana,{parent:folder.id,name:'Rich original.bin',base64:b64(rtfBytes)});
+  assert.equal(rich.payload.versions[0].mediaType,'application/rtf');assert.equal(rich.payload.versions[0].text,'');
+  const richRead=await settled(`/items/${rich.id}/reading`,people.ana);assert.equal(richRead.version,rich.payload.current);assert.equal(richRead.reading.state,'done');assert.equal(richRead.reading.method,'text of the RTF document');assert.match(richRead.reading.parser,/^chest:rtf-text:\d+$/);assert.equal(richRead.reading.errorAt,null);
+  for(const phrase of [rtfPhrase,'Escaped {braces} and \\slash','Unicode é value','Displayed field','Unicode alternative'])assert.deepEqual(await search('ben',phrase),['Rich original.bin']);
+  for(const phrase of ['synthetic-chest-private-metadata','synthetic-chest-hidden-text','synthetic-chest-unknown-data','synthetic-chest-picture-payload','synthetic-chest-object-payload','synthetic-chest-field-instruction','synthetic-chest-ansi-alternative','ansicpg1252'])assert.deepEqual(await search('ben',phrase),[]);
+  const downloaded=Buffer.from(await(await h.raw(`/api/chest/items/${rich.id}/bytes/${rich.payload.current}?download=true`,people.ana)).arrayBuffer());assert.deepEqual(downloaded,rtfBytes);assert.equal(createHash('sha256').update(downloaded).digest('hex'),rich.payload.versions[0].checksum);
+  const cyrillic=await h.api('/items',people.ana,{parent:folder.id,name:'Code page.rtf',base64:b64(Buffer.from(String.raw`{\rtf1\ansi\ansicpg1251 \'cf\'f0\'e8\'e2\'e5\'f2}`, 'latin1'))});const cpRead=(await settled(`/items/${cyrillic.id}/reading`,people.ana)).reading;assert.equal(cpRead.state,'done',cpRead.problem);assert.deepEqual(await search('ben','Привет'),['Code page.rtf']);
+  const japanese=await h.api('/items',people.ana,{parent:folder.id,name:'Font code page.rtf',base64:b64(Buffer.from(String.raw`{\rtf1\ansi{\fonttbl{\f1\fcharset128 Japanese;}}\f1 \'82\'a0\'82\'a2}`, 'latin1'))});await settled(`/items/${japanese.id}/reading`,people.ana);assert.deepEqual(await search('ben','あい'),['Font code page.rtf']);
+  const splitSource=String.raw`{\rtf1\ansi\ansicpg932 `+String.raw`\'82\'a0`.repeat(2049)+String.raw`\'82\'a2}`,split=await h.api('/items',people.ana,{parent:folder.id,name:'Split code page.rtf',base64:b64(splitSource)});assert.equal((await settled(`/items/${split.id}/reading`,people.ana)).reading.state,'done');assert.deepEqual(await search('ben','ああい'),['Split code page.rtf']);
+  const malformed=[String.raw`{\rtf1 synthetic-chest-broken`,String.raw`{\rtf1 \'xz}`,String.raw`{\rtf1 \bin99 short}`,String.raw`{\rtf1 \uc-1 bad}`,String.raw`{\rtf1 \ansicpg99999 \'e9}`,String.raw`{\rtf1\ansicpg932 \'82}`];
+  for(const [i,source] of malformed.entries()){
+   const bad=await h.api('/items',people.ana,{parent:folder.id,name:`Malformed ${i}.rtf`,base64:b64(source)}),reading=(await settled(`/items/${bad.id}/reading`,people.ana)).reading;assert.equal(reading.state,'failed');assert.match(reading.problem,/At byte \d+/);assert.equal(typeof reading.errorAt,'number');assert.equal(reading.chars,0);assert.deepEqual(await search('ben','synthetic-chest-broken'),[]);
+   const html=await(await h.raw(`/app/items/${bad.id}`,people.ana)).text();assert.ok(html.includes('At byte'),'failure offset is visible on the authenticated file page');assert.deepEqual(Buffer.from(await(await h.raw(`/api/chest/items/${bad.id}/bytes/${bad.payload.current}?download=true`,people.ana)).arrayBuffer()),Buffer.from(source));
+  }
+  const largeSource=String.raw`{\rtf1 `+'x'.repeat(900_000)+' synthetic-chest-after-cut}',large=await h.api('/items',people.ana,{parent:folder.id,name:'Bounded RTF.rtf',base64:b64(largeSource)}),largeRead=(await settled(`/items/${large.id}/reading`,people.ana)).reading;assert.equal(largeRead.chars,900_000);assert.equal(largeRead.truncatedAt,900_000);assert.deepEqual(await search('ben','synthetic-chest-after-cut'),[]);assert.match(await(await h.raw(`/app/items/${large.id}`,people.ana)).text(),/Partially indexed.*900,000/);
   assert.equal(calls.length,0,'nothing goes to a provider without a key');
   // Someone outside the space finds nothing and gets no status, text or page image; a viewer removed loses it on the next request.
   assert.deepEqual(await search('dee','supplier evidence'),[]);assert.deepEqual(await search('dee','dock schedule'),[]);await h.api(`/items/${msa.id}/reading`,people.dee,undefined,403);

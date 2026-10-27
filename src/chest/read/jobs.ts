@@ -5,6 +5,7 @@ import { waitUntil } from 'cloudflare:workers'
 import type { Bindings } from '../../auth.server'
 import { now, type Document, type Schema } from '../model'
 import { maybe } from '../files/repo'
+import { isRtf, rtfText, RtfProblem, RTF_PARSER } from './rtf'
 import { heic } from './heic'
 import { officeText } from './office'
 import { pageImage, pdfText, PdfProblem } from './pdf'
@@ -18,12 +19,12 @@ import { tiff, tiffPages, TiffProblem } from './tiff'
 // (a Worker stopped, a provider timeout) is picked up again by the next unit; uploads never wait for any of it.
 // Units run after any signed-in request (waitUntil) and while a file page that shows progress is open.
 // Unknown binaries are looked at too: Word, Excel, PowerPoint and OpenDocument files are recognised from their contents.
-export const READABLE = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/tiff', 'application/octet-stream']
+export const READABLE = ['application/rtf', 'application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/tiff', 'application/octet-stream']
 export type Page = { n: number; source: 'text' | 'scan' | 'photo'; state: 'done' | 'waiting' | 'failed' | 'empty' | 'skipped'; chars: number; language?: string; confidence?: number; image?: { mediaType: string; width: number; height: number }; problem?: string; attempts?: number }
 export type ExtractState = 'queued' | 'reading' | 'done' | 'partial' | 'failed' | 'unsupported' | 'needs_key' | 'unavailable'
 // The record's ID is `extract:<SHA-256>`: identical bytes are read once. The payload never repeats the hash, so it
 // never counts as a reference to the original when a file is erased.
-export type Extraction = { mediaType: string; size: number; state: ExtractState; format?: string; pages: Page[]; text: string; truncatedAt: number | null; model: string | null; problem: string | null; lease: string | null; usage: { input: number; output: number }; createdAt: string; updatedAt: string }
+export type Extraction = { mediaType: string; size: number; state: ExtractState; format?: string; searchText?: string; parser?: string; errorAt?: number | null; pages: Page[]; text: string; truncatedAt: number | null; model: string | null; problem: string | null; lease: string | null; usage: { input: number; output: number }; createdAt: string; updatedAt: string }
 export type ReadingState = 'waiting' | 'reading' | 'done' | 'failed' | 'not_scan' | 'no_fields' | 'needs_key' | 'unavailable'
 export type Decision = { status: 'accepted' | 'corrected' | 'rejected'; value: unknown; by: string; at: string }
 export type Reading = { schema?: string; schemaRevision?: string; unchanged?: number; document: string; version: string; checksum: string; state: ReadingState; proposals: (Proposal & { decision?: Decision })[]; model: string | null; problem: string | null; lease: string | null; attempts: number; usage: { input: number; output: number }; createdAt: string; updatedAt: string }
@@ -76,6 +77,14 @@ const finished = (pages: Page[]): ExtractState => pages.some(p => p.state === 'w
 async function analyse(env: Bindings, row: Row<Extraction>) {
  const checksum = row.id.slice('extract:'.length), x = row.payload, bytes = await original(env, checksum, x.size)
  if (!bytes) return save(env, row, { ...x, state: 'unsupported', lease: null, problem: x.size > MAX_BYTES ? `Files over ${MAX_BYTES / 1e6} MB are not read yet.` : 'The original could not be found in storage.' })
+ if (isRtf(bytes) || x.mediaType === 'application/rtf') {
+  try {
+   const rtf = rtfText(bytes, MAX_TEXT)
+   return save(env, row, { ...x, format: 'RTF document', parser: RTF_PARSER, errorAt: null, pages: [{ n: 1, source: 'text', state: 'done', chars: rtf.chars }], text: rtf.text, searchText: rtf.text.toLowerCase(), truncatedAt: rtf.truncatedAt, state: 'done', problem: null, lease: null })
+  } catch (e) {
+   return save(env, row, { ...x, format: 'RTF document', parser: RTF_PARSER, errorAt: e instanceof RtfProblem ? e.offset : 0, pages: [], text: '', searchText: '', truncatedAt: null, state: 'failed', problem: e instanceof RtfProblem ? e.message : 'This RTF could not be read.', lease: null })
+  }
+ }
  if (x.mediaType === 'application/octet-stream') {
   const office = await officeText(bytes).catch(() => null)
   if (!office) return save(env, row, { ...x, state: 'unsupported', lease: null, problem: 'Chest does not read text from this format yet.' })
@@ -226,7 +235,8 @@ export const extraction = (env: Bindings, checksum: string) => maybe<Extraction>
 // versions the person can open.
 export async function textHits(env: Bindings, q: string): Promise<Map<string, string>> {
  if (!q) return new Map()
- const rows = (await env.DB.prepare(`SELECT id, json_extract(payload,'$.text') AS text FROM chest_records WHERE kind='extract' AND instr(lower(json_extract(payload,'$.text')), ?) > 0`).bind(q.toLowerCase()).all()).results as { id: string; text: string }[]
+ // SQLite lower only folds ASCII; native RTF readings also retain their Unicode-folded search text.
+ const rows = (await env.DB.prepare(`SELECT id, json_extract(payload,'$.text') AS text FROM chest_records WHERE kind='extract' AND instr(coalesce(json_extract(payload,'$.searchText'),lower(json_extract(payload,'$.text'))), ?) > 0`).bind(q.toLowerCase()).all()).results as { id: string; text: string }[]
  // The snippet starts at a word a little before the match, so the match stays in view on a one-line result row.
  const snippet = (text: string) => { const at = text.toLowerCase().indexOf(q.toLowerCase()), from = Math.max(0, at - 24), start = from && text.slice(from, at).search(/\s/) >= 0 ? from + text.slice(from, at).search(/\s/) + 1 : from
   return (start ? '…' : '') + text.slice(start, at + q.length + 80).replaceAll(SEP, ' ').replace(/\s+/g, ' ').trim() }

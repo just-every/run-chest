@@ -24,6 +24,7 @@ export function filters(q: URLSearchParams) {
 // The original's byte signature and extraction format determine its category, never its filename.
 export function category(v?: FileVersion, format = ''): string {
  if (!v) return 'other'
+ if (v.mediaType === 'application/rtf') return 'documents'
  if (/spreadsheet|excel|workbook/i.test(format)) return 'spreadsheets'
  if (/presentation/i.test(format)) return 'presentations'
  if (/word|document/i.test(format)) return 'documents'

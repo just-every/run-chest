@@ -1,3 +1,4 @@
+import { isRtf } from './read/rtf'
 import { scanUpload, assertContent } from './content-security/scan'
 import type { Bindings } from '../auth.server'
 import { insist, id, now, type Version } from './model'
@@ -6,6 +7,7 @@ export function fromBase64(value:unknown) { insist(typeof value==='string'&&valu
 export const SMALL=8_000_000
 // Byte signatures decide the media type and preview; active formats are never rendered as HTML/SVG.
 export function signature(bytes:Uint8Array):{mediaType:string,preview:string}|null {
+ if(isRtf(bytes))return {mediaType:'application/rtf',preview:'unsupported'}
  const prefix=new TextDecoder().decode(bytes.slice(0,1024))
  if(prefix.startsWith('%PDF-'))return {mediaType:'application/pdf',preview:'pdf'}
  if(bytes.slice(0,8).join(',')==='137,80,78,71,13,10,26,10')return {mediaType:'image/png',preview:'image'}
@@ -20,7 +22,7 @@ export function signature(bytes:Uint8Array):{mediaType:string,preview:string}|nu
 export async function inspect(bytes:Uint8Array,filename:string,actor:string,reviewer:string):Promise<Version> {
  insist(bytes.length>0&&bytes.length<=SMALL,'file_size');insist(filename.length>0&&filename.length<=240&&!/[\x00-\x1f\/\\]/.test(filename),'invalid_filename')
  let {mediaType,preview}=signature(bytes)??{mediaType:'application/octet-stream',preview:'unsupported'},text=''
- if(preview==='unsupported'){let decoded='';try {decoded=new TextDecoder('utf-8',{fatal:true}).decode(bytes)}catch{};if(decoded&&!/[\x00-\x08\x0e-\x1f]/.test(decoded)){insist(bytes.length<=500_000,'text_file_too_large');text=decoded;mediaType='text/plain';preview='text'}}
+ if(preview==='unsupported'&&mediaType!=='application/rtf'){let decoded='';try {decoded=new TextDecoder('utf-8',{fatal:true}).decode(bytes)}catch{};if(decoded&&!/[\x00-\x08\x0e-\x1f]/.test(decoded)){insist(bytes.length<=500_000,'text_file_too_large');text=decoded;mediaType='text/plain';preview='text'}}
  return {id:id(),filename,checksum:await digest(bytes),size:bytes.length,mediaType,preview,text,parser:text?'chest:utf8-text:1':'chest:signature-only:1',at:now(),actor,reviewer,state:'submitted',events:[]}
 }
 export async function retain(env:Bindings,bytes:Uint8Array,v:Version) { await env.BLOBS.put(`sha256/${v.checksum}`,bytes,{httpMetadata:{contentType:v.mediaType}});const stored=await env.BLOBS.get(`sha256/${v.checksum}`);insist(stored&&stored.size===v.size&&await digest(new Uint8Array(await stored.arrayBuffer()))===v.checksum,'storage_verification_failed',503);await scanUpload(env,v) }

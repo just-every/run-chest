@@ -58,6 +58,7 @@
     "@xmldom/xmldom": "0.9.12",
     "fflate": "0.8.2",
     "hono": "4.13.7",
+    "iconv-lite": "0.7.0",
     "jose": "6.2.12",
     "jpeg-js": "0.4.4",
     "libheif-js": "1.23.5",

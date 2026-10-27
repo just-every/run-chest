@@ -19,7 +19,7 @@ export function summary(x: Extraction | null, mediaType: string, withText = true
  if (!x) return READABLE.includes(mediaType) ? { state: 'queued', pages: [], chars: 0, method: '', problem: null, truncatedAt: null, model: null, excerpt: '' } : null
  const scans = x.pages.filter(p => p.source !== 'text'), texts = x.pages.filter(p => p.source === 'text')
  const method = [texts.length ? (x.format ? `text of the ${x.format}` : 'PDF text layer') : '', scans.some(p => p.state === 'done') ? `read by ${x.model ?? 'the AI model'}` : ''].filter(Boolean).join(' and ')
- return { state: x.state, pages: x.pages.map(p => ({ n: p.n, source: p.source, state: p.state, chars: p.chars, language: p.language ?? null, confidence: p.confidence ?? null, image: !!p.image, width: p.image?.width ?? null, height: p.image?.height ?? null, problem: p.problem ?? null })), chars: x.text.replaceAll('\f', '').length, method, problem: x.problem, truncatedAt: x.truncatedAt, model: x.model, excerpt: withText ? x.text.slice(0, 20_000).replaceAll('\f', '\n\n') : '' }
+ return { state: x.state, parser: x.parser ?? null, errorAt: x.errorAt ?? null, pages: x.pages.map(p => ({ n: p.n, source: p.source, state: p.state, chars: p.chars, language: p.language ?? null, confidence: p.confidence ?? null, image: !!p.image, width: p.image?.width ?? null, height: p.image?.height ?? null, problem: p.problem ?? null })), chars: x.text.replaceAll('\f', '').length, method, problem: x.problem, truncatedAt: x.truncatedAt, model: x.model, excerpt: withText ? x.text.slice(0, 20_000).replaceAll('\f', '\n\n') : '' }
 }
 async function pageCopy(env: Bindings, checksum: string, n: number) {
  await assertContent(env,checksum)
