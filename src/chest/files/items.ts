@@ -8,7 +8,7 @@ import type { Session } from '../../modules/operator-auth/index.mjs'
 import { get, recordAccess } from '../store'
 import { fromBase64, inspect, retain, serve } from '../blobs'
 import { ChestError, id, insist, now, type Row, type Version } from '../model'
-import { commit, fresh, next, spaceItems, type Op, type Audit } from './repo'
+import { commit, fresh, next, spaceItems, folderItems, type Op, type Audit } from './repo'
 import { allowed, context, demand, descend, start, type Ctx, type Who } from './access'
 import { name, type Arrival, type FileVersion, type Item, type Space } from './model'
 import { effectiveGovernance } from './folder-metadata'
@@ -21,7 +21,7 @@ export async function place(env: Bindings, w: Who, spaceKey: unknown, parent: un
  const ctx: Ctx = { space, chain: [], state: start(space.payload, w), links: [], fences: [space, ...w.groups] }; demand(ctx, 'contribute'); return ctx
 }
 export const folderOf = (ctx: Ctx) => ctx.chain.at(-1)?.id ?? null
-export async function siblings(env: Bindings, space: string, parent: string | null) { return (await spaceItems(env, space)).filter(r => r.payload.parent === parent && !r.payload.trash) }
+export async function siblings(env: Bindings, space: string, parent: string | null) { return folderItems(env, space, parent) }
 export function unique(rows: Row<Item>[], value: string, except?: string) { insist(!rows.some(r => r.id !== except && r.payload.name.toLowerCase() === value.toLowerCase()), 'name_taken', 409) }
 export async function admit(env: Bindings, bytes: Uint8Array, filename: string, actor: string, arrival: Arrival, input: { checksum?: unknown; size?: unknown } = {}, extra: Partial<FileVersion> = {}): Promise<FileVersion> {
  const v = await inspect(bytes, filename, actor, '')
@@ -114,7 +114,7 @@ export async function itemSettings(env: Bindings, s: Session, w: Who, key: strin
  return get<Item>(env, 'item', key)
 }
 export async function children(env: Bindings, w: Who, ctx: Ctx, parent: string | null) {
- const entries=(await spaceItems(env, ctx.space.id)).filter(r => r.payload.parent === parent && !r.payload.trash).map(r => ({ row: r, state: descend(ctx.state, r, w, ctx.links) })).filter(c => c.state.role).sort((a, b) => (a.row.payload.type === b.row.payload.type ? 0 : a.row.payload.type === 'folder' ? -1 : 1) || a.row.payload.name.localeCompare(b.row.payload.name))
+ const entries=(await folderItems(env, ctx.space.id, parent)).map(r => ({ row: r, state: descend(ctx.state, r, w, ctx.links) })).filter(c => c.state.role).sort((a, b) => (a.row.payload.type === b.row.payload.type ? 0 : a.row.payload.type === 'folder' ? -1 : 1) || a.row.payload.name.localeCompare(b.row.payload.name))
  const {hiddenMerged}=await import('../filing/duplicate-view'), hidden=await hiddenMerged(env,w,entries.map(e=>({...e,space:ctx.space})))
  const result=[],security=await contentPolicy(env);for(const e of entries){const p=memberProjection(ctx.space,[...ctx.chain,e.row],ctx.links,w,descend(ctx.directState??ctx.state,e.row,w,[]),e.state);if(p.state.role&&!hidden.has(e.row.id)&&await contentReadable(env,p.row.payload.versions,w.email,false,security))result.push(p)}return result
 }

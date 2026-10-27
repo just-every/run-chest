@@ -25,6 +25,11 @@ export function withCommitAttachment(session: Session, attachment: Attachment): 
 export async function maybe<T = any>(env: Bindings, kind: string, key: string): Promise<Row<T> | null> { const r = await env.DB.prepare('SELECT * FROM chest_records WHERE id=? AND kind=?').bind(key, kind).first(); return r ? decode<T>(r) : null }
 export async function where<T = any>(env: Bindings, kind: string, path: string, value: string): Promise<Row<T>[]> { return (await env.DB.prepare(`SELECT * FROM chest_records WHERE kind=? AND json_extract(payload,?)=? ORDER BY id`).bind(kind, path, value).all()).results.map(decode<T>) }
 export const spaceItems = (env: Bindings, space: string) => where<Item>(env, 'item', '$.space', space)
+// Restrict sibling reads in SQL so a folder operation does not materialize its entire space.
+export async function folderItems(env: Bindings, space: string, parent: string | null): Promise<Row<Item>[]> {
+ const result = await env.DB.prepare("SELECT * FROM chest_records WHERE kind='item' AND json_extract(payload,'$.space')=? AND json_extract(payload,'$.parent') IS ? AND json_extract(payload,'$.trash') IS NULL ORDER BY id").bind(space,parent).all()
+ return result.results.map(decode<Item>)
+}
 // Without a session (a public link or file request) `by` names the audit actor.
 export async function commit(env: Bindings, actor: Session | null, ops: Op[], { fences = [], changes = [], audits = [], preconditions = [], statements = [], by = 'chest:system' }: { fences?: Row[]; changes?: Change[]; audits?: Audit[]; preconditions?: { sql: string; params: unknown[] }[]; statements?: { sql: string; params: unknown[] }[]; by?: string } = {}) {
  await activityAudits(env,actor,audits)

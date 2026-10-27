@@ -13,7 +13,7 @@ export async function generate({api,owner,seed='synthetic-chest-895',files=60,de
  dimensions({files,depth,members,directMembers,devices,changes});
  if(typeof seed!=='string'||!seed.trim())throw Error('Invalid generation seed');
  const fixture=createHash('sha256').update(seed).digest().readUInt32BE(0),people=[];
- for(let n=1;n<Math.max(members,directMembers);n++){
+ for(let n=1;n<members+Math.max(0,directMembers-1);n++){
   const email=`synthetic-chest-${fixture}-${n}@example.test`;
   await api('/people',owner,{action:'invite',email,name:`Scale colleague ${n}`});
   people.push(email);
@@ -27,9 +27,8 @@ export async function generate({api,owner,seed='synthetic-chest-895',files=60,de
  if(!ownerGrant)throw Error('Generated space has no direct manager');
  let membersSpace;
  if(directMembers>0){
-  const created=await api('/spaces',owner,{name:`Scale members ${seed}`});
-  await api(`/spaces/${created.id}/members`,owner,{members:[{principal:ownerGrant.principal,role:'manager'},...people.slice(0,directMembers-1).map(principal=>({principal,role:'viewer'}))]});
-  membersSpace=await api(`/spaces/${created.id}`,owner);
+  await api(`/spaces/${space.id}/members`,owner,{members:[{principal:ownerGrant.principal,role:'manager'},...people.slice(members-1).map(principal=>({principal,role:'viewer'}))]});
+  membersSpace=await api(`/spaces/${space.id}`,owner);
   if(directPeople(membersSpace).length!==directMembers)throw Error('Generated membership does not match admitted roster');
  }
  const folders=[],originals=[],children=new Map();
@@ -45,6 +44,7 @@ export async function generate({api,owner,seed='synthetic-chest-895',files=60,de
   admitted(folder.id,parent,n+1);
   parent=folder.id;
   folders.push(folder.id);
+  if(n===0&&directMembers>0)await api(`/items/${folder.id}/shares`,owner,{principal:group.id,role:'viewer'});
  }
  for(let n=0;n<files;n++){
   const body=Buffer.from(`${seed} invoice ${n} quarter ${n%50} verified original`),folder=n===0?parent:folders[0];

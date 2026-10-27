@@ -24,9 +24,9 @@ icon tooltips at 1440 and 390.
 
 The default is a bounded diagnostic: 60 files, eight folders, three people,
 two device credentials and 20 remote renames, with no seven-day offline wait.
-`CHEST_SCALE_DIRECT_MEMBERS` creates a separate membership space with that many
-individual grants, including its manager; these people are admitted by ordinary
-invitations. `CHEST_SCALE_DEVICES` enrols additional device credentials, and
+`CHEST_SCALE_DIRECT_MEMBERS` adds that many individual grants, including the manager, to the
+populated measurement space. The group-only revocation subject has no direct
+grant; the direct roster uses separate people admitted by ordinary invitations. `CHEST_SCALE_DEVICES` enrols additional device credentials, and
 `CHEST_SCALE_CHANGES` selects the exact remote rename count after the initial
 enumeration. Credentials alone do not establish active native synced devices.
 The generator records maximum actual child count and counts the deepest file
@@ -39,7 +39,7 @@ this plans the required size and does not claim that size was generated.
 No originals are represented by sparse files or invented byte counts.
 
 Use the **Scale journey** workflow on the candidate branch. Its manual `dimensions`
-profile selects 100 folders, 600 direct grants in the separate membership space,
+profile selects 100 folders and 600 direct grants in the populated measurement space,
 300 total device credentials and 10,000 immediate renames. Invitations use
 distinct synthetic client addresses at the test runtime network edge; all
 authentication rate limits remain enabled. This is a bounded protocol profile. Changes to its workflow, generator or journey start it on a pull request at the exact candidate head; manual dispatch is also available after workflow registration on the default branch.
@@ -64,6 +64,9 @@ requested items and their ancestor closure, preserving the existing grant, link
 and content-security checks. No enumeration request reads original bytes.
 The file-backed companion consumes all pages before transferring any file and
 retains its explicit 500-file queue limit. It still accumulates global metadata.
+Folder child reads use an indexed space and parent predicate, and deep opens
+read their bounded ancestor chain in one recursive database query. Authorization
+still evaluates every ancestor and every current grant before serving a result.
 These bounded protocol measurements do not establish reference capacity or
 native client behavior. In particular, the existing device security session
 expires before seven days; this change does not relax that policy.
