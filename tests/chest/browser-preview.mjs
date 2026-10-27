@@ -22,7 +22,9 @@ export async function archivePreviewJourney({page,owner,h,width,assertions=true}
   const retained=page.locator('.ver').filter({has:page.getByRole('heading',{name:/Version 1/})}).getByRole('link',{name:'Open ZIP directory'});
   const [popup]=await Promise.all([page.waitForEvent('popup'),retained.click()]);await popup.getByText('Retained version',{exact:false}).waitFor();assert.deepEqual(await popup.locator('li > span').allTextContents(),['docs/','docs/nested/terms.txt','<img src=x onerror=alert(1)>.txt']);await popup.close();
   const encrypted=Buffer.from(original);encrypted.writeUInt16LE(0x801,6);encrypted.writeUInt16LE(0x801,encrypted.readUInt32LE(encrypted.length-6)+8);
-  for(const [name,bytes,state] of [['Broken',original.subarray(0,-5),'malformed'],['Encrypted',encrypted,'unsupported'],['Too deep',zip([['a/'.repeat(65)+'file.txt','synthetic-chest-4']]),'over-bound']]){
+  const missing=zip([['entry.txt','synthetic-chest-5']]),central=missing.readUInt32LE(missing.length-6);missing.writeUInt16LE(0x808,6);missing.writeUInt16LE(0x808,central+8);
+  const contradictory=Buffer.from(missing);contradictory.writeUInt32LE(99,22);
+  for(const [name,bytes,state] of [['Missing descriptor',missing,'malformed'],['Contradictory sizes',contradictory,'malformed'],['Broken',original.subarray(0,-5),'malformed'],['Encrypted',encrypted,'unsupported'],['Too deep',zip([['a/'.repeat(65)+'file.txt','synthetic-chest-4']]),'over-bound']]){
    const item=await h.api('/items',owner,{space,name:name+'.zip',base64:bytes.toString('base64')});await page.goto(h.origin+`/app/items/${item.id}`);
    await frame.getByRole('status').filter({hasText:state+':'}).waitFor();assert.equal(await frame.locator('li').count(),0);
    assert.match(await frame.getByRole('link',{name:'Download original'}).getAttribute('href'),/download=true$/);

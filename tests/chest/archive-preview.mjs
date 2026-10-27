@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {deflateRawSync} from 'node:zlib';
+import {zipSync} from 'fflate';
 import {harness} from './harness.mjs';
 import {zip} from './fixtures.mjs';
 
@@ -30,8 +31,25 @@ try{
  const encrypted=Buffer.from(original);encrypted.writeUInt16LE(0x801,6);encrypted.writeUInt16LE(0x801,encrypted.readUInt32LE(encrypted.length-6)+8);
  const inconsistent=Buffer.from(original);inconsistent[30]=120;
  const zip64=Buffer.from(original);zip64.writeUInt16LE(65535,zip64.length-14);zip64.writeUInt16LE(65535,zip64.length-12);
- const cases=[['Broken.zip',original.subarray(0,original.length-5),'malformed'],['Inconsistent.zip',inconsistent,'malformed'],['Encrypted.zip',encrypted,'unsupported'],['Large-directory.zip',zip64,'unsupported'],['Many.zip',zip(Array.from({length:1001},(_,n)=>[`entry-${n}.txt`,''])),'over-bound'],['Deep.zip',zip([['a/'.repeat(65)+'file.txt','synthetic-chest-5']]),'over-bound'],['Other.bin',Buffer.from('synthetic-chest-6'),'unsupported'],['Empty.zip',zip([]),'ready']];
- for(const [name,bytes,state] of cases){const item=await upload(name,bytes),r=await h.api(`/items/${item.id}/archive-preview/${item.payload.current}`,owner);assert.equal(r.state,state,name);assert.deepEqual(r.entries,[],name);assert.equal(sha(Buffer.from(await(await h.raw(`/api/chest/items/${item.id}/bytes/${item.payload.current}?download=true`,owner)).arrayBuffer())),sha(bytes),name)}
+ // Descriptor records must exist and agree with both headers; stored sizes must agree.
+ const single=zip([['entry.txt','synthetic-chest-7']]),central=single.readUInt32LE(single.length-6);
+ const missingDescriptor=Buffer.from(single);missingDescriptor.writeUInt16LE(0x808,6);missingDescriptor.writeUInt16LE(0x808,central+8);
+ const contradictorySizes=Buffer.from(missingDescriptor);contradictorySizes.writeUInt32LE(99,22);
+ const descriptor=(signed=true)=>{
+  const record=Buffer.alloc(signed?16:12),offset=signed?4:0;if(signed)record.writeUInt32LE(0x08074b50,0);
+  for(const [n,field] of [[0,16],[4,20],[8,24]])record.writeUInt32LE(single.readUInt32LE(central+field),offset+n);
+  const bytes=Buffer.concat([missingDescriptor.subarray(0,central),record,missingDescriptor.subarray(central)]);
+  bytes.writeUInt32LE(central+record.length,bytes.length-6);return bytes;
+ };
+ const validDescriptor=descriptor(),unsignedDescriptor=descriptor(false),conflictingDescriptor=Buffer.from(validDescriptor),truncatedDescriptor=Buffer.concat([missingDescriptor.subarray(0,central),Buffer.alloc(4),missingDescriptor.subarray(central)]);
+ conflictingDescriptor.writeUInt32LE(99,central+12);truncatedDescriptor.writeUInt32LE(central+4,truncatedDescriptor.length-6);
+ const contradictoryWithDescriptor=Buffer.from(validDescriptor);contradictoryWithDescriptor.writeUInt32LE(99,22);
+ const deferredHeader=Buffer.from(validDescriptor);deferredHeader.fill(0,14,26);
+ const stored=Buffer.from(zipSync({'entry.txt':Buffer.from('synthetic-chest-7')},{level:0}));
+ const storedMismatch=Buffer.from(single);storedMismatch.writeUInt16LE(0,8);storedMismatch.writeUInt16LE(0,central+10);
+ const cases=[['Contradictory-sizes.zip',contradictorySizes,'malformed'],['Missing-descriptor.zip',missingDescriptor,'malformed'],['Contradictory-with-descriptor.zip',contradictoryWithDescriptor,'malformed'],['Conflicting-descriptor.zip',conflictingDescriptor,'malformed'],['Truncated-descriptor.zip',truncatedDescriptor,'malformed'],['Stored-size-mismatch.zip',storedMismatch,'malformed'],['Broken.zip',original.subarray(0,original.length-5),'malformed'],['Inconsistent.zip',inconsistent,'malformed'],['Encrypted.zip',encrypted,'unsupported'],['Large-directory.zip',zip64,'unsupported'],['Many.zip',zip(Array.from({length:1001},(_,n)=>[`entry-${n}.txt`,''])),'over-bound'],['Deep.zip',zip([['a/'.repeat(65)+'file.txt','synthetic-chest-5']]),'over-bound'],['Other.bin',Buffer.from('synthetic-chest-6'),'unsupported'],['Empty.zip',zip([]),'ready']];
+ for(const [name,bytes,state] of cases){const item=await upload(name,bytes),r=await h.api(`/items/${item.id}/archive-preview/${item.payload.current}`,owner);assert.equal(r.state,state,name);assert.deepEqual(r.entries,[],name);if(state!=='ready')assert.ok(r.reason.length>0,name);assert.equal(sha(Buffer.from(await(await h.raw(`/api/chest/items/${item.id}/bytes/${item.payload.current}?download=true`,owner)).arrayBuffer())),sha(bytes),name)}
+ for(const [name,bytes] of [['Signed-descriptor.zip',validDescriptor],['Unsigned-descriptor.zip',unsignedDescriptor],['Deferred-header.zip',deferredHeader],['Stored.zip',stored]]){const item=await upload(name,bytes),r=await h.api(`/items/${item.id}/archive-preview/${item.payload.current}`,owner);assert.equal(r.state,'ready',name);assert.deepEqual(r.entries.map(e=>[e.name,e.size]),[['entry.txt',17]],name)}
  // The resumable upload door admits originals above the listing's independent memory bound.
  const large=Buffer.concat([original,Buffer.alloc(8*1024**2)]),session=await h.api('/uploads',owner,{space,name:'Large.zip',size:large.length,checksum:sha(large)});
  for(let at=0,n=1;at<large.length;at+=session.partSize,n++){const r=await h.fetch(`/api/chest/uploads/${session.id}/parts/${n}`,{method:'PUT',headers:{cookie:owner,origin:h.origin},body:large.subarray(at,at+session.partSize)});assert.equal(r.status,200)}

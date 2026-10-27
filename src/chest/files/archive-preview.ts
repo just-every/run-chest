@@ -45,7 +45,14 @@ function directory(bytes: Uint8Array): Listing {
    const localNames = u16(local + 26), data = local + 30 + localNames + u16(local + 28)
    require(u16(local + 6) === flags && u16(local + 8) === method && localNames === names && data + packed <= start)
    require(raw.every((b, n) => bytes[local + 30 + n] === b))
-   require((flags & 8) || (u32(local + 14) === u32(at + 16) && u32(local + 18) === packed && u32(local + 22) === unpacked))
+   const crc = u32(at + 16), localCrc = u32(local + 14), localPacked = u32(local + 18), localUnpacked = u32(local + 22)
+   require(method !== 0 || packed === unpacked, 'malformed', 'A stored ZIP entry has contradictory compressed and original sizes.')
+   if (flags & 8) {
+    require((!localCrc || localCrc === crc) && (!localPacked || localPacked === packed) && (!localUnpacked || localUnpacked === unpacked), 'malformed', 'The ZIP local header contradicts its directory checksum or sizes.')
+    const descriptor = data + packed
+    const matches = (offset: number) => offset + 12 <= start && u32(offset) === crc && u32(offset + 4) === packed && u32(offset + 8) === unpacked
+    require(matches(descriptor) || (descriptor + 16 <= start && u32(descriptor) === 0x08074b50 && matches(descriptor + 4)), 'malformed', 'A required ZIP data descriptor is missing, truncated or contradicts the directory.')
+   } else require(localCrc === crc && localPacked === packed && localUnpacked === unpacked, 'malformed', 'The ZIP local header contradicts its directory checksum or sizes.')
    entries.push({ name, directory: name.endsWith('/'), depth: Math.max(0, depth), size: unpacked, compressedSize: packed })
    size += unpacked; compressedSize += packed; at += 46 + names + extra + comment
   }
