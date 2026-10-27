@@ -1,6 +1,7 @@
+import { canAdmin, requireAdmin } from '../administration/roles'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
-import { context, demand, isAdmin, start, type Who } from '../files/access'
+import { context, demand, start, type Who } from '../files/access'
 import type { Space } from '../files/model'
 import { place } from '../files/items'
 import { commit, fresh, next } from '../files/repo'
@@ -21,7 +22,8 @@ export async function templateAudience(env: Bindings, w: Who, audience: Template
 export const galleryTemplate = (row: Row<PublishedTemplate>, canUnpublish = false) => ({ id: row.id, name: row.payload.name, category: row.payload.category, thumbnail: row.payload.thumbnail, kind: row.payload.kind, extension: row.payload.extension, version: row.payload.version.id, audience: row.payload.audience, builtin: false, canUnpublish })
 export async function listTemplates(env: Bindings, s: Session, w: Who, input: any = {}) {
  const { effectiveFormat } = await effectiveSettings(env, w), templates: any[] = []
- let canPublish = isAdmin(s)
+ const serviceAdmin = await canAdmin(env, s, 'service-settings')
+ let canPublish = serviceAdmin
  if (input.space || input.parent) { const p = await place(env, w, input.space, input.parent); canPublish ||= p.state.manager && p.space.payload.kind === 'team' }
  else if (!canPublish) canPublish = (await list<Space>(env, 'space')).some(space => space.payload.kind === 'team' && start(space.payload, w).manager)
  if (input.kind) insist(['document', 'spreadsheet', 'presentation'].includes(input.kind), 'invalid_new_kind')
@@ -29,7 +31,7 @@ export async function listTemplates(env: Bindings, s: Session, w: Who, input: an
  for (const row of await list<PublishedTemplate>(env, 'office-template')) {
   if (row.payload.unpublishedAt || input.kind && row.payload.kind !== input.kind) continue
   const audience = await templateAudience(env, w, row.payload.audience)
-  if (audience.visible) templates.push(galleryTemplate(row, isAdmin(s) || row.payload.audience.type === 'space' && audience.fences.some(space => space.kind === 'space' && start(space.payload as Space, w).manager)))
+  if (audience.visible) templates.push(galleryTemplate(row, serviceAdmin || row.payload.audience.type === 'space' && audience.fences.some(space => space.kind === 'space' && start(space.payload as Space, w).manager)))
  }
  return { templates, format: effectiveFormat, canPublish }
 }
@@ -58,8 +60,9 @@ async function publishingAuthority(env: Bindings, s: Session, w: Who, audience: 
  const fences: Row[] = []
  if (audience.type === 'space') {
   const space = await get<Space>(env, 'space', audience.space); fences.push(space, ...w.groups)
-  insist(space.payload.kind === 'team' && (isAdmin(s) || start(space.payload, w).manager), 'template_publish_refused', 403)
- } else insist(isAdmin(s), 'service_settings_refused', 403)
+  insist(space.payload.kind === 'team', 'template_publish_refused', 403)
+  if (!start(space.payload, w).manager) await requireAdmin(env, s, 'service-settings')
+ } else await requireAdmin(env, s, 'service-settings')
  return fences
 }
 export async function publishTemplate(env: Bindings, s: Session, w: Who, input: any) {

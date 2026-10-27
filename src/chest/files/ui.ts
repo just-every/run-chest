@@ -1,3 +1,4 @@
+import { canAdmin } from '../administration/roles'
 import { guestPolicyCard } from './guest-policy'
 import { contentCard } from '../content-security/ui'
 import { signatureInput } from '../signatures/ui'
@@ -120,7 +121,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (parts[1] === 'spaces' && parts[2] && parts[3] === 'quota') return { body: quotaPage(await quotaView(env, s, parts[2])) }
  const w = await who(env, s), people = (await list<Person>(env, 'person')).filter(p => p.payload.status !== 'inactive'), groups = await list<Group>(env, 'group')
  if(parts[1]==='transfers')return {body:parts[2]?transferPage(await transferView(env,s,w,parts[2])):transfersPage(await transfersExecute(env,request,s,'GET',['transfers'],{}) as any[])}
- if (path === '/app/templates') return { body: templatesPage(await listTemplates(env, s, w), await creationSettings(env, s, w), groups, isAdmin(s)) }
+ if (path === '/app/templates') return { body: templatesPage(await listTemplates(env, s, w), await creationSettings(env, s, w), groups, await canAdmin(env, s, 'service-settings')) }
  if (path === '/app/ownership') return { body: ownershipInboxPage(await ownershipInbox(env, s, w)) }
  if (parts[1] === 'ownership' && parts[2]) return { body: ownershipPage(await ownershipView(env, s, w, parts[2])) }
  if (path === '/app/files/space-policy') { const scope = url.searchParams.get('scope') ?? 'organisation'; return { body: spacePolicyPage(await spacePolicyView(env, s), scope, scope.startsWith('space:') ? await spaceSettingsView(env, s, scope.slice(6)) : undefined) } }
@@ -132,7 +133,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
   try {
    const d = await itemView(env, s, w, parts[2]), returnTo = `/app/items/${d.id}`, officeEdit = url.searchParams.get('edit') === '1' && d.can.download ? await readOffice(env, w, parts[2], undefined, true, url.searchParams.get('mode')==='suggest') : null
    const creation = d.item.type === 'folder' && d.can.contribute ? await listTemplates(env, s, w, { parent: parts[2] }) : null, folder = d.item.type === 'folder' ? await browser(env, s, w, d.space.id, d.id, d.children.map((c: any) => c.id), url) : null
-   return { body: itemPage({ ...d, folder, members: await members(env, w, d.id), creation, officeEdit, me: s.operator.email, ownerRole: s.operator.role === 'owner', manage: url.searchParams.has('manage') }, { people, groups, destinations: await destinations(env, w) }), bar: d.item.type === 'folder' ? bar(itemCrumbs(d), creation, { parent: d.id }, returnTo, d.can.share ? '?manage#share' : undefined) : { crumbs: itemCrumbs(d), upload: d.can.contribute ? '#upload' : undefined, share: d.can.share ? '#share' : undefined } }
+   return { body: itemPage({ ...d, folder, members: await members(env, w, d.id), creation, officeEdit, me: s.operator.email, ownerRole: s.operator.role === 'owner', templateAdmin: await canAdmin(env, s, 'service-settings'), manage: url.searchParams.has('manage') }, { people, groups, destinations: await destinations(env, w) }), bar: d.item.type === 'folder' ? bar(itemCrumbs(d), creation, { parent: d.id }, returnTo, d.can.share ? '?manage#share' : undefined) : { crumbs: itemCrumbs(d), upload: d.can.contribute ? '#upload' : undefined, share: d.can.share ? '#share' : undefined } }
   }
   catch (e) { if (e instanceof ChestError && e.code === 'access_required') return { body: requestAccessPage(parts[2]) }; throw e }
  }

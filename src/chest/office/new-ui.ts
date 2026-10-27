@@ -13,8 +13,8 @@ export function newFileMenu(target: { space?: string; parent?: string }, returnT
 }
 
 export function templatePublisher(d: any, people: any[], groups: any[], returnTo: string) {
- if (d.item.type !== 'file' || !(d.can.administer || d.ownerRole) || !/\.(docx|xlsx|pptx|odt|ods|odp)$/i.test(d.item.name)) return ''
- const audiences = [...(d.ownerRole ? [{ id: 'organisation', label: 'Everyone in this Chest' }, ...groups.map(g => ({ id: `group:${g.id}`, label: `Group · ${g.payload.name}` }))] : []), ...(d.space.kind === 'team' ? [{ id: `space:${d.space.id}`, label: `This space · ${d.space.name}` }] : [])]
+ if (d.item.type !== 'file' || !(d.can.administer || d.templateAdmin) || !/\.(docx|xlsx|pptx|odt|ods|odp)$/i.test(d.item.name)) return ''
+ const audiences = [...(d.templateAdmin ? [{ id: 'organisation', label: 'Everyone in this Chest' }, ...groups.map(g => ({ id: `group:${g.id}`, label: `Group · ${g.payload.name}` }))] : []), ...(d.space.kind === 'team' ? [{ id: `space:${d.space.id}`, label: `This space · ${d.space.name}` }] : [])]
  if (!audiences.length) return ''
  return card('Publish a template', `<p class="quiet">Publish a snapshot of this file’s current version. People in the selected audience can create independent files from it without access to this source. Later source edits do not change the published template.</p>${form('/templates', hidden('source', d.id) + field('Template name', 'name', d.item.name.replace(/\.[^.]+$/, '')) + field('Category', 'category') + select('Template audience', 'templateAudience', audiences), 'Publish template', returnTo, { buttonClass: 'btn btn-outline btn-block' })}`, 'side-card')
 }
