@@ -851,8 +851,8 @@ Core · target · **partial** · Rules D-3
 3. Versions compare side by side, and unresolved comments are navigable in order.
 4. On a migrated file, threads show original times and states, a former collaborator's comment cannot be re-attributed by a save, an "anchor not found" thread shows its quoted text, and reply and resolve work.
 
-**Evidence.** `tests/chest/annotation-flow.mjs`; `tests/chest/role-review-flow.mjs`; `tests/chest/browser-new-files.mjs`; `tests/chest/files.mjs`; `tests/chest/office.mjs`
-**Gap.** PDF regions, version-bound replies, resolve and reopen, unresolved retained-PDF navigation and explicit carry-forward of a thread to a retained destination PDF, once only across concurrent retries, restart and a completed retry after the current version changes, exist; version comparison, other document anchors and migrated-thread fidelity remain.
+**Evidence.** `tests/chest/annotation-flow.mjs`; `tests/chest/annotation-recipients.mjs`; `tests/chest/role-review-flow.mjs`; `tests/chest/browser-new-files.mjs`; `tests/chest/files.mjs`; `tests/chest/office.mjs`
+**Gap.** PDF regions, version-bound replies, resolve and reopen, unresolved retained-PDF navigation and explicit carry-forward of a thread to a retained destination PDF, once only across concurrent retries, restart and a completed retry after the current version changes, with every recipient's destination-version access rechecked (out-of-version mentions and assignees refuse publication; out-of-version participants and file creators get no copied text) and a resolved selected thread still reachable from the file page, exist; version comparison, other document anchors and migrated-thread fidelity remain.
 
 #### EDIT-007 — Review loop: attribution and @mentions
 

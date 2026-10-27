@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {mkdir} from 'node:fs/promises';
 import {PDFDocument,StandardFonts} from 'pdf-lib';
+import {annotationRecipientsFlow} from './annotation-recipients.mjs';
 const b64=bytes=>Buffer.from(bytes).toString('base64');
 async function pdf(changed=false){
  const doc=await PDFDocument.create(),font=await doc.embedFont(StandardFonts.Helvetica);
@@ -105,6 +106,11 @@ export async function annotationFlow({h,people,parent}){
  assert.deepEqual((await state()).versions,before.versions,'carrying a thread never changes original version history');
  await h.api(`${path}/${second.id}/resolve`,people.commenter,{decision:'resolve'});await h.api(`${path}/${carried.id}/resolve`,people.commenter,{decision:'resolve'});
  const empty=await h.api(navPath,people.viewer);assert.deepEqual(empty.threads,[]);assert.equal(empty.selected,null);assert.equal(empty.next,null);assert.equal(empty.previous,null);
+ // A stale selected URL still opens its visible resolved thread when navigation is empty.
+ const resolvedPage=await h.raw(`/app/items/${key}?thread=${carried.id}`,people.viewer);
+ assert.equal(resolvedPage.status,303);
+ const redirected=await h.raw(resolvedPage.headers.get('location'),people.viewer);assert.equal(redirected.status,200);assert.ok((await redirected.text()).includes(carried.payload.message));
+ const foreignPage=await h.raw(`/app/items/${key}?thread=foreign-thread`,people.viewer);assert.equal(foreignPage.status,404);assert.ok(!(await foreignPage.text()).includes(source.message));
  // Explicitly select the earlier retained original, rather than the current pointer.
  const retainedCarry={key:crypto.randomUUID(),version,anchor:{kind:'pdf',page:2,region:[.15,.25,.65,.45]},expectedCurrent:destination},retainedPath=`${path}/${second.id}/carry`,retainedSource=(await state()).comments.find(c=>c.id===second.id);
  const earlier=await h.api(retainedPath,people.commenter,retainedCarry);
@@ -120,6 +126,7 @@ export async function annotationFlow({h,people,parent}){
  await h.api(`${path}/${earlier.id}/resolve`,people.commenter,{decision:'resolve'});
  const folder=await h.api(`/items/${parent}/comments`,people.commenter,{version:null,message:'Folder review remains independent of versions.'});assert.equal(folder.payload.version,null);
  const other=await h.api('/items',people.manager,{parent,type:'folder',name:`Other ${crypto.randomUUID()}`});await h.api(`/items/${other.id}/comments/${row.id}/resolve`,people.commenter,{decision:'resolve'},404);
+ await annotationRecipientsFlow({h,people,bytes,anchor:target});
  return {id:key,version,comment:row.id};
 }
 export async function annotationBrowserFlow({h,people,parent,browser,width}){
@@ -143,6 +150,14 @@ export async function annotationBrowserFlow({h,people,parent,browser,width}){
   await page.reload();const nav=page.getByRole('navigation',{name:'Unresolved PDF threads',exact:true});
   await nav.getByRole('link',{name:'Next unresolved',exact:true}).click();await page.waitForURL(new RegExp('thread='+second.id));
   await shot(page,'unresolved');
+  // A selected navigation URL remains usable when its thread is resolved.
+  const selectedUrl=page.url();
+  await press(page,page.locator(`[data-comment="${second.id}"]`),'Resolve thread');
+  assert.equal((await page.goto(selectedUrl)).status(),200);
+  await page.locator(`[data-comment="${second.id}"]`).getByText(/Resolved by commenter/).waitFor();
+  await shot(page,'selected-resolved');
+  await press(page,page.locator(`[data-comment="${second.id}"]`),'Reopen thread');
+  await page.goto(selectedUrl);
   if(width===1440){assert.equal(new URL(page.url()).searchParams.get('thread'),second.id);await nav.getByRole('link',{name:'Previous unresolved',exact:true}).click();await page.waitForURL(new RegExp('thread='+comment.id))}
   thread=page.locator(`[data-comment="${comment.id}"]`);await press(page,thread,'Resolve thread');await page.getByText('Resolved threads (1)',{exact:true}).click();
   thread=page.locator(`[data-comment="${comment.id}"]`);await thread.getByText('Carry thread forward',{exact:true}).click();

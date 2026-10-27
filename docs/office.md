@@ -87,6 +87,10 @@ the mentions and assignee. Chest refuses the action if any of them no longer has
 access. A replacement uploaded
 while the form is open requires you to reload and choose again. Retrying an
 already completed submission creates no duplicate thread or notification.
+Mentions and assignment require current access to the destination version; other
+participants and the file creator receive a notice only when they can open that
+version. A selected thread address that has since been resolved opens the resolved
+discussion on the file page.
 
 The no-download setting gives viewers and commenters rendered page images from
 Collabora for text, Office, PDF and image files. Page navigation remains available.
