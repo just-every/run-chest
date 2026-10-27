@@ -1,4 +1,5 @@
 import { meterOriginal } from '../administration/egress'
+import { archivePreview } from './archive-preview'
 import { renderedPreview } from './restricted-preview'
 import { openCollabora } from '../office/wopi'
 import { guestPolicy, saveGuestPolicy } from './guest-policy'
@@ -111,6 +112,7 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && !key) return createItem(env, s, w, input)
   if (get && key && !sub) return itemView(env, s, w, key)
   if (get && sub === 'rendered-preview') return renderedPreview(env,s,w,key,version,url.searchParams.get('page'))
+  if (get && sub === 'archive-preview' && version && !verb) return archivePreview(env,s,w,key,version,url.searchParams.get('format') === 'html')
   if (get && sub === 'office-preview') return meterOriginal(env,officeDocument((await readOffice(env, w, key, version)).html),key,s.operator.email,'office preview')
   if (get && sub === 'office') { const result = await readOffice(env, w, key, undefined, url.searchParams.get('edit') === 'true', url.searchParams.get('mode')==='suggest'); return { ...result, fields: url.searchParams.get('edit') === 'true' ? result.fields : undefined } }
   if (post && sub === 'office-suggestions') return suggestOffice(env,s,w,key,input)
