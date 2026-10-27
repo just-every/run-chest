@@ -105,6 +105,41 @@ try{
  assert.ok((await h.api('/templates',people.viewer)).templates.some(t=>t.id===spaceTemplate.id));assert.ok(!(await h.api('/templates',people.outside)).templates.some(t=>t.id===spaceTemplate.id));
  await h.api('/templates',people.manager,{source:managerSource.id,name:'Escalation',category:'Projects',audience:{type:'organisation'}},403);
  await h.api(`/templates/${spaceTemplate.id}/unpublish`,people.manager,{});
+ // Delegated service settings governs creation and template custody without granting content access.
+ const delegated=await h.api('/administration/roles',people.owner,{email:'contributor@example.test',role:'service-settings',scope:'organization',super:false});
+ const setting=await h.api('/creation-settings',people.contributor,{format:'odf',groups:[]});assert.equal(setting.format,'odf');assert.equal(setting.editable,true);
+ const publishedVersion=(await h.api(`/items/${copy.id}`,people.contributor)).item.current;
+ const publishedChecksum=(await h.api(`/items/${copy.id}`,people.contributor)).versions.find(v=>v.id===publishedVersion).checksum;
+ const delegatedTemplate=await h.api('/templates',people.contributor,{source:copy.id,name:'Delegated starter',category:'Projects',audience:{type:'organisation'}});
+ assert.equal(delegatedTemplate.canUnpublish,true);
+ const groupTemplate=await h.api('/templates',people.contributor,{source:copy.id,name:'Delegated group starter',category:'Projects',audience:{type:'groups',groups:[group.id]}});
+ assert.ok((await h.api('/templates',people.contributor)).templates.some(t=>t.id===groupTemplate.id));
+ assert.ok(!(await h.api('/templates',people.outside)).templates.some(t=>t.id===groupTemplate.id));
+ await h.api(`/templates/${groupTemplate.id}/unpublish`,people.contributor,{});
+ assert.ok((await h.api('/templates',people.contributor)).templates.find(t=>t.id===delegatedTemplate.id)?.canUnpublish);
+ // An administrative role does not let its holder read or publish an inaccessible source.
+ await h.api('/templates',people.contributor,{source:officeSource.id,name:'Private source',category:'Projects',audience:{type:'organisation'}},403);
+ const delegatedCopy=await newFile(people.outside,{space:(await h.api('/files',people.outside)).personal,kind:'document',template:delegatedTemplate.id,key:'delegated-template-copy'});
+ assert.equal(delegatedCopy.payload.versions[0].checksum,publishedChecksum);
+ await h.api(`/items/${copy.id}`,people.outside,undefined,403);
+ await h.api('/administration/roles',people.owner,{action:'revoke',id:delegated.id});
+ assert.equal((await h.api('/creation-settings',people.contributor)).editable,false);
+ assert.equal((await h.api('/templates',people.contributor)).templates.find(t=>t.id===delegatedTemplate.id)?.canUnpublish,false);
+ await h.api('/creation-settings',people.contributor,{format:'office',groups:[]},403);
+ await h.api('/templates',people.contributor,{source:copy.id,name:'Revoked starter',category:'Projects',audience:{type:'organisation'}},403);
+ await h.api(`/templates/${delegatedTemplate.id}/unpublish`,people.contributor,{},403);
+ assert.ok((await h.api('/templates',people.outside)).templates.some(t=>t.id===delegatedTemplate.id),'refused unpublish preserves the published template');
+ assert.equal((await h.api('/creation-settings',people.owner)).format,'odf','refused settings writes preserve the saved format');
+ const scoped=await h.api('/administration/roles',people.owner,{email:'contributor@example.test',role:'service-settings',scope:'groups',groups:[group.id],super:false});
+ await h.api('/templates',people.contributor,{source:copy.id,name:'Scope escalation',category:'Projects',audience:{type:'organisation'}},403);
+ await h.api('/creation-settings',people.contributor,{format:'office',groups:[]},403);
+ await h.api('/administration/roles',people.owner,{action:'revoke',id:scoped.id});
+ const renewed=await h.api('/administration/roles',people.owner,{email:'contributor@example.test',role:'service-settings',scope:'organization',super:false});
+ await h.api(`/templates/${delegatedTemplate.id}/unpublish`,people.contributor,{});
+ assert.ok(!(await h.api('/templates',people.viewer)).templates.some(t=>t.id===delegatedTemplate.id));
+ assert.equal((await h.api(`/items/${delegatedCopy.id}`,people.outside)).item.current,delegatedCopy.payload.current);
+ await h.api('/administration/roles',people.owner,{action:'revoke',id:renewed.id});
+ await h.api('/creation-settings',people.owner,{format:'office',groups:[]});
  const repeated={...root,kind:'document',key:'parallel-idempotency',name:'Exactly one'};
  const same=await Promise.all([newFile(people.contributor,repeated),newFile(people.contributor,repeated)]);assert.equal(same[0].id,same[1].id);
  assert.equal((await newFile(people.contributor,repeated)).id,same[0].id);
@@ -115,6 +150,7 @@ try{
  const refusal=await newFile(people.contributor,{...root,kind:'document',key:'over-quota'},413);assert.equal(refusal.error,'storage_limit_exceeded');
  assert.equal((await h.api(`/items/${folder.id}`,people.manager)).children.length,beforeQuota);
  const audit=await h.api('/audit',people.owner);for(const action of ['file.create','template.publish','template.unpublish'])assert.ok(audit.some(a=>a.action===action));
+ for(const [action,id] of [['template.publish',delegatedTemplate.id],['template.unpublish',delegatedTemplate.id]])assert.ok(audit.some(a=>a.action===action&&a.object_id===id&&a.actor==='contributor@example.test'));
  const receiptAudit=audit.filter(a=>a.action==='file.create'&&a.object_id===same[0].id);assert.equal(receiptAudit.length,1);
  // Keep both ODF and Office source documents reachable through ordinary item views.
  assert.equal((await h.api(`/items/${source.id}`,people.owner)).item.name,source.payload.name);

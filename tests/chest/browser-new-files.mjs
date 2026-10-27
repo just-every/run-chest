@@ -24,6 +24,34 @@ try {
   await migrationArrivalJourney(h,context,owner,width);
   await context.close();
  }
+ // Service-settings delegation exposes the existing creation and publishing forms, without content elevation.
+ await h.api('/people',owner,{action:'invite',email:'template-admin@example.test',name:'Template administrator'});
+ const delegated=await h.signIn('template-admin@example.test',true),personal=(await h.api('/files',delegated)).personal;
+ const grant=await h.api('/administration/roles',owner,{email:'template-admin@example.test',role:'service-settings',scope:'organization',super:false});
+ const source=await h.api('/new-files',delegated,{space:personal,kind:'document',key:'delegated-browser-source'});
+ for(const width of [1440,390]){
+  const context=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});await context.addCookies(delegated.split('; ').map(s=>{const i=s.indexOf('=');return {name:s.slice(0,i),value:s.slice(i+1),url:h.origin}}));const p=await context.newPage();
+  await p.goto(`${h.origin}/app/items/${source.id}`);
+  const publisher=p.locator('form').filter({has:p.getByRole('button',{name:'Publish template',exact:true})});
+  if(width===1440){
+   await publisher.getByLabel('Template name',{exact:true}).fill('Delegated project starter');await publisher.getByLabel('Category',{exact:true}).fill('Projects');await publisher.getByLabel('Template audience').selectOption('organisation');await press(publisher,'Publish template');
+   assert.ok((await h.api('/templates',delegated)).templates.some(t=>t.name==='Delegated project starter'&&t.canUnpublish));
+   await p.goto(`${h.origin}/app/items/${source.id}`);
+   // Existing icon controls retain immediate focus and delayed hover labels on the touched screen.
+   const control=p.locator('[data-tooltip]').first();await control.focus();assert.equal(await p.getByRole('tooltip').innerText(),await control.getAttribute('data-tooltip'));await control.blur();await control.hover();await p.getByRole('tooltip').waitFor({state:'visible'});
+  }
+  await fit(p,'delegated-publisher',width,p.locator('.side-card').filter({has:p.getByRole('heading',{name:'Publish a template',exact:true})}));
+  await p.goto(`${h.origin}/app/templates`);
+  if(width===1440){await p.getByLabel('Organization default').selectOption('odf');await press(p,'Save creation settings');assert.equal((await h.api('/creation-settings',delegated)).format,'odf')}
+  await fit(p,'delegated-settings',width);
+  if(width===1440){
+   await h.api('/administration/roles',owner,{action:'revoke',id:grant.id});await p.reload();assert.equal(await p.getByRole('button',{name:'Save creation settings',exact:true}).count(),0);assert.equal(await p.getByRole('button',{name:'Unpublish',exact:true}).count(),0);
+   await p.goto(`${h.origin}/app/items/${source.id}`);assert.equal(await p.getByRole('button',{name:'Publish template',exact:true}).count(),0);
+   await h.api('/administration/roles',owner,{email:'template-admin@example.test',role:'service-settings',scope:'organization',super:false});
+  }
+  await context.close();
+ }
+ await h.api('/creation-settings',owner,{format:'office',groups:[]});
  console.log('SPACE-001 EDIT-004 browser at 1440 and 390 passed');
 } finally { await browser?.close();await h.close() }
 
