@@ -24,6 +24,13 @@ icon tooltips at 1440 and 390.
 
 The default is a bounded diagnostic: 60 files, eight folders, three people,
 two device credentials and 20 remote renames, with no seven-day offline wait.
+`CHEST_SCALE_DIRECT_MEMBERS` creates a separate membership space with that many
+individual grants, including its manager; these people are admitted by ordinary
+invitations. `CHEST_SCALE_DEVICES` enrols additional device credentials, and
+`CHEST_SCALE_CHANGES` selects the exact remote rename count after the initial
+enumeration. Credentials alone do not establish active native synced devices.
+The generator records maximum actual child count and counts the deepest file
+as one level below its folder.
 `CHEST_SCALE_FILES` and `CHEST_SCALE_DEPTH` select larger admitted datasets.
 `CHEST_SCALE_INVENTORY` names a private JSON inventory with the numeric dimensions
 exported by `inventoryTarget` in the generator. The output records the larger of
@@ -39,5 +46,18 @@ in an isolated local runtime, without a network latency claim. The real 10 TB,
 600 direct members, 100 levels, 20,000-child scrolling without reload, US-region
 100 Mbps measurement, seven-day device catch-up on 10,000 changes, on-demand
 500,000-item enumeration without hydration, and buyer inventory rerun remain
-acceptance gaps. The existing tree endpoint returns a complete tree; bounded
-measurements do not establish scalable pagination or native client behavior.
+acceptance gaps. Device enumeration uses bounded metadata pages. `GET /api/chest/sync/tree`
+returns at most 500 candidate items and a `next` identifier. Continue with
+`after=<next>&cursor=<initial cursor>` until `next` is null, including pages
+whose visible item list is empty. Every page recomputes current access. Retain
+the initial cursor and replay changes after enumeration: a concurrent insert
+can sort before an already-scanned identifier. The change feed reads bounded
+ordered journal windows and returns `until`; retain it while following `more`
+to finish one catch-up despite concurrent writes. Both paths load only the
+requested items and their ancestor closure, preserving the existing grant, link
+and content-security checks. No enumeration request reads original bytes.
+The file-backed companion consumes all pages before transferring any file and
+retains its explicit 500-file queue limit. It still accumulates global metadata.
+These bounded protocol measurements do not establish reference capacity or
+native client behavior. In particular, the existing device security session
+expires before seven days; this change does not relax that policy.
