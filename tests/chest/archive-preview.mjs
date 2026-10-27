@@ -28,8 +28,15 @@ try{
  for(const [version,expected] of [[v1,original],[v2,replacement]])assert.equal(sha(Buffer.from(await(await h.raw(`/api/chest/items/${file.id}/bytes/${version}?download=true`,owner)).arrayBuffer())),sha(expected));
  // Refusal states return no partial directory and keep the exact original downloadable.
  const encrypted=Buffer.from(original);encrypted.writeUInt16LE(0x801,6);encrypted.writeUInt16LE(0x801,encrypted.readUInt32LE(encrypted.length-6)+8);
- const cases=[['Broken.zip',original.subarray(0,original.length-5),'malformed'],['Encrypted.zip',encrypted,'unsupported'],['Many.zip',zip(Array.from({length:1001},(_,n)=>[`entry-${n}.txt`,''])),'over-bound'],['Deep.zip',zip([['a/'.repeat(65)+'file.txt','synthetic-chest-5']]),'over-bound'],['Other.bin',Buffer.from('synthetic-chest-6'),'unsupported'],['Empty.zip',zip([]),'ready']];
+ const inconsistent=Buffer.from(original);inconsistent[30]=120;
+ const zip64=Buffer.from(original);zip64.writeUInt16LE(65535,zip64.length-14);zip64.writeUInt16LE(65535,zip64.length-12);
+ const cases=[['Broken.zip',original.subarray(0,original.length-5),'malformed'],['Inconsistent.zip',inconsistent,'malformed'],['Encrypted.zip',encrypted,'unsupported'],['Large-directory.zip',zip64,'unsupported'],['Many.zip',zip(Array.from({length:1001},(_,n)=>[`entry-${n}.txt`,''])),'over-bound'],['Deep.zip',zip([['a/'.repeat(65)+'file.txt','synthetic-chest-5']]),'over-bound'],['Other.bin',Buffer.from('synthetic-chest-6'),'unsupported'],['Empty.zip',zip([]),'ready']];
  for(const [name,bytes,state] of cases){const item=await upload(name,bytes),r=await h.api(`/items/${item.id}/archive-preview/${item.payload.current}`,owner);assert.equal(r.state,state,name);assert.deepEqual(r.entries,[],name);assert.equal(sha(Buffer.from(await(await h.raw(`/api/chest/items/${item.id}/bytes/${item.payload.current}?download=true`,owner)).arrayBuffer())),sha(bytes),name)}
+ // The resumable upload door admits originals above the listing's independent memory bound.
+ const large=Buffer.concat([original,Buffer.alloc(8*1024**2)]),session=await h.api('/uploads',owner,{space,name:'Large.zip',size:large.length,checksum:sha(large)});
+ for(let at=0,n=1;at<large.length;at+=session.partSize,n++){const r=await h.fetch(`/api/chest/uploads/${session.id}/parts/${n}`,{method:'PUT',headers:{cookie:owner,origin:h.origin},body:large.subarray(at,at+session.partSize)});assert.equal(r.status,200)}
+ const done=await h.api(`/uploads/${session.id}/complete`,owner,{}),over=await h.api(`/items/${done.result.item}/archive-preview/${done.result.version}`,owner);
+ assert.equal(over.state,'over-bound');assert.deepEqual(over.entries,[]);assert.equal(sha(Buffer.from(await(await h.raw(`/api/chest/items/${done.result.item}/bytes/${done.result.version}?download=true`,owner)).arrayBuffer())),sha(large));
  // Current grants are checked again for retained originals, even after a restart.
  await h.api(`/items/${file.id}/shares`,owner,{principal:'reader@example.test',role:'viewer'});
  assert.equal((await listing(v1,staff.reader)).files,3);
