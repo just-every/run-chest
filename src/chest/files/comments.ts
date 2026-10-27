@@ -6,12 +6,14 @@ import { commit, fresh, maybe, next, where } from './repo'
 import { allowed, context, demand, whoFor, type Ctx, type Who } from './access'
 import { deliver, notice } from './notify'
 import { personLine } from '../names'
+import { digest } from '../blobs'
 
 export type PdfAnchor = { kind: 'pdf'; page: number; region: [number, number, number, number] }
 export type Reply = { id: string; author: string; message: string; at: string; mentions?: string[] }
 export type Comment = {
  item: string; version: string | null; author: string; message: string; at: string
  mentions?: string[]; assignee?: string; anchor?: PdfAnchor; replies?: Reply[]
+ carriedFrom?: { thread: string; version: string; anchor: PdfAnchor; by: string; at: string }
  resolved?: { by: string; at: string } | null
 }
 const activePerson = (env: Bindings, email: string) => env.DB.prepare("SELECT 1 FROM oa_operators WHERE email=? AND status='active'").bind(email).first()
@@ -114,3 +116,57 @@ export async function resolveComment(env: Bindings, s: Session, w: Who, key: str
  return publish(env, s, ctx, updated, row, resolved ? 'comment.resolve' : 'comment.reopen', await participants(env, key, row), `${personLine(s.operator.displayName, s.operator.email)} ${resolved ? 'resolved' : 'reopened'} a comment on "${ctx.chain.at(-1)!.payload.name}".`)
 }
 export const comments = (env: Bindings, key: string) => where<Comment>(env, 'comment', '$.item', key)
+
+// Navigation includes only unresolved annotations on this item's retained PDF originals.
+export function pdfThreads(rows: { id: string; version: string | null; anchor?: PdfAnchor; resolved?: Comment['resolved']; at: string }[], versions: { id: string; mediaType: string }[]) {
+ return rows.filter(c => !c.resolved && c.anchor?.kind === 'pdf' && versions.some(v => v.id === c.version && v.mediaType === 'application/pdf'))
+  .sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id)).map(c => ({ id: c.id, version: c.version, anchor: c.anchor! }))
+}
+export function pdfNavigation(threads: ReturnType<typeof pdfThreads>, selected: string | null) {
+ const index = selected ? threads.findIndex(c => c.id === selected) : 0
+ insist(!selected || index >= 0, 'comment_not_found', 404)
+ return { threads, selected: threads[index]?.id ?? null, position: threads.length ? index + 1 : 0,
+  previous: threads.length > 1 ? threads[(index + threads.length - 1) % threads.length].id : null,
+  next: threads.length > 1 ? threads[(index + 1) % threads.length].id : null }
+}
+export async function unresolvedComments(env: Bindings, w: Who, key: string, selected: string | null) {
+ const ctx = await context(env, w, key); demand(ctx, 'view')
+ return pdfNavigation(pdfThreads((await comments(env, key)).map(c => ({ id: c.id, ...c.payload })), ctx.chain.at(-1)!.payload.versions), selected)
+}
+export async function carryComment(env: Bindings, s: Session, w: Who, key: string, id: string, input: any) {
+ const { ctx, row: source } = await thread(env, w, key, id), item = ctx.chain.at(-1)!
+ insist(source.payload.anchor?.kind === 'pdf' && source.payload.version, 'annotation_requires_pdf')
+ insist(typeof input.key === 'string' && /^[A-Za-z0-9_-]{8,100}$/.test(input.key), 'caller_key_required')
+ insist(typeof input.version === 'string' && input.version !== source.payload.version, 'annotation_destination_required')
+ const version = versionOf(ctx, input), anchor = await anchorOf(env, ctx, version, input)
+ insist(anchor, 'annotation_destination_required')
+ // Never silently transplant an old region. The caller chooses a version and region and binds
+ // that choice to the current pointer they saw, even when selecting an earlier retained version.
+ const fingerprint = await digest(new TextEncoder().encode(JSON.stringify([key, id, version, anchor, input.expectedCurrent])))
+ const receipt = `comment:carry:${await digest(new TextEncoder().encode(JSON.stringify([s.operator.email, input.key])))}`
+ const recipients = await participants(env, key, source, [...new Set([...(source.payload.mentions ?? []), ...(source.payload.assignee ? [source.payload.assignee] : [])])])
+ const replay = (winner: Row<Comment>) => {
+  insist((winner.payload as Comment & { carryFingerprint?: string }).carryFingerprint === fingerprint, 'caller_key_conflict', 409)
+  return winner
+ }
+ const existing = await maybe<Comment>(env, 'comment', receipt); if (existing) return replay(existing)
+ insist(input.expectedCurrent === item.payload.current, 'annotation_target_changed', 409)
+ const at = now(), row = fresh<Comment & { carryFingerprint: string }>('comment', {
+  item: key, version, anchor, author: s.operator.email, message: source.payload.message, at,
+  mentions: source.payload.mentions ?? [], ...(source.payload.assignee ? { assignee: source.payload.assignee } : {}),
+  carriedFrom: { thread: source.id, version: source.payload.version, anchor: source.payload.anchor, by: s.operator.email, at }, carryFingerprint: fingerprint,
+ }, receipt)
+ const message = `${personLine(s.operator.displayName, s.operator.email)} carried a PDF thread forward on "${item.payload.name}":\n\n${row.payload.message}`
+ const notes = [...recipients].filter(([email]) => email !== s.operator.email).map(([email]) => notice(email, 'comment.carry', key, s.operator.email, message))
+ try {
+  await commit(env, s, [{ row }, ...notes.map(row => ({ row }))], {
+   fences: [...ctx.fences, source, ...[...recipients.values()].flatMap(r => r.ctx.fences)], preconditions: [...recipients.keys()].map(activeGuard),
+   audits: [{ action: 'comment.carry', object: key, detail: { comment: row.id, version, anchor, sourceThread: source.id, sourceVersion: source.payload.version, sourceAnchor: source.payload.anchor } }],
+  })
+ } catch (error) {
+  const winner = await maybe<Comment>(env, 'comment', receipt); if (winner) return replay(winner)
+  throw error
+ }
+ await deliver(env, s, notes)
+ return row
+}

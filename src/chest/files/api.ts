@@ -40,7 +40,7 @@ import { spaceSettingsView } from './space-settings'
 import { home, itemView, search, spaceView } from './views'
 import { sharingPolicy } from './people'
 import { list } from '../store'
-import { comment, replyComment, resolveComment } from './comments'
+import { comment, replyComment, resolveComment, carryComment, unresolvedComments } from './comments'
 import { readOffice, saveOffice, officeDocument, suggestOffice } from '../office/service'
 import { presence } from '../office/presence'
 import { apply, plan, undo } from './rewind'
@@ -106,6 +106,8 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && sub === 'settings') return settings(env, s, w, key, input)
  }
  if (head === 'items') {
+  if (get && sub === 'comments' && version === 'unresolved' && !verb) return unresolvedComments(env, w, key, url.searchParams.get('thread'))
+  if (post && sub === 'comments' && version && verb === 'carry') return carryComment(env, s, w, key, version, input)
   if (post && sub === 'comments' && version && verb === 'reply') return replyComment(env, s, w, key, version, input)
   if (post && sub === 'comments' && version && verb === 'resolve') return resolveComment(env, s, w, key, version, input)
   if (post && sub === 'collabora')return openCollabora(env,s,key)

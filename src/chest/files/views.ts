@@ -6,7 +6,7 @@ import { maybe } from './repo'
 import { allowed, context, demand, descend, everything, start, type Ctx, type Entry, type Who } from './access'
 import { children } from './items'
 import { pending } from './shares'
-import { comments } from './comments'
+import { comments, pdfThreads } from './comments'
 import { rewinds } from './rewind'
 import { unfinished } from './uploads'
 import { linksOn } from './public-links'
@@ -51,6 +51,7 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
  for (const node of ctx.chain.slice(0, -1)) { state = descend(state, node, w, ctx.links); if (state.role) path.push({ id: node.id, name: node.payload.name }) }
  const sharer = allowed(ctx, 'share'), prefs = await prefsOf(env, w), currentVersion = item.payload.versions.find(v => v.id === item.payload.current)
  const lineage=await mergeView(env,s,w,item)
+ const threads = (await comments(env, key)).filter(c => c.payload.version === null || lineage.versions.some(v => v.sourceItem === key && v.id === c.payload.version)).map(c => ({ id: c.id, ...c.payload })).sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id))
  await recordAccess(env, s, item, 'item.read')
  return {
   collabora:!!env.COLLABORA_URL,storage: await storageView(env,ctx.space), fieldReadings: allowed(ctx,'download') ? await itemReadings(env,key,item.payload) : [], metadata: await metadataView(env, ctx), linkCreation: (await effectiveLinkPolicy(env,w,ctx.space.id)).rules, id: key, item: { ...item.payload, versions: undefined, grants: undefined, trash: undefined }, revision: item.revision, ownership: await ownershipForItem(env, s, w, key), accessExplanation: accessExplanation(ctx, w), role: ctx.state.role, can: can(ctx), space: { id: ctx.space.id, name: label(ctx.space.payload, w), kind: ctx.space.payload.kind, member: !!start(ctx.space.payload, w).role }, path,
@@ -63,7 +64,7 @@ export async function itemView(env: Bindings, s: Session, w: Who, key: string) {
   fileRequests: sharer && item.payload.type === 'folder' ? await requestsOn(env, key) : [],
   requests: sharer ? (await pending(env, w, key)).map(r => ({ id: r.id, requester: r.payload.requester, role: r.payload.role, message: r.payload.message, at: r.payload.at })) : [],
   activity: (await history(env,s,new URLSearchParams({object:key,limit:'100'}))).rows.map(r=>({...r,detail:JSON.parse(r.detail)})),
-  comments: (await comments(env, key)).filter(c => c.payload.version===null||lineage.versions.some(v=>v.sourceItem===key&&v.id===c.payload.version)).map(c => ({ id: c.id, ...c.payload })).sort((a, b) => a.at.localeCompare(b.at)),
+  comments: threads, unresolvedPdf: pdfThreads(threads, item.payload.versions),
   starred: prefs.starred.includes(key), shortcut: prefs.shortcuts.includes(key),
   uploads: allowed(ctx, 'contribute') ? await unfinished(env, w, item.payload.type === 'folder' ? { parent: key } : { item: key }) : [],
   rewinds: item.payload.type === 'folder' && allowed(ctx, 'contribute') ? await rewinds(env, `folder:${key}`) : [],

@@ -18,6 +18,23 @@ function annotationForm(d: any, returnTo: string) {
   + area('Annotation', 'message', '') + recipientFields()
  return details('Annotate a PDF', form(`/items/${d.id}/comments`, fields, 'Post annotation', returnTo, { buttonClass: 'btn btn-outline' }), 'btn btn-outline')
 }
+function carryForm(d: any, c: any, returnTo: string) {
+ const pdfs = d.versions.filter((v: any) => v.id !== c.version && v.mediaType === 'application/pdf' && (!v.sourceItem || v.sourceItem === d.id))
+ if (!c.anchor || !pdfs.length || !d.can.comment) return ''
+ const fields = hidden('key', crypto.randomUUID()) + hidden('expectedCurrent', d.item.current) + hidden('anchorType', 'pdf')
+  + '<p>Start a new thread with the same text, mentions and assignee. Choose its page and region. The original discussion stays unchanged.</p>'
+  + select('Destination PDF version', 'version', [{ id: '', label: 'Choose a version' }, ...pdfs.map((v: any) => ({ id: v.id, label: `Version ${versionNumber(d, v.id)}${v.id === d.item.current ? ' · current' : ''}` }))])
+  + field('Destination PDF page', 'page', '1', 'number').replace(' required', ' min="1" step="1" required')
+  + '<p class="quiet">Region percentages from the destination page’s top left.</p><div class="form-grid">'
+  + coordinate('Left (%)', 'left', 10) + coordinate('Top (%)', 'top', 10) + coordinate('Right (%)', 'right', 90) + coordinate('Bottom (%)', 'bottom', 30) + '</div>'
+ return details('Carry thread forward', form(`/items/${d.id}/comments/${c.id}/carry`, fields, 'Create linked thread', returnTo, { buttonClass: 'btn btn-outline' }), 'btn btn-outline')
+}
+function navigation(d: any, returnTo: string) {
+ const n = d.annotationNavigation
+ if (!n) return ''
+ const link = (id: string, label: string) => `<a class="btn btn-outline" href="${esc(returnTo)}?thread=${esc(id)}#comment-${esc(id)}">${label}</a>`
+ return `<nav aria-label="Unresolved PDF threads"><p>${n.threads.length ? `Unresolved PDF thread ${n.position} of ${n.threads.length}` : 'No unresolved PDF threads.'}</p><div class="doc-actions">${n.previous ? link(n.previous, 'Previous unresolved') : ''}${n.selected ? link(n.selected, 'Open selected thread') : ''}${n.next ? link(n.next, 'Next unresolved') : ''}</div></nav>`
+}
 function original(d: any, c: any) {
  if (!c.version) return ''
  const v = d.versions.find((v: any) => v.id === c.version), label = `Version ${versionNumber(d, c.version)}`, old = c.version !== d.item.current
@@ -32,13 +49,14 @@ function thread(d: any, c: any, returnTo: string) {
  const replies = (c.replies ?? []).map((r: any) => `<li><span class="mono">${esc(r.author)} · ${stamp(r.at)}</span><p>${esc(r.message)}</p>${r.mentions?.length ? `<p>Mentioned: ${r.mentions.map(esc).join(', ')}</p>` : ''}</li>`).join('')
  const state = c.resolved ? `<p class="quiet">Resolved by ${esc(c.resolved.by)} · ${stamp(c.resolved.at)}</p>` : ''
  const controls = d.can.comment ? `<div class="doc-actions">${form(`${path}/resolve`, hidden('decision', c.resolved ? 'reopen' : 'resolve'), c.resolved ? 'Reopen thread' : 'Resolve thread', returnTo, inline)}${!c.resolved ? details('Reply', form(`${path}/reply`, area('Reply', 'message', ''), 'Post reply', returnTo, { buttonClass: 'btn btn-outline' }), 'btn btn-outline') : ''}</div>` : ''
- return `<li data-comment="${esc(c.id)}"><span class="mono">${esc(c.author)} · <span class="nowrap">${stamp(c.at)}</span></span>${original(d, c)}<p>${esc(c.message)}</p>${c.assignee ? `<p>Assigned to ${esc(c.assignee)}</p>` : ''}${c.mentions?.length ? `<p>Mentioned: ${c.mentions.map(esc).join(', ')}</p>` : ''}${state}${replies ? `<ol class="events" aria-label="Replies">${replies}</ol>` : ''}${controls}</li>`
+ const lineage = c.carriedFrom ? `<p>Carried forward by ${esc(c.carriedFrom.by)} from <a class="link" href="${esc(returnTo)}?comment=${esc(c.carriedFrom.thread)}#comment-${esc(c.carriedFrom.thread)}">original thread · Version ${versionNumber(d, c.carriedFrom.version)} · Page ${c.carriedFrom.anchor.page}</a></p>` : ''
+ return `<li id="comment-${esc(c.id)}" data-comment="${esc(c.id)}"><span class="mono">${esc(c.author)} · <span class="nowrap">${stamp(c.at)}</span></span>${original(d, c)}${lineage}<p>${esc(c.message)}</p>${c.assignee ? `<p>Assigned to ${esc(c.assignee)}</p>` : ''}${c.mentions?.length ? `<p>Mentioned: ${c.mentions.map(esc).join(', ')}</p>` : ''}${state}${replies ? `<ol class="events" aria-label="Replies">${replies}</ol>` : ''}${controls}${carryForm(d, c, returnTo)}</li>`
 }
 export function commentsPanel(d: any, returnTo: string) {
  const open = d.comments.filter((c: any) => !c.resolved), resolved = d.comments.filter((c: any) => c.resolved)
  const list = (rows: any[]) => `<ol class="events">${rows.map(c => thread(d, c, returnTo)).join('')}</ol>`
  const body = open.length ? list(open) : `<p class="quiet">${resolved.length ? 'No open comments.' : 'No comments yet.'}</p>`
- const closed = resolved.length ? details(`Resolved threads (${resolved.length})`, list(resolved), 'btn btn-outline') : ''
+ const closed = resolved.length ? details(`Resolved threads (${resolved.length})`, list(resolved), 'btn btn-outline').replace('<details ', resolved.some((c: any) => c.id === d.focusComment) ? '<details open ' : '<details ') : ''
  const composer = d.can.comment ? form(`/items/${d.id}/comments`, (d.item.type === 'file' ? hidden('version', d.item.current) : '') + area('Comment', 'message', '') + recipientFields(), 'Post comment', returnTo, { buttonClass: 'btn btn-outline' }) : ''
- return `<section aria-label="Comments"><h2 class="section-title">Comments</h2>${body}${closed}${composer}${annotationForm(d, returnTo)}</section>`
+ return `<section aria-label="Comments"><h2 class="section-title">Comments</h2>${navigation(d, returnTo)}${body}${closed}${composer}${annotationForm(d, returnTo)}</section>`
 }

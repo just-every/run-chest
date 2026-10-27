@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {mkdir} from 'node:fs/promises';
 import {PDFDocument,StandardFonts} from 'pdf-lib';
 const b64=bytes=>Buffer.from(bytes).toString('base64');
@@ -35,11 +36,56 @@ export async function annotationFlow({h,people,parent}){
  const replied=await h.api(`${thread}/reply`,people.contributor,{message:'I checked this original region.'});assert.equal(replied.payload.replies[0].author,'contributor@example.test');assert.deepEqual(replied.payload.anchor,target);
  await h.api(`${thread}/resolve`,people.commenter,{decision:'resolve'});
  await h.api(`${thread}/reply`,people.commenter,{message:'Closed thread'},409);
- const replacement=await h.api(`/items/${key}/versions`,people.contributor,{base64:b64(await pdf(true))});
+ const changedBytes=await pdf(true),replacement=await h.api(`/items/${key}/versions`,people.contributor,{base64:b64(changedBytes)});
  let view=await h.api(`/items/${key}`,people.manager),retained=view.comments.find(c=>c.id===row.id);
  assert.notEqual(replacement.payload.current,version);assert.equal(retained.version,version);assert.deepEqual(retained.anchor,target);assert.equal(retained.resolved.by,'commenter@example.test');assert.equal(retained.replies.length,1);
  const original=await h.raw(`/api/chest/items/${key}/bytes/${version}`,people.commenter);assert.equal(original.status,200);assert.deepEqual(new Uint8Array(await original.arrayBuffer()),bytes);
  await h.api(`${thread}/resolve`,people.contributor,{decision:'reopen'});view=await h.api(`/items/${key}`,people.manager);assert.equal(view.comments.find(c=>c.id===row.id).resolved,null);
+ // Unresolved navigation visits an explicit set of current and retained PDF anchors only.
+ const destination=replacement.payload.current,second=await h.api(path,people.commenter,{version:destination,message:'Check the changed first page.',anchor:{...target,page:1}});
+ await h.api(path,people.commenter,{message:'An ordinary file comment is outside PDF navigation.'});
+ const navPath=`${path}/unresolved`,nav=await h.api(navPath,people.viewer);
+ assert.deepEqual(new Set(nav.threads.map(c=>c.id)),new Set([row.id,second.id]));
+ const selected=await h.api(`${navPath}?thread=${row.id}`,people.viewer);assert.equal(selected.selected,row.id);assert.equal(selected.next,second.id);assert.equal(selected.previous,second.id);
+ assert.equal((await h.api(`${navPath}?thread=${second.id}`,people.viewer)).next,row.id);
+ await h.api(`${navPath}?thread=foreign-thread`,people.commenter,undefined,404);
+ await h.api(navPath,people.outsider,undefined,403);
+ await h.api(`${thread}/resolve`,people.commenter,{decision:'resolve'});
+ assert.deepEqual((await h.api(navPath,people.viewer)).threads.map(c=>c.id),[second.id]);
+ const source=(await h.api(`/items/${key}`,people.manager)).comments.find(c=>c.id===row.id);
+ const state=async()=>{const v=await h.api(`/items/${key}`,people.manager);return {comments:v.comments,versions:v.versions,item:v.item,audits:v.activity.filter(a=>a.action.startsWith('comment.')),mails:h.mails.length}};
+ const carry={key:crypto.randomUUID(),version:destination,anchor:{kind:'pdf',page:1,region:[.2,.3,.8,.6]},expectedCurrent:destination},carryPath=`${thread}/carry`;
+ before=await state();
+ await h.api(carryPath,people.viewer,carry,403);
+ await h.api(carryPath,people.outsider,carry,403);
+ await h.api(carryPath,people.commenter,{...carry,anchor:{...carry.anchor,page:3}},400);
+ await h.api(carryPath,people.commenter,{...carry,anchor:{...carry.anchor,region:[.8,.2,.1,.4]}},400);
+ await h.api(carryPath,people.commenter,{...carry,anchor:undefined},400);
+ await h.api(carryPath,people.commenter,{...carry,version:'foreign-version'},404);
+ await h.api(carryPath,people.commenter,{...carry,expectedCurrent:version},409);
+ const otherFile=await create(h,people,parent);await h.api(`/items/${otherFile.item.id}/comments/${row.id}/carry`,people.commenter,carry,404);
+ assert.deepEqual(await state(),before,'all refused carries preserve threads, version history, audit and notifications');
+ // A retained mention must still have access; no silent recipient grant or text disclosure.
+ const space=(await h.api(`/items/${key}`,people.manager)).item.space,members=(await h.api(`/spaces/${space}`,people.manager)).members;
+ await h.api(`/spaces/${space}/members`,people.manager,{members:members.filter(m=>m.principal!=='viewer@example.test')});
+ before=await state();await h.api(carryPath,people.contributor,carry,403);assert.deepEqual(await state(),before);
+ await h.api(`/spaces/${space}/members`,people.manager,{members});
+ const initialCarries=await Promise.all([h.api(carryPath,people.contributor,carry),h.api(carryPath,people.contributor,carry)]),carried=initialCarries[0];assert.equal(initialCarries[1].id,carried.id);
+ assert.equal(carried.payload.author,'contributor@example.test');assert.equal(carried.payload.message,source.message);assert.equal(carried.payload.version,destination);assert.deepEqual(carried.payload.anchor,carry.anchor);
+ assert.deepEqual(carried.payload.carriedFrom,{thread:row.id,version,anchor:target,by:'contributor@example.test',at:carried.payload.at});
+ assert.ok(!carried.payload.resolved);assert.ok(!carried.payload.replies?.length);assert.deepEqual(carried.payload.mentions,source.mentions);assert.equal(carried.payload.assignee,source.assignee);
+ before=await state();assert.deepEqual(before.comments.find(c=>c.id===row.id),source,'original author, anchor, replies and resolution remain immutable');
+ assert.equal(before.audits.filter(a=>a.action==='comment.carry').length,1);
+ const audit=before.audits.find(a=>a.action==='comment.carry');assert.equal(audit.actor,'contributor@example.test');assert.equal(audit.detail.sourceThread,row.id);assert.equal(audit.detail.sourceVersion,version);assert.deepEqual(audit.detail.sourceAnchor,target);assert.equal(audit.detail.comment,carried.id);assert.deepEqual(audit.detail.anchor,carry.anchor);
+ const retries=await Promise.all([h.api(carryPath,people.contributor,carry),h.api(carryPath,people.contributor,carry)]);assert.ok(retries.every(r=>r.id===carried.id));assert.deepEqual(await state(),before);
+ await h.stop();await h.start();assert.equal((await h.api(carryPath,people.contributor,carry)).id,carried.id);assert.deepEqual(await state(),before,'restart and retries publish one thread, notice set and audit');
+ await h.api(carryPath,people.contributor,{...carry,anchor:{...carry.anchor,page:2}},409);assert.deepEqual(await state(),before);
+ // Both a cached actor and a cached cursor lose authority on the next request, including replay.
+ await h.api(`/spaces/${space}/members`,people.manager,{members:members.filter(m=>m.principal!=='contributor@example.test')});
+ before=await state();await h.api(carryPath,people.contributor,carry,403);await h.api(navPath,people.contributor,undefined,403);assert.deepEqual(await state(),before);
+ await h.api(`/spaces/${space}/members`,people.manager,{members});
+ for(const [v,expected] of [[version,bytes],[destination,changedBytes]]){const r=await h.raw(`/api/chest/items/${key}/bytes/${v}`,people.viewer);assert.equal(r.status,200);assert.equal(createHash('sha256').update(new Uint8Array(await r.arrayBuffer())).digest('hex'),createHash('sha256').update(expected).digest('hex'))}
+ assert.deepEqual((await state()).versions,before.versions,'carrying a thread never changes original version history');
  const folder=await h.api(`/items/${parent}/comments`,people.commenter,{version:null,message:'Folder review remains independent of versions.'});assert.equal(folder.payload.version,null);
  const other=await h.api('/items',people.manager,{parent,type:'folder',name:`Other ${crypto.randomUUID()}`});await h.api(`/items/${other.id}/comments/${row.id}/resolve`,people.commenter,{decision:'resolve'},404);
  return {id:key,version,comment:row.id};
@@ -61,6 +107,25 @@ export async function annotationBrowserFlow({h,people,parent,browser,width}){
   const contributor=await pageFor('contributor');await contributor.goto(h.origin+`/app/items/${key}`);await Promise.all([contributor.waitForNavigation(),contributor.locator('[data-upload] input[data-pick]').first().setInputFiles({name:'Changed review.pdf',mimeType:'application/pdf',buffer:Buffer.from(await pdf(true))})]);
   await page.reload();await page.getByText('Resolved threads (1)',{exact:true}).click();thread=page.locator(`[data-comment="${comment.id}"]`);await thread.getByText(/earlier version/).waitFor();const original=thread.getByRole('link',{name:'Open original page',exact:true});assert.equal(await original.getAttribute('href'),`/api/chest/items/${key}/bytes/${version}#page=2`);const response=await page.request.get(h.origin+await original.getAttribute('href'));assert.equal(response.status(),200);assert.deepEqual(await response.body(),Buffer.from(bytes));await shot(page,'retained');
   await press(page,thread,'Reopen thread');thread=page.locator(`[data-comment="${comment.id}"]`);await thread.getByRole('button',{name:'Resolve thread',exact:true}).waitFor();assert.equal((await h.api(`/items/${key}`,people.manager)).comments[0].version,version);
-  const viewer=await pageFor('viewer');await viewer.goto(h.origin+`/app/items/${key}`);assert.equal(await viewer.getByRole('button',{name:'Post annotation',exact:true}).count(),0);assert.equal(await viewer.getByRole('button',{name:'Resolve thread',exact:true}).count(),0);await shot(viewer,'viewer');
+  const second=await h.api(`/items/${key}/comments`,people.commenter,{message:'Review the changed first page.',version:(await h.api(`/items/${key}`,people.manager)).item.current,anchor:{...target,page:1}});
+  await page.reload();const nav=page.getByRole('navigation',{name:'Unresolved PDF threads',exact:true});
+  await nav.getByRole('link',{name:'Next unresolved',exact:true}).click();await page.waitForURL(new RegExp('thread='+second.id));
+  await shot(page,'unresolved');
+  if(width===1440){assert.equal(new URL(page.url()).searchParams.get('thread'),second.id);await nav.getByRole('link',{name:'Previous unresolved',exact:true}).click();await page.waitForURL(new RegExp('thread='+comment.id))}
+  thread=page.locator(`[data-comment="${comment.id}"]`);await thread.getByText('Carry thread forward',{exact:true}).click();
+  const carry=thread.locator('form').filter({has:page.getByRole('button',{name:'Create linked thread',exact:true})}),destination=(await h.api(`/items/${key}`,people.manager)).item.current;
+  await carry.getByLabel('Destination PDF version',{exact:true}).selectOption(destination);await carry.getByLabel('Destination PDF page',{exact:true}).fill('1');
+  await shot(page,'carry-compose');
+  await press(page,carry,'Create linked thread');
+  view=await h.api(`/items/${key}`,people.manager);const carried=view.comments.find(c=>c.carriedFrom?.thread===comment.id);assert.ok(carried);
+  thread=page.locator(`[data-comment="${carried.id}"]`);await thread.getByText(/Carried forward by commenter/).waitFor();await shot(page,'carried');
+  const sourceLink=thread.getByRole('link',{name:/original thread/});await sourceLink.click();
+  if(width===1440){assert.equal(new URL(page.url()).hash,'#comment-'+comment.id);assert.equal(carried.author,'commenter@example.test');assert.equal(carried.version,destination);assert.deepEqual(carried.anchor,{kind:'pdf',page:1,region:[.1,.1,.9,.3]});assert.deepEqual(view.comments.find(c=>c.id===comment.id).anchor,target);assert.equal(view.comments.find(c=>c.id===comment.id).replies.length,1);assert.equal(view.versions.length,2)}
+  // A form rendered before a replacement cannot silently target the new current version.
+  await page.reload();thread=page.locator(`[data-comment="${comment.id}"]`);await thread.getByText('Carry thread forward',{exact:true}).click();
+  const stale=thread.locator('form').filter({has:page.getByRole('button',{name:'Create linked thread',exact:true})});await stale.getByLabel('Destination PDF version',{exact:true}).selectOption(destination);
+  await h.api(`/items/${key}/versions`,people.contributor,{base64:b64(await pdf())});await press(page,stale,'Create linked thread');
+  if(width===1440){await page.getByText('annotation_target_changed',{exact:false}).waitFor();assert.equal((await h.api(`/items/${key}`,people.manager)).comments.filter(c=>c.carriedFrom).length,1)}
+  const viewer=await pageFor('viewer');await viewer.goto(h.origin+`/app/items/${key}`);assert.equal(await viewer.getByRole('button',{name:'Post annotation',exact:true}).count(),0);assert.equal(await viewer.getByRole('button',{name:'Resolve thread',exact:true}).count(),0);assert.equal(await viewer.getByRole('button',{name:'Create linked thread',exact:true}).count(),0);await shot(viewer,'viewer');
  }finally{for(const ctx of contexts)await ctx.close()}
 }
