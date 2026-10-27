@@ -84,11 +84,11 @@ Each was made by the cleanup round under the owner-approved cleanup rules (27 Oc
 
 - Date: 28 October 2026
 - Ruled by: contract cleanup round
-- Governs: SPACE-003, SYNC-012, MOBILE-006, AUDIT-002, CONNECT-003, CONNECT-013, MOBILE-004, FOLLOW-002, CONNECT-016, EDIT-012, EDIT-011, FOLLOW-003, EDIT-010, AGENT-009, SYNC-005, GOVERN-001, CONNECT-004, CONNECT-005, SEARCH-004, MIGRATE-013, SYNC-010, SYNC-014
+- Governs: SPACE-003, SYNC-012, MOBILE-005, AUDIT-002, CONNECT-003, CONNECT-013, MOBILE-004, FOLLOW-002, CONNECT-016, EDIT-012, EDIT-011, FOLLOW-003, EDIT-010, AGENT-009, SYNC-005, GOVERN-001, CONNECT-004, CONNECT-005, SEARCH-004, MIGRATE-013, SYNC-010
 
-Items the Chest buyer review (rounds 3 to 7, 16-17 October 2026) listed as non-blocking, but that rounds wrote in at full weight, move to Later: SPACE-003 (round 3, personal file ownership transfer), SYNC-012 (round 3, sync client network settings), MOBILE-006 (round 3, mobile editing), AUDIT-002 (round 3, file activity for editors), CONNECT-003 (round 3, HubSpot, with Salesforce following), CONNECT-013 (round 4, admin control of third-party apps), MOBILE-004 (round 4, ChromeOS), FOLLOW-002 (round 4, reply to a comment from the email), CONNECT-016 (round 4, Forms uploads; round 5, Forms responses sheet), EDIT-012 (round 5, CODE in production), EDIT-011 (round 5, download as another format), FOLLOW-003 (round 5, personal notification settings), EDIT-010 (round 6, assignment inside the comment box and linking to Chest files from the editor) and AGENT-009 (round 6, Gemini-style file and folder summaries).
+Items the Chest buyer review (rounds 3 to 7, 16-17 October 2026) listed as non-blocking, but that rounds wrote in at full weight, move to Later: SPACE-003 (round 3, personal file ownership transfer), SYNC-012 (round 3, sync client network settings), MOBILE-005 (round 3, mobile editing), AUDIT-002 (round 3, file activity for editors), CONNECT-003 (round 3, HubSpot, with Salesforce following), CONNECT-013 (round 4, admin control of third-party apps), MOBILE-004 (round 4, ChromeOS), FOLLOW-002 (round 4, reply to a comment from the email), CONNECT-016 (round 4, Forms uploads; round 5, Forms responses sheet), EDIT-012 (round 5, CODE in production), EDIT-011 (round 5, download as another format), FOLLOW-003 (round 5, personal notification settings), EDIT-010 (round 6, assignment inside the comment box and linking to Chest files from the editor) and AGENT-009 (round 6, Gemini-style file and folder summaries).
 
-Moved on the 27 October review's grounds (enterprise, rare, or outside a 10-100 person buyer's first week with Google Drive), not from an Also-noted list: SYNC-005, GOVERN-001, CONNECT-004, CONNECT-005, SEARCH-004, MIGRATE-013, SYNC-010 and SYNC-014.
+Moved on the 27 October review's grounds (enterprise, rare, or outside a 10-100 person buyer's first week with Google Drive), not from an Also-noted list: SYNC-005, GOVERN-001, CONNECT-004, CONNECT-005, SEARCH-004, MIGRATE-013 and SYNC-010.
 
 Not moved: round 3's "SECURITY-002 thresholds". The thresholds are the defaults of Core mass-activity detection, so SECURITY-004 stays Core.
 
@@ -96,9 +96,9 @@ Not moved: round 3's "SECURITY-002 thresholds". The thresholds are the defaults 
 
 - Date: 28 October 2026
 - Ruled by: contract cleanup round
-- Governs: SYNC-007, SYNC-013, CONNECT-009, CONNECT-015, MIGRATE-012, MIGRATE-011, EDIT-007, EDIT-008, EDIT-009
+- Governs: SYNC-007, SYNC-013, SYNC-014, CONNECT-009, CONNECT-015, MIGRATE-012, MIGRATE-011, EDIT-007, EDIT-008, EDIT-009
 
-A gap a buyer review called day-one never moves to Later. The 27 October Chest review suggested Later for five items the buyer review had called day-one, and they stay Core: desktop Office presence and locks (round 2, day-one gap 5; only the perpetual Office versions, SYNC-014, move); CONNECT-009's Make app (round 1, day-one gap 12 named Zapier and Make); CONNECT-015, the Chat app (round 3, day-one gap 1 named Meet, Calendar and Chat); the move-in of open review work, MIGRATE-012 and MIGRATE-011 (round 6, day-one gap 1); and the editor review loop, EDIT-007 to EDIT-009 (round 5, day-one gap 1).
+A gap a buyer review called day-one never moves to Later. The 27 October Chest review suggested Later for five items the buyer review had called day-one, and they stay Core: desktop Office presence, locks and the perpetual Office versions, SYNC-007, SYNC-013 and SYNC-014 (round 2, day-one gap 5 named Office 2016 or later and Microsoft 365); CONNECT-009's Make app (round 1, day-one gap 12 named Zapier and Make); CONNECT-015, the Chat app (round 3, day-one gap 1 named Meet, Calendar and Chat); the move-in of open review work, MIGRATE-012 and MIGRATE-011 (round 6, day-one gap 1); and the editor review loop, EDIT-007 to EDIT-009 (round 5, day-one gap 1).
 
 ### RL-12 — Platform cells
 
@@ -106,15 +106,15 @@ A gap a buyer review called day-one never moves to Later. The 27 October Chest r
 - Ruled by: contract cleanup round
 - Governs: SYNC-008, SYNC-009, SYNC-010, SYNC-007, SYNC-014, MOBILE-003
 
-Full journeys run on current macOS (Apple silicon), Windows 11 x64 and Microsoft 365 Apps; the other supported cells build, install and smoke-test in CI (SYNC-009, MOBILE-003). Windows 10 22H2 (Microsoft support ended 14 October 2025, extended updates only) and perpetual Office 2016 to LTSC 2024 move to Later (SYNC-010, SYNC-014). The supported floors (macOS 13, iOS 17, Android 10) are unchanged; raising them is a separate decision.
+Full journeys run on current macOS (Apple silicon), Windows 11 x64 and Microsoft 365 Apps; the other supported cells build, install and smoke-test in CI (SYNC-009, MOBILE-003). Windows 10 22H2 (Microsoft support ended 14 October 2025, extended updates only) moves to Later (SYNC-010). Perpetual Office 2016 to LTSC 2024 stays Core (SYNC-014, RL-11), because round 2's day-one gap 5 named it. The supported floors (macOS 13, iOS 17, Android 10) are unchanged; raising them is a separate decision.
 
 ### RL-13 — One mobile clause carries the feature doors
 
 - Date: 28 October 2026
 - Ruled by: contract cleanup round
-- Governs: MOBILE-005, PREVIEW-001, SEARCH-001, SEARCH-002, SEARCH-003, SIGN-001, EDIT-003, EDIT-004, EDIT-013
+- Governs: PREVIEW-003, PREVIEW-001, SEARCH-001, SEARCH-002, SEARCH-003, SIGN-001, EDIT-003, EDIT-004, EDIT-013
 
-"And in the iOS and Android apps" sentences held previews, search, scan fields, signing, comment threads and new files partial while no app exists. Those doors are now one clause, MOBILE-005, with its own acceptance, and the feature clauses are judged on their browser and API doors.
+"And in the iOS and Android apps" sentences held previews, search, scan fields, signing, comment threads and new files partial while no app exists. Those doors are now one clause, PREVIEW-003 (numbered in its first source's prefix), with its own acceptance, and the feature clauses are judged on their browser and API doors.
 
 ### RL-14 — Scale health: unmeasured is a warning
 
@@ -194,7 +194,7 @@ SURFACE-001 to SURFACE-013 are new, so no carry rule applies. Each starts missin
 - Ruled by: the owner (risk classes and company policy)
 - Governs: the Agent surface, AGENT-001 to AGENT-008, SEARCH-002
 
-Each Chest tool declares its risk classes, and Chest computes them per call on its server. The company's policy, from the paired Business or from Chest's own Agents settings, decides each call; setup asks every class Chest's tools carry, with no answer pre-selected, and agent access opens only once each is answered. Where a Core clause said a person approves an agent's step (AGENT-001 to AGENT-006 and AGENT-008), it is now worded as the class that step carries; each keeps its status, and the tests behind the done ones still prove the path. SEARCH-002's confirmation of typed values read from scans is a person's own act on Chest's built-in reader output under RL-103, not an agent's call; an agent's typed-field call carries its own class and is recorded as "<agent> for <person>" (BASE-AGENT-008).
+Each Chest tool declares its risk classes, and Chest computes them per call on its server. The company's policy, from the paired Business or from Chest's own Agents settings, decides each call; setup asks every class Chest's tools carry, with no answer pre-selected, and agent access opens only once each is answered. Where a Core clause said a person approves an agent's step (AGENT-001 to AGENT-006 and AGENT-008), it is now worded as the class that step carries; each keeps its status, and the tests behind the done ones still prove the path. Typed values that Chest's model reader takes from scans (SEARCH-002) are AI output like any agent's: writing them into typed fields is standard, the company's policy decides whether readings fill fields alone or wait for an editor, and the held policy is today's confirm journey. RL-103's rider requiring human confirmation is sent back to ct for a ruling that fits the contract standard's Agent surface rule; until then SEARCH-002's Gap names the unbuilt policy path. On the fresh judge's 28 October reading, the same rewording applies to AGENT-001 (uncertain classifications, and a person allowing and rejecting moves without a folder filing grant), AGENT-004 (approving evidence is a commitment) and AGENT-005 (a repair a person declines changes nothing; the repair door widens access for no caller). An agent's typed-field call carries its own class and is recorded as "<agent> for <person>" (BASE-AGENT-008).
 
 ## ct ruling pass, 28 October 2026
 

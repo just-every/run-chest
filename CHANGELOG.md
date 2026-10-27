@@ -176,6 +176,7 @@ Moved out of CONTRACT.md in the 28 October 2026 contract cleanup. Old clause ids
 - CONTRACT.md now follows the RER contract standard: one template per clause (a Requirement and at most eight acceptance points), Core, Agent surface and Later tiers, a Field proof register, door rules, Base duty citations and a Retired clauses table. ACCEPTANCE.md and docs/CLAIMS.md are generated from it by `src/base/contract-docs.mjs`.
 - The 0.2.0 release clauses CHEST-14 to CHEST-24 were folded into the clauses they restated (see Retired clauses). Large clauses were split into one-capability parts with new ids; the Agent surface (SURFACE-001 to SURFACE-013) was added. Rulings moved to RULINGS.md, accounting and import mechanism to `docs/`, and history here.
 - Statuses were carried part by part from the 21 October 2026 judgement, with no part promoted; `docs/contract/COVERAGE.json` gives every earlier sentence its place.
+- After the fresh judge's first reading: the mobile feature doors are PREVIEW-003 (numbered in their first source's prefix) and mobile co-authoring is MOBILE-005; perpetual Office versions (SYNC-014) stay Core as part of a day-one gap; ADMIN-001, AUDIT-001, OWN-001, RECOVER-002, SHARE-003, ADMIN-003 and ROLE-001 keep only Chest's delta on their Base duties; SEARCH-002, AGENT-001, AGENT-004 and AGENT-005 leave each agent decision to the company's policy (RL-23). Statuses are unchanged.
 
 ### Earlier contract history
 

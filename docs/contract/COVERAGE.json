@@ -851,6 +851,14 @@
       "to": "clause",
       "ids": [
         "OWN-001"
+      ],
+      "also": [
+        {
+          "to": "base",
+          "ids": [
+            "BASE-INSTALL-001"
+          ]
+        }
       ]
     },
     {
@@ -884,9 +892,9 @@
       "file": "CONTRACT.md",
       "line": 160,
       "text": "`rer deploy --remove --yes` deletes the Worker, database and bucket and reads back that none remains.",
-      "to": "clause",
+      "to": "base",
       "ids": [
-        "OWN-001"
+        "BASE-INSTALL-001"
       ]
     },
     {
@@ -896,6 +904,14 @@
       "to": "clause",
       "ids": [
         "OWN-001"
+      ],
+      "also": [
+        {
+          "to": "base",
+          "ids": [
+            "BASE-INSTALL-001"
+          ]
+        }
       ]
     },
     {
@@ -1259,9 +1275,17 @@
       "file": "CONTRACT.md",
       "line": 188,
       "text": "Role changes take effect on the next request through every door.",
-      "to": "clause",
+      "to": "base",
       "ids": [
-        "ROLE-001"
+        "BASE-ROLE-001"
+      ],
+      "also": [
+        {
+          "to": "door-rule",
+          "ids": [
+            "D-2"
+          ]
+        }
       ]
     },
     {
@@ -1304,9 +1328,9 @@
       "file": "CONTRACT.md",
       "line": 190,
       "text": "Downgrade a role mid-session and prove the next request uses the new role.",
-      "to": "clause",
+      "to": "base",
       "ids": [
-        "ROLE-001"
+        "BASE-ROLE-001"
       ]
     },
     {
@@ -2423,7 +2447,7 @@
       "to": "clause",
       "ids": [
         "MOBILE-001",
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     {
@@ -2531,7 +2555,7 @@
       "to": "clause",
       "ids": [
         "MOBILE-001",
-        "MOBILE-006",
+        "MOBILE-005",
         "MOBILE-002"
       ]
     },
@@ -2856,9 +2880,9 @@
       "file": "CONTRACT.md",
       "line": 285,
       "text": "Notifications never label provider acknowledgment or a preview-bot request as proof a human received the file.",
-      "to": "clause",
+      "to": "base",
       "ids": [
-        "SHARE-003"
+        "BASE-MAIL-001"
       ]
     },
     {
@@ -2873,7 +2897,16 @@
     {
       "file": "CONTRACT.md",
       "line": 287,
-      "text": "A mail scanner GET and successful email API response must not set human receipt; expiry stops new range requests.",
+      "text": "A mail scanner GET and successful email API response must not set human receipt;",
+      "to": "base",
+      "ids": [
+        "BASE-MAIL-001"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 287,
+      "text": " expiry stops new range requests.",
       "to": "clause",
       "ids": [
         "SHARE-003"
@@ -3466,7 +3499,7 @@
       "ids": [
         "PREVIEW-001",
         "PREVIEW-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -3685,7 +3718,7 @@
       "to": "clause",
       "ids": [
         "SEARCH-003",
-        "MOBILE-005"
+        "PREVIEW-003"
       ],
       "also": [
         {
@@ -3783,7 +3816,7 @@
       "to": "clause",
       "ids": [
         "SEARCH-003",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -3901,7 +3934,7 @@
       "to": "clause",
       "ids": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -4073,7 +4106,7 @@
       "to": "clause",
       "ids": [
         "EDIT-005",
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     {
@@ -4082,7 +4115,7 @@
       "text": "The apps open Collabora Online's touch editing interface inside the app, on the same WOPI session, grants and attributed saves as the browser.",
       "to": "clause",
       "ids": [
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     {
@@ -4349,16 +4382,26 @@
     {
       "file": "CONTRACT.md",
       "line": 357,
-      "text": "A format or Collabora release in which any part below does not work fails this clause's acceptance; making it work, in Chest's integration or upstream, is delivery work under this clause.",
+      "text": "A format or Collabora release in which any part below does not work fails this clause's acceptance; making it work",
       "to": "clause",
       "ids": [
         "EDIT-001"
-      ],
-      "also": [
-        {
-          "to": "deleted",
-          "note": "the \"or upstream\" duty, an open-ended obligation to patch a third-party engine rather than a buyer outcome (RULINGS P-8)"
-        }
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 357,
+      "text": ", in Chest's integration or upstream",
+      "to": "deleted",
+      "note": "the \"in Chest's integration or upstream\" duty, an open-ended obligation to patch a third-party engine rather than a buyer outcome (RL-17)"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 357,
+      "text": ", is delivery work under this clause.",
+      "to": "clause",
+      "ids": [
+        "EDIT-001"
       ]
     },
     {
@@ -4666,7 +4709,7 @@
       "text": "Repeat one co-edit with one participant in the iOS app and one in the Android app on the MOBILE-001 current-release devices, each save attributed to that participant.",
       "to": "clause",
       "ids": [
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     {
@@ -4675,7 +4718,7 @@
       "text": "Revoke the Android participant mid-session and see their next save refused.",
       "to": "clause",
       "ids": [
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     {
@@ -4959,7 +5002,7 @@
         "EDIT-007",
         "EDIT-008",
         "EDIT-009",
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     {
@@ -5241,7 +5284,7 @@
       "to": "clause",
       "ids": [
         "EDIT-008",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -5269,7 +5312,7 @@
       "to": "clause",
       "ids": [
         "EDIT-004",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -5477,7 +5520,7 @@
       "to": "clause",
       "ids": [
         "EDIT-004",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -5856,7 +5899,7 @@
       "to": "clause",
       "ids": [
         "SIGN-001",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -6046,6 +6089,14 @@
       "to": "clause",
       "ids": [
         "RECOVER-002"
+      ],
+      "also": [
+        {
+          "to": "base",
+          "ids": [
+            "BASE-BACKUP-001"
+          ]
+        }
       ]
     },
     {
@@ -6064,6 +6115,14 @@
       "to": "clause",
       "ids": [
         "RECOVER-002"
+      ],
+      "also": [
+        {
+          "to": "base",
+          "ids": [
+            "BASE-BACKUP-001"
+          ]
+        }
       ]
     },
     {
@@ -6073,6 +6132,14 @@
       "to": "clause",
       "ids": [
         "RECOVER-002"
+      ],
+      "also": [
+        {
+          "to": "base",
+          "ids": [
+            "BASE-BACKUP-001"
+          ]
+        }
       ]
     },
     {
@@ -6091,6 +6158,14 @@
       "to": "clause",
       "ids": [
         "ADMIN-001"
+      ],
+      "also": [
+        {
+          "to": "base",
+          "ids": [
+            "BASE-SIGNIN-001"
+          ]
+        }
       ]
     },
     {
@@ -6124,9 +6199,17 @@
       "file": "CONTRACT.md",
       "line": 450,
       "text": "**Acceptance evidence:** Against a real identity provider, provision a user/group, sign in, change membership and deactivate the user.",
-      "to": "clause",
+      "to": "base",
       "ids": [
-        "ADMIN-001"
+        "BASE-SIGNIN-001"
+      ],
+      "also": [
+        {
+          "to": "clause",
+          "ids": [
+            "ADMIN-001"
+          ]
+        }
       ]
     },
     {
@@ -6607,7 +6690,24 @@
     {
       "file": "CONTRACT.md",
       "line": 468,
-      "text": "An admin role confers no access to file contents, names, previews or search results unless that person also holds a content role (ROLE-001); content recovery restores items without opening them.",
+      "text": "An admin role confers no access to file contents, names, previews or search results unless that person also holds a content role (ROLE-001);",
+      "to": "clause",
+      "ids": [
+        "ADMIN-003"
+      ],
+      "also": [
+        {
+          "to": "base",
+          "ids": [
+            "BASE-ROLE-001"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 468,
+      "text": " content recovery restores items without opening them.",
       "to": "clause",
       "ids": [
         "ADMIN-003"
@@ -7539,7 +7639,16 @@
     {
       "file": "CONTRACT.md",
       "line": 524,
-      "text": "A searchable, exportable audit attributes reads/downloads, sharing/admin mutations, device actions and every automation/provider attempt to actor, exact version, authority and outcome.",
+      "text": "A searchable, exportable audit",
+      "to": "base",
+      "ids": [
+        "BASE-AUDIT-001"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 524,
+      "text": " attributes reads/downloads, sharing/admin mutations, device actions and every automation/provider attempt to actor, exact version, authority and outcome.",
       "to": "clause",
       "ids": [
         "AUDIT-001"
@@ -7549,6 +7658,24 @@
       "file": "CONTRACT.md",
       "line": 524,
       "text": "Failed/uncertain/crashed jobs retain durable outcomes and cannot disappear on restart or become success by timeout.",
+      "to": "base",
+      "ids": [
+        "BASE-AUDIT-001"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 524,
+      "text": "Pagination/export includes all retained history beyond UI limits;",
+      "to": "base",
+      "ids": [
+        "BASE-AUDIT-001"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 524,
+      "text": " audit payloads omit secrets",
       "to": "clause",
       "ids": [
         "AUDIT-001"
@@ -7557,10 +7684,10 @@
     {
       "file": "CONTRACT.md",
       "line": 524,
-      "text": "Pagination/export includes all retained history beyond UI limits; audit payloads omit secrets and anonymize erased identities without deleting the action record.",
-      "to": "clause",
+      "text": " and anonymize erased identities without deleting the action record.",
+      "to": "base",
       "ids": [
-        "AUDIT-001"
+        "BASE-AUDIT-001"
       ]
     },
     {
@@ -7597,6 +7724,14 @@
       "to": "clause",
       "ids": [
         "AUDIT-001"
+      ],
+      "also": [
+        {
+          "to": "base",
+          "ids": [
+            "BASE-AUDIT-001"
+          ]
+        }
       ]
     },
     {
@@ -7606,6 +7741,14 @@
       "to": "clause",
       "ids": [
         "AUDIT-001"
+      ],
+      "also": [
+        {
+          "to": "base",
+          "ids": [
+            "BASE-AUDIT-001"
+          ]
+        }
       ]
     },
     {
@@ -8012,7 +8155,7 @@
     {
       "file": "CONTRACT.md",
       "line": 554,
-      "text": "**Acceptance evidence:** Run the probes for 30 days against the SCALE-001 reference installation and publish each door's availability and minute history against the 99.9% target.",
+      "text": "**Acceptance evidence:** Run the probes for 30 days",
       "to": "clause",
       "ids": [
         "OPS-002"
@@ -8023,10 +8166,30 @@
           "ids": [
             "R-20"
           ]
-        },
+        }
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 554,
+      "text": " against the SCALE-001 reference installation",
+      "to": "deleted",
+      "note": "\"against the SCALE-001 reference installation\": availability does not need the reference size (RL-20)"
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 554,
+      "text": " and publish each door's availability and minute history against the 99.9% target.",
+      "to": "clause",
+      "ids": [
+        "OPS-002"
+      ],
+      "also": [
         {
-          "to": "deleted",
-          "note": "\"against the reference installation\", availability does not need reference size"
+          "to": "register",
+          "ids": [
+            "R-20"
+          ]
         }
       ]
     },
@@ -8154,24 +8317,32 @@
       "to": "clause",
       "ids": [
         "OWN-001"
+      ],
+      "also": [
+        {
+          "to": "base",
+          "ids": [
+            "BASE-INSTALL-001"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 565,
       "text": "**Their own computer** (macOS, Linux, or Windows with WSL2), with one line, `npx -y @runeditrun/rer dev just-every/run-chest`, which clones, installs, sets up a local owner and starts Chest;",
-      "to": "clause",
+      "to": "base",
       "ids": [
-        "OWN-001"
+        "BASE-INSTALL-001"
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 565,
       "text": "`rer dev` inside the checkout starts it again.",
-      "to": "clause",
+      "to": "base",
       "ids": [
-        "OWN-001"
+        "BASE-INSTALL-001"
       ]
     },
     {
@@ -8181,15 +8352,23 @@
       "to": "clause",
       "ids": [
         "OWN-001"
+      ],
+      "also": [
+        {
+          "to": "base",
+          "ids": [
+            "BASE-INSTALL-001"
+          ]
+        }
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 567,
       "text": "**Their own cloud account**:",
-      "to": "clause",
+      "to": "base",
       "ids": [
-        "OWN-001"
+        "BASE-INSTALL-001"
       ]
     },
     {
@@ -8199,6 +8378,14 @@
       "to": "clause",
       "ids": [
         "OWN-001"
+      ],
+      "also": [
+        {
+          "to": "base",
+          "ids": [
+            "BASE-INSTALL-001"
+          ]
+        }
       ]
     },
     {
@@ -8232,27 +8419,36 @@
       "file": "CONTRACT.md",
       "line": 569,
       "text": "Install, update and rollback steps are reproducible from the documentation (OPS-001, RECOVER-002).",
-      "to": "clause",
+      "to": "base",
       "ids": [
-        "OWN-001"
+        "BASE-INSTALL-001",
+        "BASE-BACKUP-001"
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 571,
       "text": "**Acceptance evidence:** From a fresh clone on macOS and on Ubuntu LTS, run the five documented commands and reach the signed-in owner library in the browser.",
-      "to": "clause",
+      "to": "base",
       "ids": [
-        "OWN-001"
+        "BASE-INSTALL-001"
       ]
     },
     {
       "file": "CONTRACT.md",
       "line": 571,
       "text": "On a Linux VM the owner controls, install Chest with the documented server steps and sign in from a second computer over HTTPS on the owner's domain.",
-      "to": "clause",
+      "to": "base",
       "ids": [
-        "OWN-001"
+        "BASE-INSTALL-001"
+      ],
+      "also": [
+        {
+          "to": "clause",
+          "ids": [
+            "OWN-001"
+          ]
+        }
       ]
     },
     {
@@ -8268,9 +8464,9 @@
       "file": "CONTRACT.md",
       "line": 571,
       "text": "Deploy the same release to the owner's Cloudflare account.",
-      "to": "clause",
+      "to": "base",
       "ids": [
-        "OWN-001"
+        "BASE-INSTALL-001"
       ]
     },
     {
@@ -11873,7 +12069,7 @@
         "MOBILE-002",
         "MOBILE-003",
         "MOBILE-004",
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     {
@@ -12129,7 +12325,7 @@
       "ids": [
         "PREVIEW-001",
         "PREVIEW-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12141,7 +12337,7 @@
       "ids": [
         "PREVIEW-001",
         "PREVIEW-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12153,7 +12349,7 @@
       "ids": [
         "PREVIEW-001",
         "PREVIEW-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12165,7 +12361,7 @@
       "ids": [
         "PREVIEW-001",
         "PREVIEW-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12177,7 +12373,7 @@
       "ids": [
         "PREVIEW-001",
         "PREVIEW-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12189,7 +12385,7 @@
       "ids": [
         "PREVIEW-001",
         "PREVIEW-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12201,7 +12397,7 @@
       "ids": [
         "PREVIEW-001",
         "PREVIEW-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12214,7 +12410,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -12228,7 +12424,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -12242,7 +12438,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -12256,7 +12452,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -12270,7 +12466,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -12284,7 +12480,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -12298,7 +12494,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -12312,7 +12508,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -12326,7 +12522,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -12340,7 +12536,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -12354,7 +12550,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -12368,7 +12564,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -12382,7 +12578,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -12394,7 +12590,7 @@
       "to": "gap",
       "ids": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12405,7 +12601,7 @@
       "to": "gap",
       "ids": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12416,7 +12612,7 @@
       "to": "gap",
       "ids": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12427,7 +12623,7 @@
       "to": "gap",
       "ids": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12438,7 +12634,7 @@
       "to": "gap",
       "ids": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12449,7 +12645,7 @@
       "to": "gap",
       "ids": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12460,7 +12656,7 @@
       "to": "gap",
       "ids": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12471,7 +12667,7 @@
       "to": "gap",
       "ids": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12482,7 +12678,7 @@
       "to": "gap",
       "ids": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12493,7 +12689,7 @@
       "to": "gap",
       "ids": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12504,7 +12700,7 @@
       "to": "gap",
       "ids": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12548,7 +12744,7 @@
       "to": "gap",
       "ids": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12581,7 +12777,7 @@
         "EDIT-012",
         "EDIT-004",
         "EDIT-014",
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     {
@@ -12603,7 +12799,7 @@
         "EDIT-012",
         "EDIT-004",
         "EDIT-014",
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     {
@@ -12625,7 +12821,7 @@
         "EDIT-012",
         "EDIT-004",
         "EDIT-014",
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     {
@@ -12647,7 +12843,7 @@
         "EDIT-012",
         "EDIT-004",
         "EDIT-014",
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     {
@@ -12669,7 +12865,7 @@
         "EDIT-012",
         "EDIT-004",
         "EDIT-014",
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     {
@@ -12692,7 +12888,7 @@
         "EDIT-004",
         "EDIT-013",
         "EDIT-014",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12705,7 +12901,7 @@
         "EDIT-004",
         "EDIT-013",
         "EDIT-014",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12718,7 +12914,7 @@
         "EDIT-004",
         "EDIT-013",
         "EDIT-014",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12731,7 +12927,7 @@
         "EDIT-004",
         "EDIT-013",
         "EDIT-014",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12744,7 +12940,7 @@
         "EDIT-004",
         "EDIT-013",
         "EDIT-014",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12755,7 +12951,7 @@
       "to": "gap",
       "ids": [
         "SIGN-001",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12766,7 +12962,7 @@
       "to": "gap",
       "ids": [
         "SIGN-001",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12817,7 +13013,7 @@
       "to": "gap",
       "ids": [
         "SIGN-001",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -12910,7 +13106,8 @@
           "ids": [
             "ADMIN-002",
             "ADMIN-005"
-          ]
+          ],
+          "cell": "gap"
         }
       ]
     },
@@ -12927,7 +13124,8 @@
           "ids": [
             "ADMIN-002",
             "ADMIN-005"
-          ]
+          ],
+          "cell": "gap"
         }
       ]
     },
@@ -12944,7 +13142,8 @@
           "ids": [
             "ADMIN-002",
             "ADMIN-005"
-          ]
+          ],
+          "cell": "gap"
         }
       ]
     },
@@ -12961,7 +13160,8 @@
           "ids": [
             "ADMIN-002",
             "ADMIN-005"
-          ]
+          ],
+          "cell": "gap"
         }
       ]
     },
@@ -12978,7 +13178,8 @@
           "ids": [
             "ADMIN-002",
             "ADMIN-005"
-          ]
+          ],
+          "cell": "gap"
         }
       ]
     },
@@ -12995,7 +13196,8 @@
           "ids": [
             "ADMIN-002",
             "ADMIN-005"
-          ]
+          ],
+          "cell": "gap"
         }
       ]
     },
@@ -13012,7 +13214,8 @@
           "ids": [
             "ADMIN-002",
             "ADMIN-005"
-          ]
+          ],
+          "cell": "gap"
         }
       ]
     },
@@ -13029,7 +13232,8 @@
           "ids": [
             "ADMIN-002",
             "ADMIN-005"
-          ]
+          ],
+          "cell": "gap"
         }
       ]
     },
@@ -13046,7 +13250,8 @@
           "ids": [
             "ADMIN-002",
             "ADMIN-005"
-          ]
+          ],
+          "cell": "gap"
         }
       ]
     },
@@ -13063,7 +13268,8 @@
           "ids": [
             "ADMIN-002",
             "ADMIN-005"
-          ]
+          ],
+          "cell": "gap"
         }
       ]
     },
@@ -13080,7 +13286,8 @@
           "ids": [
             "ADMIN-002",
             "ADMIN-005"
-          ]
+          ],
+          "cell": "gap"
         }
       ]
     },
@@ -14447,12 +14654,8 @@
       "path": "docs/reading.md",
       "also": [
         {
-          "to": "gap",
-          "ids": [
-            "TRANSFER-001",
-            "TRANSFER-002",
-            "SEARCH-001"
-          ]
+          "to": "section",
+          "section": "Status"
         }
       ]
     },
@@ -14460,32 +14663,22 @@
       "file": "CONTRACT.md",
       "line": 812,
       "text": "Current PDF and raster viewing uses the browser, and DOCX/XLSX/PPTX have built-in previews.",
-      "to": "gap",
-      "ids": [
-        "PREVIEW-001"
-      ]
+      "to": "section",
+      "section": "Status"
     },
     {
       "file": "CONTRACT.md",
       "line": 812,
       "text": "Search also combines the named type, people, date, location and version filters and finds matches in earlier versions, labeled with their exact version.",
-      "to": "gap",
-      "ids": [
-        "SEARCH-003"
-      ]
+      "to": "section",
+      "section": "Status"
     },
     {
       "file": "CONTRACT.md",
       "line": 812,
       "text": "These are delivered subsets of TRANSFER-001, PREVIEW-001 and SEARCH-001; their larger limits, complete format matrices, native-app search and the SCALE-001 search target remain required.",
-      "to": "gap",
-      "ids": [
-        "TRANSFER-002",
-        "PREVIEW-001",
-        "SEARCH-001",
-        "MOBILE-005",
-        "SCALE-001"
-      ]
+      "to": "section",
+      "section": "Status"
     },
     {
       "file": "CONTRACT.md",
@@ -15021,41 +15214,6 @@
       "line": 877,
       "text": "Office preview, editing and comment rows updated on 17 October 2026; see `docs/office.md`.",
       "to": "changelog"
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 879,
-      "text": "| Clauses | Done | Partial | Missing | Total |",
-      "to": "generated",
-      "note": "The contract generator writes the Status summary counts."
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 881,
-      "text": "| Published | 24 | 0 | 0 | 24 |",
-      "to": "generated",
-      "note": "The contract generator writes the Status summary counts."
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 882,
-      "text": "| Target and push further | 25 | 30 | 17 | 72 |",
-      "to": "generated",
-      "note": "The contract generator writes the Status summary counts."
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 883,
-      "text": "| All | 49 | 30 | 17 | 96 |",
-      "to": "generated",
-      "note": "The contract generator writes the Status summary counts."
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 885,
-      "text": "| Clause | Title | Kind | Status | Evidence | Gap |",
-      "to": "section",
-      "section": "Status"
     },
     {
       "file": "ACCEPTANCE.md",
@@ -15697,28 +15855,28 @@
     {
       "file": "ACCEPTANCE.md",
       "line": 210,
-      "text": "- Search the phrase with Type = PDF, People = owned by the second owner and Modified = last 30 days. Only the matching files come back, including the renamed PDF.",
+      "text": "Search the phrase with Type = PDF, People = owned by the second owner and Modified = last 30 days. Only the matching files come back, including the renamed PDF.",
       "to": "copy",
       "of": 327
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 211,
-      "text": "- Combine each of Type, People, Modified and Version with Location = Shared with me, and again with Location = one space; check each result set against the seed. Use a custom date range, and a filter-only search with no text.",
+      "text": "Combine each of Type, People, Modified and Version with Location = Shared with me, and again with Location = one space; check each result set against the seed. Use a custom date range, and a filter-only search with no text.",
       "to": "copy",
       "of": 328
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 212,
-      "text": "- The test user never sees the PDF they cannot open, or a count or suggestion that includes it.",
+      "text": "The test user never sees the PDF they cannot open, or a count or suggestion that includes it.",
       "to": "copy",
       "of": 329
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 213,
-      "text": "- Repeat in the browser at 1440 and 390, in the iOS and Android apps and through the search API.",
+      "text": "Repeat in the browser at 1440 and 390, in the iOS and Android apps and through the search API.",
       "to": "copy",
       "of": 330
     },
@@ -15760,105 +15918,105 @@
     {
       "file": "ACCEPTANCE.md",
       "line": 224,
-      "text": "- At setup, the console shows Collabora Online's edition, its document and connection limits and its USD cost before the owner confirms enabling it. Choosing CODE shows the not-for-production notice and what a subscription adds, and enabling it is refused until the owner acknowledges the notice.",
+      "text": "At setup, the console shows Collabora Online's edition, its document and connection limits and its USD cost before the owner confirms enabling it. Choosing CODE shows the not-for-production notice and what a subscription adds, and enabling it is refused until the owner acknowledges the notice.",
       "to": "copy",
       "of": 367
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 225,
-      "text": "- Two staff and one PIN-verified SHARE-005 guest co-edit a DOCX, an XLSX and a PPTX in the browser at 1440 and 390. Concurrent changes reach every participant, and each save is a version attributed to its author, the guest by verified email. While they co-edit, each participant sees the other two named as present in the editor and on the file page. Afterwards the folder holds one file with one stable ID and no copy or conflict file, and its version history attributes each person's saves. Revoke the guest mid-session and see their next save refused.",
+      "text": "Two staff and one PIN-verified SHARE-005 guest co-edit a DOCX, an XLSX and a PPTX in the browser at 1440 and 390. Concurrent changes reach every participant, and each save is a version attributed to its author, the guest by verified email. While they co-edit, each participant sees the other two named as present in the editor and on the file page. Afterwards the folder holds one file with one stable ID and no copy or conflict file, and its version history attributes each person's saves. Revoke the guest mid-session and see their next save refused.",
       "to": "copy",
       "of": 368
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 226,
-      "text": "- Repeat one co-edit with one participant in the iOS app and one in the Android app on the MOBILE-001 current-release devices, each save attributed to that participant. Revoke the Android participant mid-session and see their next save refused.",
+      "text": "Repeat one co-edit with one participant in the iOS app and one in the Android app on the MOBILE-001 current-release devices, each save attributed to that participant. Revoke the Android participant mid-session and see their next save refused.",
       "to": "copy",
       "of": 369
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 227,
-      "text": "- Round-trip tables, formulas and comments in all three formats, then open the saved versions in desktop Word, Excel and PowerPoint and in LibreOffice with them intact. Edit a review-gated file and see its approved version unchanged. Stop the Collabora Online service and see the outage named, with the original still downloadable.",
+      "text": "Round-trip tables, formulas and comments in all three formats, then open the saved versions in desktop Word, Excel and PowerPoint and in LibreOffice with them intact. Edit a review-gated file and see its approved version unchanged. Stop the Collabora Online service and see the outage named, with the original still downloadable.",
       "to": "copy",
       "of": 370
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 228,
-      "text": "- A contributor creates a blank spreadsheet from the EDIT-004 New menu, and it opens in Collabora Online.",
+      "text": "A contributor creates a blank spreadsheet from the EDIT-004 New menu, and it opens in Collabora Online.",
       "to": "copy",
       "of": 371
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 229,
-      "text": "- A uses Insert Chest link in the DOCX, searches for a contract in a restricted folder A can open and inserts it; a search for a file A cannot open returns nothing. A is told that staff member B, who can open the DOCX but not that folder, cannot open the link, and is offered a viewer grant; A declines, and B following the link sees Request access. Repeat at 390 and in the iOS and Android apps.",
+      "text": "A uses Insert Chest link in the DOCX, searches for a contract in a restricted folder A can open and inserts it; a search for a file A cannot open returns nothing. A is told that staff member B, who can open the DOCX but not that folder, cannot open the link, and is offered a viewer grant; A declines, and B following the link sees Request access. Repeat at 390 and in the iOS and Android apps.",
       "to": "copy",
       "of": 372
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 230,
-      "text": "- A viewer downloads the DOCX as PDF and as ODT from the file page, the iOS app and the API, each named for its source version, with no new version created. With the ROLE-001 no-download setting on, each format is refused.",
+      "text": "A viewer downloads the DOCX as PDF and as ODT from the file page, the iOS app and the API, each named for its source version, with no new version created. With the ROLE-001 no-download setting on, each format is refused.",
       "to": "copy",
       "of": 373
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 231,
-      "text": "- Review loop, on the same installation:",
+      "text": "Review loop, on the same installation:",
       "to": "copy",
       "of": 374
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 232,
-      "text": "  - Staff A opens a DOCX and comments \"@B please check clause 4\". B gets the in-app and email notifications with the comment text, and the comment shows A and B by Chest name in the editor and on the file page.",
+      "text": "Staff A opens a DOCX and comments \"@B please check clause 4\". B gets the in-app and email notifications with the comment text, and the comment shows A and B by Chest name in the editor and on the file page.",
       "to": "copy",
       "of": 375
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 233,
-      "text": "  - A mentions C, who has no access to the file. A is offered a commenter grant, and C is sent nothing until A accepts it; C is then notified and opens the file. A contributor in a space with editor sharing switched off mentions D, who has no access: the refusal names the rule, and the offered access request reaches the file's managers. A mention of an address on a domain outside the POLICY-001 allowlist is refused with the policy named, and autocomplete never offered it.",
+      "text": "A mentions C, who has no access to the file. A is offered a commenter grant, and C is sent nothing until A accepts it; C is then notified and opens the file. A contributor in a space with editor sharing switched off mentions D, who has no access: the refusal names the rule, and the offered access request reaches the file's managers. A mention of an address on a domain outside the POLICY-001 allowlist is refused with the policy named, and autocomplete never offered it.",
       "to": "copy",
       "of": 376
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 234,
-      "text": "  - Inside the Collabora Online comment box, A mentions B in a new comment and chooses Assign, and the comment appears in B's task list. B replies to the notification email: within 60 seconds the reply appears inside A's open session, attributed to B, and the file gains a \"comment reply\" version. B resolves the comment on the file page and it shows resolved inside the document. A replies inside the document and the thread on the file page shows it within 60 seconds.",
+      "text": "Inside the Collabora Online comment box, A mentions B in a new comment and chooses Assign, and the comment appears in B's task list. B replies to the notification email: within 60 seconds the reply appears inside A's open session, attributed to B, and the file gains a \"comment reply\" version. B resolves the comment on the file page and it shows resolved inside the document. A replies inside the document and the thread on the file page shows it within 60 seconds.",
       "to": "copy",
       "of": 377
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 235,
-      "text": "  - A PIN-verified SHARE-005 guest commenter opens the DOCX and types a change. It is recorded as a tracked change attributed to their verified email, and the file's owner is notified of the suggestion. Saves from that session carrying a direct edit, and one adding a comment under B's name, are refused with `suggest_only` and `author_mismatch` and create no version. A contributor accepts one of the guest's suggestions and rejects another, and each decision is its own version attributed to the contributor, naming the guest and the decision.",
+      "text": "A PIN-verified SHARE-005 guest commenter opens the DOCX and types a change. It is recorded as a tracked change attributed to their verified email, and the file's owner is notified of the suggestion. Saves from that session carrying a direct edit, and one adding a comment under B's name, are refused with `suggest_only` and `author_mismatch` and create no version. A contributor accepts one of the guest's suggestions and rejects another, and each decision is its own version attributed to the contributor, naming the guest and the decision.",
       "to": "copy",
       "of": 378
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 236,
-      "text": "  - A viewer's session is read-only, and a save from it is refused.",
+      "text": "A viewer's session is read-only, and a save from it is refused.",
       "to": "copy",
       "of": 379
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 237,
-      "text": "  - Repeat the @mention step with an XLSX comment, a PPTX comment and an ODT, and the guest suggestion step with the ODT. In the XLSX and the PPTX, the commenter's comment posts and their cell or slide edit is refused with `suggest_only`. Run every review-loop step in the browser at 1440 and 390 and in the iOS and Android apps on the MOBILE-001 current-release devices.",
+      "text": "Repeat the @mention step with an XLSX comment, a PPTX comment and an ODT, and the guest suggestion step with the ODT. In the XLSX and the PPTX, the commenter's comment posts and their cell or slide edit is refused with `suggest_only`. Run every review-loop step in the browser at 1440 and 390 and in the iOS and Android apps on the MOBILE-001 current-release devices.",
       "to": "copy",
       "of": 380
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 238,
-      "text": "- Set the connection limit to 3 and open a fourth editing session: it is refused with `editor_capacity_reached`, naming the limit and current use, in the browser, a mobile app and the API. The file opens read-only, and the three open sessions continue.",
+      "text": "Set the connection limit to 3 and open a fourth editing session: it is refused with `editor_capacity_reached`, naming the limit and current use, in the browser, a mobile app and the API. The file opens read-only, and the three open sessions continue.",
       "to": "copy",
       "of": 381
     },
@@ -15872,14 +16030,14 @@
     {
       "file": "ACCEPTANCE.md",
       "line": 241,
-      "text": "- Two licensed users co-edit a DOCX, an XLSX and a PPTX through Office for the web and desktop Office, with attributed saves. Revoke one mid-session and see their next save refused.",
+      "text": "Two licensed users co-edit a DOCX, an XLSX and a PPTX through Office for the web and desktop Office, with attributed saves. Revoke one mid-session and see their next save refused.",
       "to": "copy",
       "of": 384
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 242,
-      "text": "- A group member without a qualifying license opens the same DOCX and gets the read-only view with the license named as the reason. No editing session is created, and no save from them is accepted. With no Microsoft session open on the file, they choose Edit in Collabora Online, and their saves are attributed to them.",
+      "text": "A group member without a qualifying license opens the same DOCX and gets the read-only view with the license named as the reason. No editing session is created, and no save from them is accepted. With no Microsoft session open on the file, they choose Edit in Collabora Online, and their saves are attributed to them.",
       "to": "copy",
       "of": 385
     },
@@ -15921,42 +16079,42 @@
     {
       "file": "ACCEPTANCE.md",
       "line": 255,
-      "text": "- A contributor creates a blank spreadsheet in a restricted team-space folder. It opens in the EDIT-001 editor at once, and after two saved edits its version history shows versions 1–3 (created, then two editor saves) attributed to them. A colleague with folder access finds it in search and opens it; a staff member outside the folder finds nothing in search and gets 403 on its URL.",
+      "text": "A contributor creates a blank spreadsheet in a restricted team-space folder. It opens in the EDIT-001 editor at once, and after two saved edits its version history shows versions 1–3 (created, then two editor saves) attributed to them. A colleague with folder access finds it in search and opens it; a staff member outside the folder finds nothing in search and gets 403 on its URL.",
       "to": "copy",
       "of": 409
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 256,
-      "text": "- Create a blank document and a blank presentation; download each version 1 and open it in desktop Word, Excel or PowerPoint and in LibreOffice without a repair prompt. Switch the organization creation format to ODF and see the next new document created as ODT; set a group override to Google types under EDIT-002 and see a group member's new document open as a Google Doc.",
+      "text": "Create a blank document and a blank presentation; download each version 1 and open it in desktop Word, Excel or PowerPoint and in LibreOffice without a repair prompt. Switch the organization creation format to ODF and see the next new document created as ODT; set a group override to Google types under EDIT-002 and see a group member's new document open as a Google Doc.",
       "to": "copy",
       "of": 410
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 257,
-      "text": "- An admin publishes a DOCX organization template to one group. A group member creates a document from it; a user outside the group does not see the template in the New menu, the gallery or the API listing. Editing the new document leaves the template's bytes and version unchanged, editing the template afterwards leaves the new document unchanged, and the new document's version 1 names the template and its version. A space manager publishes a space template that only that space's members see. Unpublish the organization template and see documents made from it unchanged.",
+      "text": "An admin publishes a DOCX organization template to one group. A group member creates a document from it; a user outside the group does not see the template in the New menu, the gallery or the API listing. Editing the new document leaves the template's bytes and version unchanged, editing the template afterwards leaves the new document unchanged, and the new document's version 1 names the template and its version. A space manager publishes a space template that only that space's members see. Unpublish the organization template and see documents made from it unchanged.",
       "to": "copy",
       "of": 411
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 258,
-      "text": "- A viewer and a commenter see no New action, and their direct API create returns 403 with no file created. A guest contributor on a folder creates a blank document there, attributed to the guest's email.",
+      "text": "A viewer and a commenter see no New action, and their direct API create returns 403 with no file created. A guest contributor on a folder creates a blank document there, attributed to the guest's email.",
       "to": "copy",
       "of": 412
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 259,
-      "text": "- An over-limit user's create in their personal area is refused with `storage_limit_exceeded` naming the limit in the browser, the mobile app and the API.",
+      "text": "An over-limit user's create in their personal area is refused with `storage_limit_exceeded` naming the limit in the browser, the mobile app and the API.",
       "to": "copy",
       "of": 413
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 260,
-      "text": "- Repeat an API create with the same caller key and get one file. Inspect the audit entry for each create, publish and unpublish.",
+      "text": "Repeat an API create with the same caller key and get one file. Inspect the audit entry for each create, publish and unpublish.",
       "to": "copy",
       "of": 414
     },
@@ -16271,49 +16429,49 @@
     {
       "file": "ACCEPTANCE.md",
       "line": 353,
-      "text": "- The DOCX opens in Collabora Online with the three open threads and the resolved thread in their states, anchored to their text. On the file page and in the iOS and Android apps they are EDIT-003 threads with their original timestamps, attributed to the mapped Chest users. The external comment carries the guest's email, and the departed user's comment shows as \"Former collaborator (name as in source)\".",
+      "text": "The DOCX opens in Collabora Online with the three open threads and the resolved thread in their states, anchored to their text. On the file page and in the iOS and Android apps they are EDIT-003 threads with their original timestamps, attributed to the mapped Chest users. The external comment carries the guest's email, and the departed user's comment shows as \"Former collaborator (name as in source)\".",
       "to": "copy",
       "of": 599
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 354,
-      "text": "- B finds the assigned comment in their task list. The notification log shows nothing sent to anyone during the migration or the delta pass, and no reminder on cutover day.",
+      "text": "B finds the assigned comment in their task list. The notification log shows nothing sent to anyone during the migration or the delta pass, and no reminder on cutover day.",
       "to": "copy",
       "of": 600
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 355,
-      "text": "- C's two suggestions are tracked changes attributed to C. A contributor accepts one and rejects the other, and each decision is an EDIT-001 decision version.",
+      "text": "C's two suggestions are tracked changes attributed to C. A contributor accepts one and rejects the other, and each decision is an EDIT-001 decision version.",
       "to": "copy",
       "of": 601
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 356,
-      "text": "- The Sheet's cell comment and the PDF's region comment are EDIT-003 threads on the right cell and on the right page and region.",
+      "text": "The Sheet's cell comment and the PDF's region comment are EDIT-003 threads on the right cell and on the right page and region.",
       "to": "copy",
       "of": 602
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 357,
-      "text": "- Add a reply and resolve a thread in Google, run the delta pass, and see each arrive once, with no notification.",
+      "text": "Add a reply and resolve a thread in Google, run the delta pass, and see each arrive once, with no notification.",
       "to": "copy",
       "of": 603
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 358,
-      "text": "- The report's per-file counts match the source. An injected author with no match shows as a former collaborator and is listed with its reason, never as another person; an injected comment whose quoted text was removed is flagged \"anchor not found\" with its quoted text kept; an assignment to a user who cannot open the file goes to the file's owner and is listed, with no access granted.",
+      "text": "The report's per-file counts match the source. An injected author with no match shows as a former collaborator and is listed with its reason, never as another person; an injected comment whose quoted text was removed is flagged \"anchor not found\" with its quoted text kept; an assignment to a user who cannot open the file goes to the file's owner and is listed, with no access granted.",
       "to": "copy",
       "of": 604
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 359,
-      "text": "- Repeat with the Doc kept native under EDIT-002: its comments stay in Google, Chest reports them as provider-held with counts and a link, and no thread is duplicated.",
+      "text": "Repeat with the Doc kept native under EDIT-002: its comments stay in Google, Chest reports them as provider-held with counts and a link, and no thread is duplicated.",
       "to": "copy",
       "of": 605
     },
@@ -16390,35 +16548,35 @@
     {
       "file": "ACCEPTANCE.md",
       "line": 380,
-      "text": "- a Doc linking to a Sheet in another shared drive;",
+      "text": "a Doc linking to a Sheet in another shared drive;",
       "to": "copy",
       "of": 655
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 381,
-      "text": "- a Sheet with `IMPORTRANGE`, kept native in one run and converted to XLSX in another;",
+      "text": "a Sheet with `IMPORTRANGE`, kept native in one run and converted to XLSX in another;",
       "to": "copy",
       "of": 656
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 382,
-      "text": "- a PPTX and a PDF with Drive links;",
+      "text": "a PPTX and a PDF with Drive links;",
       "to": "copy",
       "of": 657
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 383,
-      "text": "- a Drive shortcut and a `.url` file;",
+      "text": "a Drive shortcut and a `.url` file;",
       "to": "copy",
       "of": 658
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 384,
-      "text": "- a link to a file excluded from the migration.",
+      "text": "a link to a file excluded from the migration.",
       "to": "copy",
       "of": 659
     },
@@ -16572,49 +16730,49 @@
     {
       "file": "ACCEPTANCE.md",
       "line": 429,
-      "text": "- A group member schedules an event linked through the Calendar add-on to a restricted team-space folder, with one internal attendee and one external attendee from an allowlisted domain, and records the Meet with transcript and notes on. The recording, transcript and notes document each appear once in the folder with meeting code, organizer, event ID and source Drive file ID. The internal attendee opens them, the external attendee opens them as a guest viewer, and a staff member who was not invited and has no folder access gets 403.",
+      "text": "A group member schedules an event linked through the Calendar add-on to a restricted team-space folder, with one internal attendee and one external attendee from an allowlisted domain, and records the Meet with transcript and notes on. The recording, transcript and notes document each appear once in the folder with meeting code, organizer, event ID and source Drive file ID. The internal attendee opens them, the external attendee opens them as a guest viewer, and a staff member who was not invited and has no folder access gets 403.",
       "to": "copy",
       "of": 738
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 430,
-      "text": "- Replay the Workspace event notification and run the reconciliation sweep: there is no duplicate.",
+      "text": "Replay the Workspace event notification and run the reconciliation sweep: there is no duplicate.",
       "to": "copy",
       "of": 739
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 431,
-      "text": "- With \"remove source after verification\" on, the Drive copy goes to Drive trash only after the SHA-256 check passes. With the destination over its QUOTA-001 limit, the filing is refused with `storage_limit_exceeded`, the organizer and an admin are told, and the Drive copy is kept. An organizer outside the covered group has nothing filed.",
+      "text": "With \"remove source after verification\" on, the Drive copy goes to Drive trash only after the SHA-256 check passes. With the destination over its QUOTA-001 limit, the filing is refused with `storage_limit_exceeded`, the organizer and an admin are told, and the Drive copy is kept. An organizer outside the covered group has nothing filed.",
       "to": "copy",
       "of": 740
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 432,
-      "text": "- Through the Calendar add-on, attach a restricted Chest file to an event with one guest who has access and one who doesn't. On save, the guest without access is named, gets viewer in one step, and the audit entry exists. Add a guest from a domain that isn't on the POLICY-001 allowlist: the grant is refused with the policy named.",
+      "text": "Through the Calendar add-on, attach a restricted Chest file to an event with one guest who has access and one who doesn't. On save, the guest without access is named, gets viewer in one step, and the audit entry exists. Add a guest from a domain that isn't on the POLICY-001 allowlist: the grant is refused with the policy named.",
       "to": "copy",
       "of": 741
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 433,
-      "text": "- Through the Chat app, share a restricted file into a space with mixed membership. The card shows no title. A member with access presses Preview and sees the file; a member without access sees Request access without the title. The sharer's private prompt names the members without access, and a one-step grant lets them open it. A subscribed comment notification reaches the space. Search through the app as two users returns only what each can open. Repeat the share in the Chat mobile app.",
+      "text": "Through the Chat app, share a restricted file into a space with mixed membership. The card shows no title. A member with access presses Preview and sees the file; a member without access sees Request access without the title. The sharer's private prompt names the members without access, and a one-step grant lets them open it. A subscribed comment notification reaches the space. Search through the app as two users returns only what each can open. Repeat the share in the Chat mobile app.",
       "to": "copy",
       "of": 742
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 434,
-      "text": "- A covered user maps a form with a file-upload question to a restricted folder. Two respondents each submit a file; each file appears once in the folder with form, response and source Drive file provenance, and neither respondent can open it in Chest. Replay the response notification and run the sweep: there is no duplicate. The form's Chest folder links the responses Sheet, which opens under EDIT-002, and no response rows are copied into Chest.",
+      "text": "A covered user maps a form with a file-upload question to a restricted folder. Two respondents each submit a file; each file appears once in the folder with form, response and source Drive file provenance, and neither respondent can open it in Chest. Replay the response notification and run the sweep: there is no duplicate. The form's Chest folder links the responses Sheet, which opens under EDIT-002, and no response rows are copied into Chest.",
       "to": "copy",
       "of": 743
     },
     {
       "file": "ACCEPTANCE.md",
       "line": 435,
-      "text": "- Revoke Meet filing, the Calendar add-on, the Chat app and Forms filing one at a time, then the whole connection. The next filing, attachment check, share and search are each refused, and files already filed keep their Chest permissions.",
+      "text": "Revoke Meet filing, the Calendar add-on, the Chat app and Forms filing one at a time, then the whole connection. The next filing, attachment check, share and search are each refused, and files already filed keep their Chest permissions.",
       "to": "copy",
       "of": 744
     },
@@ -16778,19 +16936,19 @@
     {
       "file": "docs/CLAIMS.md",
       "line": 8,
-      "text": "- **code**: every clause is done (implementing source and an exercising test).",
+      "text": "**code**: every clause is done (implementing source and an exercising test).",
       "to": "changelog"
     },
     {
       "file": "docs/CLAIMS.md",
       "line": 9,
-      "text": "- **partly**: some of it is in code; the clause's gap in `CONTRACT.md` names the rest.",
+      "text": "**partly**: some of it is in code; the clause's gap in `CONTRACT.md` names the rest.",
       "to": "changelog"
     },
     {
       "file": "docs/CLAIMS.md",
       "line": 10,
-      "text": "- **contract, not yet in code**: no delivered product workflow yet; the page shows the product we are building toward",
+      "text": "**contract, not yet in code**: no delivered product workflow yet; the page shows the product we are building toward",
       "to": "changelog"
     },
     {
@@ -17708,7 +17866,7 @@
       "ids": [
         "EDIT-003",
         "EDIT-008",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -17720,7 +17878,7 @@
       "ids": [
         "EDIT-003",
         "EDIT-008",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -17732,7 +17890,7 @@
       "ids": [
         "EDIT-003",
         "EDIT-008",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -17744,7 +17902,7 @@
       "ids": [
         "EDIT-003",
         "EDIT-008",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -17756,7 +17914,7 @@
       "ids": [
         "EDIT-003",
         "EDIT-008",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -17768,7 +17926,7 @@
       "ids": [
         "EDIT-003",
         "EDIT-008",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -17780,7 +17938,7 @@
       "ids": [
         "EDIT-003",
         "EDIT-008",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -17792,7 +17950,7 @@
       "ids": [
         "EDIT-003",
         "EDIT-008",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     {
@@ -17804,7 +17962,7 @@
       "ids": [
         "EDIT-003",
         "EDIT-008",
-        "MOBILE-005",
+        "PREVIEW-003",
         "MIGRATE-012"
       ]
     },

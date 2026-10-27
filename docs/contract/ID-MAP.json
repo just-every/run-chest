@@ -247,7 +247,7 @@
         "MOBILE-002",
         "MOBILE-003",
         "MOBILE-004",
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     "SHARE-001": {
@@ -298,7 +298,7 @@
       "to": [
         "PREVIEW-001",
         "PREVIEW-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     "SEARCH-001": {
@@ -307,7 +307,7 @@
         "SEARCH-001",
         "SEARCH-003",
         "SEARCH-004",
-        "MOBILE-005",
+        "PREVIEW-003",
         "SCALE-001"
       ]
     },
@@ -315,7 +315,7 @@
       "how": "split",
       "to": [
         "SEARCH-002",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     "EDIT-001": {
@@ -333,7 +333,7 @@
         "EDIT-012",
         "EDIT-004",
         "EDIT-014",
-        "MOBILE-006"
+        "MOBILE-005"
       ]
     },
     "EDIT-002": {
@@ -347,7 +347,7 @@
       "to": [
         "EDIT-003",
         "EDIT-008",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     "EDIT-004": {
@@ -356,14 +356,14 @@
         "EDIT-004",
         "EDIT-013",
         "EDIT-014",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     "SIGN-001": {
       "how": "split",
       "to": [
         "SIGN-001",
-        "MOBILE-005"
+        "PREVIEW-003"
       ]
     },
     "RECOVER-001": {
