@@ -145,6 +145,8 @@ export async function carryComment(env: Bindings, s: Session, w: Who, key: strin
  const fingerprint = await digest(new TextEncoder().encode(JSON.stringify([key, id, version, anchor, input.expectedCurrent])))
  const receipt = `comment:carry:${await digest(new TextEncoder().encode(JSON.stringify([s.operator.email, input.key])))}`
  const recipients = await participants(env, key, source, [...new Set([...(source.payload.mentions ?? []), ...(source.payload.assignee ? [source.payload.assignee] : [])])])
+ const owner = ctx.space.payload.kind === 'personal' ? ctx.space.payload.owner : item.payload.createdBy
+ if (!recipients.has(owner)) { const ownerCtx = await recipient(env, key, owner, false); if (ownerCtx) recipients.set(owner, { ctx: ownerCtx, type: 'comment.carry' }) }
  const replay = (winner: Row<Comment>) => {
   insist((winner.payload as Comment & { carryFingerprint?: string }).carryFingerprint === fingerprint, 'caller_key_conflict', 409)
   return winner

@@ -1693,7 +1693,7 @@
       "executable": false
     },
     "src/chest/files/comments.ts": {
-      "sha256": "6b613fd43e274b6d63b80953ddb29776e33654cf56cbc957b5dd52813d5adb10",
+      "sha256": "1674e708ca22d1d83bf83f4436f8749157c79d2a95af2e9bc9f056c606dfdb6b",
       "executable": false
     },
     "src/chest/files/devices.ts": {
@@ -4685,7 +4685,7 @@
       "executable": false
     },
     "tests/chest/annotation-flow.mjs": {
-      "sha256": "1c8010629d36cc38a13d2b497d00fa7960098157a6e1700169049a12baaf8aaf",
+      "sha256": "6d5fb973627c8461297a9af5524eaa7a9895bb2e2c7e3f72cacdf8b5b73986ae",
       "executable": false
     },
     "tests/chest/archive-preview.mjs": {

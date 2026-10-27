@@ -53,7 +53,7 @@ export async function annotationFlow({h,people,parent}){
  await h.api(`${thread}/resolve`,people.commenter,{decision:'resolve'});
  assert.deepEqual((await h.api(navPath,people.viewer)).threads.map(c=>c.id),[second.id]);
  const source=(await h.api(`/items/${key}`,people.manager)).comments.find(c=>c.id===row.id);
- const state=async()=>{const v=await h.api(`/items/${key}`,people.manager);return {comments:v.comments,versions:v.versions,item:v.item,audits:v.activity.filter(a=>a.action.startsWith('comment.')),mails:h.mails.length}};
+ const state=async()=>{const v=await h.api(`/items/${key}`,people.manager);return {comments:v.comments,versions:v.versions,item:v.item,audits:v.activity.filter(a=>a.action.startsWith('comment.')),notices:await Promise.all(['viewer','commenter','contributor','manager'].map(async role=>(await h.api('/notices',people[role])).filter(n=>n.payload.item===key))),mails:h.mails.length}};
  const carry={key:crypto.randomUUID(),version:destination,anchor:{kind:'pdf',page:1,region:[.2,.3,.8,.6]},expectedCurrent:destination},carryPath=`${thread}/carry`;
  before=await state();
  await h.api(carryPath,people.viewer,carry,403);
@@ -76,9 +76,10 @@ export async function annotationFlow({h,people,parent}){
  assert.ok(!carried.payload.resolved);assert.ok(!carried.payload.replies?.length);assert.deepEqual(carried.payload.mentions,source.mentions);assert.equal(carried.payload.assignee,source.assignee);
  before=await state();assert.deepEqual(before.comments.find(c=>c.id===row.id),source,'original author, anchor, replies and resolution remain immutable');
  assert.equal(before.audits.filter(a=>a.action==='comment.carry').length,1);
+ assert.deepEqual(before.notices.flat().filter(n=>n.payload.type==='comment.carry').map(n=>n.payload.to).sort(),['commenter@example.test','manager@example.test','viewer@example.test']);
  const audit=before.audits.find(a=>a.action==='comment.carry');assert.equal(audit.actor,'contributor@example.test');assert.equal(audit.detail.sourceThread,row.id);assert.equal(audit.detail.sourceVersion,version);assert.deepEqual(audit.detail.sourceAnchor,target);assert.equal(audit.detail.comment,carried.id);assert.deepEqual(audit.detail.anchor,carry.anchor);
  const retries=await Promise.all([h.api(carryPath,people.contributor,carry),h.api(carryPath,people.contributor,carry)]);assert.ok(retries.every(r=>r.id===carried.id));assert.deepEqual(await state(),before);
- await h.stop();await h.start();assert.equal((await h.api(carryPath,people.contributor,carry)).id,carried.id);assert.deepEqual(await state(),before,'restart and retries publish one thread, notice set and audit');
+ await h.stop();await h.start();assert.deepEqual(new Set((await h.api(navPath,people.viewer)).threads.map(c=>c.id)),new Set([second.id,carried.id]));assert.equal((await h.api(carryPath,people.contributor,carry)).id,carried.id);assert.deepEqual(await state(),before,'restart and retries publish one thread, notice set and audit');
  await h.api(carryPath,people.contributor,{...carry,anchor:{...carry.anchor,page:2}},409);assert.deepEqual(await state(),before);
  // Both a cached actor and a cached cursor lose authority on the next request, including replay.
  await h.api(`/spaces/${space}/members`,people.manager,{members:members.filter(m=>m.principal!=='contributor@example.test')});
@@ -86,6 +87,8 @@ export async function annotationFlow({h,people,parent}){
  await h.api(`/spaces/${space}/members`,people.manager,{members});
  for(const [v,expected] of [[version,bytes],[destination,changedBytes]]){const r=await h.raw(`/api/chest/items/${key}/bytes/${v}`,people.viewer);assert.equal(r.status,200);assert.equal(createHash('sha256').update(new Uint8Array(await r.arrayBuffer())).digest('hex'),createHash('sha256').update(expected).digest('hex'))}
  assert.deepEqual((await state()).versions,before.versions,'carrying a thread never changes original version history');
+ await h.api(`${path}/${second.id}/resolve`,people.commenter,{decision:'resolve'});await h.api(`${path}/${carried.id}/resolve`,people.commenter,{decision:'resolve'});
+ const empty=await h.api(navPath,people.viewer);assert.deepEqual(empty.threads,[]);assert.equal(empty.selected,null);assert.equal(empty.next,null);assert.equal(empty.previous,null);
  const folder=await h.api(`/items/${parent}/comments`,people.commenter,{version:null,message:'Folder review remains independent of versions.'});assert.equal(folder.payload.version,null);
  const other=await h.api('/items',people.manager,{parent,type:'folder',name:`Other ${crypto.randomUUID()}`});await h.api(`/items/${other.id}/comments/${row.id}/resolve`,people.commenter,{decision:'resolve'},404);
  return {id:key,version,comment:row.id};
@@ -112,20 +115,22 @@ export async function annotationBrowserFlow({h,people,parent,browser,width}){
   await nav.getByRole('link',{name:'Next unresolved',exact:true}).click();await page.waitForURL(new RegExp('thread='+second.id));
   await shot(page,'unresolved');
   if(width===1440){assert.equal(new URL(page.url()).searchParams.get('thread'),second.id);await nav.getByRole('link',{name:'Previous unresolved',exact:true}).click();await page.waitForURL(new RegExp('thread='+comment.id))}
+  thread=page.locator(`[data-comment="${comment.id}"]`);await press(page,thread,'Resolve thread');await page.getByText('Resolved threads (1)',{exact:true}).click();
   thread=page.locator(`[data-comment="${comment.id}"]`);await thread.getByText('Carry thread forward',{exact:true}).click();
   const carry=thread.locator('form').filter({has:page.getByRole('button',{name:'Create linked thread',exact:true})}),destination=(await h.api(`/items/${key}`,people.manager)).item.current;
-  await carry.getByLabel('Destination PDF version',{exact:true}).selectOption(destination);await carry.getByLabel('Destination PDF page',{exact:true}).fill('1');
+  await carry.getByLabel('Destination PDF version').selectOption(destination);await carry.getByLabel('Destination PDF page',{exact:true}).fill('1');
   await shot(page,'carry-compose');
   await press(page,carry,'Create linked thread');
   view=await h.api(`/items/${key}`,people.manager);const carried=view.comments.find(c=>c.carriedFrom?.thread===comment.id);assert.ok(carried);
   thread=page.locator(`[data-comment="${carried.id}"]`);await thread.getByText(/Carried forward by commenter/).waitFor();await shot(page,'carried');
-  const sourceLink=thread.getByRole('link',{name:/original thread/});await sourceLink.click();
-  if(width===1440){assert.equal(new URL(page.url()).hash,'#comment-'+comment.id);assert.equal(carried.author,'commenter@example.test');assert.equal(carried.version,destination);assert.deepEqual(carried.anchor,{kind:'pdf',page:1,region:[.1,.1,.9,.3]});assert.deepEqual(view.comments.find(c=>c.id===comment.id).anchor,target);assert.equal(view.comments.find(c=>c.id===comment.id).replies.length,1);assert.equal(view.versions.length,2)}
+  const sourceLink=thread.getByRole('link',{name:/original thread/});await sourceLink.click();await page.locator(`[data-comment="${comment.id}"]`).getByText(/Resolved by commenter/).waitFor();
+  if(width===1440){assert.equal(new URL(page.url()).hash,'#comment-'+comment.id);assert.equal(carried.author,'commenter@example.test');assert.equal(carried.version,destination);assert.deepEqual(carried.anchor,{kind:'pdf',page:1,region:[.1,.1,.9,.3]});assert.deepEqual(view.comments.find(c=>c.id===comment.id).anchor,target);assert.equal(view.comments.find(c=>c.id===comment.id).replies.length,1);assert.equal(view.comments.find(c=>c.id===comment.id).resolved.by,'commenter@example.test');assert.equal(view.versions.length,2)}
   // A form rendered before a replacement cannot silently target the new current version.
   await page.reload();thread=page.locator(`[data-comment="${comment.id}"]`);await thread.getByText('Carry thread forward',{exact:true}).click();
-  const stale=thread.locator('form').filter({has:page.getByRole('button',{name:'Create linked thread',exact:true})});await stale.getByLabel('Destination PDF version',{exact:true}).selectOption(destination);
+  const stale=thread.locator('form').filter({has:page.getByRole('button',{name:'Create linked thread',exact:true})});await stale.getByLabel('Destination PDF version').selectOption(destination);
   await h.api(`/items/${key}/versions`,people.contributor,{base64:b64(await pdf())});await press(page,stale,'Create linked thread');
   if(width===1440){await page.getByText('annotation_target_changed',{exact:false}).waitFor();assert.equal((await h.api(`/items/${key}`,people.manager)).comments.filter(c=>c.carriedFrom).length,1)}
   const viewer=await pageFor('viewer');await viewer.goto(h.origin+`/app/items/${key}`);assert.equal(await viewer.getByRole('button',{name:'Post annotation',exact:true}).count(),0);assert.equal(await viewer.getByRole('button',{name:'Resolve thread',exact:true}).count(),0);assert.equal(await viewer.getByRole('button',{name:'Create linked thread',exact:true}).count(),0);await shot(viewer,'viewer');
+  if(width===1440){const icons=viewer.locator('button,a,summary').filter({has:viewer.locator('svg')});for(const control of await icons.all()){if((await control.innerText()).trim()||!await control.isVisible())continue;assert.ok(await control.getAttribute('data-tooltip'));await control.focus();await viewer.getByRole('tooltip').waitFor({state:'visible'});await viewer.locator('h1').click();await control.hover();await viewer.waitForTimeout(350);assert.equal(await viewer.getByRole('tooltip').isVisible(),true)}}
  }finally{for(const ctx of contexts)await ctx.close()}
 }
