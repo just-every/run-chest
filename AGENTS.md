@@ -1,5 +1,12 @@
 # Run it locally
 
+Lander-Regenerate: after editing a clause's Status row in CONTRACT.md, run
+`node scripts/contract-docs.mjs write <clause>` and
+`node scripts/contract-docs.mjs check <clause>` to refresh its evidence and Gap
+in the existing acceptance and claim projections. Acceptance sentences remain
+owned by CONTRACT.md. Regenerate the edition lock last with
+`node scripts/edition-authoring/cli.mjs lock`, then run its `check` command.
+
 ```sh
 curl -fsSL https://runeditrun.com/install.sh | sh
 rer install
