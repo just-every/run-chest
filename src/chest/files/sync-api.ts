@@ -12,7 +12,7 @@ export async function syncRoute(env: Bindings, request: Request, path: string): 
  await sweep(env)
  if (path === '/sync/repair' && method === 'GET') return repairInstructions(env,s,url.searchParams.get('folder')!)
  if (path === '/sync/repair' && method === 'POST') return receiveReport(env,s,await request.json())
- if (method === 'GET' && path === '/sync/tree') return tree(env, s)
+ if (method === 'GET' && path === '/sync/tree') return tree(env, s, url)
  if (method === 'GET' && path === '/sync/changes') return changes(env, s, url)
  if (method === 'POST' && path === '/sync/items') return create(env, s, url, request)
  if (key && sub === 'content' && method === 'GET') return hydrate(env, s, key, url, request)

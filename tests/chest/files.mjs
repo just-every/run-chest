@@ -319,6 +319,10 @@ try{
   const device=await h.api('/devices',people.ana,{name:'Ana desktop',platform:'windows'}),auth={authorization:`Bearer ${device.token}`},sync=(path,init={})=>h.fetch('/api/chest'+path,{...init,headers:{...auth,...init.headers}});
   assert.equal((await h.fetch('/api/chest/sync/tree')).status,401);assert.equal((await h.fetch('/api/chest/sync/tree',{headers:{authorization:'Bearer chest_dev_'+'x'.repeat(43)}})).status,401);
   const start=await(await sync('/sync/tree')).json();assert.ok(start.items.some(i=>i.id===space.terms));assert.ok(!start.items.some(i=>i.id===space.hr),'restricted folders stay out of the tree');
+  const enumerated=new Map();let after='';
+  do{const response=await sync(`/sync/tree?limit=1&cursor=${start.cursor}&after=${encodeURIComponent(after)}`);assert.equal(response.status,200);const page=await response.json();assert.equal(page.cursor,start.cursor,'pages retain the initial change boundary');assert.ok(page.items.length<=1);for(const item of page.items){assert.ok(!enumerated.has(item.id),'each item is enumerated once');enumerated.set(item.id,item)}if(page.next)assert.ok(page.next>after,'pages advance even past inaccessible records');after=page.next}while(after);
+  assert.deepEqual([...enumerated.keys()].sort(),start.items.map(i=>i.id).sort(),'bounded enumeration serves every accessible item and omits restricted descendants');
+  assert.equal((await sync('/sync/tree?limit=0')).status,400);assert.equal((await sync('/sync/tree?cursor=-1')).status,400);
   const body='synced from the desktop client',created=await(await sync(`/sync/items?parent=${space.contracts}&name=desk.txt`,{method:'POST',body})).json();
   const part=await sync(`/sync/items/${created.item}/content`,{headers:{range:'bytes=7-10'}});assert.equal(part.status,206);assert.equal(await part.text(),body.slice(7,11));
   const saved=await(await sync(`/sync/items/${created.item}/content`,{method:'PUT',headers:{'if-match':created.version},body:'second save'})).json();assert.equal(saved.conflict,false);

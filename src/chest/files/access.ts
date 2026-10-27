@@ -9,6 +9,7 @@ import { policyItems } from './sharing-policy'
 import { creatorLinkPolicy } from './link-policy'
 import { permittedLinks } from './link-policy'
 import { rank, live, type Item, type Link, type Role, type Space } from './model'
+import { itemPaths } from './item-paths'
 // Current access, computed on every request from the space, each folder on the path and the person's live groups.
 // Inherited roles accumulate down the tree; a restricted folder or file stops inheritance except for space managers.
 // Expired grants, removed links and trashed ancestors take effect on the next request through every door.
@@ -96,8 +97,8 @@ export function demand(ctx: Ctx, action: Action) {
 export const isAdmin = (s: Session) => s.operator.role === 'owner' || s.operator.role === 'admin'
 // Every item with the person's current state, computed once per request for search, Shared with me, recent and trash.
 export type Entry = { row: Row<Item>; space: Row<Space>; state: State; directState?:State }
-export async function everything(env: Bindings, w: Who): Promise<Map<string, Entry>> {
- const spaces = new Map((await list<Space>(env, 'space')).map(r => [r.id, r])), original=await list<Item>(env,'item'),filtered=await policyItems(env,w,[...spaces.values()],original), rows = new Map(filtered.items.map(r => [r.id, r])), links = await permittedLinks(env, await list<Link>(env, 'link'), new Map([...rows.values()].map(r => [r.id,r.payload.space])),w), memo = new Map<string, Entry>()
+export async function everything(env: Bindings, w: Who, keys?: string[]): Promise<Map<string, Entry>> {
+ const spaces = new Map((await list<Space>(env, 'space')).map(r => [r.id, r])), original=keys ? await itemPaths(env,keys) : await list<Item>(env,'item'),filtered=await policyItems(env,w,[...spaces.values()],original), rows = new Map(filtered.items.map(r => [r.id, r])), links = await permittedLinks(env, await list<Link>(env, 'link'), new Map([...rows.values()].map(r => [r.id,r.payload.space])),w), memo = new Map<string, Entry>()
  const visit = (key: string, depth = 0): Entry | undefined => {
   const known = memo.get(key); if (known) return known
   const row = rows.get(key), space = row && spaces.get(row.payload.space); if (!row || !space || depth > 200) return undefined

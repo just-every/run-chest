@@ -3,6 +3,7 @@ import { openDisk } from './disk.mjs';
 import { folderFiles, versionOf } from './tree.mjs';
 import { measure, newRecord, readState, reportFiles, status } from './state.mjs';
 import { download, verifyRemote } from './transfer.mjs';
+import { enumerateTree } from './enumeration.mjs';
 
 export { CLIENT_VERSION } from './api.mjs';
 
@@ -15,6 +16,13 @@ export async function runCompanion(options) {
   try {
     state = readState(await disk.load(), api.origin, options.folder);
     const save = () => disk.save(state);
+    const remoteFiles = async () => {
+      const files = folderFiles(await enumerateTree(api), state.folder);
+      if (new Set([...state.files.map(file => file.item), ...files.map(file => file.id)]).size > 500) {
+        throw new SyncError('folder_exceeds_companion_limit');
+      }
+      return files;
+    };
     const report = async () => {
       await save();
       const result = await api.report({ folder: state.folder, clientVersion: CLIENT_VERSION,
@@ -29,7 +37,7 @@ export async function runCompanion(options) {
     else if (policy.paused) state.paused = true;
 
     let remote;
-    try { remote = folderFiles(await api.tree(), state.folder); }
+    try { remote = await remoteFiles(); }
     catch (error) {
       for (const record of state.files) {
         try { await measure(disk, record); } catch { /* Preserve previous observation on unsafe paths. */ }
@@ -39,7 +47,6 @@ export async function runCompanion(options) {
     }
     const byId = new Map(remote.map(file => [file.id, file]));
     const existing = new Map(state.files.map(file => [file.item, file]));
-    if (new Set([...existing.keys(), ...byId.keys()]).size > 500) throw new SyncError('folder_exceeds_companion_limit');
     for (const item of remote) if (!existing.has(item.id)) { const record = newRecord(item); state.files.push(record); existing.set(item.id, record); }
     const occupied = new Map(), collisions = new Set();
     for (const record of state.files) {
@@ -72,10 +79,10 @@ export async function runCompanion(options) {
       try {
         // Refresh current access/version immediately before each transfer. Earlier
         // tree snapshots and cached authorization never grant a later operation.
-        const current = folderFiles(await api.tree(), state.folder).find(item => item.id === record.item);
+        const current = (await remoteFiles()).find(item => item.id === record.item);
         if (!current || !current.download) throw new SyncError('access_or_scope_changed', 403);
         if (current.problem || current.path !== record.path) throw new SyncError(current.problem ?? 'remote_path_changed');
-        await synchronize(disk, api, state.folder, record, current, save);
+        await synchronize(disk, api, record, current, save, remoteFiles);
       } catch (error) {
         if (record.inflight) status(record, 'conflicted', 'upload_outcome_uncertain');
         else status(record, 'failed', reasonFor(error));
@@ -85,7 +92,7 @@ export async function runCompanion(options) {
     // A local editor or remote collaborator may have changed a file while another
     // transfer ran. Only receipts still matching both current ends survive.
     let finalTree;
-    try { finalTree = new Map(folderFiles(await api.tree(), state.folder).map(file => [file.id, file])); }
+    try { finalTree = new Map((await remoteFiles()).map(file => [file.id, file])); }
     catch (error) {
       for (const record of state.files) if (record.state === 'up-to-date') status(record, 'failed', reasonFor(error));
       await report();
@@ -105,7 +112,7 @@ export async function runCompanion(options) {
   } finally { await unlock(); }
 }
 
-async function synchronize(disk, api, folder, record, remote, save) {
+async function synchronize(disk, api, record, remote, save, remoteFiles) {
   let version = versionOf(remote), local = await measure(disk, record);
   if (record.baseVersion && !local) throw new SyncError('local_file_missing');
   const localChanged = record.baseVersion && local.checksum !== record.baseChecksum;
@@ -133,7 +140,7 @@ async function synchronize(disk, api, folder, record, remote, save) {
     if (result?.conflict !== false || result.item !== record.item) throw new SyncError('invalid_upload_receipt');
     // Learn the actual current version from the server, then verify its original
     // bytes. A successful HTTP status alone is not a recovery receipt.
-    remote = folderFiles(await api.tree(), folder).find(item => item.id === record.item);
+    remote = (await remoteFiles()).find(item => item.id === record.item);
     if (!remote || !remote.download) throw new SyncError('access_or_scope_changed', 403);
     version = versionOf(remote);
     if (version.checksum !== upload.checksum || version.size !== upload.size) throw new SyncError('upload_superseded_before_verification');

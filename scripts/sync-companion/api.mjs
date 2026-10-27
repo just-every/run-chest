@@ -36,7 +36,7 @@ export function client({ origin, token, allowHttp = false, fetch: fetchImpl = gl
   }
   return {
     origin: url.origin,
-    tree: () => json('/tree'),
+    tree: (page) => json('/tree' + (page ? '?' + new URLSearchParams({ cursor: String(page.cursor), after: page.after }) : '')),
     policy: folder => json(`/repair?folder=${encodeURIComponent(folder)}`),
     report: body => json('/repair', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }),
     hydrate: (item, version, offset = 0) => request(`/items/${encodeURIComponent(item)}/content?version=${encodeURIComponent(version)}`,

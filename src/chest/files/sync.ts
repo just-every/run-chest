@@ -13,23 +13,30 @@ import type { Item } from './model'
 const view = (e: Entry) => { const v = e.row.payload.versions.find(v => v.id === e.row.payload.current)
  return { id: e.row.id, space: e.space.id, parent: e.row.payload.parent, type: e.row.payload.type, name: e.row.payload.name, updatedAt: e.row.payload.updatedAt, role: e.state.role, download: allowed(e, 'download'), version: v ? { id: v.id, checksum: v.checksum, size: v.size, mediaType: v.mediaType, arrival: v.arrival } : null } }
 const head = async (env: Bindings) => Number((await env.DB.prepare('SELECT COALESCE(MAX(seq),0) AS seq FROM chest_changes').first<{ seq: number }>())!.seq)
-export async function tree(env: Bindings, s: Session) {
- const cursor = await head(env), w = await who(env, s), entries = [...(await everything(env, w)).values()].filter(e => e.state.role && !e.state.trash)
+export async function tree(env: Bindings, s: Session, url: URL) {
+ const latest = await head(env), cursor = Number(url.searchParams.get('cursor') ?? latest), after = url.searchParams.get('after') ?? '', limit = Number(url.searchParams.get('limit') ?? 500)
+ insist(Number.isSafeInteger(cursor) && cursor >= 0 && cursor <= latest && Number.isSafeInteger(limit) && limit >= 1 && limit <= 500 && after.length <= 200, 'invalid_cursor')
+ const rows = (await env.DB.prepare("SELECT id FROM chest_records WHERE kind='item' AND id>? ORDER BY id LIMIT ?").bind(after,limit+1).all()).results as { id: string }[]
+ const page = rows.slice(0,limit), all = await everything(env, await who(env,s), page.map(r=>r.id)), entries = page.map(r=>all.get(r.id)).filter((e): e is Entry => !!e && !!e.state.role && !e.state.trash)
  const spaces = new Map(entries.map(e => [e.space.id, { id: e.space.id, name: e.space.payload.kind === 'personal' ? (e.space.payload.owner === s.operator.email ? 'My files' : 'Shared with me') : e.space.payload.name, kind: e.space.payload.kind }]))
- return { cursor, spaces: [...spaces.values()], items: entries.map(view) }
+ return { cursor, next: rows.length > limit ? page.at(-1)!.id : null, spaces: [...spaces.values()], items: entries.map(view) }
 }
 export async function changes(env: Bindings, s: Session, url: URL) {
  const cursor = Number(url.searchParams.get('cursor') ?? '0'); insist(Number.isSafeInteger(cursor) && cursor >= 0, 'invalid_cursor')
  const latest = await head(env); if (cursor > latest) return { resync: true, cursor: latest, changes: [] }
- const rows = (await env.DB.prepare('SELECT item, MAX(seq) AS seq, GROUP_CONCAT(DISTINCT kind) AS kinds FROM chest_changes WHERE seq>? GROUP BY item ORDER BY MAX(seq) LIMIT 500').bind(cursor).all()).results as { item: string; seq: number; kinds: string }[]
- const all = await everything(env, await who(env, s)), result = rows.map(r => {
+ const until = Number(url.searchParams.get('until') ?? latest); insist(Number.isSafeInteger(until) && until >= cursor && until <= latest, 'invalid_cursor')
+ const window = (await env.DB.prepare('SELECT item,seq,kind FROM chest_changes WHERE seq>? AND seq<=? ORDER BY seq LIMIT 501').bind(cursor,until).all()).results as { item: string; seq: number; kind: string }[]
+ const consumed = window.slice(0,500), merged = new Map<string,{item:string;seq:number;kinds:string}>()
+ for(const row of consumed){const previous=merged.get(row.item);merged.set(row.item,{item:row.item,seq:row.seq,kinds:previous?`${previous.kinds},${row.kind}`:row.kind})}
+ const rows = [...merged.values()]
+ const all = await everything(env, await who(env, s), rows.map(r=>r.item)), result = rows.map(r => {
   const e = all.get(r.item), access = r.kinds.split(',').includes('access')
   // A space's membership or settings changed (or an item went away): rescan that space, or drop the item.
   if (!e) return access && !r.kinds.includes('erase') ? { id: r.item, state: 'rescan' } : { id: r.item, state: 'removed' }
   if (!e.state.role || e.state.trash) return { id: r.item, state: 'removed' }
   return { id: r.item, state: 'present', rescan: access && e.row.payload.type === 'folder', item: view(e) }
  })
- return { cursor: rows.length ? rows.at(-1)!.seq : latest, more: rows.length === 500, changes: result }
+ return { cursor: consumed.length ? consumed.at(-1)!.seq : until, until, more: window.length > 500, changes: result }
 }
 export async function hydrate(env: Bindings, s: Session, key: string, url: URL, request: Request) {
  const item = await get<Item>(env, 'item', key), version = url.searchParams.get('version') ?? item.payload.current
