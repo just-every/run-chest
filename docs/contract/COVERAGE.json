@@ -2,7 +2,7 @@
   "schema": 1,
   "seed": "chest",
   "old": {
-    "commit": "a8e0f6fd5a8e8ef4268afefeaa993b7783f7b7ce",
+    "commit": "c4980005e9d1c60763e2d49482d9d7c36f714ee5",
     "files": [
       "CONTRACT.md",
       "ACCEPTANCE.md",
@@ -12684,78 +12684,6 @@
     },
     {
       "file": "CONTRACT.md",
-      "line": 936,
-      "cell": "gap",
-      "text": "Version-bound file comments notify the file owner by in-app notice and the installation mail provider; presence rechecks live sessions and access.",
-      "to": "gap",
-      "ids": [
-        "EDIT-003",
-        "EDIT-008",
-        "MOBILE-005"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 936,
-      "cell": "gap",
-      "text": "Managed email reports one unavailable line pending outbound support.",
-      "to": "gap",
-      "ids": [
-        "EDIT-003",
-        "EDIT-008",
-        "MOBILE-005"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 936,
-      "cell": "gap",
-      "text": "File comments now support access-checked mentions and assignment, and the built-in DOCX editor records tracked suggestions and contributor decisions, proven by tests/chest/role-review-flow.mjs (roleReviewFlow).",
-      "to": "gap",
-      "ids": [
-        "EDIT-003",
-        "EDIT-008",
-        "MOBILE-005"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 936,
-      "cell": "gap",
-      "text": "PDF region anchors, version-bound replies, resolution and reopening now work through the file page, proven by tests/chest/annotation-flow.mjs (annotationFlow and annotationBrowserFlow at 1440 and 390).",
-      "to": "gap",
-      "ids": [
-        "EDIT-003",
-        "EDIT-008",
-        "MOBILE-005"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 936,
-      "cell": "gap",
-      "text": "Real CODE retains attributed comments and tracked suggestions under ROLE-001.",
-      "to": "gap",
-      "ids": [
-        "EDIT-003",
-        "EDIT-008",
-        "MOBILE-005"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
-      "line": 936,
-      "cell": "gap",
-      "text": "Remaining: other document anchors, shared engine and Chest threads, tasks, the full cross-format Collabora review loop, email replies and resolution, and native acceptance.",
-      "to": "gap",
-      "ids": [
-        "EDIT-003",
-        "EDIT-008",
-        "MOBILE-005"
-      ]
-    },
-    {
-      "file": "CONTRACT.md",
       "line": 937,
       "cell": "gap",
       "text": "Contributors create blank DOCX/XLSX/PPTX or ODT/ODS/ODP in any writable browser folder, or use ten built-in templates.",
@@ -15985,13 +15913,6 @@
     },
     {
       "file": "ACCEPTANCE.md",
-      "line": 252,
-      "text": "Current evidence: `src/chest/files/comments.ts`; `src/chest/files/notify.ts`; `src/chest/office/presence.ts`; `src/chest/reviews.ts`; `tests/chest/office.mjs`; `tests/chest/files.mjs`; `docs/office.md`. Remaining: Version-bound file comments notify the file owner by in-app notice and the installation mail provider; presence rechecks live sessions and access. Managed email reports one unavailable line pending outbound support. File comments now support access-checked mentions and assignment, and the built-in DOCX editor records tracked suggestions and contributor decisions, proven by `tests/chest/role-review-flow.mjs` (roleReviewFlow). PDF region anchors, version-bound replies, resolution and reopening now work through the file page, proven by `tests/chest/annotation-flow.mjs` (annotationFlow and annotationBrowserFlow at 1440 and 390). Real CODE retains attributed comments and tracked suggestions under ROLE-001. Remaining: other document anchors, shared engine and Chest threads, tasks, the full cross-format Collabora review loop, email replies and resolution, and native acceptance.",
-      "to": "generated",
-      "note": "The contract generator writes this status or count."
-    },
-    {
-      "file": "ACCEPTANCE.md",
       "line": 254,
       "text": "**EDIT-004 — New documents, spreadsheets and presentations from blank or templates (partial).** Run these journeys on an installation with no Microsoft or Google provider configured, where new files open in the shipped Collabora Online (EDIT-001), through the browser at 1440 and 390 and in the iOS and Android apps on the MOBILE-001 current-release devices. Then enable Microsoft 365 for the web and repeat the first journey with a licensed contributor.",
       "to": "generated",
@@ -17078,12 +16999,6 @@
     },
     {
       "file": "docs/CLAIMS.md",
-      "line": 54,
-      "text": "| 27 | Open it and edit together | \"Edit at the same time, comment\" (Pricing.xlsx with Dana and Luis, a resolved thread, \"Saved · 2 people editing\") | partly | EDIT-001 (partial), EDIT-003 (partial) | `src/chest/office/service.ts`; `src/chest/office/codec.ts`; `src/chest/office/presence.ts`; `src/chest/office/ui.ts`; `src/chest/files/items.ts`; `tests/chest/office.mjs`; `docs/office.md`; `src/chest/files/comments.ts`; `src/chest/files/notify.ts`; `src/chest/reviews.ts`; `tests/chest/files.mjs` |",
-      "to": "changelog"
-    },
-    {
-      "file": "docs/CLAIMS.md",
       "line": 55,
       "text": "| 28 | Open it and edit together | \"and keep one copy\" | partly | EDIT-001 (partial) | `src/chest/office/service.ts`; `src/chest/office/codec.ts`; `src/chest/office/presence.ts`; `src/chest/office/ui.ts`; `src/chest/files/items.ts`; `tests/chest/office.mjs`; `docs/office.md` |",
       "to": "changelog"
@@ -17777,6 +17692,128 @@
       "text": "Status total: **96 clauses — 49 done, 30 partial and 17 missing.**",
       "to": "generated",
       "note": "The generator writes the clause counts."
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 936,
+      "cell": "gap",
+      "text": "Version-bound file comments notify the file owner by in-app notice and the installation mail provider; presence rechecks live sessions and access.",
+      "to": "gap",
+      "ids": [
+        "EDIT-003",
+        "EDIT-008",
+        "MOBILE-005"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 936,
+      "cell": "gap",
+      "text": "Managed email reports one unavailable line pending outbound support.",
+      "to": "gap",
+      "ids": [
+        "EDIT-003",
+        "EDIT-008",
+        "MOBILE-005"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 936,
+      "cell": "gap",
+      "text": "File comments now support access-checked mentions and assignment, and the built-in DOCX editor records tracked suggestions and contributor decisions, proven by `tests/chest/role-review-flow.mjs` (roleReviewFlow).",
+      "to": "gap",
+      "ids": [
+        "EDIT-003",
+        "EDIT-008",
+        "MOBILE-005"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 936,
+      "cell": "gap",
+      "text": "PDF region anchors, version-bound replies, resolution, reopening and unresolved retained-PDF navigation now work through the file page and API.",
+      "to": "gap",
+      "ids": [
+        "EDIT-003",
+        "EDIT-008",
+        "MOBILE-005"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 936,
+      "cell": "gap",
+      "text": "Explicit carry-forward selects a retained destination PDF and validated page and region, creates one linked thread attributed to the initiator across concurrent retries and restart, preserves the original thread, replies, resolution, anchors and bytes, and rechecks current commenter authority and recipients.",
+      "to": "gap",
+      "ids": [
+        "EDIT-003",
+        "EDIT-008",
+        "MOBILE-005"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 936,
+      "cell": "gap",
+      "text": "Viewer, revoked-access, foreign-thread, invalid-region and stale-target refusals publish no thread or notification.",
+      "to": "gap",
+      "ids": [
+        "EDIT-003",
+        "EDIT-008",
+        "MOBILE-005"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 936,
+      "cell": "gap",
+      "text": "Proven by `tests/chest/annotation-flow.mjs` (annotationFlow and annotationBrowserFlow at 1440 and 390).",
+      "to": "gap",
+      "ids": [
+        "EDIT-003",
+        "EDIT-008",
+        "MOBILE-005"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 936,
+      "cell": "gap",
+      "text": "Real CODE retains attributed comments and tracked suggestions under ROLE-001.",
+      "to": "gap",
+      "ids": [
+        "EDIT-003",
+        "EDIT-008",
+        "MOBILE-005"
+      ]
+    },
+    {
+      "file": "CONTRACT.md",
+      "line": 936,
+      "cell": "gap",
+      "text": "Remaining: version comparison, other document anchors, shared engine and Chest threads, tasks, the full cross-format Collabora review loop, email replies and resolution, native acceptance, and MIGRATE-001 and MIGRATE-002 imported-thread timestamps, source IDs, author matching, states and missing-anchor fidelity.",
+      "to": "gap",
+      "ids": [
+        "EDIT-003",
+        "EDIT-008",
+        "MOBILE-005",
+        "MIGRATE-012"
+      ]
+    },
+    {
+      "file": "ACCEPTANCE.md",
+      "line": 252,
+      "text": "Current evidence: `src/chest/files/comments.ts`; `src/chest/files/ui-comments.ts`; `src/chest/files/api.ts`; `src/chest/files/views.ts`; `src/chest/files/notify.ts`; `src/chest/office/presence.ts`; `src/chest/reviews.ts`; `tests/chest/office.mjs`; `tests/chest/files.mjs`; `tests/chest/annotation-flow.mjs`; `tests/chest/role-review-flow.mjs`; `tests/chest/browser-new-files.mjs`; `docs/office.md`. Remaining: Version-bound file comments notify the file owner by in-app notice and the installation mail provider; presence rechecks live sessions and access. Managed email reports one unavailable line pending outbound support. File comments now support access-checked mentions and assignment, and the built-in DOCX editor records tracked suggestions and contributor decisions, proven by `tests/chest/role-review-flow.mjs` (roleReviewFlow). PDF region anchors, version-bound replies, resolution, reopening and unresolved retained-PDF navigation now work through the file page and API. Explicit carry-forward selects a retained destination PDF and validated page and region, creates one linked thread attributed to the initiator across concurrent retries and restart, preserves the original thread, replies, resolution, anchors and bytes, and rechecks current commenter authority and recipients. Viewer, revoked-access, foreign-thread, invalid-region and stale-target refusals publish no thread or notification. Proven by `tests/chest/annotation-flow.mjs` (annotationFlow and annotationBrowserFlow at 1440 and 390). Real CODE retains attributed comments and tracked suggestions under ROLE-001. Remaining: version comparison, other document anchors, shared engine and Chest threads, tasks, the full cross-format Collabora review loop, email replies and resolution, native acceptance, and MIGRATE-001 and MIGRATE-002 imported-thread timestamps, source IDs, author matching, states and missing-anchor fidelity.",
+      "to": "generated",
+      "note": "The generated ACCEPTANCE.md copies EDIT-003's evidence and gap from this contract."
+    },
+    {
+      "file": "docs/CLAIMS.md",
+      "line": 54,
+      "text": "| 27 | Open it and edit together | \"Edit at the same time, comment\" (Pricing.xlsx with Dana and Luis, a resolved thread, \"Saved · 2 people editing\") | partly | EDIT-001 (partial), EDIT-003 (partial) | `src/chest/office/service.ts`; `src/chest/office/codec.ts`; `src/chest/office/presence.ts`; `src/chest/office/ui.ts`; `src/chest/files/items.ts`; `tests/chest/office.mjs`; `docs/office.md`; `src/chest/files/comments.ts`; `src/chest/files/ui-comments.ts`; `src/chest/files/api.ts`; `src/chest/files/views.ts`; `src/chest/files/notify.ts`; `src/chest/reviews.ts`; `tests/chest/files.mjs`; `tests/chest/annotation-flow.mjs`; `tests/chest/role-review-flow.mjs`; `tests/chest/browser-new-files.mjs` |",
+      "to": "changelog"
     }
   ]
 }
