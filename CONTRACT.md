@@ -1125,7 +1125,7 @@ The CHEST-10 reviewer duty combines with any role from commenter up and adds no 
 **Requirement.** Chest's delta on Base audit: the trail also attributes reads and downloads, sharing and admin changes, device actions and every automation and provider attempt to actor, exact version, authority and outcome, and its payloads omit secrets.
 
 **Acceptance.** On Chest's own records:
-1. A provider failure through a public door exports with its action and version IDs and outcome, and they reconcile.
+1. A share whose notice mail the provider fails leaves a provider attempt against the item marked uncertain, and a notice mail that a restart interrupts stays uncertain, with its reason.
 2. After an actor is erased, no exported record of their actions exposes a secret field.
 
 #### AUDIT-002 — File activity and view history for collaborators
@@ -1710,23 +1710,22 @@ Chest declares no money, accounts, gated or live class. In the Risk class column
 
 *Tier:* Agent surface · *From:* new · *Cites:* BASE-AGENT-001, BASE-AGENT-002, BASE-AGENT-006, BASE-AGENT-013
 
-**Requirement.** Chest's delta on the Base agent door: the door serves exactly the tools, resource templates, event types and prompts in this section. They are generated from one action registry, which the browser, the integration API and Chest's own agents (AGENT-001 to AGENT-008) all call. Each tool declares input and output schemas, truthful annotations, the risk classes it can carry and the server-side test that decides them. `/mcp/chest` stays as an alias of `/mcp`.
+**Requirement.** Chest's delta on the Base agent door: the door serves exactly the tools, resource templates, event types and prompts in this section. They are generated from one action registry, which the browser, the integration API and Chest's own agents (AGENT-001 to AGENT-008) all call. `/mcp/chest` stays as an alias of `/mcp`.
 
 **Acceptance.**
 1. `tools/list` and `resources/templates/list` return exactly the names in the tool table and the resource list, in a stable order.
 2. The Core clause ids in `tools/list` `_meta`, with the reasons `server/discover` serves for what is not a tool, cover every Core clause, and no reason given is risk.
-3. Each tool's fixture result validates against its output schema. Read tools declare `readOnlyHint`; tools that can carry destructive declare `destructiveHint`, and tools that can carry external declare `openWorldHint`.
-4. Each tool's classes in `_meta` equal its Risk class cell.
-5. For upload, move, rename, a colleague share, link revoke, version restore and trash, the browser action and the tool on the same fixture leave the same record state and the same audit event type.
-6. AGENT-001's filing apply and AGENT-005's Make private appear in the audit as calls to the same tools an outside agent uses, with their classes and decisions.
-7. A 2025-03-26 client on `/mcp/chest` and a 2026-07-28 client on `/mcp` list the same tools.
-8. `/docs/agents` lists every tool with its classes, scopes and error codes, and the Base harness passes on Chest's fixtures in CI under both of its policies, all autonomous and held.
+3. Each tool's classes in `_meta` equal its Risk class cell.
+4. For upload, move, rename, a colleague share, link revoke, version restore and trash, the browser action and the tool on the same fixture leave the same record state and the same audit event type.
+5. AGENT-001's filing apply and AGENT-005's Make private appear in the audit as calls to the same tools an outside agent uses, with their classes and decisions.
+6. A 2025-03-26 client on `/mcp/chest` and a 2026-07-28 client on `/mcp` list the same tools.
+7. The Base harness passes on Chest's fixtures in CI under both of its policies, all autonomous and held.
 
 #### SURFACE-002 — Find and read what the sponsor can open
 
 *Tier:* Agent surface · *From:* new · *Cites:* BASE-AGENT-003, BASE-AGENT-005, BASE-AGENT-006, BASE-AGENT-010 · *Rules:* D-4
 
-**Requirement.** The records clerk finds and reads through the read tools and the `chest://` resources. Every read returns exactly what the sponsor's current role shows in the browser, inside the grant's folders, and an item the sponsor cannot open reads exactly like a missing id. Reads are standard. A read that returns sensitive content (as Chest computes it above) also declares sensitive, with the data kind. Text from files, scans, mail and requesters carries the untrusted marker.
+**Requirement.** The records clerk finds and reads through the read tools and the `chest://` resources. Reads are standard. A read that returns sensitive content (as Chest computes it above) also declares sensitive, with the data kind.
 
 **Acceptance.**
 1. `chest.search` with every SEARCH-003 filter returns the same items in the same order as the sponsor's browser search, and none outside the grant.
@@ -1742,7 +1741,7 @@ Chest declares no money, accounts, gated or live class. In the Risk class column
 
 *Tier:* Agent surface · *From:* new · *Cites:* BASE-AGENT-003, BASE-AGENT-011 · *Rules:* D-1
 
-**Requirement.** `chest.files.read` returns a version's original bytes only where the sponsor could download them in the browser: current access, the ROLE-001 no-download setting, quarantine and upload protection all apply. Up to 10 MB it returns the bytes as a blob resource; larger versions return a byte link on the integration API's byte path, valid for 5 minutes, bound to the same grant and carrying no credential in its URL. Bytes count against any byte budget on the grant before any are sent.
+**Requirement.** `chest.files.read` returns a version's original bytes only where the sponsor could download them in the browser: current access, the ROLE-001 no-download setting, quarantine and upload protection all apply. Up to 10 MB it returns the bytes as a blob resource; larger versions return a byte link on the integration API's byte path, valid for 5 minutes, bound to the same grant and carrying no credential in its URL.
 
 **Acceptance.**
 1. Under a no-download setting the agent's byte read is refused with 403.
@@ -1756,7 +1755,7 @@ Chest declares no money, accounts, gated or live class. In the Risk class column
 
 *Tier:* Agent surface · *From:* new · *Cites:* BASE-AGENT-002, BASE-AGENT-006, BASE-AGENT-012 · *Rules:* D-1
 
-**Requirement.** Within the grant's folders and the sponsor's role, the records clerk uploads originals and new versions (resumable over 10 MB through TRANSFER-001's session protocol), creates folders and new files, and moves, renames and sets typed fields on one item or a selection. These are standard, because version history, trash or Undo reverses each one, unless the exposure rule makes a call external: an upload, new file or move that lands where outside people can already see. Every write takes an idempotency key and an optional expected revision; moves and renames keep stable ids, versions, grants and links (CHEST-04).
+**Requirement.** Within the grant's folders and the sponsor's role, the records clerk uploads originals and new versions (resumable over 10 MB through TRANSFER-001's session protocol), creates folders and new files, and moves, renames and sets typed fields on one item or a selection. These are standard, because version history, trash or Undo reverses each one, unless the exposure rule makes a call external: an upload, new file or move that lands where outside people can already see. Moves and renames keep stable ids, versions, grants and links (CHEST-04).
 
 **Acceptance.**
 1. A 200 MB upload resumes after a dropped connection and produces one version with the client's SHA-256.
@@ -1765,8 +1764,7 @@ Chest declares no money, accounts, gated or live class. In the Risk class column
 4. Moving a 50-item selection keeps ids, versions and grants, and returns a job handle whose status tool reports completion.
 5. A typed field set to a value outside its type is refused, and a valid value is searchable with SEARCH-003.
 6. An over-limit upload returns `storage_limit_exceeded` naming the limit, and a malware fixture is quarantined as in the browser.
-7. A rename with a stale expected revision returns `revision_conflict` with the current revision.
-8. Moving a file into a folder shared with an outside vendor declares external with counterparty known and one recipient; the same move into an internal folder declares standard.
+7. Moving a file into a folder shared with an outside vendor declares external with counterparty known and one recipient; the same move into an internal folder declares standard.
 
 #### SURFACE-005 — Recovery stays standard; destruction is its own class
 
@@ -1817,7 +1815,7 @@ Chest declares no money, accounts, gated or live class. In the Risk class column
 
 *Tier:* Agent surface · *From:* new · *Cites:* BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008, BASE-MAIL-001
 
-**Requirement.** `chest.requests.create` makes an upload-only request link, sends nothing and exposes no content, so it is standard. `chest.send` emails a request, a reminder, a transfer or a signature envelope. To colleagues it is standard; to outside addresses it is external, with counterparty and recipient count, and sensitive as well when an attached file is. Every message names "<agent> for <person>" as its sender. Mail outcomes keep BASE-MAIL-001's separate states, and each submission raises `request.submitted` for the agent that asked.
+**Requirement.** `chest.requests.create` makes an upload-only request link, sends nothing and exposes no content, so it is standard. `chest.send` emails a request, a reminder, a transfer or a signature envelope. To colleagues it is standard; to outside addresses it is external, with counterparty and recipient count, and sensitive as well when an attached file is. Mail outcomes keep BASE-MAIL-001's separate states, and each submission raises `request.submitted` for the agent that asked.
 
 **Acceptance.**
 1. `chest.requests.create` returns a request link and sends no mail.
@@ -1846,7 +1844,7 @@ Chest declares no money, accounts, gated or live class. In the Risk class column
 
 *Tier:* Agent surface · *From:* new · *Cites:* BASE-AGENT-005, BASE-AGENT-006, BASE-AGENT-007, BASE-ROLE-001
 
-**Requirement.** An admin sponsor's agent can do the admin work its sponsor's admin scope allows. Admin reports and CSV (ADMIN-002) and storage limits (QUOTA-001) are standard. A space with members other than the sponsor is access. Staff invitations, roles and admin roles are access, plus external when an invitation goes outside the company. The settings in `chest.settings.update`, quarantine release and backups are security, and a restore is destructive and security too. A staff sponsor's agent gets no admin tool. No call may change the sponsor's own role or the agent's own grant (`self_escalation`).
+**Requirement.** An admin sponsor's agent can do the admin work its sponsor's admin scope allows. Admin reports and CSV (ADMIN-002) and storage limits (QUOTA-001) are standard. A space with members other than the sponsor is access. Staff invitations, roles and admin roles are access, plus external when an invitation goes outside the company. The settings in `chest.settings.update`, quarantine release and backups are security, and a restore is destructive and security too. A staff sponsor's agent gets no admin tool.
 
 **Acceptance.**
 1. A scoped admin's agent exports the activity CSV for its scope only, matching the browser report row for row.
@@ -1862,7 +1860,7 @@ Chest declares no money, accounts, gated or live class. In the Risk class column
 
 *Tier:* Agent surface · *From:* new · *Cites:* BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008
 
-**Requirement.** For a sponsor who is the assigned reviewer, `chest.decisions.record` assigns, requests changes (standard) or approves an exact version under CHEST-08 (commitment). For a sponsor who is a signer, `chest.sign` applies the sponsor's signature under SIGN-001 (commitment), and only after the sponsor has accepted SIGN-001's consent disclosure. An agent's decision or signature always reads "<agent> for <person>" in the version history, the signature certificate and the audit, and never as the person's own act. Where the policy asks for approval, the approver's decision is recorded as that person's, with the agent as preparer.
+**Requirement.** For a sponsor who is the assigned reviewer, `chest.decisions.record` assigns, requests changes (standard) or approves an exact version under CHEST-08 (commitment). For a sponsor who is a signer, `chest.sign` applies the sponsor's signature under SIGN-001 (commitment), and only after the sponsor has accepted SIGN-001's consent disclosure. An agent's decision or signature always reads "<agent> for <person>" in the version history, the signature certificate and the audit.
 
 **Acceptance.**
 1. Requesting changes declares standard and records "<agent> for <reviewer>".
@@ -1877,16 +1875,15 @@ Chest declares no money, accounts, gated or live class. In the Risk class column
 
 *Tier:* Agent surface · *From:* new · *Cites:* BASE-AGENT-004, BASE-AGENT-011
 
-**Requirement.** Chest documents its capacity limits, which bound rate and size, never daily volume. A grant carries request, mutation and byte budgets only when the person who grants it sets them. Business limits and the spend cap for `chest.ask` come from the company's policy, which setup asks, and Chest presets none. SECURITY-004's mass-activity rules count agent tokens like any token and can pause them. **Pause agents** in Connected apps refuses every agent token within 60 seconds until a person resumes, while browser sessions and sync clients keep working; when Business pairs Chest, its Pause all agents does the same.
+**Requirement.** The company's policy can cap what `chest.ask` spends. SECURITY-004's mass-activity rules count agent tokens like any token and can pause them. **Pause agents** lives in Connected apps, and while it holds, browser sessions and sync clients keep working.
 
 **Acceptance.**
 1. The consent screen and `/docs/agents` show Chest's capacity limits and the grant's budgets.
 2. A grant with a mutation budget of 0 is refused with 429 and creates nothing.
 3. A token that crosses a download threshold with pause on is refused with 423 on its next call, metadata included, while the sponsor's browser session keeps working, and resuming restores it.
-4. Pause agents stops every agent token's next call within 60 seconds on MCP and the API alike; Resume restores them, and an agent token cannot resume.
-5. Under the company's answer "no cap", `chest.ask` runs and its spend shows; at a set cap it returns `budget_exhausted` with no partial answer and shows the spend.
-6. Connected apps shows calls, decisions by class and spend per agent.
-7. A grant whose granter set no budget files 500 arrivals in one day, paced within the documented rate limit, with none refused.
+4. Under the company's answer "no cap", `chest.ask` runs and its spend shows; at a set cap it returns `budget_exhausted` with no partial answer and shows the spend.
+5. Connected apps shows calls, decisions by class and spend per agent.
+6. A grant whose granter set no budget files 500 arrivals in one day, paced within the documented rate limit, with none refused.
 
 #### SURFACE-013 — The records clerk journey under two company policies
 
@@ -2257,7 +2254,7 @@ Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8a
 | `SURFACE-001` | The Agent surface is Chest's tool registry | target | missing |  | No registry, output schemas, annotations, class declarations, parity test, generated docs or Base harness. Today 9 tools run on `/mcp/chest` at protocol 2025-03-26 with input schemas only (`src/chest/integrations/mcp.ts`), and 39 of the table's 48 tools have no MCP tool. |
 | `SURFACE-002` | Find and read what the sponsor can open | target | missing |  | A restricted or out-of-grant item returns 403 while a missing one returns 404; there is no activity, trash view, report, exposure or event-feed tool, no resources, no sensitive class and no untrusted marker. Today `chest_list`, `chest_get`, `chest_search` and `chest_versions` exist. |
 | `SURFACE-003` | Original bytes follow download rights | target | partial | `tests/chest/integrations.mjs` | Points 1 and 2 pass on the integration API's byte path with an agent's OAuth token; there is no MCP byte tool, blob resource or expiring byte link, and quarantine, byte-budget exhaustion and mid-stream revocation are not asserted for agent grants. |
-| `SURFACE-004` | Add and organize files | target | missing |  | No resumable agent upload, move, field or selection tools, expected revisions, job handles or exposure rule. Today `chest_upload` (base64 in one call) and `chest_create_folder` exist, and the integration API renames and adds versions. |
+| `SURFACE-004` | Add and organize files | target | missing |  | No resumable agent upload, move, field or selection tools, job handles or exposure rule. Today `chest_upload` (base64 in one call) and `chest_create_folder` exist, and the integration API renames and adds versions. |
 | `SURFACE-005` | Recovery stays standard; destruction is its own class | target | missing |  | No trash, rewind, purge or erasure tools, class declarations or policy decisions; today the integration API restores and names versions. |
 | `SURFACE-006` | Sharing is classified by its recipient, never by the agent | target | missing |  | No recipient classification, policy decision, pending actions or receipts. Today `chest_share` forwards the agent's own `confirmExternal`, which the sharing policy (`src/chest/files/sharing-policy.ts`) accepts as the browser's confirmation, and the API's `/links` creates links under policy with no class or decision. |
 | `SURFACE-007` | Narrowing access and repairing links | target | missing |  | No narrowing tool, class declaration or policy decision; today the integration API removes grants (`/unshare`), and revoke and Make private are browser-only (SHARE-007, AGENT-005). |
