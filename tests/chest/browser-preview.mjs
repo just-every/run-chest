@@ -8,6 +8,10 @@ export async function archivePreviewJourney({page,owner,h,width,assertions=true}
  const space=(await h.api('/files',owner)).personal,file=await h.api('/items',owner,{space,name:`Archive ${width}.zip`,base64:original.toString('base64')}),v1=file.payload.current;
  await page.goto(h.origin+`/app/items/${file.id}`);
  const frame=page.frameLocator('iframe[title="ZIP directory"]');await frame.getByRole('heading',{name:'ZIP directory'}).waitFor();
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'file page fits');
+ assert.ok(await frame.locator('html').evaluate(e=>e.scrollWidth<=innerWidth),'ZIP listing fits');
+ await page.screenshot({path:`test-results/${width}-files-zip-directory.png`,fullPage:true});
+ await tooltips(page,width,'zip-directory');
  if(assertions){
   assert.deepEqual(await frame.locator('li > span').allTextContents(),['docs/','docs/nested/terms.txt','<img src=x onerror=alert(1)>.txt']);
   assert.match(await frame.getByRole('status').innerText(),/2 files · 1 folders · 34 bytes/);
@@ -17,11 +21,14 @@ export async function archivePreviewJourney({page,owner,h,width,assertions=true}
   await frame.getByText('replacement.txt',{exact:true}).waitFor();assert.deepEqual(await frame.locator('li > span').allTextContents(),['replacement.txt']);
   const retained=page.locator('.ver').filter({has:page.getByRole('heading',{name:/Version 1/})}).getByRole('link',{name:'Open ZIP directory'});
   const [popup]=await Promise.all([page.waitForEvent('popup'),retained.click()]);await popup.getByText('Retained version',{exact:false}).waitFor();assert.deepEqual(await popup.locator('li > span').allTextContents(),['docs/','docs/nested/terms.txt','<img src=x onerror=alert(1)>.txt']);await popup.close();
+  const encrypted=Buffer.from(original);encrypted.writeUInt16LE(0x801,6);encrypted.writeUInt16LE(0x801,encrypted.readUInt32LE(encrypted.length-6)+8);
+  for(const [name,bytes,state] of [['Broken',original.subarray(0,-5),'malformed'],['Encrypted',encrypted,'unsupported'],['Too deep',zip([['a/'.repeat(65)+'file.txt','synthetic-chest-4']]),'over-bound']]){
+   const item=await h.api('/items',owner,{space,name:name+'.zip',base64:bytes.toString('base64')});await page.goto(h.origin+`/app/items/${item.id}`);
+   await frame.getByRole('status').filter({hasText:state+':'}).waitFor();assert.equal(await frame.locator('li').count(),0);
+   assert.match(await frame.getByRole('link',{name:'Download original'}).getAttribute('href'),/download=true$/);
+  }
  }
- assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'file page fits');
- assert.ok(await frame.locator('html').evaluate(e=>e.scrollWidth<=innerWidth),'ZIP listing fits');
- await page.screenshot({path:`test-results/${width}-files-zip-directory.png`,fullPage:true});
- await tooltips(page,width,'zip-directory');
+ console.log(`ZIP directory browser proof passed at ${width}`);
 }
 
 // Chromium creates the embed before the native viewer has loaded its PDF.
