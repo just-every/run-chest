@@ -23,10 +23,11 @@ function mentionsOf(input: any): string[] {
  insist(Array.isArray(values) && values.length <= 20 && values.every(v => typeof v === 'string'), 'invalid_mentions')
  return [...new Set<string>(values.map((v: string) => v.trim().toLowerCase()).filter(Boolean))]
 }
-async function recipient(env: Bindings, key: string, email: string, required: boolean) {
+async function recipient(env: Bindings, key: string, version: string | null, email: string, required: boolean) {
  const active = await activePerson(env, email)
  const ctx = active ? await context(env, await whoFor(env, email), key) : null
  const available = ctx && !ctx.state.trash && allowed(ctx, 'view')
+  && (version === null || ctx.chain.at(-1)!.payload.versions.some(v => v.id === version))
  if (required) insist(available, 'comment_recipient_unavailable', 403)
  return available ? ctx : null
 }
@@ -69,9 +70,9 @@ export async function comment(env: Bindings, s: Session, w: Who, key: string, in
  const version = versionOf(ctx, input), mentions = mentionsOf(input)
  const assignee = typeof input.assignee === 'string' ? input.assignee.trim().toLowerCase() : ''
  const recipients = new Map<string, { ctx: Ctx; type: string }>()
- for (const email of new Set([...mentions, ...(assignee ? [assignee] : [])])) recipients.set(email, { ctx: (await recipient(env, key, email, true))!, type: assignee === email ? 'comment.assignment' : 'comment.mention' })
+ for (const email of new Set([...mentions, ...(assignee ? [assignee] : [])])) recipients.set(email, { ctx: (await recipient(env, key, version, email, true))!, type: assignee === email ? 'comment.assignment' : 'comment.mention' })
  const owner = ctx.space.payload.kind === 'personal' ? ctx.space.payload.owner : item.payload.createdBy
- if (!recipients.has(owner)) { const ownerCtx = await recipient(env, key, owner, false); if (ownerCtx) recipients.set(owner, { ctx: ownerCtx, type: 'comment' }) }
+ if (!recipients.has(owner)) { const ownerCtx = await recipient(env, key, version, owner, false); if (ownerCtx) recipients.set(owner, { ctx: ownerCtx, type: 'comment' }) }
  const anchor = await anchorOf(env, ctx, version, input)
  const row = fresh<Comment>('comment', { item: key, version, author: s.operator.email, message: text(input.message, 'comment', 4000), at: now(), mentions, ...(assignee ? { assignee } : {}), ...(anchor ? { anchor } : {}) })
  const label = personLine(s.operator.displayName, s.operator.email)
@@ -90,10 +91,10 @@ async function thread(env: Bindings, w: Who, key: string, id: string) {
  versionOf(ctx, { version: row.payload.version })
  return { ctx, row }
 }
-async function participants(env: Bindings, key: string, row: Row<Comment>, explicit: string[] = []) {
+async function participants(env: Bindings, key: string, row: Row<Comment>, explicit: string[] = [], version = row.payload.version) {
  const people = new Map<string, { ctx: Ctx; type: string }>()
  for (const email of new Set([row.payload.author, ...(row.payload.mentions ?? []), ...(row.payload.assignee ? [row.payload.assignee] : []), ...(row.payload.replies?.map(r => r.author) ?? []), ...explicit])) {
-  const ctx = await recipient(env, key, email, explicit.includes(email))
+  const ctx = await recipient(env, key, version, email, explicit.includes(email))
   if (ctx) people.set(email, { ctx, type: explicit.includes(email) ? 'comment.mention' : 'comment.reply' })
  }
  return people
@@ -144,9 +145,9 @@ export async function carryComment(env: Bindings, s: Session, w: Who, key: strin
  // that choice to the current pointer they saw, even when selecting an earlier retained version.
  const fingerprint = await digest(new TextEncoder().encode(JSON.stringify([key, id, version, anchor, input.expectedCurrent])))
  const receipt = `comment:carry:${await digest(new TextEncoder().encode(JSON.stringify([s.operator.email, input.key])))}`
- const recipients = await participants(env, key, source, [...new Set([...(source.payload.mentions ?? []), ...(source.payload.assignee ? [source.payload.assignee] : [])])])
+ const recipients = await participants(env, key, source, [...new Set([...(source.payload.mentions ?? []), ...(source.payload.assignee ? [source.payload.assignee] : [])])], version)
  const owner = ctx.space.payload.kind === 'personal' ? ctx.space.payload.owner : item.payload.createdBy
- if (!recipients.has(owner)) { const ownerCtx = await recipient(env, key, owner, false); if (ownerCtx) recipients.set(owner, { ctx: ownerCtx, type: 'comment.carry' }) }
+ if (!recipients.has(owner)) { const ownerCtx = await recipient(env, key, version, owner, false); if (ownerCtx) recipients.set(owner, { ctx: ownerCtx, type: 'comment.carry' }) }
  const replay = (winner: Row<Comment>) => {
   insist((winner.payload as Comment & { carryFingerprint?: string }).carryFingerprint === fingerprint, 'caller_key_conflict', 409)
   return winner

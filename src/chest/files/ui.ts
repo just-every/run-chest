@@ -133,6 +133,10 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (parts[1] === 'items' && parts[2]) {
   try {
    const d = await itemView(env, s, w, parts[2]), returnTo = `/app/items/${d.id}`, officeEdit = url.searchParams.get('edit') === '1' && d.can.download ? await readOffice(env, w, parts[2], undefined, true, url.searchParams.get('mode')==='suggest') : null
+   const selectedThread = url.searchParams.get('thread')
+   if (selectedThread && d.comments.some(c => c.id === selectedThread && c.resolved && c.anchor?.kind === 'pdf')) {
+    return { redirect: `${returnTo}?comment=${encodeURIComponent(selectedThread)}#comment-${encodeURIComponent(selectedThread)}` }
+   }
    const creation = d.item.type === 'folder' && d.can.contribute ? await listTemplates(env, s, w, { parent: parts[2] }) : null, folder = d.item.type === 'folder' ? await browser(env, s, w, d.space.id, d.id, d.children.map((c: any) => c.id), url) : null
    return { body: itemPage({ ...d, focusComment: url.searchParams.get('comment'), annotationNavigation: pdfNavigation(d.unresolvedPdf, url.searchParams.get('thread')), folder, members: await members(env, w, d.id), creation, officeEdit, me: s.operator.email, ownerRole: s.operator.role === 'owner', templateAdmin: await canAdmin(env, s, 'service-settings'), manage: url.searchParams.has('manage') }, { people, groups, destinations: await destinations(env, w) }), bar: d.item.type === 'folder' ? bar(itemCrumbs(d), creation, { parent: d.id }, returnTo, d.can.share ? '?manage#share' : undefined) : { crumbs: itemCrumbs(d), upload: d.can.contribute ? '#upload' : undefined, share: d.can.share ? '#share' : undefined } }
   }

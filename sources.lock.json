@@ -185,7 +185,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "e2e8a6668b6af1c5ca7ec917942169e6be8678977ccefd6c10e2ce0151f56a3d",
+      "sha256": "9b47b77e46fc4f87138497839808df557b84102669b115b8c83a2b03dde78408",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -213,7 +213,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "bf970c030aa7d42f1af5471aede85ae6d967946d556d321b63aa5ab6aefc6e0f",
+      "sha256": "445059da83f048ac7a43b81b779cb41ffe66dc6e1166d43927831f4c1d100cf2",
       "executable": false
     },
     "DEMO.md": {
@@ -253,7 +253,7 @@
       "executable": false
     },
     "docs/CLAIMS.md": {
-      "sha256": "b0a179a431244167e6ce22eabdae6c28a5837dabcd25a61ac2de976aab9ff5b1",
+      "sha256": "bfa37ddf84a7634df3bbf8ffc67de5305e844450022c89dfd542ae68c60260a1",
       "executable": false
     },
     "docs/collections.md": {
@@ -313,7 +313,7 @@
       "executable": false
     },
     "docs/office.md": {
-      "sha256": "1b7310c15d74103e3ecc0bd6ff176e09989f899442db0a651fc198f32dc2968a",
+      "sha256": "0312c2509403b0bf9e101ca4a2c5e999b65e2b5696bf1b4b0f1e1dd7ec2595bd",
       "executable": false
     },
     "docs/open-source.md": {
@@ -1693,7 +1693,7 @@
       "executable": false
     },
     "src/chest/files/comments.ts": {
-      "sha256": "1674e708ca22d1d83bf83f4436f8749157c79d2a95af2e9bc9f056c606dfdb6b",
+      "sha256": "869a3d489515fcf92085bedfffd3425b95034577326e1b6bda1639efa8d7c185",
       "executable": false
     },
     "src/chest/files/devices.ts": {
@@ -1945,7 +1945,7 @@
       "executable": false
     },
     "src/chest/files/ui.ts": {
-      "sha256": "447bf46bf38ffb770737eae7e5d8c6b23c4d9386da79a3ee77108d73e29e53ea",
+      "sha256": "e9223d72aaed40ef799714c79ab24c413042c7cd2494a00a00ad55b14647e34a",
       "executable": false
     },
     "src/chest/files/uploads.ts": {
@@ -4685,7 +4685,11 @@
       "executable": false
     },
     "tests/chest/annotation-flow.mjs": {
-      "sha256": "1fb53d76442ff134a75211fbafd5a8cd6a01659559b90138b20cd9b137d65617",
+      "sha256": "6ab1ab4cda23b7b0fdf07b7204273e691db725fc8c2178cd41b666a59a7ed9d1",
+      "executable": false
+    },
+    "tests/chest/annotation-recipients.mjs": {
+      "sha256": "ddbab7c98aca6a4c8a5423d5ef4fe2510881bdc69c9922219898163b95944fcf",
       "executable": false
     },
     "tests/chest/archive-preview.mjs": {
