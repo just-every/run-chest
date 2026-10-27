@@ -48,16 +48,16 @@ The primary journey: create a team space, move originals and rights in, install 
 | BASE-DATA-005 | Independence | OPEN-001, OWN-001 | not run |
 | BASE-PUBLIC-001 | Privacy | SHARE-001, SHARE-002 | not run |
 | BASE-PUBLIC-002 | Origins | CONNECT-012 | not run |
-| BASE-PUBLIC-003 | Accessibility | none | not run |
+| BASE-PUBLIC-003 | Accessibility | OPS-001 | not run |
 | BASE-OPS-001 | Health | SCALE-002, OPS-004 | not run |
 | BASE-OPS-002 | Migrations | RECOVER-002 | not run |
 | BASE-OPS-003 | Idempotency | MIGRATE-001, CONNECT-006, CONNECT-007, CONNECT-009 | not run |
 | BASE-OPS-004 | Failure is visible | BULK-001, AUDIT-001, OPS-001, FOLLOW-001 | not run |
 | BASE-OPS-005 | Audit | CHEST-13, AUDIT-001 | not run |
 | BASE-ROLE-001 | Roles through every door | ROLE-001, ADMIN-003, SURFACE-010 | not run |
-| BASE-AUDIT-001 | Searchable, durable audit | none | not run |
+| BASE-AUDIT-001 | Searchable, durable audit | AUDIT-001 | not run |
 | BASE-BACKUP-001 | Independent backup, restore and rollback | RECOVER-002 | not run |
-| BASE-DATA-006 | Erasure respects retention and legal hold | none | not run |
+| BASE-DATA-006 | Erasure respects retention and legal hold | ERASE-001 | not run |
 | BASE-SIGNIN-001 | Standards-based SSO and lifecycle | ADMIN-001 | not run |
 | BASE-SIGNIN-002 | Native multi-factor authentication | ADMIN-004 | not run |
 | BASE-INSTALL-001 | Free self-host and removal | OWN-001 | not run |
