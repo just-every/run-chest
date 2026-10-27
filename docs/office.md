@@ -75,6 +75,19 @@ page, and enter the region as percentages from its top left. Replies, mentions,
 assignment and resolution stay with that original version. Uploading a replacement
 does not move the annotation; **Open original page** returns to its original.
 
+Use **Previous unresolved** and **Next unresolved** to visit open PDF threads,
+including those on earlier retained versions. Resolving a thread removes it from
+this navigation without deleting the discussion.
+
+To continue a discussion on another retained PDF, open **Carry thread forward**,
+choose the destination version, page and region, then select **Create linked
+thread**. This starts a new thread attributed to you with a link to the original;
+the original replies, resolution and anchor stay unchanged. The new thread keeps
+the mentions and assignee. Chest refuses the action if any of them no longer has
+access. A replacement uploaded
+while the form is open requires you to reload and choose again. Retrying an
+already completed submission creates no duplicate thread or notification.
+
 The no-download setting gives viewers and commenters rendered page images from
 Collabora for text, Office, PDF and image files. Page navigation remains available.
 Original bytes, extraction, retained originals, ranges, sync and archive inclusion
