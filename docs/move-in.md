@@ -75,3 +75,17 @@ The Library (records with sign-off) has its own importer, for the owner, under
 previews every item before anything is written, and files each record private
 and unapproved. Use it only when you are moving records that need an owner, a
 reviewer and an approved version.
+
+## Import rules moved from the contract
+
+Moved out of CONTRACT.md on 28 October 2026; the contract links here where it needs these rules.
+
+- Base D1 journal/native target publish inert records, resume after restart and undo only untouched batches.
+- It is anchored to the quoted text, cell, slide, or PDF or image page and region, located from the export's comment ranges and the API's `anchor` and `quotedFileContent`.
+- **Authors:** the Drive API does not return comment authors' email addresses or permission IDs, so Chest matches each author by evidence, in this order:
+- (1) for domain users, the migration lists each file's comments as each migrating user under its domain-wide delegation, and the API marks that user's own comments and replies with `me`;
+- (2) the Drive Activity API's comment actors, resolved to directory users through the Admin SDK Directory API;
+- (3) for anyone left, the author's display name matched against the file's permission list, the domain directory and existing SHARE-005 guests, which is only a proposal, applied once the owner confirms it in the MIGRATE-001 mapping preview.
+- **Mentions and action items:** the API's `mentionedEmailAddresses` become EDIT-003 mentions of the mapped people, and a mention grants no access.
+- An assigned comment keeps its assignee from `assigneeEmailAddress` and becomes an open task in that person's EDIT-003 and FOLLOW-001 task lists, keeping its source age.
+- If the assignee was not migrated or cannot open the migrated file, no access is granted: the report names the assignee and the reason, the task goes to the file's owner (for a space file, the space's managers), and the owner is offered EDIT-001's one-step grant.

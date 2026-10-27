@@ -1,4 +1,4 @@
-// CHEST-15: use the real browser uploader and persisted originals. Only the browser's
+// TRANSFER-001: use the real browser uploader and persisted originals. Only the browser's
 // network is interrupted; all admitted parts and completion responses come from Chest.
 import assert from 'node:assert/strict';
 import {createHash,randomBytes} from 'node:crypto';
@@ -52,6 +52,6 @@ export async function uploadResumeJourney(h,page,width,space,parent){
   const [download]=await Promise.all([page.waitForEvent('download'),page.locator('.doc-actions').getByRole('link',{name:'Download',exact:true}).click()]);
   assert.equal(await download.failure(),null);assert.equal(await hash(await download.path()),original);
   await shot('complete');
-  console.log(`CHEST-15 passed at ${width}: 150 MB, network interruption, reload at 26%, persisted parts, resumed progress, stored and downloaded SHA-256.`);
+  console.log(`TRANSFER-001 passed at ${width}: 150 MB, network interruption, reload at 26%, persisted parts, resumed progress, stored and downloaded SHA-256.`);
  }finally{await page.unroute(partPattern,interrupt);await rm(path,{force:true})}
 }

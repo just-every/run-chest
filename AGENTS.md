@@ -1,10 +1,14 @@
 # Run it locally
 
-Lander-Regenerate: after editing a clause's Status row in CONTRACT.md, run
-`node scripts/contract-docs.mjs write <clause>` and
-`node scripts/contract-docs.mjs check <clause>` to refresh its evidence and Gap
-in the existing acceptance and claim projections. Acceptance sentences remain
-owned by CONTRACT.md. Regenerate the edition lock last with
+Lander-Regenerate: node src/base/contract-docs.mjs write
+Lander-Regenerate: node scripts/edition-authoring/cli.mjs lock
+
+CONTRACT.md is the only acceptance text and status, in the RER contract
+standard's shape (at most eight acceptance points per clause). After any
+CONTRACT.md change, run `node src/base/contract-docs.mjs write`, then
+`node src/base/contract-docs.mjs check`; ACCEPTANCE.md and docs/CLAIMS.md are
+generated, so never edit them by hand. Rulings live in RULINGS.md and history
+in CHANGELOG.md. Regenerate the edition lock last with
 `node scripts/edition-authoring/cli.mjs lock`, then run its `check` command.
 
 ```sh

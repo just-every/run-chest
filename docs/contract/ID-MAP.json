@@ -81,75 +81,77 @@
       ]
     },
     "CHEST-14": {
-      "how": "kept",
+      "how": "merged",
       "to": [
-        "CHEST-14"
+        "SPACE-001"
       ]
     },
     "CHEST-15": {
-      "how": "kept",
+      "how": "merged",
       "to": [
-        "CHEST-15"
+        "TRANSFER-001"
       ]
     },
     "CHEST-16": {
-      "how": "kept",
+      "how": "merged",
       "to": [
-        "CHEST-16"
+        "VERSION-001"
       ]
     },
     "CHEST-17": {
-      "how": "kept",
+      "how": "merged",
       "to": [
-        "CHEST-17"
+        "RECOVER-001"
       ]
     },
     "CHEST-18": {
-      "how": "kept",
+      "how": "merged",
       "to": [
-        "CHEST-18"
+        "SHARE-001"
       ]
     },
     "CHEST-19": {
-      "how": "kept",
+      "how": "merged",
       "to": [
-        "CHEST-19"
+        "SHARE-007"
       ]
     },
     "CHEST-20": {
-      "how": "kept",
+      "how": "merged",
       "to": [
-        "CHEST-20"
+        "SHARE-002"
       ]
     },
     "CHEST-21": {
-      "how": "kept",
+      "how": "merged",
       "to": [
-        "CHEST-21"
+        "SEARCH-001"
       ]
     },
     "CHEST-22": {
-      "how": "kept",
+      "how": "merged",
       "to": [
-        "CHEST-22"
+        "ROLE-001"
       ]
     },
     "CHEST-23": {
-      "how": "kept",
+      "how": "merged",
       "to": [
-        "CHEST-23"
+        "OWN-001"
       ]
     },
     "CHEST-24": {
-      "how": "kept",
+      "how": "merged",
       "to": [
-        "CHEST-24"
+        "RECOVER-002"
       ]
     },
     "SPACE-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "SPACE-001"
+        "SPACE-001",
+        "SPACE-003",
+        "SCALE-001"
       ]
     },
     "SPACE-002": {
@@ -171,21 +173,30 @@
       ]
     },
     "TRANSFER-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "TRANSFER-001"
+        "TRANSFER-001",
+        "TRANSFER-002",
+        "SYNC-008",
+        "MOBILE-001"
       ]
     },
     "BULK-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "BULK-001"
+        "BULK-001",
+        "BULK-002",
+        "SYNC-008",
+        "MOBILE-001"
       ]
     },
     "SYNC-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "SYNC-001"
+        "SYNC-001",
+        "SYNC-008",
+        "SYNC-009",
+        "SYNC-010"
       ]
     },
     "SYNC-002": {
@@ -195,9 +206,12 @@
       ]
     },
     "SYNC-003": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "SYNC-003"
+        "SYNC-003",
+        "SYNC-011",
+        "SYNC-012",
+        "SCALE-001"
       ]
     },
     "SYNC-004": {
@@ -219,21 +233,29 @@
       ]
     },
     "SYNC-007": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "SYNC-007"
+        "SYNC-007",
+        "SYNC-013",
+        "SYNC-014"
       ]
     },
     "MOBILE-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "MOBILE-001"
+        "MOBILE-001",
+        "MOBILE-002",
+        "MOBILE-003",
+        "MOBILE-004",
+        "MOBILE-006"
       ]
     },
     "SHARE-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "SHARE-001"
+        "SHARE-001",
+        "SHARE-006",
+        "SHARE-007"
       ]
     },
     "SHARE-002": {
@@ -249,45 +271,69 @@
       ]
     },
     "SHARE-004": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "SHARE-004"
+        "SHARE-004",
+        "SHARE-008",
+        "SHARE-009"
       ]
     },
     "SHARE-005": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "SHARE-005"
+        "SHARE-005",
+        "SHARE-010"
       ]
     },
     "POLICY-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "POLICY-001"
+        "POLICY-001",
+        "POLICY-002",
+        "CONNECT-009"
       ]
     },
     "PREVIEW-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "PREVIEW-001"
+        "PREVIEW-001",
+        "PREVIEW-002",
+        "MOBILE-005"
       ]
     },
     "SEARCH-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "SEARCH-001"
+        "SEARCH-001",
+        "SEARCH-003",
+        "SEARCH-004",
+        "MOBILE-005",
+        "SCALE-001"
       ]
     },
     "SEARCH-002": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "SEARCH-002"
+        "SEARCH-002",
+        "MOBILE-005"
       ]
     },
     "EDIT-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "EDIT-001"
+        "EDIT-001",
+        "EDIT-005",
+        "EDIT-006",
+        "EDIT-002",
+        "EDIT-007",
+        "EDIT-008",
+        "EDIT-009",
+        "EDIT-010",
+        "EDIT-011",
+        "EDIT-012",
+        "EDIT-004",
+        "EDIT-014",
+        "MOBILE-006"
       ]
     },
     "EDIT-002": {
@@ -297,21 +343,27 @@
       ]
     },
     "EDIT-003": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "EDIT-003"
+        "EDIT-003",
+        "EDIT-008",
+        "MOBILE-005"
       ]
     },
     "EDIT-004": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "EDIT-004"
+        "EDIT-004",
+        "EDIT-013",
+        "EDIT-014",
+        "MOBILE-005"
       ]
     },
     "SIGN-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "SIGN-001"
+        "SIGN-001",
+        "MOBILE-005"
       ]
     },
     "RECOVER-001": {
@@ -333,15 +385,17 @@
       ]
     },
     "ADMIN-002": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "ADMIN-002"
+        "ADMIN-002",
+        "ADMIN-005"
       ]
     },
     "ADMIN-003": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "ADMIN-003"
+        "ADMIN-003",
+        "ADMIN-006"
       ]
     },
     "ADMIN-004": {
@@ -363,15 +417,17 @@
       ]
     },
     "SECURITY-002": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "SECURITY-002"
+        "SECURITY-002",
+        "SECURITY-004"
       ]
     },
     "SECURITY-003": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "SECURITY-003"
+        "SECURITY-003",
+        "SECURITY-005"
       ]
     },
     "GOVERN-001": {
@@ -381,9 +437,10 @@
       ]
     },
     "AUDIT-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "AUDIT-001"
+        "AUDIT-001",
+        "AUDIT-002"
       ]
     },
     "ERASE-001": {
@@ -393,21 +450,25 @@
       ]
     },
     "OPS-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "OPS-001"
-      ]
-    },
-    "SCALE-001": {
-      "how": "kept",
-      "to": [
+        "OPS-001",
         "SCALE-001"
       ]
     },
-    "OPS-002": {
-      "how": "kept",
+    "SCALE-001": {
+      "how": "split",
       "to": [
-        "OPS-002"
+        "SCALE-001",
+        "SCALE-002"
+      ]
+    },
+    "OPS-002": {
+      "how": "split",
+      "to": [
+        "OPS-002",
+        "OPS-003",
+        "OPS-004"
       ]
     },
     "OPEN-001": {
@@ -423,15 +484,24 @@
       ]
     },
     "MIGRATE-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "MIGRATE-001"
+        "MIGRATE-001",
+        "MIGRATE-008",
+        "MIGRATE-012",
+        "MIGRATE-007",
+        "MIGRATE-014"
       ]
     },
     "MIGRATE-002": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "MIGRATE-002"
+        "MIGRATE-002",
+        "MIGRATE-009",
+        "MIGRATE-010",
+        "MIGRATE-011",
+        "MIGRATE-012",
+        "MIGRATE-007"
       ]
     },
     "MIGRATE-003": {
@@ -453,15 +523,17 @@
       ]
     },
     "MIGRATE-006": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "MIGRATE-006"
+        "MIGRATE-006",
+        "MIGRATE-013"
       ]
     },
     "MIGRATE-007": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "MIGRATE-007"
+        "MIGRATE-007",
+        "MIGRATE-014"
       ]
     },
     "CONNECT-001": {
@@ -495,15 +567,18 @@
       ]
     },
     "CONNECT-006": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "CONNECT-006"
+        "CONNECT-006",
+        "CONNECT-011"
       ]
     },
     "CONNECT-007": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "CONNECT-007"
+        "CONNECT-007",
+        "CONNECT-012",
+        "CONNECT-013"
       ]
     },
     "CONNECT-008": {
@@ -519,9 +594,12 @@
       ]
     },
     "CONNECT-010": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "CONNECT-010"
+        "CONNECT-010",
+        "CONNECT-014",
+        "CONNECT-015",
+        "CONNECT-016"
       ]
     },
     "RULE-001": {
@@ -531,9 +609,11 @@
       ]
     },
     "FOLLOW-001": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "FOLLOW-001"
+        "FOLLOW-001",
+        "FOLLOW-002",
+        "FOLLOW-003"
       ]
     },
     "AGENT-001": {
@@ -573,9 +653,11 @@
       ]
     },
     "AGENT-007": {
-      "how": "kept",
+      "how": "split",
       "to": [
-        "AGENT-007"
+        "AGENT-007",
+        "AGENT-008",
+        "AGENT-009"
       ]
     }
   }

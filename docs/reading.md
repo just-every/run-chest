@@ -70,3 +70,9 @@ Readers see the values and the boxes, but not the buttons. Each accept,
 correction and rejection is in the audit trail with the version, page, box and
 the model that read it. A new version is read again; earlier decisions stay
 with their own version.
+
+## Current reading limits moved from the contract
+
+Moved out of CONTRACT.md on 28 October 2026; the contract links here where it needs these rules.
+
+- Today, searchable extraction covers UTF-8 text up to 500 kB, native RTF displayed text, PDF text layers, Office and OpenDocument text, and OCR of scans and photos with the installation's own AI model key (up to 60 scanned pages and 900,000 characters per file); originals sent through the plain upload form or the JSON API have an 8 MB admission limit and resumable uploads take up to 4 GB per file; reviewed JSON move-in archives have 100-item/16 MB bounds.

@@ -1,4 +1,4 @@
-// CHEST-24 / RECOVER-002: genuine tagged upgrade and clean prior-revision recovery.
+// RECOVER-002: genuine tagged upgrade and clean prior-revision recovery.
 import assert from 'node:assert/strict';
 import {mkdtemp,mkdir,readFile,writeFile,copyFile,chmod,stat,rm} from 'node:fs/promises';
 import {join} from 'node:path';
@@ -117,5 +117,5 @@ try {
  for(const document of documents)for(const version of document.payload.versions){const r=await fetch(`${origin}/api/chest/documents/${document.id}/bytes/${version.id}?download=true`,{headers:{cookie:upgradedOwner}});assert.equal(r.status,200);assert.equal(hash(new Uint8Array(await r.arrayBuffer())),version.checksum)}
  const post=await fetch(origin+'/api/chest/spaces',{method:'POST',headers:{cookie:upgradedOwner,origin,'content-type':'application/json'},body:JSON.stringify({name:'Harbor upgraded project'})});assert.equal(post.status,200);const space=await post.json();
  await screenshots(upgradedOwner,[['library','/app/library'],['document',`/app/documents/${documents[0].id}`],['files',`/app/spaces/${space.id}`]],'upgrade');
- console.log(`CHEST-24 passed: ${Object.keys(before.tables).length} prior tables, every earlier row and ${before.objects.length} originals preserved; all Library versions download and Files works at 1440/390. The tagged application used the currently supported installer runtime.`);
+ console.log(`RECOVER-002 passed: ${Object.keys(before.tables).length} prior tables, every earlier row and ${before.objects.length} originals preserved; all Library versions download and Files works at 1440/390. The tagged application used the currently supported installer runtime.`);
 }finally{await browser?.close();await server?.stop();await rm(scratch,{recursive:true,force:true})}

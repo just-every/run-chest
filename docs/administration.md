@@ -87,3 +87,43 @@ provider outcome to its Chest admission. Older outcomes without a session remain
 unmatched. Provider-side live capacity and completeness of provider refusal
 reporting remain unknown. This is the conservative ADMIN-002 default; it does not
 claim provider verification or close that contract gap.
+
+## Accounting and reporting rules moved from the contract
+
+Moved out of CONTRACT.md on 28 October 2026; the contract links here where it needs these rules.
+
+- For reporting, activity dates are inclusive UTC instants;
+- CSV exports include every matching page under current administrative scope.
+- Storage is a current retained-original snapshot, deduplicated by SHA-256 across selected areas.
+- An original is assigned once to live current, otherwise live previous, otherwise trash (including descendants of trashed folders), otherwise quarantined/rejected request custody; per-area totals can overlap and are never summed into an organization total.
+- Provider rates are explicitly confirmed owner-entered USD estimates, using decimal GB (1,000,000,000 bytes), a current monthly storage run rate rounded to six decimal places, and a named quote/source; they are not invoices, live prices or authority to enable paid work.
+- Stream receipts reserve each output chunk durably before emission.
+- A lost completion is uncertain, with confirmed bytes and the reserved upper bound kept separate; no restart fabricates delivery.
+- Organization selection totals include ZIP framing, while scoped totals include only original member bytes at the enclosing ZIP output checkpoints under current custody.
+- Provider-call receipts snapshot the confirmed quote at request start; reported uncached input and output tokens use decimal millions, and request fees and network estimates remain separate provider charges.
+- Anthropic input excludes cache units;
+- OpenAI prompt totals include cache reads, which are subtracted before uncached pricing.
+- Cache read, five minute write and one hour write quotes use decimal millions; a nonstandard provider service tier requires an exact tier quote.
+- Collabora admission counts unexpired Chest session reservations of at most 30 minutes, checks document and connection ceilings atomically and records each Chest refusal; an acknowledged close releases that reservation.
+- Provider-side disconnection is not inferred.
+- Portability receipts preserve operation-specific confirmed quotes and separate provider inbound and outbound decimal GB estimates.
+- Private local receipt journals contain metadata only, survive database replacement and replay idempotently; a lost completion remains uncertain.
+- Licensed editor limits are administrator-recorded from the quote, with product and version from an explicit audited probe.
+- Provider-side capacity stays unknown; browser outcomes reconcile to Chest admissions and never claim complete provider verification.
+- ADMIN-002 reports the configured Collabora edition, administrator-recorded licensed limits and costs, Chest reservations and refusals, and attributed observed provider outcomes.
+- Independent provider-side enforcement is not inferred from those records;
+- External-guest reporting is a current snapshot of shared-link audiences and retained file-request submission evidence under the same content-custody administrative scope.
+- Configured recipient addresses prove no visit; completed email verification is historical evidence, never a live-session count.
+- Domain and anonymous audiences have no known person count, and self-reported submitter addresses remain unverified.
+- Existing view-history privacy choices and identity-erasure redaction apply; activity date filters do not apply to this snapshot.
+- Durable stream receipts now cover original doors, rendered and extracted previews, ZIP64 selections and signing PDFs; cancellation retains emitted prefixes and interrupted checkpoints retain uncertain upper bounds.
+- Scoped archive receipts now use the enclosing ZIP output checkpoints, excluding headers, paths, framing and the manifest; generation ahead of output is not counted as emission. tests/chest/administration-accounting-flow.mjs (accountingJourney) reconciles cancelled member bytes to the enclosing ZIP prefix and preserves them across restart.
+- Dated AI and provider calls preserve confirmed quotes, reported units and separate network estimates without historical repricing.
+- Confirmed Collabora edition, price, CODE warning, atomic document and connection reservations, close and expiry, scoped refusal reports and CSV are implemented.
+- Independent backup database export control calls, signed SQL downloads and object-store calls now record durable request reservations and response checkpoints for listings, multipart uploads, original reads and encrypted readbacks, without object keys or credentials.
+- AI quotes distinguish Anthropic uncached input from OpenAI inclusive prompt totals, cache reads, five minute and one hour writes, and exact service tiers; missing or malformed units, unmatched tiers and models remain unknown.
+- Saved receipts preserve their quote across restart and replacement.
+- An explicit audited Collabora capability probe records the service product and version; authenticated editor sessions retain deduplicated browser-reported refusal kinds separately from Chest admission.
+- Legacy hosted backup and restore, independent restore, verification and retention now use durable provider transport receipts, including D1 export, private SQL download, SQL upload, import control calls, multipart originals and readbacks.
+- A private metadata journal preserves receipts across database replacement and interruption, and replays them by receipt ID after a successful command; validation failure leaves the remote restore target untouched.
+- Confirmed object-store quotes distinguish list, read, write, delete and each multipart operation, plus provider inbound and outbound decimal GB estimates, with missing rates unknown. tests/chest/administration-accounting-flow.mjs (accountingJourney, including portabilityJourney) proves those paths, immutable operation quotes, scoped reports and the conservative editor default at 1440 and 390.

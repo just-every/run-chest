@@ -47,3 +47,9 @@ A folder manager can enable **Read required fields after scan upload**. PDFs and
 photos may then arrive with required values empty, and approval is blocked until
 a person confirms or enters them. Other uploads still require their typed values.
 The installation's reader provider and key are set in People & settings.
+
+## Search parameters moved from the contract
+
+Moved out of CONTRACT.md on 28 October 2026; the contract links here where it needs these rules.
+
+- Filters work in the browser at 1440 and 390, in the iOS and Android apps, and through the CONNECT-007 search API as named parameters (`type`, `owner`, `creator`, `sharedBy`, `modifiedFrom`, `modifiedTo`, `location`, `versions`).
