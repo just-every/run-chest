@@ -172,6 +172,12 @@
       "name": "0027_item_enumeration.sql",
       "sha256": "f28c71eec23057577793014e439feac57af1e0dd613e5eb5060c864b45b2f78f",
       "sql": "-- Bound metadata scans by kind and stable item identifier.\nCREATE INDEX chest_item_enumeration ON chest_records(kind, id);\nCREATE INDEX chest_space_enumeration ON chest_records(json_extract(payload,'$.space'), id) WHERE kind='item';\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0028_folder_items.sql",
+      "sha256": "d027533676d5bf991f927693262620f58ed7c651aee185b8772a985665e2a9cf",
+      "sql": "-- Sibling operations read one live folder rather than every item in its space.\nCREATE INDEX chest_folder_items ON chest_records(json_extract(payload,'$.space'), json_extract(payload,'$.parent'), id) WHERE kind='item' AND json_extract(payload,'$.trash') IS NULL;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
