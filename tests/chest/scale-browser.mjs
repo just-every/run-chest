@@ -21,7 +21,7 @@ export async function scaleScreens({browser,h,owner,data}){
     await page.waitForURL('**/app/administration?peoplePage=1#people');
     assert.equal(await page.getByRole('heading',{name:first,exact:true}).count(),0,'the next page shows another part of the current scoped roster');
     await page.goto(h.origin+'/app/administration?peoplePage=99999');
-    const last=data.membersSpace.members.map(m=>m.principal).sort().at(-1);
+    const last=data.membersSpace.members.filter(m=>m.principal.includes('@')).map(m=>m.principal).sort().at(-1);
     const finalPerson=page.locator('#people h3').filter({hasText:last});
     assert.equal(await finalPerson.count(),1,'the final admitted person remains reachable');
     assert.equal(await page.getByRole('link',{name:'Next people',exact:true}).count(),0);
