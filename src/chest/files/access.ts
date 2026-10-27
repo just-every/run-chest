@@ -1,3 +1,4 @@
+import { sessionAgent, type AgentIdentity } from '../agent-policy'
 import { policy as contentPolicy } from '../content-security/policy'
 import { memberProjection } from './member-link-controls'
 import { contentReadable } from '../content-security/scan'
@@ -13,7 +14,7 @@ import { itemPaths } from './item-paths'
 // Current access, computed on every request from the space, each folder on the path and the person's live groups.
 // Inherited roles accumulate down the tree; a restricted folder or file stops inheritance except for space managers.
 // Expired grants, removed links and trashed ancestors take effect on the next request through every door.
-export type Who = { email: string; principals: string[]; groups: Row<Group>[]; opened: string[]; linkSessions?:Row[]; guest?: {root:string;role:Role;download:boolean;fences:Row[]} }
+export type Who = { agent?: AgentIdentity; email: string; principals: string[]; groups: Row<Group>[]; opened: string[]; linkSessions?:Row[]; guest?: {root:string;role:Role;download:boolean;fences:Row[]} }
 export type State = { role: Role | null; manager: boolean; noDownload: boolean; trash: Row<Item> | null; memberOnlyRefused?: boolean; externalDownloadOff?: boolean }
 export type Ctx = { space: Row<Space>; chain: Row<Item>[]; state: State; links: Row<Link>[]; fences: Row[]; directState?:State; memberLinks?:Row<Link>[] }
 // Organization links a person has opened come from the durable audit, never from a grant.
@@ -21,7 +22,7 @@ export async function who(env:Bindings,s:Session):Promise<Who>{
  if((s as any).guestWho)return (s as any).guestWho
  const {mfaPolicy}=await import('../security/policy'),hours=Math.min(12,(await mfaPolicy(env)).sessionHours)
  const w=await whoFor(env,s.operator.email),{digest}=await import('../blobs'),fingerprint=await digest(new TextEncoder().encode(s.id)),{where}=await import('./repo')
- return {...w,linkSessions:(await where(env,'member-link-session','$.sessionHash',fingerprint)).filter(r=>r.payload.email===s.operator.email&&Math.min(r.payload.expires,(r.payload.at??0)+hours*3600000)>Date.now())}
+ return {...w,agent:sessionAgent(s),linkSessions:(await where(env,'member-link-session','$.sessionHash',fingerprint)).filter(r=>r.payload.email===s.operator.email&&Math.min(r.payload.expires,(r.payload.at??0)+hours*3600000)>Date.now())}
 }
 export async function whoFor(env: Bindings, email: string): Promise<Who> {
  const groups = (await list<Group>(env, 'group')).filter(g => g.payload.members.includes(email))

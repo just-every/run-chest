@@ -41,7 +41,7 @@ export async function share(env: Bindings, s: Session, w: Who, key: string, inpu
  const message = optional(input.message, 'message'), expires = await expiry(env, input.expires, input.zone)
  const grant: Grant = { principal, role: r, by: s.operator.email, at: now(), ...(expires ? { expires } : {}), ...(message ? { message } : {}) }
  const notices = emails.filter(e => e !== s.operator.email).map(e => notice(e, 'share', key, s.operator.email, `${personLine(s.operator.displayName, s.operator.email)} shared "${item.payload.name}" with you as ${r}.${message ? `\n\n${message}` : ''}${expires ? `\n\nAccess expires ${expires.slice(0, 10)}.` : ''}`))
- await commit(env, s, [{ row: next(item, { ...item.payload, grants: [...item.payload.grants.filter(g => g.principal !== principal), grant] }), previous: item }, ...await expiryOps(env, key, principal, grant), ...notices.map(row => ({ row }))], { fences: [...ctx.fences,...memberFences,...policy.fences], changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'share.grant', object: key, detail: { principal, role: r, expires: expires ?? null } }] })
+ await commit(env, s, [{ row: next(item, { ...item.payload, grants: [...item.payload.grants.filter(g => g.principal !== principal), grant] }), previous: item }, ...await expiryOps(env, key, principal, grant), ...notices.map(row => ({ row }))], { fences: [...ctx.fences,...memberFences,...policy.fences], changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'share.grant', object: key, detail: { ...policy.audit, principal, role: r, expires: expires ?? null } }] })
  await deliver(env, s, notices)
  return get<Item>(env, 'item', key)
 }
@@ -120,7 +120,7 @@ export async function decide(env: Bindings, s: Session, w: Who, id: string, inpu
  const ctx = await context(env, w, req.payload.item), item = ctx.chain.at(-1)!; insist(!ctx.state.trash, 'not_found', 404)
  const share = allowed(ctx, 'share'); insist(share || isAdmin(s), 'share_refused', 403)
  insist(input.decision === 'approve' || input.decision === 'decline', 'invalid_decision')
- const memberFences=input.decision==='approve'?await memberRecipients(env,ctx,[req.payload.requester]):[],policy=input.decision==='approve'?await sharePolicy(env,w,ctx,[req.payload.requester],input):{fences:[]}
+ const memberFences=input.decision==='approve'?await memberRecipients(env,ctx,[req.payload.requester]):[],policy=input.decision==='approve'?await sharePolicy(env,w,ctx,[req.payload.requester],input):{fences:[],audit:{}}
  const ops: Op[] = [], at = now(); let granted: Grant | undefined
  if (input.decision === 'approve') {
   const r = role(input.role ?? req.payload.role, shareRoles); insist(rank[r] <= rank[req.payload.role], 'role_above_request'); insist(!share || rank[r] <= level(ctx.state), 'role_above_own', 403)
@@ -129,7 +129,7 @@ export async function decide(env: Bindings, s: Session, w: Who, id: string, inpu
  }
  const decided = next(req, { ...req.payload, status: input.decision === 'approve' ? 'approved' as const : 'declined' as const, decidedBy: s.operator.email, decidedAt: at, ...(granted ? { grantedRole: granted.role } : {}) })
  const told = notice(req.payload.requester, 'request.decision', granted ? item.id : null, s.operator.email, granted ? `Your access request for "${item.payload.name}" was approved as ${granted.role}.` : 'Your access request was declined.', id)
- await commit(env, s, [...ops, { row: decided, previous: req }, { row: told }], { fences: [...ctx.fences,...memberFences,...policy.fences], changes: granted ? [{ item: item.id, space: ctx.space.id, kind: 'access' }] : [], audits: [{ action: `access.${input.decision}`, object: item.id, detail: { request: id, role: granted?.role ?? null } }] })
+ await commit(env, s, [...ops, { row: decided, previous: req }, { row: told }], { fences: [...ctx.fences,...memberFences,...policy.fences], changes: granted ? [{ item: item.id, space: ctx.space.id, kind: 'access' }] : [], audits: [{ action: `access.${input.decision}`, object: item.id, detail: { ...policy.audit, request: id, role: granted?.role ?? null } }] })
  await deliver(env, s, [told])
  return { id, status: decided.payload.status, grantedRole: granted?.role ?? null }
 }
