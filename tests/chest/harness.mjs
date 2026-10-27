@@ -41,10 +41,10 @@ export async function harness({edge,bindings={},hostname='127.0.0.1',tls,publicO
  }
  const raw=(path,cookie,body)=>fetch(path,{method:body===undefined?'GET':'POST',headers:{...(cookie?{cookie}:{}),...(body===undefined?{}:{origin,'content-type':'application/json'})},...(body===undefined?{}:{body:JSON.stringify(body)})});
  async function api(path,cookie,body,status=200){const r=await raw('/api/chest'+path,cookie,body);assert.equal(r.status,status,`${path}: ${r.status===status?'':await r.text()}`);return r.json()}
- // The newest message to this address carries the ordinary sign-in or invitation link.
+ // Select the ordinary sign-in or invitation message, even after later sharing notices.
  async function signIn(email,invite=false){
   if(!invite){const response=await raw('/auth/magic-link',null,{email,returnTo:'/app'});assert.equal(response.status,202,response.status===202?'':(await response.text()).slice(0,120))}
-  const message=mails.findLast(m=>[m.to].flat().includes(email));assert.ok(message,'the provider received the sign-in message');
+  const message=mails.findLast(m=>[m.to].flat().includes(email)&&/\/auth\/confirm\?/.test(m.text));assert.ok(message,'the provider received the sign-in message');
   const link=new URL(message.text.match(/https?:\/\/[^\s]+/)[0]);assert.equal(link.origin,origin);
   const response=await raw('/auth/confirm',null,{token:link.searchParams.get('token')});assert.equal(response.status,303,'ordinary link confirmation');return response.headers.getSetCookie().map(v=>v.split(';')[0]).join('; ')
  }

@@ -3,7 +3,7 @@ import { memberProjection } from './member-link-controls'
 import { contentReadable } from '../content-security/scan'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
-import { get, list } from '../store'
+import { decode, get, list } from '../store'
 import { ChestError, insist, type Group, type Row } from '../model'
 import { policyItems } from './sharing-policy'
 import { creatorLinkPolicy } from './link-policy'
@@ -52,8 +52,16 @@ export function descend(state: State, node: Row<Item>, w: Who, links: Row<Link>[
  return { role, manager: state.manager, memberOnlyRefused:state.memberOnlyRefused, noDownload: state.noDownload || node.payload.noDownload, trash: state.trash ?? (node.payload.trash ? node : null) }
 }
 export async function chain(env: Bindings, key: string): Promise<{ space: Row<Space>; chain: Row<Item>[] }> {
- const nodes: Row<Item>[] = []
- for (let at: string | null = key; at; ) { const node: Row<Item> = await get<Item>(env, 'item', at); insist(nodes.length < 200 && !nodes.some(n => n.id === node.id), 'tree_corrupt', 503); nodes.unshift(node); at = node.payload.parent }
+ // One bounded indexed walk retains the complete path needed by grants and mutation fences.
+ const result = await env.DB.prepare(`WITH RECURSIVE ancestors(id,kind,payload,revision,depth) AS (
+  SELECT id,kind,payload,revision,0 FROM chest_records WHERE kind='item' AND id=?
+  UNION ALL
+  SELECT r.id,r.kind,r.payload,r.revision,a.depth+1 FROM chest_records r JOIN ancestors a ON r.id=json_extract(a.payload,'$.parent') WHERE r.kind='item' AND a.depth<200
+ ) SELECT id,kind,payload,revision FROM ancestors ORDER BY depth DESC`).bind(key).all()
+ const nodes = result.results.map(decode<Item>)
+ insist(nodes.length, 'not_found', 404)
+ insist(nodes.length<=200 && new Set(nodes.map(n=>n.id)).size===nodes.length, 'tree_corrupt', 503)
+ insist(!nodes[0].payload.parent, 'not_found', 404)
  return { space: await get<Space>(env, 'space', nodes[0].payload.space), chain: nodes }
 }
 export async function context(env: Bindings, w: Who, key: string, checkSecurity=true): Promise<Ctx> {
