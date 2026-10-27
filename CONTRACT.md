@@ -71,7 +71,7 @@ The primary journey: create a team space, move originals and rights in, install 
 | BASE-AGENT-005 | An agent acts as a person in a role, never more | SURFACE-002, SURFACE-006, SURFACE-010, AGENT-008 | not run |
 | BASE-AGENT-006 | Every action declares its risk class | SURFACE-001, SURFACE-002, SURFACE-004, SURFACE-005, SURFACE-006, SURFACE-007, SURFACE-008, SURFACE-009, SURFACE-010, SURFACE-011 | not run |
 | BASE-AGENT-007 | The company's policy decides, at one chokepoint | SURFACE-005, SURFACE-006, SURFACE-008, SURFACE-010, SURFACE-011, SURFACE-013 | not run |
-| BASE-AGENT-008 | Truthful attribution | SURFACE-006, SURFACE-008, SURFACE-011 | not run |
+| BASE-AGENT-008 | Truthful attribution | SURFACE-006, SURFACE-008, SURFACE-011, AGENT-008 | not run |
 | BASE-AGENT-009 | Every agent action is audited with its class and decision | SURFACE-007, SURFACE-013 | not run |
 | BASE-AGENT-010 | Agents can follow changes | CONNECT-007, SURFACE-002 | not run |
 | BASE-AGENT-011 | Limits are policy, and Pause stops everything | SURFACE-003, SURFACE-012 | not run |
@@ -1980,9 +1980,9 @@ Chest declares no money, accounts, gated or live class. In the Risk class column
 
 #### AGENT-008 — Custom document agents with tools
 
-*Tier:* Core · *From:* AGENT-007 · *Cites:* BASE-AGENT-002, BASE-AGENT-005
+*Tier:* Core · *From:* AGENT-007 · *Cites:* BASE-AGENT-002, BASE-AGENT-005, BASE-AGENT-008
 
-**Requirement.** Owners define bounded custom document agents over granted folders. Their calls go through the Agent surface's tools and obey current ACLs: an approval or signature is a commitment, a delete is destructive and widening access is external or access, the company's policy decides each, and none is ever recorded as a person's own act.
+**Requirement.** Owners define bounded custom document agents over granted folders. Their calls go through the Agent surface's tools and obey current ACLs: an approval or signature is a commitment, a delete is destructive and widening access is external or access, and the company's policy decides each.
 
 **Acceptance.**
 1. A custom agent's tool calls succeed inside its grant and are refused outside it.
@@ -2110,29 +2110,29 @@ Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8a
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 13 | 0 | 0 | 13 |
-| Target and push further | 34 | 45 | 65 | 144 |
-| All | 47 | 45 | 65 | 157 |
+| Published | 9 | 4 | 0 | 13 |
+| Target and push further | 28 | 51 | 65 | 144 |
+| All | 37 | 55 | 65 | 157 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
 | `CHEST-01` | Owner claim and staff identity | published | done | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-02` | Typed filing without lost values | published | done | `tests/chest/flows.mjs` |  |
-| `CHEST-03` | Validate before publishing originals | published | done | `tests/chest/flows.mjs` |  |
+| `CHEST-03` | Validate before publishing originals | published | partial | `tests/chest/flows.mjs` | Point 1 passes, and point 2's bad checksum and bad filing values are asserted to create no visible record (`tests/chest/flows.mjs`); no test submits a mismatched size, so the size refusal is not asserted. |
 | `CHEST-04` | Accountable filing and safe moves | published | done | `tests/chest/flows.mjs` |  |
 | `CHEST-05` | Safe basic previews | published | done | `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs` |  |
 | `CHEST-06` | Current access governs every private door | published | done | `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs` |  |
 | `CHEST-07` | Immutable versions and exact approved pointers | published | done | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-08` | Exact-version human decisions | published | done | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
-| `CHEST-09` | Review and expiry work keep evidence | published | done | `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs` |  |
-| `CHEST-10` | People and group grants | published | done | `tests/chest/flows.mjs`; `tests/chest/restore.mjs` |  |
-| `CHEST-11` | Reviewed, reversible archive admission | published | done | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
+| `CHEST-09` | Review and expiry work keep evidence | published | partial | `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs` | Point 2 passes, and point 1's completion record and expiry date are asserted (`tests/chest/flows.mjs`), with the review work item selected on the document page (`tests/chest/browser-flow.mjs`); no test reads the work list, so both dates appearing there is not asserted. |
+| `CHEST-10` | People and group grants | published | partial | `tests/chest/flows.mjs`; `tests/chest/restore.mjs` | After the member is removed and collection access revoked, details, search and review mutations are asserted refused, and readers are listed for a person grant (`tests/chest/flows.mjs`); the group grant's effective readers are never listed, and no preview or download is attempted after the revoke. |
+| `CHEST-11` | Reviewed, reversible archive admission | published | partial | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` | Point 1 passes, and point 2's undo of untouched records after a restart and the kept native edit are asserted (`tests/chest/flows.mjs`); the apply completes before the restart, so an interrupted apply resuming after a restart is not asserted. |
 | `CHEST-12` | Complete independent local export and restore | published | done | `tests/chest/restore.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-13` | Self-service reversible trash | published | done | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
 | `SPACE-001` | Team spaces, personal areas and ordinary files | target | partial | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `tests/chest/ownership.mjs`; `tests/chest/governance.mjs`; `tests/chest/browser-governance.mjs` | Fresh-judge candidate: the old gap named only the EDIT-004 provider experience and the SCALE-001 run, both now in their own clauses. |
 | `SPACE-003` | Hand ownership of one file to a colleague | target | partial | `tests/chest/ownership.mjs`; `tests/chest/browser-ownership.mjs` | Fresh-judge candidate: the old gap lists ownership offers with acceptance, decline, cancel and notices as delivered. |
 | `SPACE-002` | Who creates spaces, and new-space defaults | target | done | `tests/chest/space-policy.mjs`; `tests/chest/browser-space-policy.mjs` |  |
-| `ROLE-001` | Five-level roles and delegated sharing | target | done | `tests/chest/role-review-flow.mjs`; `tests/chest/role-browser-matrix.mjs`; `tests/chest/restriction-flow.mjs`; `tests/chest/annotation-flow.mjs`; `tests/chest/wopi-flow.mjs`; `tests/chest/collabora-live.mjs`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
+| `ROLE-001` | Five-level roles and delegated sharing | target | partial | `tests/chest/role-review-flow.mjs`; `tests/chest/role-browser-matrix.mjs`; `tests/chest/restriction-flow.mjs`; `tests/chest/annotation-flow.mjs`; `tests/chest/wopi-flow.mjs`; `tests/chest/collabora-live.mjs`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` | Points 1 to 4 pass. Point 5's **Request access** without the name, and the viewer's lack of upload and new-folder rights (no contribute right, folder creation 403), are asserted (`tests/chest/files.mjs`, `tests/chest/browser-files.mjs`); a viewer's rename returning 403, People & settings returning 403, and the absence of the share, rename and trash actions for a viewer are not. |
 | `VERSION-001` | Version history and restore by editors | target | done | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `tests/chest/office-restore-flow.mjs`; `tests/chest/wopi-flow.mjs`; `tests/chest/signatures.mjs` |  |
 | `TRANSFER-001` | Resumable uploads in the browser and API | target | partial | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `tests/chest/upload-resume-flow.mjs` | Case-collision and path-length errors are not named in the evidence; the old gap listed only name-taken, too-large and no-access refusals. |
 | `TRANSFER-002` | Whole folders and large originals | target | missing |  | Whole-folder upload, files above 4 GB and the 5 TB limit do not exist. The 5 TB upload itself is register row R-3. |
@@ -2161,8 +2161,8 @@ Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8a
 | `SHARE-007` | Link list, Shared too widely and one-click revoke | target | done | `tests/chest/organization-link-controls-flow.mjs`; `tests/chest/browser-links.mjs`; `tests/chest/files.mjs` |  |
 | `SHARE-002` | Upload-only file requests | target | done | `tests/chest/file-requests.mjs`; `tests/chest/browser-file-requests.mjs`; `tests/chest/request-browser-flow.mjs`; `tests/chest/files.mjs` |  |
 | `SHARE-003` | Large-file transfers and delivery receipts | target | done | `tests/chest/transfers.mjs`; `tests/chest/transfer-large-flow.mjs`; `tests/chest/browser-transfers.mjs`; `docs/deliveries.md` |  |
-| `SHARE-004` | Item sharing and Shared with me | target | done | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
-| `SHARE-008` | Access requests | target | done | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
+| `SHARE-004` | Item sharing and Shared with me | target | partial | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` | Point 1 passes (`tests/chest/files.mjs`, `tests/chest/browser-files.mjs`); no test asserts the share's audit row (point 2). |
+| `SHARE-008` | Access requests | target | partial | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` | Points 1 and 2 pass, and point 3's routing to a deactivated owner's successor is asserted (`tests/chest/files.mjs`); a file whose deactivated owner has no successor is never routed to a space manager. |
 | `SHARE-009` | Expiring grants | target | done | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
 | `SHARE-005` | Guests: sign-in, scope and expiry | target | partial | `tests/chest/guest-editing-flow.mjs`; `tests/chest/guest-links.mjs`; `tests/chest/wopi-flow.mjs`; `docs/guest-collaboration.md` | Guest sign-in with a verified Google or Microsoft identity is not in the evidence, which covers PIN sign-in only. |
 | `SHARE-010` | Guests edit, upload and manage versions | target | partial | `tests/chest/guest-editing-flow.mjs`; `tests/chest/wopi-flow.mjs`; `tests/chest/collabora-live.mjs` | Resumable guest uploads above the 8 MB direct-form limit are unproved. Native guest collaboration in the apps and desktop clients (MOBILE-001, SYNC-008) remains. |
@@ -2196,8 +2196,8 @@ Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8a
 | `ADMIN-001` | Single sign-on and directory lifecycle | target | done | `tests/chest/organisation.mjs`; `tests/chest/organisation-lifecycle.mjs`; `tests/chest/organisation-deprovision.mjs`; `tests/chest/organisation-recovery.mjs`; `docs/organisation.md` |  |
 | `ADMIN-002` | Admin reports | target | partial | `tests/chest/administration-report-flow.mjs`; `tests/chest/administration-guest-flow.mjs`; `tests/chest/quota.mjs`; `docs/administration.md` | Transfer and sync-failure reporting are incomplete in the old gap ("complete transfer ... reporting"). |
 | `ADMIN-005` | Provider-only USD cost view | target | partial | `tests/chest/administration-accounting-flow.mjs`; `tests/chest/backup-archive.mjs`; `tests/chest/bulk.mjs`; `tests/chest/signatures.mjs` | Fresh-judge candidate: ct ruled on administrator-recorded licence records and probes (RL-101); the old gap's remaining items, trusted live licensed limits, provider-side capacity and complete provider refusal reporting, stay unknown under that ruling and are field proof R-11. |
-| `ADMIN-003` | Several admins, delegated roles and owner transfer | target | done | `tests/chest/administration.mjs`; `docs/administration.md` |  |
-| `ADMIN-006` | Admin rewind without content access | target | done | `tests/chest/administration.mjs` |  |
+| `ADMIN-003` | Several admins, delegated roles and owner transfer | target | partial | `tests/chest/administration.mjs`; `docs/administration.md` | Points 1 and 2 pass, point 3's refusal of the former owner's owner-only actions is asserted, and the last super admin cannot be deactivated (`tests/chest/administration.mjs`); the new owner succeeding at an owner-only action, a refused demotion of the last super admin, and the audit of each step are not asserted. |
+| `ADMIN-006` | Admin rewind without content access | target | partial | `tests/chest/administration.mjs` | Point 1 passes. Asserted (`tests/chest/administration.mjs`): the account restore's bytes and versions, the team-space restore's name and parent, the moved file among the preview's changes, revoked links and the departed identity denied, the admin refused names, preview and download, and an apply refused after the scope is removed. Not asserted: every restored team-space byte, kept conflict copies, a preview accounting for membership and sharing changes, the admin refused search, and a preview requested after the scope is removed. |
 | `ADMIN-004` | Enforced multi-factor sign-in | target | done | `tests/chest/security.mjs`; `tests/chest/administration.mjs` |  |
 | `QUOTA-001` | Storage limits for users and spaces | target | done | `tests/chest/quota.mjs`; `tests/chest/browser-quota.mjs`; `tests/chest/space-policy.mjs`; `tests/chest/new-files.mjs` |  |
 | `SECURITY-001` | Encryption and secret custody | target | partial | `tests/chest/reading.mjs`; `tests/chest/files.mjs`; `tests/chest/upgrade.mjs`; `tests/chest/restore.mjs` | Transport and owner-storage encryption proof, installation-wide rotation and recovery, runtime-log canaries and the stale-grant race across every mutation door remain, and so does device-cache encryption on the desktop and mobile clients (SYNC-008, MOBILE-002), which do not exist yet. |
@@ -2207,7 +2207,7 @@ Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8a
 | `SECURITY-005` | Client-side ransomware protection | target | missing |  | No native client exists. |
 | `GOVERN-001` | Retention, legal hold and discovery providers | target | missing |  | No delivered workflow (R-22). |
 | `AUDIT-001` | Complete, durable action history | target | done | `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs` |  |
-| `AUDIT-002` | File activity and view history for collaborators | target | done | `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs` |  |
+| `AUDIT-002` | File activity and view history for collaborators | target | partial | `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs` | Point 2 passes, and point 1's one colleague's view shown to a contributor and no view history for a viewer are asserted (`tests/chest/audit.mjs`); the second colleague's name, the view times, and the viewer seeing edits are not. |
 | `ERASE-001` | Deliberate erasure, separate from trash | target | done | `tests/chest/erasure.mjs`; `tests/chest/erasure-archive.mjs`; `tests/chest/browser-erasure.mjs`; `tests/chest/backup-archive.mjs`; `docs/erasure.md` |  |
 | `OPS-001` | Clear, accessible and observable operation | target | partial | `tests/chest/browser-flow.mjs`; `tests/chest/journey.mjs`; `docs/hosting.md` | Responsive journeys and a hosted install exist; accessibility checks and per-service disconnect journeys are unproven. The VPAT and a human screen-reader pass are R-21. |
 | `SCALE-001` | Seeded scale run | target | partial | `scripts/scale/generator.mjs`; `tests/chest/scale.mjs`; `tests/chest/scale-sync.mjs`; `.github/workflows/scale.yml`; `docs/scale.md` | The bounded journey exercises 100 nested folders and 600 direct members in one populated space, 300 device credentials and 10,000 remote renames; the combined 2,000,000-item run, 20,000-child scrolling and 500,000-item enumeration have not run. The reference install is R-1, and each buyer's inventory rerun is R-2. |

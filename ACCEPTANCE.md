@@ -8,10 +8,10 @@ The primary journey: create a team space, move originals and rights in, install 
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 45 | 40 | 38 | 123 |
+| Core | 36 | 49 | 38 | 123 |
 | Agent surface | 0 | 2 | 11 | 13 |
-| Later | 2 | 3 | 16 | 21 |
-| Full target | 47 | 45 | 65 | 157 |
+| Later | 1 | 4 | 16 | 21 |
+| Full target | 37 | 55 | 65 | 157 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -49,7 +49,7 @@ Core · published · **done**
 
 #### CHEST-03 — Validate before publishing originals
 
-Core · published · **done** · Cites BASE-INPUT-003
+Core · published · **partial** · Cites BASE-INPUT-003
 
 **Requirement.** Uploads validate actual bytes, SHA-256 and size. Durable original custody comes before atomic record admission, so an invalid or failed upload never appears as a library file.
 
@@ -58,7 +58,7 @@ Core · published · **done** · Cites BASE-INPUT-003
 2. Bad checksum, size and filing values create no visible record.
 
 **Evidence.** `tests/chest/flows.mjs`
-**Gap.** None.
+**Gap.** Point 1 passes, and point 2's bad checksum and bad filing values are asserted to create no visible record (`tests/chest/flows.mjs`); no test submits a mismatched size, so the size refusal is not asserted.
 
 #### CHEST-04 — Accountable filing and safe moves
 
@@ -128,7 +128,7 @@ Core · published · **done** · Rules D-3
 
 #### CHEST-09 — Review and expiry work keep evidence
 
-Core · published · **done**
+Core · published · **partial**
 
 **Requirement.** Separate review and expiry dates create due and upcoming work. Completion records actor, date and evidence, never destroys the file, and never treats an expiry as a deletion. Automated reminders are FOLLOW-001.
 
@@ -137,11 +137,11 @@ Core · published · **done**
 2. An empty completion is refused, and completing only the review with evidence leaves the expiry and the original in place.
 
 **Evidence.** `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs`
-**Gap.** None.
+**Gap.** Point 2 passes, and point 1's completion record and expiry date are asserted (`tests/chest/flows.mjs`), with the review work item selected on the document page (`tests/chest/browser-flow.mjs`); no test reads the work list, so both dates appearing there is not asserted.
 
 #### CHEST-10 — People and group grants
 
-Core · published · **done**
+Core · published · **partial**
 
 **Requirement.** The owner grants and revokes reader, editor and reviewer access for people and groups. Effective readers need active local identities, current group membership governs access, and imported people have no sign-in authority. These rules keep holding under the five-level roles (ROLE-001) and item sharing (SHARE-004).
 
@@ -150,11 +150,11 @@ Core · published · **done**
 2. After a member is removed and collection access revoked, details, search, previews, downloads and review mutations are refused.
 
 **Evidence.** `tests/chest/flows.mjs`; `tests/chest/restore.mjs`
-**Gap.** None.
+**Gap.** After the member is removed and collection access revoked, details, search and review mutations are asserted refused, and readers are listed for a person grant (`tests/chest/flows.mjs`); the group grant's effective readers are never listed, and no preview or download is attempted after the revoke.
 
 #### CHEST-11 — Reviewed, reversible archive admission
 
-Core · published · **done**
+Core · published · **partial**
 
 **Requirement.** An archive preview writes nothing and lists every item, hash, duplicate, mapping and gap. Apply binds the reviewed fingerprint and current authority, publishes inert records, resumes after restart, and undoes only untouched batches. Unsafe paths or corrupt bytes publish nothing. Source decisions never become new Chest approvals. The import journal is described in `docs/move-in.md`.
 
@@ -163,7 +163,7 @@ Core · published · **done**
 2. After a restart the apply resumes, untouched records undo, and a conflicting native edit is kept.
 
 **Evidence.** `tests/chest/flows.mjs`; `tests/chest/journey.mjs`
-**Gap.** None.
+**Gap.** Point 1 passes, and point 2's undo of untouched records after a restart and the kept native edit are asserted (`tests/chest/flows.mjs`); the apply completes before the restart, so an interrupted apply resuming after a restart is not asserted.
 
 #### CHEST-12 — Complete independent local export and restore
 
@@ -233,7 +233,7 @@ Core · target · **done**
 
 #### ROLE-001 — Five-level roles and delegated sharing
 
-Core · target · **done** · From ROLE-001, CHEST-22 · Cites BASE-ROLE-001 · Rules D-1
+Core · target · **partial** · From ROLE-001, CHEST-22 · Cites BASE-ROLE-001 · Rules D-1
 
 **Requirement.** Spaces, folders and files grant one of five cumulative roles to people, groups and guests.
 
@@ -255,7 +255,7 @@ The CHEST-10 reviewer duty combines with any role from commenter up and adds no 
 5. A space viewer sees no upload, new folder, share, rename or trash action, a rename request returns 403, a file in another space shows **Request access** without its name, and People & settings returns 403.
 
 **Evidence.** `tests/chest/role-review-flow.mjs`; `tests/chest/role-browser-matrix.mjs`; `tests/chest/restriction-flow.mjs`; `tests/chest/annotation-flow.mjs`; `tests/chest/wopi-flow.mjs`; `tests/chest/collabora-live.mjs`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`
-**Gap.** None.
+**Gap.** Points 1 to 4 pass. Point 5's **Request access** without the name, and the viewer's lack of upload and new-folder rights (no contribute right, folder creation 403), are asserted (`tests/chest/files.mjs`, `tests/chest/browser-files.mjs`); a viewer's rename returning 403, People & settings returning 403, and the absence of the share, rename and trash actions for a viewer are not.
 
 #### VERSION-001 — Version history and restore by editors
 
@@ -609,7 +609,7 @@ Core · target · **done** · Cites BASE-MAIL-001
 
 #### SHARE-004 — Item sharing and Shared with me
 
-Core · target · **done**
+Core · target · **partial**
 
 **Requirement.** Any staff member shares a personal-area item, and editors and content managers share space items, with colleagues or groups at viewer, commenter or editor, with an optional message, under POLICY-001. Recipients get an in-app notice and an email (and Slack or Teams where connected) and find the item under **Shared with me**, filterable by sharer and date, with add-to-my-area shortcuts that grant nothing more.
 
@@ -618,11 +618,11 @@ Core · target · **done**
 2. The audit records the share.
 
 **Evidence.** `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`
-**Gap.** None.
+**Gap.** Point 1 passes (`tests/chest/files.mjs`, `tests/chest/browser-files.mjs`); no test asserts the share's audit row (point 2).
 
 #### SHARE-008 — Access requests
 
-Core · target · **done** · From SHARE-004
+Core · target · **partial** · From SHARE-004
 
 **Requirement.** A signed-in person who opens a link they cannot use sees **Request access** with an optional message and role, never the item's name or contents. The request goes to the item's sharers with share rights (owner, file editors, then space managers), who approve at the requested or a lower role, or decline, from the email, the notice or the share dialog; the requester is told. If the owner has left, the request goes to the successor set at offboarding, then space managers, then content-recovery admins; it never stalls silently. Requests expire after 30 days with the requester told. Each request, decision and grant is audited.
 
@@ -632,7 +632,7 @@ Core · target · **done** · From SHARE-004
 3. With the owner of a third file deactivated, the request reaches the successor, and with none, a space manager.
 
 **Evidence.** `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`
-**Gap.** None.
+**Gap.** Points 1 and 2 pass, and point 3's routing to a deactivated owner's successor is asserted (`tests/chest/files.mjs`); a file whose deactivated owner has no successor is never routed to a space manager.
 
 #### SHARE-009 — Expiring grants
 
@@ -1063,7 +1063,7 @@ Core · target · **partial** · From ADMIN-002 · Register R-11
 
 #### ADMIN-003 — Several admins, delegated roles and owner transfer
 
-Core · target · **done** · Cites BASE-ROLE-001
+Core · target · **partial** · Cites BASE-ROLE-001
 
 **Requirement.** The owner promotes any number of super admins and assigns delegated roles, alone or combined, scoped to the organization or named groups: user management, help desk (resend invitations, revoke sessions and devices, reset sign-in factors), sharing and security policy, service settings (integrations, backup, sync and mobile policy, space creation and defaults, storage limits), content recovery, and read-only audit and reporting. Admins can define custom roles from these privileges. File names, previews and search hits count as content under BASE-ROLE-001, and content recovery restores items without opening them. The owner role transfers to another super admin with acceptance and a fresh sign-in, and the former owner keeps only roles left to them. The console warns while only one super admin exists, and the last cannot be demoted or deactivated. Every role grant, change and use is audited.
 
@@ -1074,11 +1074,11 @@ Core · target · **done** · Cites BASE-ROLE-001
 4. Demoting the last super admin is refused, and the audit records each step.
 
 **Evidence.** `tests/chest/administration.mjs`; `docs/administration.md`
-**Gap.** None.
+**Gap.** Points 1 and 2 pass, point 3's refusal of the former owner's owner-only actions is asserted, and the last super admin cannot be deactivated (`tests/chest/administration.mjs`); the new owner succeeding at an owner-only action, a refused demotion of the last super admin, and the audit of each step are not asserted.
 
 #### ADMIN-006 — Admin rewind without content access
 
-Core · target · **done** · From ADMIN-003
+Core · target · **partial** · From ADMIN-003
 
 **Requirement.** An admin with content-recovery scope rewinds a departed user's account or any space to a recorded point without the owner, previewing changed originals, names, hierarchy, memberships and sharing effects, and restores selected content without opening it or gaining a content role. Recovery keeps later history and conflict copies and never re-enables revoked shares or identities.
 
@@ -1089,7 +1089,7 @@ Core · target · **done** · From ADMIN-003
 4. With the scope removed, the next preview and restore are refused.
 
 **Evidence.** `tests/chest/administration.mjs`
-**Gap.** None.
+**Gap.** Point 1 passes. Asserted (`tests/chest/administration.mjs`): the account restore's bytes and versions, the team-space restore's name and parent, the moved file among the preview's changes, revoked links and the departed identity denied, the admin refused names, preview and download, and an apply refused after the scope is removed. Not asserted: every restored team-space byte, kept conflict copies, a preview accounting for membership and sharing changes, the admin refused search, and a preview requested after the scope is removed.
 
 #### ADMIN-004 — Enforced multi-factor sign-in
 
@@ -1805,9 +1805,9 @@ Core · push-further · **partial** · Cites BASE-DATA-004 · Rules D-4
 
 #### AGENT-008 — Custom document agents with tools
 
-Core · push-further · **missing** · From AGENT-007 · Cites BASE-AGENT-002, BASE-AGENT-005
+Core · push-further · **missing** · From AGENT-007 · Cites BASE-AGENT-002, BASE-AGENT-005, BASE-AGENT-008
 
-**Requirement.** Owners define bounded custom document agents over granted folders. Their calls go through the Agent surface's tools and obey current ACLs: an approval or signature is a commitment, a delete is destructive and widening access is external or access, the company's policy decides each, and none is ever recorded as a person's own act.
+**Requirement.** Owners define bounded custom document agents over granted folders. Their calls go through the Agent surface's tools and obey current ACLs: an approval or signature is a commitment, a delete is destructive and widening access is external or access, and the company's policy decides each.
 
 **Acceptance.**
 1. A custom agent's tool calls succeed inside its grant and are refused outside it.
@@ -2206,7 +2206,7 @@ Later · target · **missing** · Register R-22, R-23
 
 #### AUDIT-002 — File activity and view history for collaborators
 
-Later · target · **done** · From AUDIT-001
+Later · target · **partial** · From AUDIT-001
 
 **Requirement.** Each file's activity panel shows everyone with viewer access its edits, versions, comments, moves and sharing changes, and shows people who can edit it which colleagues viewed it and when, as Drive's activity dashboard does. Admins turn view history on or off per organization or group, each user can hide their own views, and guests' and link visitors' views appear only as counts unless the viewer is a manager. The panel follows current access and never reveals a viewer of something the requester cannot see.
 
@@ -2215,7 +2215,7 @@ Later · target · **done** · From AUDIT-001
 2. A colleague who hides their views leaves the list, and turning view history off for the group removes it.
 
 **Evidence.** `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs`
-**Gap.** None.
+**Gap.** Point 2 passes, and point 1's one colleague's view shown to a contributor and no view history for a viewer are asserted (`tests/chest/audit.mjs`); the second colleague's name, the view times, and the viewer seeing edits are not.
 
 ### Move-in from incumbents
 
