@@ -8,13 +8,21 @@ import {generate,inventoryTarget} from '../../scripts/scale/generator.mjs';
 import {tooltips} from './tooltip-proof.mjs';
 import {enumerate} from './scale-sync.mjs';
 const h=await harness();let browser;
+// Model distinct client addresses at the runtime's trusted network edge, as in
+// the existing 150-person installation journey. Authentication limits stay on.
+let invitations=0;
+async function generationApi(path,cookie,body){
+ if(path!=='/people')return h.api(path,cookie,body);
+ const response=await h.fetch('/api/chest/people',{method:'POST',headers:{cookie,origin:h.origin,'content-type':'application/json','CF-Connecting-IP':`198.51.100.${1+Math.floor(invitations++/25)}`},body:JSON.stringify(body)});
+ assert.equal(response.status,200,'public invitation succeeds with authentication limits enabled');return response.json();
+}
 const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),samples={listing:[],deepOpen:[],search:[],catchUp:[],enumeration:[]};
 async function timed(name,fn){const start=performance.now();const value=await fn();samples[name].push(performance.now()-start);return value}
 try{
  await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Scale owner'});const owner=await h.signIn(h.vars.OWNER_EMAIL);
  await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
  assert.equal((await h.raw('/api/chest/administration/scale/health',owner)).status,503);
- const data=await generate({api:h.api,owner,files:Number(process.env.CHEST_SCALE_FILES||60),depth:Number(process.env.CHEST_SCALE_DEPTH||8),directMembers:Number(process.env.CHEST_SCALE_DIRECT_MEMBERS||0),devices:Number(process.env.CHEST_SCALE_DEVICES||0)}),member=await h.signIn(data.sessions[0],true);
+ const data=await generate({api:generationApi,owner,files:Number(process.env.CHEST_SCALE_FILES||60),depth:Number(process.env.CHEST_SCALE_DEPTH||8),directMembers:Number(process.env.CHEST_SCALE_DIRECT_MEMBERS||0),devices:Number(process.env.CHEST_SCALE_DEVICES||0)}),member=await h.signIn(data.sessions[0],true);
  const wide=await h.api(`/items/${data.folders[0]}`,owner),deep=await h.api(`/items/${data.folders.at(-1)}`,owner);assert.equal(data.counts.largestFolder,Math.max(wide.children.length,deep.children.length),'recorded folder size equals admitted direct children');
  const device=await h.api('/devices',member,{name:'Offline measurement device',platform:'linux'});await h.api('/devices',owner,{name:'Enumeration device',platform:'linux'});data.counts.devices+=2;
  const sync=async path=>{const r=await h.fetch('/api/chest/sync'+path,{headers:{authorization:`Bearer ${device.token}`}});assert.equal(r.status,200);return r.json()};

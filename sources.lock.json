@@ -5085,7 +5085,7 @@
       "executable": false
     },
     "tests/chest/scale.mjs": {
-      "sha256": "68305eda8d5a2ed8c8340f66ad2c2a449c0da49c81b576f35ee257d45d21e20b",
+      "sha256": "0bce9b80cf0d9554952b7de201ae668dd253f06a66bce417ff896b1c18eaeb9f",
       "executable": false
     },
     "tests/chest/scan-fields.mjs": {
