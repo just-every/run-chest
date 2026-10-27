@@ -9,12 +9,14 @@ import { insist,now,type Group } from '../model'
 import { list,sessionPredicate } from '../store'
 import { commit,fresh,maybe,next,type Op } from '../files/repo'
 import { deprovisionTransfer,planTransfer } from '../organisation/offboarding'
-import { requireAdmin,canAdmin,guardAdminDeactivation,requireAdminGroup } from './roles'
+import { requireAdmin,withAdministrativePermissions,guardAdminDeactivation,requireAdminGroup } from './roles'
 // Identity administration deliberately does not elevate the actor's OA role or content ACL.
 export async function administrativePeople(env:Bindings,s:Session){
- const people=(await env.DB.prepare('SELECT id,email,display_name AS name,status,role FROM oa_operators ORDER BY email').all<{id:string;email:string;name:string;status:string;role:string}>()).results,result=[]
- for(const p of people){const manage=await canAdmin(env,s,'user-management',p.email),helpdesk=await canAdmin(env,s,'help-desk',p.email);if(manage||helpdesk)result.push({...p,manage,helpdesk})}
- return result
+ return withAdministrativePermissions(env,s,async can=>{
+  const people=(await env.DB.prepare('SELECT id,email,display_name AS name,status,role FROM oa_operators ORDER BY email').all<{id:string;email:string;name:string;status:string;role:string}>()).results,result=[]
+  for(const p of people){const manage=can('user-management',p.email),helpdesk=can('help-desk',p.email);if(manage||helpdesk)result.push({...p,manage,helpdesk})}
+  return result
+ })
 }
 export async function administrativePersonAction(env:Bindings,request:Request,s:Session,input:any){
  const email=String(input.email??'').trim().toLowerCase(),action=String(input.action)

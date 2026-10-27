@@ -67,6 +67,15 @@ export async function canAdmin(env: Bindings, s: Session, privilege: AdminPrivil
  const state = await authority(env)
  return permitted(state, s, privilege, targetEmail) && await current(env, s, state)
 }
+// A read may decide many scopes against one authority snapshot, but may return
+// its result only while that exact authority and the actor's session remain live.
+export async function withAdministrativePermissions<T>(env: Bindings, s: Session, read: (can: (privilege: AdminPrivilege, targetEmail?: string) => boolean) => Promise<T>): Promise<T> {
+ const state = await authority(env)
+ insist(await current(env, s, state), 'admin_required', 403)
+ const result = await read((privilege, targetEmail) => validPrivilege(privilege) && permitted(state, s, privilege, targetEmail))
+ insist(await current(env, s, state), 'admin_required', 403)
+ return result
+}
 export async function requireAdmin(env: Bindings, s: Session, privilege: AdminPrivilege, targetEmail?: string) {
  insist(validPrivilege(privilege), 'invalid_admin_privilege')
  const state = await authority(env)

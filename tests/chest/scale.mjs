@@ -5,7 +5,7 @@ import {execFileSync} from 'node:child_process';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
 import {generate,inventoryTarget} from '../../scripts/scale/generator.mjs';
-import {tooltips} from './tooltip-proof.mjs';
+import {scaleScreens} from './scale-browser.mjs';
 import {enumerate} from './scale-sync.mjs';
 const h=await harness();let browser;
 // Model distinct client addresses at the runtime's trusted network edge, as in
@@ -57,7 +57,7 @@ try{
  assert.ok(Object.values(saved.timings).every(t=>Number.isFinite(t.p50)&&Number.isFinite(t.p95)));
  await mkdir('test-results',{recursive:true});
  browser=await chromium.launch({headless:true,executablePath:process.env.CHEST_CHROMIUM||(existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox','--use-mock-keychain','--password-store=basic']});
- for(const width of [1440,390]){const context=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});await context.addCookies(owner.split('; ').map(pair=>{const i=pair.indexOf('=');return{name:pair.slice(0,i),value:pair.slice(i+1),url:h.origin,secure:true}}));const page=await context.newPage();await page.goto(h.origin+'/app/administration');await page.getByRole('link',{name:'Operating scale',exact:true}).waitFor();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:`test-results/${width}-scale-administration.png`,fullPage:true});await page.getByRole('link',{name:'Operating scale',exact:true}).click();await page.getByRole('heading',{name:'Operating scale',exact:true}).waitFor();assert.ok(await page.getByText('Failing scale health check',{exact:true}).isVisible());assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await tooltips(page,width,'scale');await page.screenshot({path:`test-results/${width}-scale.png`,fullPage:true});await context.close()}
+ await scaleScreens({browser,h,owner,data});
  await writeFile('test-results/scale.json',JSON.stringify({source:head,enumeration:{pages:start.pages,items:start.items,metadataOnly:true},requestedTarget:inventoryTarget(inventory??{}),buyerInventorySupplied:!!inventory,result:saved,gaps:['Real reference installation and measured US 100 Mbps connection','Seven-day offline device and 10000 remote changes','500000-item initial enumeration without hydration','20000-child scrolling without a full reload','Buyer MIGRATE-001 inventory rerun']},null,2));
  console.log(JSON.stringify({head,counts:data.counts,timings:saved.timings,health:'failing: bounded data and unmeasured network',revocation:report.revocation}));
 }finally{await browser?.close();await h.close()}
