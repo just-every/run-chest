@@ -5085,7 +5085,7 @@
       "executable": false
     },
     "tests/chest/scale-browser.mjs": {
-      "sha256": "03bb93aa00c9d051bf1d1302caaf4d8f99cedd60ca5e558a6ab132fe40e47757",
+      "sha256": "1dffb3dfb9a35c7eaedf48562058c25ea569008fe030ff79a3dc3d5923b4a589",
       "executable": false
     },
     "tests/chest/scale-sync.mjs": {
