@@ -31,11 +31,12 @@ async function authority(env: Bindings): Promise<Authority> {
  return { rows, operators: identities.results, definitions: [...builtins, ...rows.filter(r => r.kind === 'admin-role-definition')], grants: rows.filter(r => r.kind === 'admin-grant'), groups: rows.filter(r => r.kind === 'group') }
 }
 // Fence the exact sets, including absence: an inserted grant, definition, group or identity must also invalidate
-// a decision. The predicates travel with the session into the caller's existing atomic commit.
+// a decision. Scan each unique snapshot ID once and look up its current row by primary key.
+// The predicates travel with the session into the caller's existing atomic commit.
 function fence(state: Authority): Predicate {
  const records = JSON.stringify(state.rows.map(r => ({ ...r, payload: JSON.stringify(r.payload) })))
- return conjunction({ sql: `(SELECT COUNT(*) FROM chest_records WHERE kind IN (${kinds}))=? AND NOT EXISTS(SELECT 1 FROM chest_records r WHERE r.kind IN (${kinds}) AND NOT EXISTS(SELECT 1 FROM json_each(?) j WHERE r.id=json_extract(j.value,'$.id') AND r.kind=json_extract(j.value,'$.kind') AND r.payload=json_extract(j.value,'$.payload') AND r.revision=json_extract(j.value,'$.revision')))`, params: [state.rows.length, records] },
-  { sql: `(SELECT COUNT(*) FROM oa_operators)=? AND NOT EXISTS(SELECT 1 FROM oa_operators o WHERE NOT EXISTS(SELECT 1 FROM json_each(?) j WHERE o.id=json_extract(j.value,'$.id') AND o.email=json_extract(j.value,'$.email') AND o.role=json_extract(j.value,'$.role') AND o.status=json_extract(j.value,'$.status') AND o.version=json_extract(j.value,'$.version')))`, params: [state.operators.length, JSON.stringify(state.operators)] })
+ return conjunction({ sql: `(SELECT COUNT(*) FROM chest_records WHERE kind IN (${kinds}))=? AND NOT EXISTS(SELECT 1 FROM json_each(?) j LEFT JOIN chest_records r ON r.id=json_extract(j.value,'$.id') WHERE r.id IS NULL OR r.kind IS NOT json_extract(j.value,'$.kind') OR r.payload IS NOT json_extract(j.value,'$.payload') OR r.revision IS NOT json_extract(j.value,'$.revision'))`, params: [state.rows.length, records] },
+  { sql: `(SELECT COUNT(*) FROM oa_operators)=? AND NOT EXISTS(SELECT 1 FROM json_each(?) j LEFT JOIN oa_operators o ON o.id=json_extract(j.value,'$.id') WHERE o.id IS NULL OR o.email IS NOT json_extract(j.value,'$.email') OR o.role IS NOT json_extract(j.value,'$.role') OR o.status IS NOT json_extract(j.value,'$.status') OR o.version IS NOT json_extract(j.value,'$.version'))`, params: [state.operators.length, JSON.stringify(state.operators)] })
 }
 function actor(state: Authority, s: Session) {
  return state.operators.find(o => o.id === s.operator.id && o.email === s.operator.email && o.status === 'active' && o.version === s.operator.version)

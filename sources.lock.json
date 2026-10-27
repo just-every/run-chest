@@ -1489,7 +1489,7 @@
       "executable": false
     },
     "src/chest/administration/roles.ts": {
-      "sha256": "4ae71ab0ba5a1159d46e2353f4b25ca8ecb53dcebf2b7c1d4f5a92139ef63c51",
+      "sha256": "0910b22928c18390fc4f5005cea01a02e63f4699d95ad55b09336201565dfaae",
       "executable": false
     },
     "src/chest/administration/scale.ts": {
