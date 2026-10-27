@@ -28,7 +28,7 @@ export async function createFileRequest(env: Bindings, s: Session, w: Who, key: 
  const sharing=await sharePolicy(env,w,ctx,[],input,'request')
  const secret = randomToken(requestPrefix), row = fresh<FileRequest>('file-request', { folder: key, title: optional(input.title, 'title', 200) || `Files for ${folder.payload.name}`, message: optional(input.message, 'message', 2000), types: typesOf(input.types), maxBytes: requestSize(input.maxMegabytes), ...policy(input), deadline: linkDate(input.deadline, input.zone), tokenHash: await tokenHash(secret), createdBy: s.operator.email, at: now(), uploads: 0 })
  insist(row.payload.verification!=='email'||!!(operatorMail(env)&&env.MAIL_FROM),'mail_not_configured',503)
- await commit(env, s, [{ row }], { fences: [...ctx.fences,...sharing.fences], audits: [{ action: 'file-request.create', object: key, detail: { request: row.id, types: row.payload.types, maxBytes: row.payload.maxBytes, deadline: row.payload.deadline } }] })
+ await commit(env, s, [{ row }], { fences: [...ctx.fences,...sharing.fences], audits: [{ action: 'file-request.create', object: key, detail: { ...sharing.audit, request: row.id, types: row.payload.types, maxBytes: row.payload.maxBytes, deadline: row.payload.deadline } }] })
  return { request: describeRequest(row), url: `${env.AUTH_ORIGIN}/r/${secret}`, email: operatorMail(env) && env.MAIL_FROM ? 'available' : 'not_available' }
 }
 export async function closeFileRequest(env: Bindings, s: Session, w: Who, id: string) {

@@ -1,3 +1,4 @@
+import { agentAttribution, sessionAgent } from '../agent-policy'
 import { activityAudits } from '../content-security/activity'
 import { integrationEventOps, integrationEventStatements } from '../integrations/events'
 import { erasurePublication } from '../erasure/publication'
@@ -38,8 +39,11 @@ export async function commit(env: Bindings, actor: Session | null, ops: Op[], { 
  const statement = (sql: string, params: unknown[] = []) => env.DB.prepare(sql).bind(...params)
  const written = new Set(ops.map(o => o.row.id)), predicates = [...(actor ? [sessionPredicate(actor)] : []), ...fences.filter(f => !written.has(f.id)).map(snapshot), ...ops.map(o => o.previous ? snapshot(o.previous) : { sql: 'NOT EXISTS(SELECT 1 FROM chest_records WHERE id=?)', params: [o.row.id] })]
  const redact=await (await import('../audit/privacy')).identityRedactor(env)
- const at = now(), who = await redact(actor?.operator.email ?? by)
- const auditRows=await Promise.all(audits.map(async a=>({...a,detail:await redact(JSON.stringify(facts({version:ops.find(o=>o.row.id===a.object)?.row.payload?.current??null,...a.detail},actor?`${actor.kind}:${actor.operator.role}`:by)))})))
+ // Sharing receipts name the authenticated agent; other audit policies keep their existing actor semantics.
+ const sharing = audits.some(a => ['share.grant','link.create','link.change','file-request.create','access.approve'].includes(a.action))
+ const agent = actor && sharing ? sessionAgent(actor) : undefined
+ const at = now(), who = await redact(agent ? `agent:${agent.id}` : actor?.operator.email ?? by)
+ const auditRows=await Promise.all(audits.map(async a=>({...a,detail:await redact(JSON.stringify(facts({version:ops.find(o=>o.row.id===a.object)?.row.payload?.current??null,...a.detail,...(agent ? agentAttribution(agent) : {})},actor?`${actor.kind}:${actor.operator.role}`:by)))})))
  const quotas = storageGuards(ops), warnings = await warningPublication(env,ops)
  try { await env.DB.batch([
   ...predicates.map(p => statement(`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${p.sql}) THEN 1 ELSE 0 END`, p.params)),

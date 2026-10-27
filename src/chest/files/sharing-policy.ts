@@ -1,3 +1,4 @@
+import { agentPolicy } from '../agent-policy'
 import type { Bindings } from '../../auth.server'
 import { list } from '../store'
 import { ChestError, insist, type Group, type Row } from '../model'
@@ -26,8 +27,17 @@ export async function sharePolicy(env:Bindings,w:Who,ctx:Ctx,emails:string[],inp
   insist(!['public','guests','domain','request'].includes(audience),'sharing_policy_non_members_disabled',403)
   for(const email of emails){const groups=(await list<Group>(env,'group')).filter(g=>g.payload.members.includes(email));insist(ctx.space.payload.members.some(g=>(g.principal===email||groups.some(r=>r.id===g.principal))&&(!g.expires||Date.parse(g.expires)>Date.now())),'sharing_policy_non_members_disabled',403);policy.fences.push(...groups as any)}
  }
- if(p.warnExternal && external.length && input.confirmExternal!==true)throw new SharingConfirmation(external)
- return policy
+ const outside=audience==='named'?external.length>0:!['organisation','restricted'].includes(audience)
+ let audit:Record<string,unknown>={}
+ if(outside && w.agent){
+  const decision=await agentPolicy(env,{riskClass:'external-share',agent:w.agent,item:ctx.chain.at(-1)!.id,audience,recipients:external})
+  audit={riskClass:'external-share',policyDecision:decision.decision,policy:decision.policy,humanConfirmed:false}
+  insist(decision.decision==='allow','agent_policy_'+decision.decision,403)
+ }else if(outside){
+  if(p.warnExternal && external.length && input.confirmExternal!==true)throw new SharingConfirmation(external)
+  audit={humanConfirmed:input.confirmExternal===true}
+ }
+ return {...policy,audit}
 }
 const member=(space:Space,email:string,groups:Row<Group>[])=>space.kind==='personal'?email===space.owner:space.members.some(g=>(g.principal===email||groups.some(r=>r.id===g.principal&&r.payload.members.includes(email)))&&(!g.expires||Date.parse(g.expires)>Date.now()))
 const manager=(space:Space,email:string,groups:Row<Group>[])=>space.kind==='personal'?email===space.owner:space.members.some(g=>g.role==='manager'&&(g.principal===email||groups.some(r=>r.id===g.principal&&r.payload.members.includes(email)))&&(!g.expires||Date.parse(g.expires)>Date.now()))

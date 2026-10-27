@@ -22,8 +22,8 @@ export async function createLink(env: Bindings, s: Session, w: Who, key: string,
  const ctx = await context(env, w, key); demand(ctx, 'share')
  const policy=await effectiveLinkPolicy(env,w,ctx.space.id), audience=input.audience ?? policy.rules.defaultAudience
  if(!['public','guests','domain'].includes(audience))demandLinkPolicy(policy.rules,audience,input.discoverable === true)
- const sharing=await sharePolicy(env,w,ctx,[],input,audience)
  if(['public','guests','domain'].includes(audience))return createPublicLink(env,s,w,key,input)
+ const sharing=await sharePolicy(env,w,ctx,[],input,audience)
  if(audience==='restricted')insist(!input.password&&!input.limit&&(!input.versionMode||input.versionMode==='current')&&!input.version&&input.download!==false,'restricted_link_grants_no_controls')
  insist(audience!=='restricted' || !input.discoverable,'restricted_links_not_discoverable')
  const r = role(input.role ?? policy.rules.defaultRole, shareRoles); insist(rank[r] <= rank[ctx.state.role!], 'role_above_own', 403); insist(input.discoverable === undefined || typeof input.discoverable === 'boolean', 'invalid_discoverable')
@@ -32,7 +32,7 @@ export async function createLink(env: Bindings, s: Session, w: Who, key: string,
  insist(input.download!==false||r!=='editor','editor_requires_original_downloads')
  const snapshot=audience==='organisation'&&ctx.chain.at(-1)!.payload.type==='folder'&&'versionMode' in choice&&choice.versionMode==='pinned'?await folderSnapshot(env,ctx.chain.at(-1)!):null
  const secret = randomToken('chest_link_'), row = fresh<Link>('link', { item: key, tokenHash: await tokenHash(secret), audience,...choice,password,limit,downloads:0,download:input.download!==false,...(snapshot?{snapshot:snapshot.files,folders:snapshot.fences.filter(r=>r.payload.type==='folder').map(r=>({id:r.id,name:r.payload.name}))}:{}), expires:linkDate(input.expires,input.zone), role: r, discoverable: input.discoverable ?? false, createdBy: s.operator.email, at: now() })
- await commit(env, s, [{ row }], { fences: [...ctx.fences,...policy.fences,...sharing.fences,...snapshot?.fences??[]], changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.create', object: key, detail: { link: row.id, role: r, discoverable: row.payload.discoverable,password:!!password,limit,versionMode:'versionMode' in choice?choice.versionMode:'current' } }] })
+ await commit(env, s, [{ row }], { fences: [...ctx.fences,...policy.fences,...sharing.fences,...snapshot?.fences??[]], changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.create', object: key, detail: { ...sharing.audit, link: row.id, role: r, discoverable: row.payload.discoverable,password:!!password,limit,versionMode:'versionMode' in choice?choice.versionMode:'current' } }] })
  return { link: { id: row.id, ...row.payload,password:!!row.payload.password, tokenHash: undefined }, url: `${env.AUTH_ORIGIN}/s/${secret}` }
 }
 export async function changeLink(env: Bindings, s: Session, w: Who, id: string, input: any) {
@@ -50,7 +50,7 @@ export async function changeLink(env: Bindings, s: Session, w: Who, id: string, 
  insist(!link.payload.versionMode||link.payload.versionMode==='current'||r!=='editor','editor_requires_current_versions')
  insist(link.payload.download!==false||r!=='editor','editor_requires_original_downloads')
  const payload = { ...link.payload, role: r, discoverable: input.discoverable ?? link.payload.discoverable }
- await commit(env, s, [{ row: next(link, payload), previous: link }], { fences: [...ctx.fences,...policy.fences,...sharing.fences], changes: [{ item: link.payload.item, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.change', object: link.payload.item, detail: { link: id, before: { role: link.payload.role, discoverable: link.payload.discoverable }, after: { role: r, discoverable: payload.discoverable } } }] })
+ await commit(env, s, [{ row: next(link, payload), previous: link }], { fences: [...ctx.fences,...policy.fences,...sharing.fences], changes: [{ item: link.payload.item, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'link.change', object: link.payload.item, detail: { ...sharing.audit, link: id, before: { role: link.payload.role, discoverable: link.payload.discoverable }, after: { role: r, discoverable: payload.discoverable } } }] })
  return { link: { id, ...payload,password:!!payload.password, tokenHash: undefined } }
 }
 export async function openLink(env: Bindings, s: Session, secret: string,input:any={}) {
