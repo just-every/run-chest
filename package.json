@@ -33,7 +33,7 @@
     "rer": "rer",
     "test:chest": "pnpm run test:chest:core && pnpm run test:chest:office",
     "test:browser": "pnpm run test:browser:files && pnpm run test:browser:other && pnpm run test:browser:extra && pnpm run test:browser:office && pnpm run test:browser:security",
-    "test:chest:extra": "node tests/chest/signatures.mjs",
+    "test:chest:extra": "node tests/chest/signatures.mjs && node tests/chest/archive-preview.mjs",
     "test:browser:extra": "node tests/chest/browser-signatures.mjs",
     "test:journey": "node tests/chest/journey.mjs",
     "test:hosted": "node tests/chest/hosted-lifecycle.mjs",

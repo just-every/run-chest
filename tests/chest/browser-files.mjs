@@ -8,6 +8,7 @@ import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
 import {zip} from './fixtures.mjs';
 import {uploadResumeJourney} from './upload-resume-flow.mjs';
+import {archivePreviewJourney} from './browser-preview.mjs';
 const h=await harness(),sha=v=>createHash('sha256').update(v).digest('hex'),day=86_400_000,cookies={},b64=v=>Buffer.from(v).toString('base64');
 let browser;
 const people=['ana','ben','cy','mo','dee','eve'];
@@ -126,7 +127,8 @@ async function journey(width){
 }
 try{
  await mkdir('test-results',{recursive:true});await staff();
- browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{}),args:['--use-mock-keychain','--password-store=basic',...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?['--no-sandbox']:[])]});
+ for(const width of [1440,390]){const page=await as('owner',width);await archivePreviewJourney({page,owner:cookies.owner,h,width,assertions:width===1440});await page.context().close()}
  for(const width of [1440,390])await journey(width);
  console.log('CHEST-13, VERSION-001 and SHARE-004 browser journeys passed');
 }finally{await browser?.close();await h.close()}
