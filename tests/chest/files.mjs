@@ -322,6 +322,8 @@ try{
   const enumerated=new Map();let after='';
   do{const response=await sync(`/sync/tree?limit=1&cursor=${start.cursor}&after=${encodeURIComponent(after)}`);assert.equal(response.status,200);const page=await response.json();assert.equal(page.cursor,start.cursor,'pages retain the initial change boundary');assert.ok(page.items.length<=1);for(const item of page.items){assert.ok(!enumerated.has(item.id),'each item is enumerated once');enumerated.set(item.id,item)}if(page.next)assert.ok(page.next>after,'pages advance even past inaccessible records');after=page.next}while(after);
   assert.deepEqual([...enumerated.keys()].sort(),start.items.map(i=>i.id).sort(),'bounded enumeration serves every accessible item and omits restricted descendants');
+  const scoped=await(await sync(`/sync/tree?space=${space.id}`)).json();assert.deepEqual(scoped.items.map(i=>i.id).sort(),start.items.filter(i=>i.space===space.id).map(i=>i.id).sort(),'space-scoped enumeration preserves the same current access');
+  assert.deepEqual((await(await sync('/sync/tree?space=synthetic-chest-absent')).json()).items,[]);
   assert.equal((await sync('/sync/tree?limit=0')).status,400);assert.equal((await sync('/sync/tree?cursor=-1')).status,400);
   const body='synced from the desktop client',created=await(await sync(`/sync/items?parent=${space.contracts}&name=desk.txt`,{method:'POST',body})).json();
   const part=await sync(`/sync/items/${created.item}/content`,{headers:{range:'bytes=7-10'}});assert.equal(part.status,206);assert.equal(await part.text(),body.slice(7,11));

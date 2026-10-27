@@ -38,7 +38,11 @@ the reference and each supplied inventory dimension with 25 percent headroom;
 this plans the required size and does not claim that size was generated.
 No originals are represented by sparse files or invented byte counts.
 
-Use the **Scale journey** workflow on the candidate branch. Changes to its workflow, generator or journey start it on a pull request at the exact candidate head; manual dispatch is also available after workflow registration on the default branch.
+Use the **Scale journey** workflow on the candidate branch. Its manual `dimensions`
+profile selects 100 folders, 600 direct grants in the separate membership space,
+300 total device credentials and 10,000 immediate renames. Invitations use
+distinct synthetic client addresses at the test runtime network edge; all
+authentication rate limits remain enabled. This is a bounded protocol profile. Changes to its workflow, generator or journey start it on a pull request at the exact candidate head; manual dispatch is also available after workflow registration on the default branch.
 It runs separately from push Verify, records the exact checked-out commit and
 uploads measurements and browser captures. It exercises the actual built Worker
 in an isolated local runtime, without a network latency claim. The real 10 TB,
@@ -50,6 +54,8 @@ acceptance gaps. Device enumeration uses bounded metadata pages. `GET /api/chest
 returns at most 500 candidate items and a `next` identifier. Continue with
 `after=<next>&cursor=<initial cursor>` until `next` is null, including pages
 whose visible item list is empty. Every page recomputes current access. Retain
+the same optional `space` selector on each page to enumerate one space through
+its indexed metadata path. A selector grants no access. Retain
 the initial cursor and replay changes after enumeration: a concurrent insert
 can sort before an already-scanned identifier. The change feed reads bounded
 ordered journal windows and returns `until`; retain it while following `more`

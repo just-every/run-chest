@@ -4,7 +4,7 @@ import {createHash} from 'node:crypto';
 export async function enumerate(sync, data, limit=31) {
  let after='', cursor, pages=0;const items=new Map();
  do {
-  const page=await sync(`/tree?limit=${limit}${cursor===undefined?'':`&cursor=${cursor}`}&after=${encodeURIComponent(after)}`);
+  const page=await sync(`/tree?space=${encodeURIComponent(data.space.id)}&limit=${limit}${cursor===undefined?'':`&cursor=${cursor}`}&after=${encodeURIComponent(after)}`);
   if(cursor===undefined)cursor=page.cursor;
   assert.equal(page.cursor,cursor);
   assert.ok(page.items.length<=limit);

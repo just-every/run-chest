@@ -25,6 +25,8 @@ try{
  const data=await generate({api:generationApi,owner,files:Number(process.env.CHEST_SCALE_FILES||60),depth:Number(process.env.CHEST_SCALE_DEPTH||8),directMembers:Number(process.env.CHEST_SCALE_DIRECT_MEMBERS||0),devices:Number(process.env.CHEST_SCALE_DEVICES||0)}),member=await h.signIn(data.sessions[0],true);
  const wide=await h.api(`/items/${data.folders[0]}`,owner),deep=await h.api(`/items/${data.folders.at(-1)}`,owner);assert.equal(data.counts.largestFolder,Math.max(wide.children.length,deep.children.length),'recorded folder size equals admitted direct children');
  const device=await h.api('/devices',member,{name:'Offline measurement device',platform:'linux'});await h.api('/devices',owner,{name:'Enumeration device',platform:'linux'});data.counts.devices+=2;
+ const registered=await h.api('/devices',owner);assert.equal(registered.length,data.counts.devices);assert.equal(new Set(registered.map(d=>d.id)).size,data.counts.devices);
+ if(data.membersSpace){const last=data.membersSpace.members.at(-1).principal,lastSession=await h.signIn(last,true),roster=await h.api(`/spaces/${data.membersSpace.id}`,lastSession);assert.equal(roster.role,'viewer');assert.equal(roster.members.length,Number(process.env.CHEST_SCALE_DIRECT_MEMBERS))}
  const sync=async path=>{const r=await h.fetch('/api/chest/sync'+path,{headers:{authorization:`Bearer ${device.token}`}});assert.equal(r.status,200);return r.json()};
  const start=await timed('enumeration',()=>enumerate(sync,data));
  assert.equal(data.counts.depth,Number(process.env.CHEST_SCALE_DEPTH||8)+1);

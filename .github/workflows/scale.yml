@@ -1,11 +1,17 @@
 name: Scale journey
 on:
   workflow_dispatch:
+    inputs:
+      profile:
+        description: Diagnostic or extended admitted dimensions
+        type: choice
+        default: diagnostic
+        options: [diagnostic, dimensions]
   pull_request:
     paths:
       - .github/workflows/scale.yml
       - scripts/scale/**
-      - tests/chest/scale.mjs
+      - tests/chest/scale*.mjs
 permissions:
   contents: read
 jobs:
@@ -15,6 +21,10 @@ jobs:
     env:
       CI: 'true'
       WRANGLER_SEND_METRICS: 'false'
+      CHEST_SCALE_DEPTH: ${{ inputs.profile == 'dimensions' && '100' || '8' }}
+      CHEST_SCALE_DIRECT_MEMBERS: ${{ inputs.profile == 'dimensions' && '600' || '0' }}
+      CHEST_SCALE_DEVICES: ${{ inputs.profile == 'dimensions' && '298' || '0' }}
+      CHEST_SCALE_CHANGES: ${{ inputs.profile == 'dimensions' && '10000' || '20' }}
     steps:
       - uses: actions/checkout@v4
         with:

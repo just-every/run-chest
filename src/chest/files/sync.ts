@@ -14,9 +14,10 @@ const view = (e: Entry) => { const v = e.row.payload.versions.find(v => v.id ===
  return { id: e.row.id, space: e.space.id, parent: e.row.payload.parent, type: e.row.payload.type, name: e.row.payload.name, updatedAt: e.row.payload.updatedAt, role: e.state.role, download: allowed(e, 'download'), version: v ? { id: v.id, checksum: v.checksum, size: v.size, mediaType: v.mediaType, arrival: v.arrival } : null } }
 const head = async (env: Bindings) => Number((await env.DB.prepare('SELECT COALESCE(MAX(seq),0) AS seq FROM chest_changes').first<{ seq: number }>())!.seq)
 export async function tree(env: Bindings, s: Session, url: URL) {
- const latest = await head(env), cursor = Number(url.searchParams.get('cursor') ?? latest), after = url.searchParams.get('after') ?? '', limit = Number(url.searchParams.get('limit') ?? 500)
- insist(Number.isSafeInteger(cursor) && cursor >= 0 && cursor <= latest && Number.isSafeInteger(limit) && limit >= 1 && limit <= 500 && after.length <= 200, 'invalid_cursor')
- const rows = (await env.DB.prepare("SELECT id FROM chest_records WHERE kind='item' AND id>? ORDER BY id LIMIT ?").bind(after,limit+1).all()).results as { id: string }[]
+ const latest = await head(env), cursor = Number(url.searchParams.get('cursor') ?? latest), after = url.searchParams.get('after') ?? '', limit = Number(url.searchParams.get('limit') ?? 500), space = url.searchParams.get('space') ?? ''
+ insist(Number.isSafeInteger(cursor) && cursor >= 0 && cursor <= latest && Number.isSafeInteger(limit) && limit >= 1 && limit <= 500 && after.length <= 200 && space.length <= 200, 'invalid_cursor')
+ const query = space ? env.DB.prepare("SELECT id FROM chest_records WHERE kind='item' AND json_extract(payload,'$.space')=? AND id>? ORDER BY id LIMIT ?").bind(space,after,limit+1) : env.DB.prepare("SELECT id FROM chest_records WHERE kind='item' AND id>? ORDER BY id LIMIT ?").bind(after,limit+1)
+ const rows = (await query.all()).results as { id: string }[]
  const page = rows.slice(0,limit), all = await everything(env, await who(env,s), page.map(r=>r.id)), entries = page.map(r=>all.get(r.id)).filter((e): e is Entry => !!e && !!e.state.role && !e.state.trash)
  const spaces = new Map(entries.map(e => [e.space.id, { id: e.space.id, name: e.space.payload.kind === 'personal' ? (e.space.payload.owner === s.operator.email ? 'My files' : 'Shared with me') : e.space.payload.name, kind: e.space.payload.kind }]))
  return { cursor, next: rows.length > limit ? page.at(-1)!.id : null, spaces: [...spaces.values()], items: entries.map(view) }
