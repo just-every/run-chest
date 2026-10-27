@@ -4685,7 +4685,7 @@
       "executable": false
     },
     "tests/chest/archive-preview.mjs": {
-      "sha256": "3d68599a33ed879f6f8f01bd2ef3e3e179fbb90c90aebc456d86c15feaf9d71c",
+      "sha256": "fff85332706b4239b17c75b0cf5c1ed90342a7f72577fc6bf80fe9fc2ebcaf53",
       "executable": false
     },
     "tests/chest/arrival-rules.mjs": {
