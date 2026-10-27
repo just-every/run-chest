@@ -2349,7 +2349,7 @@
       "executable": false
     },
     "src/chest/quota/api.ts": {
-      "sha256": "a42444ad87d848d58ea69f93691ddca460e45f6e28dff4db317b6c2a8bc54c89",
+      "sha256": "4b3c6944fe7fbb204c67c4fb18c90fe132b3f6c2f362f866773b9b1cbb69518c",
       "executable": false
     },
     "src/chest/quota/errors.ts": {
@@ -2361,7 +2361,7 @@
       "executable": false
     },
     "src/chest/quota/storage.ts": {
-      "sha256": "70724af208430ce03a9f2d962819970f379c457c657721a1e34f0fa85c7a3ee5",
+      "sha256": "42c201563bbb6f72ee3facb8a471c70e86e3c11e9a280d0f1b7be4bf272bd280",
       "executable": false
     },
     "src/chest/quota/ui.ts": {
@@ -5085,7 +5085,7 @@
       "executable": false
     },
     "tests/chest/scale-browser.mjs": {
-      "sha256": "df8ced8a146f417a751af5b320d0455b26e59c3c7979f43a1f2df9d8943da252",
+      "sha256": "03bb93aa00c9d051bf1d1302caaf4d8f99cedd60ca5e558a6ab132fe40e47757",
       "executable": false
     },
     "tests/chest/scale-sync.mjs": {

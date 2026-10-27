@@ -5,7 +5,7 @@ import { get, list } from '../store'
 import { insist, type Person, type Group, type Row } from '../model'
 import { commit, fresh, maybe, next, type Op } from '../files/repo'
 import { personalId, type Space } from '../files/model'
-import { storage, storageView } from './storage'
+import { storage, storageBySpace, storageView } from './storage'
 import { effectiveQuota, quotaRules, ruleId, type QuotaRule } from './rules'
 import { QuotaConfirmation } from './errors'
 
@@ -19,8 +19,8 @@ async function areas(env: Bindings) {
  return spaces
 }
 export async function quotas(env: Bindings, s: Session) {
- const rows=[],global=await canAdmin(env,s,'service-settings'),state=await quotaRules(env)
- for(const row of await areas(env)) if(global||await canAdmin(env,s,'service-settings',row.payload.owner||row.payload.createdBy)) rows.push({name:s.operator.role==='owner'?row.payload.name:row.id,kind:row.payload.kind,owner:row.payload.owner,...await storageView(env,row,state)})
+ const rows=[],[global,state,usage,all]=await Promise.all([canAdmin(env,s,'service-settings'),quotaRules(env),storageBySpace(env),areas(env)])
+ for(const row of all) if(global||await canAdmin(env,s,'service-settings',row.payload.owner||row.payload.createdBy)) rows.push({name:s.operator.role==='owner'?row.payload.name:row.id,kind:row.payload.kind,owner:row.payload.owner,id:row.id,...effectiveQuota(row,state.rules,state.groups),usedBytes:usage.get(row.id)??0})
  insist(rows.length||await canAdmin(env,s,'service-settings'),'admin_required',403);return rows
 }
 export async function quotaPolicyView(env: Bindings,s: Session) {

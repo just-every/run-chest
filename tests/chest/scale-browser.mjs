@@ -11,7 +11,9 @@ export async function scaleScreens({browser,h,owner,data}){
    await page.getByRole('link',{name:'Operating scale',exact:true}).waitFor();
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    await tooltips(page,width,'scale-administration');
+   await page.evaluate(()=>scrollTo(0,0));
    await page.screenshot({path:`test-results/${width}-scale-administration.png`,fullPage:true});
+   await page.screenshot({path:`test-results/${width}-scale-administration-view.png`});
    if(data.membersSpace){
     const first=await page.locator('#people h3').first().textContent();
     await page.getByRole('link',{name:'Next people',exact:true}).first().click();
@@ -23,13 +25,17 @@ export async function scaleScreens({browser,h,owner,data}){
     assert.equal(await page.getByRole('link',{name:'Next people',exact:true}).count(),0);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await page.screenshot({path:`test-results/${width}-scale-administration-last.png`,fullPage:true});
+    await page.locator('#people').scrollIntoViewIfNeeded();
+    await page.screenshot({path:`test-results/${width}-scale-administration-last-view.png`});
    }
    await page.getByRole('link',{name:'Operating scale',exact:true}).click();
    await page.getByRole('heading',{name:'Operating scale',exact:true}).waitFor();
    assert.ok(await page.getByText('Failing scale health check',{exact:true}).isVisible());
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    await tooltips(page,width,'scale');
+   await page.evaluate(()=>scrollTo(0,0));
    await page.screenshot({path:`test-results/${width}-scale.png`,fullPage:true});
+   await page.screenshot({path:`test-results/${width}-scale-view.png`});
   }finally{await context.close()}
  }
 }

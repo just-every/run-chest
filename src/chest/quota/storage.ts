@@ -13,6 +13,15 @@ export async function storage(env: Bindings, space: string) {
  const row = await env.DB.prepare(`SELECT COALESCE(SUM(bytes),0) usedBytes FROM (${originals})`).bind(space,space).first<{ usedBytes: number }>()
  return { usedBytes: row?.usedBytes ?? 0 }
 }
+export async function storageBySpace(env: Bindings): Promise<Map<string,number>> {
+ const rows = await env.DB.prepare(`WITH originalSizes AS (
+  SELECT checksum,MAX(bytes) bytes FROM (${versions('chest_records')}) GROUP BY checksum
+ ), refs AS (
+  SELECT json_extract(r.payload,'$.space') space,json_extract(v.value,'$.checksum') checksum FROM chest_records r,json_each(r.payload,'$.versions') v WHERE r.kind='item'
+  UNION SELECT json_extract(r.payload,'$.space'),json_extract(f.value,'$.version.checksum') FROM chest_records r,json_each(r.payload,'$.files') f WHERE r.kind='request-submission' AND json_extract(r.payload,'$.status') IN ('quarantined','rejected')
+ ) SELECT refs.space,COALESCE(SUM(originalSizes.bytes),0) usedBytes FROM refs JOIN originalSizes ON originalSizes.checksum=refs.checksum GROUP BY refs.space`).all<{space:string;usedBytes:number}>()
+ return new Map(rows.results.map(row=>[row.space,row.usedBytes]))
+}
 export async function totalStorage(env: Bindings) {
  const row = await env.DB.prepare(`SELECT COALESCE(SUM(bytes),0) usedBytes FROM (SELECT checksum,MAX(bytes) bytes FROM (${versions('chest_records')}) GROUP BY checksum)`).first<{ usedBytes: number }>()
  return row?.usedBytes ?? 0
