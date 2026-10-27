@@ -19,7 +19,8 @@ import { tiff, tiffPages, TiffProblem } from './tiff'
 // (a Worker stopped, a provider timeout) is picked up again by the next unit; uploads never wait for any of it.
 // Units run after any signed-in request (waitUntil) and while a file page that shows progress is open.
 // Unknown binaries are looked at too: Word, Excel, PowerPoint and OpenDocument files are recognised from their contents.
-export const READABLE = ['application/rtf', 'application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/tiff', 'application/octet-stream']
+const RTF_MEDIA_TYPE = 'application' + '/rtf'
+export const READABLE = [RTF_MEDIA_TYPE, 'application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/tiff', 'application/octet-stream']
 export type Page = { n: number; source: 'text' | 'scan' | 'photo'; state: 'done' | 'waiting' | 'failed' | 'empty' | 'skipped'; chars: number; language?: string; confidence?: number; image?: { mediaType: string; width: number; height: number }; problem?: string; attempts?: number }
 export type ExtractState = 'queued' | 'reading' | 'done' | 'partial' | 'failed' | 'unsupported' | 'needs_key' | 'unavailable'
 // The record's ID is `extract:<SHA-256>`: identical bytes are read once. The payload never repeats the hash, so it
@@ -47,6 +48,8 @@ async function save<T extends { updatedAt: string }>(env: Bindings, row: Row<T>,
 // fields gets a field reading. Both are created as waiting work.
 async function discover(env: Bindings) {
  const at = now(), types = READABLE.map(() => '?').join(',')
+ // Invalidate old RTF readings before reuse; clearing the revision also fences an older running reader.
+ const upgraded = await env.DB.prepare(`UPDATE chest_records SET payload=json_set(payload,'$.parser',?,'$.state','queued','$.pages',json('[]'),'$.text','','$.searchText','','$.truncatedAt',NULL,'$.problem',NULL,'$.lease',NULL,'$.updatedAt',?),revision=? WHERE kind='extract' AND (json_extract(payload,'$.mediaType')=? OR json_extract(payload,'$.format')='RTF document') AND coalesce(json_extract(payload,'$.parser'),'')<>?`).bind(RTF_PARSER, at, crypto.randomUUID(), RTF_MEDIA_TYPE, RTF_PARSER).run()
  const versions = (await env.DB.prepare(`SELECT DISTINCT json_extract(v.value,'$.checksum') AS checksum, json_extract(v.value,'$.mediaType') AS mediaType, json_extract(v.value,'$.size') AS size FROM chest_records r, json_each(r.payload,'$.versions') v WHERE r.kind IN ('item','document') AND json_extract(v.value,'$.mediaType') IN (${types}) AND NOT EXISTS (SELECT 1 FROM chest_records e WHERE e.id='extract:'||json_extract(v.value,'$.checksum')) LIMIT 25`).bind(...READABLE).all()).results as { checksum: string; mediaType: string; size: number }[]
  const latest = (await env.DB.prepare(`SELECT r.id AS document, json_extract(r.payload,'$.versions[#-1].id') AS version, json_extract(r.payload,'$.versions[#-1].checksum') AS checksum FROM chest_records r WHERE ((r.kind='document' AND json_extract(r.payload,'$.trash')=0) OR (r.kind='item' AND json_extract(r.payload,'$.trash') IS NULL AND json_extract(r.payload,'$.filing.schema') IS NOT NULL)) AND json_extract(r.payload,'$.versions[#-1].mediaType') IN (${types}) AND NOT EXISTS (SELECT 1 FROM chest_records x WHERE x.id='reading:'||r.id||':'||json_extract(r.payload,'$.versions[#-1].id')) LIMIT 25`).bind(...READABLE).all()).results as { document: string; version: string; checksum: string }[]
  const insert = (key: string, kind: string, payload: unknown) => env.DB.prepare('INSERT INTO chest_records(id,kind,payload,revision) VALUES(?,?,?,?) ON CONFLICT(id) DO NOTHING').bind(key, kind, JSON.stringify(payload), crypto.randomUUID())
@@ -55,7 +58,7 @@ async function discover(env: Bindings) {
   ...latest.map(r => insert(readingId(r.document, r.version), 'reading', { document: r.document, version: r.version, checksum: r.checksum, state: 'waiting', proposals: [], model: null, problem: null, lease: null, attempts: 0, usage: { input: 0, output: 0 }, createdAt: at, updatedAt: at } satisfies Reading)),
  ]
  if (statements.length) await env.DB.batch(statements)
- return statements.length > 0
+ return statements.length > 0 || upgraded.meta.changes > 0
 }
 // The next unit: an extraction with work left, or a field reading whose extraction has finished.
 async function nextUnit(env: Bindings): Promise<Row<any> | null> {
@@ -230,13 +233,16 @@ export async function requestReading(env: Bindings, doc: string, version: string
  if (existing) { if (['failed', 'needs_key', 'unavailable'].includes(existing.payload.state)) await save(env, existing, { ...existing.payload, state: 'waiting', attempts: 0, problem: null, lease: null }); return }
  await env.DB.prepare('INSERT INTO chest_records(id,kind,payload,revision) VALUES(?,?,?,?) ON CONFLICT(id) DO NOTHING').bind(readingId(doc, version), 'reading', JSON.stringify({ document: doc, version, checksum, state: 'waiting', proposals: [], model: null, problem: null, lease: null, attempts: 0, usage: { input: 0, output: 0 }, createdAt: at, updatedAt: at } satisfies Reading), crypto.randomUUID()).run()
 }
-export const extraction = (env: Bindings, checksum: string) => maybe<Extraction>(env, 'extract', extractId(checksum))
+export const extraction = async (env: Bindings, checksum: string) => {
+ const row = await maybe<Extraction>(env, 'extract', extractId(checksum))
+ return row && (row.payload.mediaType === RTF_MEDIA_TYPE || row.payload.format === 'RTF document') && row.payload.parser !== RTF_PARSER ? null : row
+}
 // Text search over extracted text: the hashes whose text holds the query, with a snippet. Callers only ask about
 // versions the person can open.
 export async function textHits(env: Bindings, q: string): Promise<Map<string, string>> {
  if (!q) return new Map()
  // SQLite lower only folds ASCII; native RTF readings also retain their Unicode-folded search text.
- const rows = (await env.DB.prepare(`SELECT id, json_extract(payload,'$.text') AS text FROM chest_records WHERE kind='extract' AND instr(coalesce(json_extract(payload,'$.searchText'),lower(json_extract(payload,'$.text'))), ?) > 0`).bind(q.toLowerCase()).all()).results as { id: string; text: string }[]
+ const rows = (await env.DB.prepare(`SELECT id, json_extract(payload,'$.text') AS text FROM chest_records WHERE kind='extract' AND (NOT (coalesce(json_extract(payload,'$.mediaType'),'')=? OR coalesce(json_extract(payload,'$.format'),'')='RTF document') OR json_extract(payload,'$.parser')=?) AND instr(coalesce(json_extract(payload,'$.searchText'),lower(json_extract(payload,'$.text'))), ?) > 0`).bind(RTF_MEDIA_TYPE,RTF_PARSER,q.toLowerCase()).all()).results as { id: string; text: string }[]
  // The snippet starts at a word a little before the match, so the match stays in view on a one-line result row.
  const snippet = (text: string) => { const at = text.toLowerCase().indexOf(q.toLowerCase()), from = Math.max(0, at - 24), start = from && text.slice(from, at).search(/\s/) >= 0 ? from + text.slice(from, at).search(/\s/) + 1 : from
   return (start ? '…' : '') + text.slice(start, at + q.length + 80).replaceAll(SEP, ' ').replace(/\s+/g, ' ').trim() }

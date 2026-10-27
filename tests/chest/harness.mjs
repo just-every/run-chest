@@ -10,12 +10,18 @@ const {Miniflare,convertV4MiniflareOptions}=createRequire(require.resolve('wrang
 // The built Worker runs as deployed (production mail, https origin). Its network
 // edges are the mail provider, where the test receives each message, and, when a
 // test passes `edge`, that test's fake of a paid provider (an AI model).
-export async function harness({edge,bindings={},hostname='127.0.0.1',tls,publicOrigin}={}){
+export async function harness({edge,bindings={},hostname='127.0.0.1',tls,publicOrigin,now}={}){
  let port=0,origin=`https://${hostname}`;
  const directory=await mkdtemp(join(tmpdir(),'chest-http-')),secret=()=>randomBytes(32).toString('base64url'),mails=[];
  const vars={AUTH_LOCAL:'false',AUTH_ORIGIN:origin,OWNER_EMAIL:'owner@example.test',SESSION_SECRET:secret(),SIGNING_KEY_SECRET:secret(),SETUP_TOKEN:secret(),MAIL_PROVIDER:'resend',MAIL_API_KEY:'test-only-mail-provider-key',MAIL_FROM:'Chest <auth@example.test>',...bindings};
  const {compatibilityDate,compatibilityFlags,assets,d1Databases,r2Buckets}=workerOptions('dist/server/wrangler.json').workerOptions,root=join(process.cwd(),'dist/server');
+ // Pin Intl's implicit calendar date without changing session lifetimes or background deadlines.
+ const clock=now ? `
+ const realParts=Intl.DateTimeFormat.prototype.formatToParts;
+ Intl.DateTimeFormat.prototype.formatToParts=function(value=${Date.parse(now)}){return realParts.call(this,value)};
+ ` : '';
  const modules=['index.js',...(await readdir(join(root,'assets'))).map(f=>`assets/${f}`)].map(f=>({type:f.endsWith('.wasm')?'CompiledWasm':'ESModule',path:join(root,f)}));
+ if(clock) modules[0].contents=clock+await readFile(join(root,'index.js'),'utf8');
  const options={modulesRoot:root,modules,compatibilityDate,compatibilityFlags,assets,d1Databases,r2Buckets};
  const outboundService=async request=>{
   const answer=await edge?.(request);if(answer)return answer;
@@ -48,7 +54,7 @@ export async function harness({edge,bindings={},hostname='127.0.0.1',tls,publicO
   const link=new URL(message.text.match(/https?:\/\/[^\s]+/)[0]);assert.equal(link.origin,origin);
   const response=await raw('/auth/confirm',null,{token:link.searchParams.get('token')});assert.equal(response.status,303,'ordinary link confirmation');return response.headers.getSetCookie().map(v=>v.split(';')[0]).join('; ')
  }
- try{await start()}catch(e){await stop();await rm(directory,{recursive:true,force:true});throw e}// Time passing for expiry journeys: tests age stored timestamps; the Worker's clock is never faked.
+ try{await start()}catch(e){await stop();await rm(directory,{recursive:true,force:true});throw e}// Expiry journeys age stored timestamps; date-filter journeys may supply a frozen Worker clock.
  const sql=async(query,...params)=>(await worker.getD1Database('DB')).prepare(query).bind(...params).run();
  return {scheduled:async()=>(await worker.getWorker()).scheduled(),email:async(from,to,raw)=>{const response=await worker.dispatchFetch(origin+'/cdn-cgi/local/email?'+new URLSearchParams({from,to,format:'json'}),{method:'POST',body:raw});assert.equal(response.status,200,await response.clone().text());return response.json()},get origin(){return origin},vars,mails,fetch,raw,api,signIn,start,stop,directory,sql,async close(){await stop();await rm(directory,{recursive:true,force:true})}};
 }

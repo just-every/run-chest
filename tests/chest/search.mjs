@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {harness} from './harness.mjs';
 import {pdf} from './fixtures.mjs';
-import {rtf,rtfPhrase} from './rtf-fixtures.mjs';
+import {rtf,rtfPhrase,privateRtf,symbolRtf,symbolPhrase} from './rtf-fixtures.mjs';
 import {xlsx} from './office-fixtures.mjs';
 const h=await harness(),b64=x=>Buffer.from(x).toString('base64');
 try{
@@ -28,6 +28,31 @@ try{
  await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.updatedAt',?) WHERE id=?",'2026-10-15T12:00:00.000Z',b.id);
  assert.deepEqual((await search({location:root.id,modifiedFrom:'2026-10-14',modifiedTo:'2026-10-14',timeZone:'America/Los_Angeles',type:'pdfs,spreadsheets'})).results.map(r=>r.id),[a.id]);
  const sheet=await h.api('/items',owner,{space:team.id,name:'Forecast.bin',base64:b64(xlsx())});for(let i=0;i<30;i++){if((await h.api(`/items/${sheet.id}/reading?work=1`,owner)).reading?.state==='done')break;await new Promise(r=>setTimeout(r,100))}assert.deepEqual((await search({q:'Harbor logistics',type:'spreadsheets'})).results.map(r=>r.id),[sheet.id],'Office package contents determine type even with an unknown extension');
+
+ // Both RTF repairs are asserted through stored originals and ordinary search, independently.
+ const rtfFailures=[];
+ for(const [name,bytes,visible,excluded] of [
+  ['Displayed RTF.bin',privateRtf,'Visible harbor text',['private-index-token','private-contents-token','private-unnumbered-token']],
+  ['Symbol RTF.bin',symbolRtf,symbolPhrase,[]],
+  ['Named symbol RTF.bin',Buffer.from(String.raw`{\rtf1\ansi{\fonttbl{\f0 Arial;}{\f1 Symbol;}}{\f1 D W \u-4031? \u945? }\f0 ordinary text}`, 'latin1'),'Δ Ω Α α ordinary text',[]]
+ ]){
+  const item=await h.api('/items',owner,{parent:nested.id,name,base64:b64(bytes)});
+  for(let i=0;i<80;i++){const state=(await h.api(`/items/${item.id}/reading?work=1`,owner)).reading;if(!['queued','reading'].includes(state?.state))break;await new Promise(r=>setTimeout(r,100))}
+  try{
+   for(const q of excluded)assert.deepEqual((await search({q,type:'documents'})).results,[],`${name}: non-displayed ${q} must not be indexed`);
+   const hit=await search({q:visible,type:'documents',location:root.id});assert.deepEqual(hit.results.map(r=>r.id),[item.id],`${name}: displayed text must be searchable`);assert.ok(hit.results[0].snippet.includes(visible));
+   assert.deepEqual(Buffer.from(await(await h.raw(`/api/chest/items/${item.id}/bytes/${item.payload.current}?download=true`,owner)).arrayBuffer()),bytes);
+   if(name==='Displayed RTF.bin'){
+    await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.parser','chest:rtf-text:1','$.text','private-index-token','$.searchText','private-index-token','$.state','done') WHERE id=?",`extract:${item.payload.versions[0].checksum}`);
+    assert.equal((await search({q:'private-index-token'})).count,0,'old parser text cannot leak while its replacement is queued');
+    await h.api(`/items/${item.id}/reading`,owner,{});
+    for(let i=0;i<80;i++){const state=(await h.api(`/items/${item.id}/reading?work=1`,owner)).reading;if(state?.state==='done'&&state.parser!=='chest:rtf-text:1')break;await new Promise(r=>setTimeout(r,100))}
+    assert.deepEqual((await search({q:visible})).results.map(r=>r.id),[item.id],'an existing extraction is rebuilt from the retained original');
+   }
+
+  }catch(error){rtfFailures.push(error);console.error(error.message)}
+ }
+ if(rtfFailures.length)throw new AggregateError(rtfFailures,'RTF public search regressions');
 
  const rich=await h.api('/items',owner,{parent:nested.id,name:'Retained rich bytes.bin',base64:b64(rtf())});
  const settle=async()=>{for(let i=0;i<80;i++){const r=await h.api(`/items/${rich.id}/reading?work=1`,owner);if(r.reading?.state==='done')return;await new Promise(r=>setTimeout(r,100))}assert.fail('RTF extraction did not finish')};await settle();

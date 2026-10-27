@@ -2,21 +2,29 @@ import { Buffer } from 'node:buffer'
 import { getDecoder, encodingExists } from 'iconv-lite'
 // Native RTF text reading never executes fields, links, pictures or embedded objects.
 // Offsets in failures refer to original bytes; truncation refers to decoded UTF-16 characters.
-export const RTF_PARSER = 'chest:rtf-text:1'
+export const RTF_PARSER = 'chest:rtf-text:2'
 export const isRtf = (bytes: Uint8Array) => /^\{\\rtf(?=\d|[^a-z]|$)/.test(String.fromCharCode(...bytes.subarray(0, 32)))
 export class RtfProblem extends Error {
  constructor(message: string, public offset: number) { super(`${message} At byte ${offset}.`) }
 }
-type State = { skip: boolean; hidden: boolean; uc: number; encoding: string; font: number; table: boolean; definition: number; starred: boolean; upr: number }
-const destinations = new Set('fonttbl colortbl stylesheet info pict object objdata objclass objname datastore datafield filetbl listtable listoverridetable rsidtbl generator xmlnstbl colorschememapping latentstyles themedata headerfooter htmltag mhtmltag fldinst pn fontemb fontfile annotation atnauthor atndate'.split(' '))
-const charsets: Record<number, string> = { 77: 'macintosh', 128: 'shift_jis', 129: 'euc-kr', 134: 'gbk', 136: 'big5', 161: 'windows-1253', 162: 'windows-1254', 163: 'windows-1258', 177: 'windows-1255', 178: 'windows-1256', 186: 'windows-1257', 204: 'windows-1251', 222: 'windows-874', 238: 'windows-1250', 255: 'ibm866' }
+type State = { skip: boolean; hidden: boolean; uc: number; encoding: string; font: number; table: boolean; definition: number; starred: boolean; upr: number; fontName: string }
+const destinations = new Set('fonttbl colortbl stylesheet info pict object objdata objclass objname datastore datafield filetbl listtable listoverridetable rsidtbl generator xmlnstbl colorschememapping latentstyles themedata headerfooter htmltag mhtmltag fldinst pn fontemb fontfile annotation atnauthor atndate xe tc tcn'.split(' '))
+const charsets: Record<number, string> = { 2: 'symbol', 77: 'macintosh', 128: 'shift_jis', 129: 'euc-kr', 134: 'gbk', 136: 'big5', 161: 'windows-1253', 162: 'windows-1254', 163: 'windows-1258', 177: 'windows-1255', 178: 'windows-1256', 186: 'windows-1257', 204: 'windows-1251', 222: 'windows-874', 238: 'windows-1250', 255: 'ibm866' }
 const codePage = (n: number) => ({ 65001: 'utf-8', 10000: 'macintosh', 437: 'cp437', 850: 'cp850', 932: 'shift_jis', 936: 'gbk', 949: 'euc-kr', 950: 'big5' } as Record<number, string>)[n] || `windows-${n}`
 const symbols: Record<string, string> = { par: '\n', line: '\n', tab: '\t', cell: '\t', row: '\n', page: '\n', sect: '\n', emdash: '—', endash: '–', bullet: '•', lquote: '‘', rquote: '’', ldblquote: '“', rdblquote: '”', enspace: ' ', emspace: ' ', qmspace: ' ' }
+// Adobe Symbol uses glyph positions rather than the document ANSI code page.
+const symbolChars = new Map<number, string>([[9, '\t']])
+for (let code = 32; code <= 126; code++) symbolChars.set(code, String.fromCharCode(code))
+for (const [start, letters] of [[65, 'ΑΒΧΔΕΦΓΗΙϑΚΛΜΝΟΠΘΡΣΤΥςΩΞΨΖ'], [97, 'αβχδεφγηιϕκλμνοπθρστυϖωξψζ']] as const)
+ Array.from(letters).forEach((letter, i) => symbolChars.set(start + i, letter))
+for (const [code, letter] of Object.entries({34:'∀',36:'∃',39:'∋',42:'∗',45:'−',64:'≅',92:'∴',94:'⊥',96:'\uf8e5',126:'∼'})) symbolChars.set(Number(code), letter)
+Array.from('€ϒ′≤∕∞ƒ♣♦♥♠↔←↑→↓°±″≥×∝∂•÷≠≡≈…\uf8e6\uf8e7↵ℵℑℜ℘⊗⊕∅∩∪⊃⊇⊄⊂⊆∈∉∠∇\uf6da\uf6d9\uf6db∏√⋅¬∧∨⇔⇐⇑⇒⇓◊〈\uf8e8\uf8e9\uf8ea∑\uf8eb\uf8ec\uf8ed\uf8ee\uf8ef\uf8f0\uf8f1\uf8f2\uf8f3\uf8f4').forEach((letter, i) => symbolChars.set(160 + i, letter))
+Array.from('〉∫⌠\uf8f5⌡\uf8f6\uf8f7\uf8f8\uf8f9\uf8fa\uf8fb\uf8fc\uf8fd\uf8fe').forEach((letter, i) => symbolChars.set(241 + i, letter))
 export function rtfText(bytes: Uint8Array, limit: number) {
  if (!isRtf(bytes)) throw new RtfProblem('This is not an RTF document.', 0)
  const stack: State[] = [], fonts = new Map<number, string>(), parts: string[] = []
  let decoder: ReturnType<typeof getDecoder> | TextDecoder | null = null
- let s: State = { skip: false, hidden: false, uc: 1, encoding: 'windows-1252', font: 0, table: false, definition: 0, starred: false, upr: 0 }, at = 0, count = 0, kept = 0, fallback = 0, pending: number[] = [], pendingAt = 0, rootClosed = false, defaultFont = 0
+ let s: State = { skip: false, hidden: false, uc: 1, encoding: 'windows-1252', font: 0, table: false, definition: 0, starred: false, upr: 0, fontName: '' }, at = 0, count = 0, kept = 0, fallback = 0, pending: number[] = [], pendingAt = 0, rootClosed = false, defaultFont = 0
  const fail = (message: string, offset = at): never => { throw new RtfProblem(message, offset) }
  const emit = (text: string) => {
   if (s.skip || s.hidden) return
@@ -25,9 +33,17 @@ export function rtfText(bytes: Uint8Array, limit: number) {
  }
  const flush = (final = true) => {
   if (!pending.length && !decoder) return
+  if (s.table) {
+   s.fontName = (s.fontName + String.fromCharCode(...pending)).slice(0, 128)
+   if (/^\s*Symbol\s*;/i.test(s.fontName)) fonts.set(s.definition, 'symbol')
+  }
   if (!s.skip && !s.hidden) {
    const encoding = fonts.get(s.font) || s.encoding
    try {
+    if (encoding === 'symbol') {
+     emit(pending.map(code => symbolChars.get(code) ?? fail('The RTF Symbol character is undefined.', pendingAt)).join(''))
+     pending = []; return
+    }
     if (!decoder) {
      if (!encodingExists(encoding)) fail('The RTF character encoding is unsupported.', pendingAt)
      decoder = encoding === 'utf-8' ? new TextDecoder(encoding, { fatal: true }) : getDecoder(encoding)
@@ -107,7 +123,7 @@ export function rtfText(bytes: Uint8Array, limit: number) {
   if (word === 'pc') s.encoding = 'cp437'
   if (word === 'pca') s.encoding = 'cp850'
   if (word === 'deff' && n !== null) { defaultFont = n; s.font = n }
-  if (word === 'f' && n !== null) { if (s.table) s.definition = n; else s.font = n }
+  if (word === 'f' && n !== null) { if (s.table) { s.definition = n; s.fontName = '' } else s.font = n }
   if (word === 'fcharset' && n !== null && s.table) [0, 1].includes(n) ? fonts.delete(s.definition) : fonts.set(s.definition, charsets[n] || `unsupported-charset-${n}`)
   if (word === 'cpg' && n !== null && s.table) fonts.set(s.definition, codePage(n))
   if (word === 'v') s.hidden = n !== 0
@@ -115,7 +131,8 @@ export function rtfText(bytes: Uint8Array, limit: number) {
   if (word === 'uc') { if (n === null || n < 0 || n > 255) fail('The RTF Unicode fallback length is invalid.', start); s.uc = n! }
   if (word === 'u') {
    if (n === null || n < -32768 || n > 65535) fail('The RTF Unicode escape is invalid.', start)
-   emit(String.fromCharCode(n! < 0 ? n! + 65536 : n!)); fallback = s.uc
+   const value = n! < 0 ? n! + 65536 : n!
+   emit(fonts.get(s.font) === 'symbol' && value >= 0xf020 && value <= 0xf0ff ? symbolChars.get(value - 0xf000) ?? fail('The RTF Symbol character is undefined.', start) : String.fromCharCode(value)); fallback = s.uc
   } else if (word in symbols) character(symbols[word])
  }
  flush()
