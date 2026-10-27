@@ -2,7 +2,7 @@
   "schema": 1,
   "seed": "chest",
   "old": {
-    "commit": "c4980005e9d1c60763e2d49482d9d7c36f714ee5",
+    "commit": "13db42efa368c80323c8955237faf611ae175222",
     "files": [
       "CONTRACT.md",
       "ACCEPTANCE.md",
@@ -17694,6 +17694,12 @@
       "note": "The generator writes the clause counts."
     },
     {
+      "file": "docs/CLAIMS.md",
+      "line": 54,
+      "text": "| 27 | Open it and edit together | \"Edit at the same time, comment\" (Pricing.xlsx with Dana and Luis, a resolved thread, \"Saved · 2 people editing\") | partly | EDIT-001 (partial), EDIT-003 (partial) | `src/chest/office/service.ts`; `src/chest/office/codec.ts`; `src/chest/office/presence.ts`; `src/chest/office/ui.ts`; `src/chest/files/items.ts`; `tests/chest/office.mjs`; `docs/office.md`; `src/chest/files/comments.ts`; `src/chest/files/ui-comments.ts`; `src/chest/files/api.ts`; `src/chest/files/views.ts`; `src/chest/files/notify.ts`; `src/chest/reviews.ts`; `tests/chest/files.mjs`; `tests/chest/annotation-flow.mjs`; `tests/chest/role-review-flow.mjs`; `tests/chest/browser-new-files.mjs` |",
+      "to": "changelog"
+    },
+    {
       "file": "CONTRACT.md",
       "line": 936,
       "cell": "gap",
@@ -17745,7 +17751,7 @@
       "file": "CONTRACT.md",
       "line": 936,
       "cell": "gap",
-      "text": "Explicit carry-forward selects a retained destination PDF and validated page and region, creates one linked thread attributed to the initiator across concurrent retries and restart, preserves the original thread, replies, resolution, anchors and bytes, and rechecks current commenter authority and recipients.",
+      "text": "Explicit carry-forward selects a retained destination PDF and validated page and region, creates one linked thread attributed to the initiator across concurrent retries and restart, including a completed retry after the current version changes, preserves the original thread, replies, resolution, anchors and bytes, and rechecks current commenter authority and recipients.",
       "to": "gap",
       "ids": [
         "EDIT-003",
@@ -17805,15 +17811,9 @@
     {
       "file": "ACCEPTANCE.md",
       "line": 252,
-      "text": "Current evidence: `src/chest/files/comments.ts`; `src/chest/files/ui-comments.ts`; `src/chest/files/api.ts`; `src/chest/files/views.ts`; `src/chest/files/notify.ts`; `src/chest/office/presence.ts`; `src/chest/reviews.ts`; `tests/chest/office.mjs`; `tests/chest/files.mjs`; `tests/chest/annotation-flow.mjs`; `tests/chest/role-review-flow.mjs`; `tests/chest/browser-new-files.mjs`; `docs/office.md`. Remaining: Version-bound file comments notify the file owner by in-app notice and the installation mail provider; presence rechecks live sessions and access. Managed email reports one unavailable line pending outbound support. File comments now support access-checked mentions and assignment, and the built-in DOCX editor records tracked suggestions and contributor decisions, proven by `tests/chest/role-review-flow.mjs` (roleReviewFlow). PDF region anchors, version-bound replies, resolution, reopening and unresolved retained-PDF navigation now work through the file page and API. Explicit carry-forward selects a retained destination PDF and validated page and region, creates one linked thread attributed to the initiator across concurrent retries and restart, preserves the original thread, replies, resolution, anchors and bytes, and rechecks current commenter authority and recipients. Viewer, revoked-access, foreign-thread, invalid-region and stale-target refusals publish no thread or notification. Proven by `tests/chest/annotation-flow.mjs` (annotationFlow and annotationBrowserFlow at 1440 and 390). Real CODE retains attributed comments and tracked suggestions under ROLE-001. Remaining: version comparison, other document anchors, shared engine and Chest threads, tasks, the full cross-format Collabora review loop, email replies and resolution, native acceptance, and MIGRATE-001 and MIGRATE-002 imported-thread timestamps, source IDs, author matching, states and missing-anchor fidelity.",
+      "text": "Current evidence: `src/chest/files/comments.ts`; `src/chest/files/ui-comments.ts`; `src/chest/files/api.ts`; `src/chest/files/views.ts`; `src/chest/files/notify.ts`; `src/chest/office/presence.ts`; `src/chest/reviews.ts`; `tests/chest/office.mjs`; `tests/chest/files.mjs`; `tests/chest/annotation-flow.mjs` (annotationFlow: unresolved navigation, explicit current or earlier retained destinations, lineage, unchanged originals, recipient and actor refusals, and durable once-only publication; annotationBrowserFlow: file-page navigation and carry-forward at 1440 and 390); `tests/chest/role-review-flow.mjs`; `tests/chest/browser-new-files.mjs`; `docs/office.md`. Remaining: Version-bound file comments notify the file owner by in-app notice and the installation mail provider; presence rechecks live sessions and access. Managed email reports one unavailable line pending outbound support. File comments now support access-checked mentions and assignment, and the built-in DOCX editor records tracked suggestions and contributor decisions, proven by `tests/chest/role-review-flow.mjs` (roleReviewFlow). PDF region anchors, version-bound replies, resolution, reopening and unresolved retained-PDF navigation now work through the file page and API. Explicit carry-forward selects a retained destination PDF and validated page and region, creates one linked thread attributed to the initiator across concurrent retries and restart, including a completed retry after the current version changes, preserves the original thread, replies, resolution, anchors and bytes, and rechecks current commenter authority and recipients. Viewer, revoked-access, foreign-thread, invalid-region and stale-target refusals publish no thread or notification. Proven by `tests/chest/annotation-flow.mjs` (annotationFlow and annotationBrowserFlow at 1440 and 390). Real CODE retains attributed comments and tracked suggestions under ROLE-001. Remaining: version comparison, other document anchors, shared engine and Chest threads, tasks, the full cross-format Collabora review loop, email replies and resolution, native acceptance, and MIGRATE-001 and MIGRATE-002 imported-thread timestamps, source IDs, author matching, states and missing-anchor fidelity.",
       "to": "generated",
       "note": "The generated ACCEPTANCE.md copies EDIT-003's evidence and gap from this contract."
-    },
-    {
-      "file": "docs/CLAIMS.md",
-      "line": 54,
-      "text": "| 27 | Open it and edit together | \"Edit at the same time, comment\" (Pricing.xlsx with Dana and Luis, a resolved thread, \"Saved · 2 people editing\") | partly | EDIT-001 (partial), EDIT-003 (partial) | `src/chest/office/service.ts`; `src/chest/office/codec.ts`; `src/chest/office/presence.ts`; `src/chest/office/ui.ts`; `src/chest/files/items.ts`; `tests/chest/office.mjs`; `docs/office.md`; `src/chest/files/comments.ts`; `src/chest/files/ui-comments.ts`; `src/chest/files/api.ts`; `src/chest/files/views.ts`; `src/chest/files/notify.ts`; `src/chest/reviews.ts`; `tests/chest/files.mjs`; `tests/chest/annotation-flow.mjs`; `tests/chest/role-review-flow.mjs`; `tests/chest/browser-new-files.mjs` |",
-      "to": "changelog"
     }
   ]
 }
