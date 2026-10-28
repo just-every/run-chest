@@ -5161,7 +5161,7 @@
       "executable": false
     },
     "tests/chest/role-review-flow.mjs": {
-      "sha256": "54b6a535911ec28f6b9e373cfafb57daefb6b2440c96f3911424b3227d315c36",
+      "sha256": "aecec97b1e0410484051705924fae032170a935e5c5281bca515787f455a9e31",
       "executable": false
     },
     "tests/chest/rtf-fixtures.mjs": {
