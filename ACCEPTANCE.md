@@ -8,10 +8,10 @@ The primary journey: create a team space, move originals and rights in, install 
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 36 | 49 | 38 | 123 |
+| Core | 37 | 48 | 38 | 123 |
 | Agent surface | 0 | 2 | 11 | 13 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 37 | 55 | 65 | 157 |
+| Full target | 38 | 54 | 65 | 157 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -841,7 +841,7 @@ Core · target · **missing** · From EDIT-002, EDIT-001 · Register R-12
 
 #### EDIT-003 — Comments, annotations and tasks on files
 
-Core · target · **partial** · Rules D-3
+Core · target · **done** · Rules D-3
 
 **Requirement.** Files carry threaded comments, mentions, tasks and PDF page and region annotations bound to the exact version. Users compare versions, move between unresolved comments, and carry a thread forward only with a link to its original. In-document comments in the shipped editor are threads too, kept in step under EDIT-008. An assigned comment is a task in the assignee's list until resolved. Threads migrated from an incumbent keep their original times, source IDs and state, show an unmatched author as "Former collaborator (name as in source)", keep the quoted text of a comment whose anchor was not found, and then behave like any other thread.
 
@@ -851,8 +851,8 @@ Core · target · **partial** · Rules D-3
 3. Versions compare side by side, and unresolved comments are navigable in order.
 4. On a migrated file, threads show original times and states, a former collaborator's comment cannot be re-attributed by a save, an "anchor not found" thread shows its quoted text, and reply and resolve work.
 
-**Evidence.** `tests/chest/annotation-flow.mjs`; `tests/chest/annotation-recipients.mjs`; `tests/chest/role-review-flow.mjs`; `tests/chest/browser-new-files.mjs`; `tests/chest/files.mjs`; `tests/chest/office.mjs`
-**Gap.** PDF regions, version-bound replies, resolve and reopen, unresolved retained-PDF navigation and explicit carry-forward of a thread to a retained destination PDF, once only across concurrent retries, restart and a completed retry after the current version changes, with every recipient's destination-version access rechecked (out-of-version mentions and assignees refuse publication; out-of-version participants and file creators get no copied text) and a resolved selected thread still reachable from the file page, exist; Side-by-side retained-version comparison uses the file page and current preview authority, proven by `tests/chest/annotation-flow.mjs` (annotationFlow and annotationBrowserFlow). An owner-reviewed source-thread receiver, source attribution and missing-anchor quotes, assigned-comment lists and general unresolved navigation are implemented. Exact-candidate journey proof for migrated-thread fidelity and non-PDF anchor coverage remains pending.
+**Evidence.** `tests/chest/annotation-flow.mjs` (annotationFlow and annotationBrowserFlow: PDF mentions and refusal, retained anchors, side-by-side originals, unresolved navigation and linked carry-forward); `tests/chest/annotation-recipients.mjs` (annotationRecipientsFlow: version-scoped recipients); `tests/chest/imported-review-flow.mjs` (importedReviewFlow and importedReviewBrowserFlow: source times, IDs, states, former authors, missing-anchor quotes, replies, resolution, tasks, erasure and reviewed import authority); `tests/chest/role-review-flow.mjs` (roleReviewFlow); `tests/chest/browser-new-files.mjs`; `tests/chest/files.mjs`; `tests/chest/office.mjs`
+**Gap.** None.
 
 #### EDIT-007 — Review loop: attribution and @mentions
 

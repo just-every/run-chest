@@ -32,7 +32,7 @@ A claim is done when every clause behind it is done, missing when every one is m
 | 24 | On every desk and phone | "photos upload from the phone" ("45 of 48 uploaded · 3 waiting for Wi-Fi") | `MOBILE-001` missing; `TRANSFER-001` partial | partial |
 | 25 | On every desk and phone | "edits made offline come home safely" ("Conflict: Dana changed it too" · "Kept both · Luis chose v5") | `SYNC-002` partial | partial |
 | 26 | Open it and edit together | "Word, Excel and PowerPoint files open in the browser" | `PREVIEW-001` partial; `EDIT-005` partial | partial |
-| 27 | Open it and edit together | "Edit at the same time, comment" (Pricing.xlsx with Dana and Luis, a resolved thread, "Saved · 2 people editing") | `EDIT-005` partial; `EDIT-003` partial | partial |
+| 27 | Open it and edit together | "Edit at the same time, comment" (Pricing.xlsx with Dana and Luis, a resolved thread, "Saved · 2 people editing") | `EDIT-005` partial; `EDIT-003` done | partial |
 | 28 | Open it and edit together | "and keep one copy" | `EDIT-005` partial | partial |
 | 29 | Share out. Collect in. | "Send a link with a password and an expiry" (Contract pack: password on, expires Oct 31, 3 of 10 downloads, opened by priya@acme.example, Revoke) | `SHARE-001` done; `SHARE-007` done | done |
 | 30 | Share out. Collect in. | "and ask for files back without an account" (file request to Vendors / Acme Supply / Onboarding, 2 of 2 received) | `SHARE-002` done | done |
