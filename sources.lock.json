@@ -185,7 +185,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "917aef93b250319a1740b828abb338f9131311ac166b6f4e3224e9ceeada5bee",
+      "sha256": "b083fb4e88d56bf5e1c839456cb903e5d209201c69666957634aedaea68a30b9",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -213,7 +213,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "b7be2c8ddfac91308a7399f282d82d22ef99b5be9f23146a72e51559b634c809",
+      "sha256": "7408efe9490bb85df7caef98241d8fa474f3047d8c3aedcf92d78546148bb730",
       "executable": false
     },
     "DEMO.md": {
@@ -673,7 +673,7 @@
       "executable": false
     },
     "public/chest.css": {
-      "sha256": "6a8db4b7572848dd1e597e34fa92488e2ef3e91d7a0255d707da2ba2f53e4f25",
+      "sha256": "17e7d06229fff5776df118b8378197df5dbd50fd1a98248eb26db0bf75937dcd",
       "executable": false
     },
     "public/fonts/caveat/caveat-latin-wght-normal.woff2": {
@@ -1697,7 +1697,7 @@
       "executable": false
     },
     "src/chest/files/api.ts": {
-      "sha256": "b70cbdad7cc03ee4e01346a7541af05301f3efccc5776e9f02cb778ef8f0ab90",
+      "sha256": "a2fb90acb15cbde6d4b61ae5c556ee6a12005f25d88ad7bdc74d8e210ea2254c",
       "executable": false
     },
     "src/chest/files/archive-preview.ts": {
@@ -1710,6 +1710,10 @@
     },
     "src/chest/files/comments.ts": {
       "sha256": "869a3d489515fcf92085bedfffd3425b95034577326e1b6bda1639efa8d7c185",
+      "executable": false
+    },
+    "src/chest/files/compare.ts": {
+      "sha256": "b09dbcd39efd7b38239896899a33aff429ef2627c7cae914d8a3e9e8fd500b5b",
       "executable": false
     },
     "src/chest/files/devices.ts": {
@@ -1909,7 +1913,7 @@
       "executable": false
     },
     "src/chest/files/ui-item.ts": {
-      "sha256": "59d8cfb0be57c013a01e47620aef02d413d7bdac2858400aecaa8a4d53dcf8b0",
+      "sha256": "fe42b7b0ebdbaf0adcae8c23752ee39d9c65854d048577d614ee730c4cc2d1e2",
       "executable": false
     },
     "src/chest/files/ui-link-form.ts": {
@@ -1961,7 +1965,7 @@
       "executable": false
     },
     "src/chest/files/ui.ts": {
-      "sha256": "e9223d72aaed40ef799714c79ab24c413042c7cd2494a00a00ad55b14647e34a",
+      "sha256": "5c0dea1f5eabfa17523e0bad86588faa011d7dfe4c8b699073c38d993d6d0af1",
       "executable": false
     },
     "src/chest/files/uploads.ts": {
@@ -4701,7 +4705,7 @@
       "executable": false
     },
     "tests/chest/annotation-flow.mjs": {
-      "sha256": "6ab1ab4cda23b7b0fdf07b7204273e691db725fc8c2178cd41b666a59a7ed9d1",
+      "sha256": "05ab12919a1ba1d7218129d6332148314f4991f932e785d4533ffb4a59d2c9bb",
       "executable": false
     },
     "tests/chest/annotation-recipients.mjs": {

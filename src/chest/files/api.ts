@@ -1,4 +1,5 @@
 import { meterOriginal } from '../administration/egress'
+import { compareVersions, comparisonPreview } from './compare'
 import { archivePreview } from './archive-preview'
 import { renderedPreview } from './restricted-preview'
 import { openCollabora } from '../office/wopi'
@@ -106,6 +107,8 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && sub === 'settings') return settings(env, s, w, key, input)
  }
  if (head === 'items') {
+  if (get && sub === 'compare' && !version) return compareVersions(env, w, key, url.searchParams.get('left'), url.searchParams.get('right'))
+  if (get && sub === 'comparison-preview' && version && !verb) return comparisonPreview(env, w, key, version)
   if (get && sub === 'comments' && version === 'unresolved' && !verb) return unresolvedComments(env, w, key, url.searchParams.get('thread'))
   if (post && sub === 'comments' && version && verb === 'carry') return carryComment(env, s, w, key, version, input)
   if (post && sub === 'comments' && version && verb === 'reply') return replyComment(env, s, w, key, version, input)
