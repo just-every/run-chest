@@ -1,4 +1,3 @@
-# Review threads on retained originals
 
 On a file page, **Compare versions** opens two retained versions beside each
 other. Choose the left and right originals independently. On a reviewed file, the
