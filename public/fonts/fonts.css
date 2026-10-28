@@ -91,7 +91,7 @@
 
 
 /* Base's Run and not-found pages on the run site (src/base/run-site.ts): the landing's grid paper, lockup,
-   heavy Inter heading, white step cards, violet step numbers and the dark terminal code card. The :has()
+   heavy Inter heading and the dark terminal code card. The :has()
    prefix outranks the page's own <style>, which follows this stylesheet. */
 body:has(> header.bar) { background: url('/site/grid.svg') top center / 1536px auto repeat, var(--chest-site-paper); }
 body:has(> header.bar) > .bar { max-width: 1536px; padding: 22px clamp(16px, 5.73vw, 88px) 0; }
@@ -101,13 +101,8 @@ body:has(> header.bar) h1 { font-weight: 860; letter-spacing: -0.05em; word-spac
 body:has(> header.bar) .intro h1 { font-size: 64px; }
 body:has(> header.bar) .intro h1::after { content: ""; display: block; width: 92px; height: 6px; margin: 22px auto 0; border-radius: 6px; background: var(--chest-gradient); }
 body:has(> header.bar) .sub { color: #4f5464; }
-body:has(> header.bar) .step { background: #fff; border-color: #e6e7f1; border-radius: 22px; box-shadow: var(--chest-card-shadow); backdrop-filter: none; }
-body:has(> header.bar) .num { background: linear-gradient(140deg, #7b2cfb, #3b54f6); color: #fff; font-weight: 750; box-shadow: 0 10px 20px -10px rgba(90, 44, 232, 0.7); }
-body:has(> header.bar) .step h2 { font-weight: 750; letter-spacing: -0.03em; }
 body:has(> header.bar) .code { background: #1a191f; color: #f1f0f6; border-radius: 14px; box-shadow: 0 22px 40px -26px rgba(20, 12, 60, 0.6); }
 body:has(> header.bar) .code pre { font-size: 15.5px; }
-body:has(> header.bar) .copy { border-color: rgba(174, 130, 252, 0.5); color: #e5dcff; }
-body:has(> header.bar) .copy:hover { background: rgba(124, 72, 253, 0.25); }
 body:has(> header.bar) .note code, body:has(> header.bar) .alt code { padding: 2px 6px; border-radius: 6px; background: var(--chest-lilac-soft); color: #2b1b8f; }
 body:has(> header.bar) .facts a, body:has(> header.bar) .link { text-decoration-color: rgba(90, 44, 232, 0.45); }
 @media (max-width: 760px) {
