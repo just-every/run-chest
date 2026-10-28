@@ -1,5 +1,7 @@
 import { meterOriginal } from '../administration/egress'
 import { compareVersions, comparisonPreview } from './compare'
+import { previewCommentImport, applyCommentImport } from './comment-import'
+import { assignedComments } from './comments'
 import { archivePreview } from './archive-preview'
 import { renderedPreview } from './restricted-preview'
 import { openCollabora } from '../office/wopi'
@@ -49,7 +51,7 @@ import { begin, cancel, complete, receive, status, unfinished } from './uploads'
 import type { AccessRequest } from './model'
 // /api/chest routes for everyday files. Every route reads the person's current groups and links first; the UI's form
 // posts reach the same functions through execute().
-const roots = new Set(['quota-policy', 'transfers', 'space-policy', 'space-requests', 'link-repairs', 'new-files', 'templates', 'creation-settings', 'link-policy', 'uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search', 'signatures'])
+const roots = new Set(['tasks', 'quota-policy', 'transfers', 'space-policy', 'space-requests', 'link-repairs', 'new-files', 'templates', 'creation-settings', 'link-policy', 'uploads', 'rewind', 'ownership', 'files', 'spaces', 'items', 'trash', 'shared', 'requests', 'notices', 'links', 'public-links', 'file-requests', 'devices', 'policy', 'search', 'signatures'])
 export async function filesExecute(env: Bindings, request: Request, s: Session, method: string, parts: string[], input: any, url: URL): Promise<unknown> {
  if(parts[0]==='guest-policy')return method==='GET'?guestPolicy(env):saveGuestPolicy(env,s,input)
  const content=await contentExecute(env,s,method,parts,input);if(content!==undefined)return content
@@ -80,6 +82,7 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
  }
  if(head==='link-policy'&&key==='grants'&&post)return removeSuspendedGrant(env,s,input)
  if(head==='link-policy')return get?linkPolicies(env,s):saveLinkPolicy(env,s,input)
+ if (get && head === 'tasks') return assignedComments(env, w)
  if (get && head === 'files') return home(env, s, w)
  if (get && head === 'search') return search(env, w, url)
  if (get && head === 'trash') return trashView(env, s, w)
@@ -107,9 +110,11 @@ export async function filesExecute(env: Bindings, request: Request, s: Session, 
   if (post && sub === 'settings') return settings(env, s, w, key, input)
  }
  if (head === 'items') {
+  if (post && sub === 'comment-import' && version === 'preview') { const plan = await previewCommentImport(env, s, w, key, input); return { fingerprint: plan.fingerprint, version: plan.version, threads: plan.summary } }
+  if (post && sub === 'comment-import' && version === 'apply') return applyCommentImport(env, s, w, key, input)
   if (get && sub === 'compare' && !version) return compareVersions(env, w, key, url.searchParams.get('left'), url.searchParams.get('right'))
   if (get && sub === 'comparison-preview' && version && !verb) return comparisonPreview(env, w, key, version)
-  if (get && sub === 'comments' && version === 'unresolved' && !verb) return unresolvedComments(env, w, key, url.searchParams.get('thread'))
+  if (get && sub === 'comments' && version === 'unresolved' && !verb) return unresolvedComments(env, w, key, url.searchParams.get('thread'), url.searchParams.get('scope') === 'all')
   if (post && sub === 'comments' && version && verb === 'carry') return carryComment(env, s, w, key, version, input)
   if (post && sub === 'comments' && version && verb === 'reply') return replyComment(env, s, w, key, version, input)
   if (post && sub === 'comments' && version && verb === 'resolve') return resolveComment(env, s, w, key, version, input)

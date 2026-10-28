@@ -15,6 +15,7 @@ export async function annotationRecipientsFlow({h,people,bytes,anchor}) {
   const link=await h.api(`/items/${key}/links`,people.manager,{audience:'organisation',role:'viewer',versionMode:'pinned',version:second,discoverable:true});
   const third=(await h.api(`/items/${key}/versions`,people.manager,{base64:Buffer.from(bytes).toString('base64')})).payload.current;
   assert.deepEqual((await h.api(`/items/${key}`,people.viewer)).versions.map(v=>v.id),[second]);
+  if(kind==='mention'){await h.api(`/items/${key}/compare?left=${second}&right=${third}`,people.viewer,undefined,404);assert.equal((await h.raw(`/api/chest/items/${key}/comparison-preview/${third}`,people.viewer)).status,404)}
   const state=async()=>{const view=await h.api(`/items/${key}`,people.manager);return {comments:view.comments,versions:view.versions,audit:view.activity.filter(a=>a.action.startsWith('comment.')),notices:(await h.api('/notices',people.viewer)).filter(n=>n.payload.item===key),mail:h.mails.filter(m=>[m.to].flat().includes('viewer@example.test')).length}};
   const before=await state(),carry={key:crypto.randomUUID(),version:third,expectedCurrent:third,anchor};
   const required=kind==='mention'||kind==='assignment';

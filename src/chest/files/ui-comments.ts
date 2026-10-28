@@ -1,3 +1,4 @@
+import { threadNavigation } from './comments'
 import { esc, field, area, select, form, hidden, details, stamp } from '../ui-shared'
 
 const inline = { className: 'form form-inline', buttonClass: 'btn btn-outline' }
@@ -35,6 +36,14 @@ function navigation(d: any, returnTo: string) {
  const link = (id: string, label: string) => `<a class="btn btn-outline" href="${esc(returnTo)}?thread=${esc(id)}#comment-${esc(id)}">${label}</a>`
  return `<nav aria-label="Unresolved PDF threads"><p>${n.threads.length ? `Unresolved PDF thread ${n.position} of ${n.threads.length}` : 'No unresolved PDF threads.'}</p><div class="doc-actions">${n.previous ? link(n.previous, 'Previous unresolved') : ''}${n.selected ? link(n.selected, 'Open selected thread') : ''}${n.next ? link(n.next, 'Next unresolved') : ''}</div></nav>`
 }
+function allNavigation(d: any, returnTo: string) {
+ const rows = d.comments.filter((c: any) => !c.resolved)
+ if (!rows.some((c: any) => !c.anchor)) return ''
+ const selected = rows.some((c: any) => c.id === d.focusComment) ? d.focusComment : null
+ const n = threadNavigation<{ id: string }>(rows, selected)
+ const link = (id: string, label: string) => `<a class="btn btn-outline" href="${esc(returnTo)}?comment=${esc(id)}#comment-${esc(id)}">${label}</a>`
+ return `<nav aria-label="All unresolved comments"><p>Open comment ${n.position} of ${rows.length}</p><div class="doc-actions">${n.previous ? link(n.previous, 'Previous comment') : ''}${n.selected ? link(n.selected, 'Open comment') : ''}${n.next ? link(n.next, 'Next comment') : ''}</div></nav>`
+}
 function original(d: any, c: any) {
  if (!c.version) return ''
  const v = d.versions.find((v: any) => v.id === c.version), label = `Version ${versionNumber(d, c.version)}`, old = c.version !== d.item.current
@@ -47,10 +56,11 @@ function original(d: any, c: any) {
 function thread(d: any, c: any, returnTo: string) {
  const path = `/items/${d.id}/comments/${c.id}`
  const replies = (c.replies ?? []).map((r: any) => `<li><span class="mono">${esc(r.author)} · ${stamp(r.at)}</span><p>${esc(r.message)}</p>${r.mentions?.length ? `<p>Mentioned: ${r.mentions.map(esc).join(', ')}</p>` : ''}</li>`).join('')
+ const provenance = c.imported ? `<p class="mono">Migrated from ${esc(c.imported.provider)} · Source file ${esc(c.imported.file)} · Source thread ${esc(c.imported.id)}</p>${c.imported.anchorMissing ? `<p>Anchor not found</p><blockquote>${esc(c.imported.quotedText)}</blockquote>` : ''}${c.assignmentGap ? `<p>${esc(c.assignmentGap)}</p>` : ''}` : ''
  const state = c.resolved ? `<p class="quiet">Resolved by ${esc(c.resolved.by)} · ${stamp(c.resolved.at)}</p>` : ''
  const controls = d.can.comment ? `<div class="doc-actions">${form(`${path}/resolve`, hidden('decision', c.resolved ? 'reopen' : 'resolve'), c.resolved ? 'Reopen thread' : 'Resolve thread', returnTo, inline)}${!c.resolved ? details('Reply', form(`${path}/reply`, area('Reply', 'message', ''), 'Post reply', returnTo, { buttonClass: 'btn btn-outline' }), 'btn btn-outline') : ''}</div>` : ''
  const lineage = c.carriedFrom ? `<p>Carried forward by ${esc(c.carriedFrom.by)} from <a class="link" href="${esc(returnTo)}?comment=${esc(c.carriedFrom.thread)}#comment-${esc(c.carriedFrom.thread)}">original thread · Version ${versionNumber(d, c.carriedFrom.version)} · Page ${c.carriedFrom.anchor.page}</a></p>` : ''
- return `<li id="comment-${esc(c.id)}" data-comment="${esc(c.id)}"><span class="mono">${esc(c.author)} · <span class="nowrap">${stamp(c.at)}</span></span>${original(d, c)}${lineage}<p>${esc(c.message)}</p>${c.assignee ? `<p>Assigned to ${esc(c.assignee)}</p>` : ''}${c.mentions?.length ? `<p>Mentioned: ${c.mentions.map(esc).join(', ')}</p>` : ''}${state}${replies ? `<ol class="events" aria-label="Replies">${replies}</ol>` : ''}${controls}${carryForm(d, c, returnTo)}</li>`
+ return `<li id="comment-${esc(c.id)}" data-comment="${esc(c.id)}"><span class="mono">${esc(c.author)} · <span class="nowrap">${stamp(c.at)}</span></span>${original(d, c)}${provenance}${lineage}<p>${esc(c.message)}</p>${c.assignee ? `<p>Assigned to ${esc(c.assignee)}</p>` : ''}${c.taskCustodians?.length ? `<p>Task custodians: ${c.taskCustodians.map(esc).join(', ')}</p>` : ''}${c.mentions?.length ? `<p>Mentioned: ${c.mentions.map(esc).join(', ')}</p>` : ''}${state}${replies ? `<ol class="events" aria-label="Replies">${replies}</ol>` : ''}${controls}${carryForm(d, c, returnTo)}</li>`
 }
 export function commentsPanel(d: any, returnTo: string) {
  const open = d.comments.filter((c: any) => !c.resolved), resolved = d.comments.filter((c: any) => c.resolved)
@@ -58,5 +68,5 @@ export function commentsPanel(d: any, returnTo: string) {
  const body = open.length ? list(open) : `<p class="quiet">${resolved.length ? 'No open comments.' : 'No comments yet.'}</p>`
  const closed = resolved.length ? details(`Resolved threads (${resolved.length})`, list(resolved), 'btn btn-outline').replace('<details ', resolved.some((c: any) => c.id === d.focusComment) ? '<details open ' : '<details ') : ''
  const composer = d.can.comment ? form(`/items/${d.id}/comments`, (d.item.type === 'file' ? hidden('version', d.item.current) : '') + area('Comment', 'message', '') + recipientFields(), 'Post comment', returnTo, { buttonClass: 'btn btn-outline' }) : ''
- return `<section aria-label="Comments"><h2 class="section-title">Comments</h2>${navigation(d, returnTo)}${body}${closed}${composer}${annotationForm(d, returnTo)}</section>`
+ return `<section aria-label="Comments"><h2 class="section-title">Comments</h2><p><a class="link" href="/app/notices#tasks">Your assigned comments</a>${d.ownerRole && d.item.type === 'file' && d.can.contribute ? ` · <a class="link" href="${returnTo}/import-comments">Import review threads</a>` : ''}</p>${navigation(d, returnTo)}${allNavigation(d, returnTo)}${body}${closed}${composer}${annotationForm(d, returnTo)}</section>`
 }

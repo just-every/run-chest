@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {mkdir} from 'node:fs/promises';
 import {PDFDocument,StandardFonts} from 'pdf-lib';
 import {annotationRecipientsFlow} from './annotation-recipients.mjs';
+import {importedReviewFlow,importedReviewBrowserFlow} from './imported-review-flow.mjs';
 const b64=bytes=>Buffer.from(bytes).toString('base64');
 async function pdf(changed=false){
  const doc=await PDFDocument.create(),font=await doc.embedFont(StandardFonts.Helvetica);
@@ -12,7 +13,7 @@ async function pdf(changed=false){
 const target={kind:'pdf',page:2,region:[.1,.2,.7,.4]};
 async function create(h,people,parent){const bytes=await pdf();const item=await h.api('/items',people.manager,{parent,name:`Review ${crypto.randomUUID()}.pdf`,base64:b64(bytes)});return {item,bytes}}
 // Fold this into the existing role journey, which owns authentication and the Worker lifecycle.
-export async function annotationFlow({h,people,parent}){
+export async function annotationFlow({h,people,parent,owner}){
  const {item,bytes}=await create(h,people,parent),key=item.id,version=item.payload.current,path=`/items/${key}/comments`;
  const snapshot=async()=>({comments:(await h.api(`/items/${key}`,people.manager)).comments,mails:h.mails.length});
  let before=await snapshot();
@@ -133,10 +134,12 @@ export async function annotationFlow({h,people,parent}){
  const folder=await h.api(`/items/${parent}/comments`,people.commenter,{version:null,message:'Folder review remains independent of versions.'});assert.equal(folder.payload.version,null);
  const other=await h.api('/items',people.manager,{parent,type:'folder',name:`Other ${crypto.randomUUID()}`});await h.api(`/items/${other.id}/comments/${row.id}/resolve`,people.commenter,{decision:'resolve'},404);
  await annotationRecipientsFlow({h,people,bytes,anchor:target});
+ await importedReviewFlow({h,people,owner,bytes});
  return {id:key,version,comment:row.id};
 }
-export async function annotationBrowserFlow({h,people,parent,browser,width}){
+export async function annotationBrowserFlow({h,people,parent,browser,width,owner}){
  await mkdir('test-results',{recursive:true});
+ await importedReviewBrowserFlow({h,people,owner,bytes:await pdf(),browser,width});
  const contexts=[];
  async function pageFor(role){const ctx=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});contexts.push(ctx);await ctx.addCookies(people[role].split('; ').map(s=>{const i=s.indexOf('=');return{name:s.slice(0,i),value:s.slice(i+1),url:h.origin}}));return ctx.newPage()}
  const shot=async(page,state)=>{await page.evaluate(()=>document.fonts.ready);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),state+' fits '+width);await page.screenshot({path:`test-results/${width}-annotation-${state}.png`,fullPage:true})};
@@ -146,6 +149,14 @@ export async function annotationBrowserFlow({h,people,parent,browser,width}){
   await page.getByText('Annotate a PDF',{exact:true}).click();const annotation=page.locator('form').filter({has:page.getByRole('button',{name:'Post annotation',exact:true})});
   await annotation.getByLabel('PDF page',{exact:true}).fill('2');for(const [label,value] of [['Left (%)','10'],['Top (%)','20'],['Right (%)','70'],['Bottom (%)','40']])await annotation.getByLabel(label,{exact:true}).fill(value);
   await annotation.getByLabel('Annotation',{exact:true}).fill('Confirm this original page region.');await annotation.getByLabel('Mention people (email addresses, comma separated)').fill('viewer@example.test');await annotation.getByLabel('Assign comment (email address)').fill('contributor@example.test');await shot(page,'compose');
+  if(width===1440){
+   const before=(await h.api(`/items/${key}`,people.manager)).comments,mails=h.mails.length;
+   await annotation.getByLabel('Mention people (email addresses, comma separated)').fill(['viewer','outsider'].map(role=>[role,'example.test'].join(String.fromCharCode(64))).join(', '));
+   await press(page,annotation,'Post annotation');await page.getByText('comment_recipient_unavailable',{exact:false}).waitFor();assert.deepEqual((await h.api(`/items/${key}`,people.manager)).comments,before);assert.equal(h.mails.length,mails);
+   await page.goto(h.origin+`/app/items/${key}`);await page.getByText('Annotate a PDF',{exact:true}).click();
+   await annotation.getByLabel('PDF page',{exact:true}).fill('2');for(const [label,value] of [['Left (%)','10'],['Top (%)','20'],['Right (%)','70'],['Bottom (%)','40']])await annotation.getByLabel(label,{exact:true}).fill(value);
+   await annotation.getByLabel('Annotation',{exact:true}).fill('Confirm this original page region.');await annotation.getByLabel('Mention people (email addresses, comma separated)').fill(['viewer','example.test'].join(String.fromCharCode(64)));await annotation.getByLabel('Assign comment (email address)').fill(['contributor','example.test'].join(String.fromCharCode(64)));
+  }
   await press(page,annotation,'Post annotation');let view=await h.api(`/items/${key}`,people.manager),comment=view.comments[0];assert.equal(comment.version,version);assert.deepEqual(comment.anchor,target);
   let thread=page.locator(`[data-comment="${comment.id}"]`);await thread.locator('summary').filter({hasText:/^Reply$/}).click();await thread.getByLabel('Reply',{exact:true}).fill('Keep this discussion with its original.');await press(page,thread,'Post reply');
   thread=page.locator(`[data-comment="${comment.id}"]`);await press(page,thread,'Resolve thread');await page.getByText('Resolved threads (1)',{exact:true}).click();thread=page.locator(`[data-comment="${comment.id}"]`);await thread.getByText(/Resolved by commenter/).waitFor();await shot(page,'resolved');

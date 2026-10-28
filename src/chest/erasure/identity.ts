@@ -31,7 +31,16 @@ export async function identityPlan(env: Bindings, s: Session, email: string) {
  statements.push({sql:'DELETE FROM oa_tokens WHERE issuer_id=?',params:[person.id]})
  statements.push({sql:'UPDATE oa_auth_audit SET actor_id=CASE WHEN actor_id=? THEN ? ELSE actor_id END,value=replace(value,?,?)',params:[person.id,alias,email,alias]})
  statements.push({sql:"UPDATE oa_operators SET email=?,display_name=?,status='inactive',version=version+1 WHERE id=?",params:[`erased-${hash}@deleted.invalid`,alias,person.id]})
- const redact=(value:any):any=>Array.isArray(value)?value.filter(x=>x!==email&&x?.principal!==email).map(redact):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,redact(v)])):typeof value==='string'?value.replaceAll(email,alias):value
+ const redact=(value:any):any=>{
+  if(Array.isArray(value))return value.filter(x=>x!==email&&x?.principal!==email).map(redact)
+  if(value&&typeof value==='object'){
+   // Source attribution is personal data too. Keep the inert source record IDs and
+   // replay fingerprint, but erase the matched person's source name and mapping notes.
+   if(value.author===email&&value.imported)value={...value,imported:{...value.imported,authorName:alias,mappingEvidence:undefined}}
+   return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,redact(v)]))
+  }
+  return typeof value==='string'?value.replaceAll(email,alias):value
+ }
  for(const r of (await env.DB.prepare('SELECT * FROM chest_records').all<any>()).results){const row={...r,payload:JSON.parse(r.payload)}
   if(row.kind.startsWith('erasure')||row.kind==='audit-erased'||row.kind==='person'||row.kind==='extract')continue
   const payload=redact(row.payload)
