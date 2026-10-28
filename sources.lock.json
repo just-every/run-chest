@@ -297,7 +297,7 @@
       "executable": false
     },
     "docs/getting-started.md": {
-      "sha256": "7addda4493336bad04f03cdfb93330ad9ad80f6be30b4aff61c738198a1a8672",
+      "sha256": "29cf81ca43f72745f9ce459e688b9e650f9845f59e02b7d471193d5347666bab",
       "executable": false
     },
     "docs/guest-collaboration.md": {
@@ -913,7 +913,7 @@
       "executable": false
     },
     "README.md": {
-      "sha256": "28439bb7a655bd2aa37a5753b7f9463ccbbff4ed68a9384b427a4e75f64c5daa",
+      "sha256": "670d0b1346ac9ddb435c823810f4a35ee1058ff87e147d606c00f9879e7e70c7",
       "executable": false
     },
     "release-history/0.2.0.json": {
@@ -937,7 +937,7 @@
       "executable": false
     },
     "RUN-LOCALLY.md": {
-      "sha256": "bf7197a060702994fe1d59a10b1f1c77ed12373cc3d27f1301ab701226752ed3",
+      "sha256": "0d90911f94abf9382b99ac701d79ba55a2f01d46b5da065e107a1af40bb4b636",
       "executable": false
     },
     "scripts/backup/accounting-journal.mjs": {
@@ -5153,7 +5153,7 @@
       "executable": false
     },
     "src/site/docs/build/site.ts": {
-      "sha256": "c8036a0bc48dc9dbcaf58eeb14cb4f2cbd291f7ac69266fc4edb0e39347d4ac9",
+      "sha256": "6bbcd9b0c243c226f3d8b8767fbb47578efa4da2a1a5c2d7316f7cfdc51adc6e",
       "executable": false
     },
     "src/site/docs/build/slug.ts": {

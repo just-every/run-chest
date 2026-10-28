@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { runRequirements, startLine } from '../../../base/run-site.ts';
+import { run } from '../../run.ts';
 import type { DocsBody, DocsSection } from '../types.ts';
 import { docsDirectory, manifestPath, readManifest } from './manifest.ts';
 import { renderMarkdown } from './render.ts';
@@ -19,7 +21,15 @@ export function buildDocs(root: string): DocsSite {
   const rendered = new Map(pages.map(page => {
     const file = join(root, docsDirectory, page.file);
     files.push(file);
-    return [page.slug, renderMarkdown(readFileSync(file, 'utf8'))] as const;
+    const source = readFileSync(file, 'utf8');
+    // Keep the Markdown readable in the repository while the published recipe
+    // takes its command and requirements from the same source as /run.
+    const markdown = page.slug === 'getting-started' ? source
+      .replace(/```sh\n[^\n]+\n```/, () => `\`\`\`sh\n${startLine(run)}\n\`\`\``)
+      .replace(/`npx -y @runeditrun\/rer dev [^`]+`/, () => `\`${run.clone}\``)
+      .replace(/git is required; rer brings Node and pnpm\./i, () => runRequirements)
+      : source;
+    return [page.slug, renderMarkdown(markdown)] as const;
   }));
   const problems: string[] = [];
   for (const page of pages) {

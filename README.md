@@ -1,10 +1,10 @@
 # Run it locally
 
 ```sh
-npx -y @runeditrun/rer dev just-every/run-chest
+curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-chest
 ```
 
-No Node? `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-chest` does the same and brings its own Node; it changes no shell settings, so if it prints an `export PATH=…` line, run that line to use `rer` again later. To set Chest up without starting it, use `setup` in place of `dev`.
+Have Node 22 or later? `npx -y @runeditrun/rer dev just-every/run-chest` does the same. git is required; rer brings Node and pnpm. The installer changes no shell settings, so if it prints an `export PATH=…` line, run that line to use `rer` again later. To set Chest up without starting it, use `setup` in place of `dev`.
 
 To start it again later, run `cd run-chest && rer dev`. To be the owner under your own address, run these from the checkout instead:
 
