@@ -2108,11 +2108,13 @@ The owner-approved page-s1 homepage (the hero, then one supplier's folder from t
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026).
 
+EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fbfbf114 (28 October 2026). Its final candidate strengthens the preview-authority journey and records the exact candidate in Verify; the runtime bytes are unchanged from that source commit.
+
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 9 | 4 | 0 | 13 |
-| Target and push further | 28 | 51 | 65 | 144 |
-| All | 37 | 55 | 65 | 157 |
+| Target and push further | 29 | 50 | 65 | 144 |
+| All | 38 | 54 | 65 | 157 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2178,7 +2180,7 @@ Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8a
 | `EDIT-005` | Co-authoring sessions | target | partial | `tests/chest/collabora-live.mjs`; `tests/chest/wopi-flow.mjs`; `tests/chest/office.mjs`; `docs/office.md` | DOCX co-editing by staff and a verified guest is proven with real CODE; XLSX and PPTX co-authoring and the formula and presentation round trips remain. Licensed desktop Office round trips are R-8. |
 | `EDIT-006` | Editor capacity and cost | target | partial | `tests/chest/administration-accounting-flow.mjs` | Fresh-judge candidate: ADMIN-002's evidence shows confirmed edition, price, atomic document and connection reservations and refusal reports implemented, but EDIT-001 never judged this part. Trusted licensed limits are R-11. |
 | `EDIT-002` | Google-format files without hidden loss | target | missing |  | No delivered workflow. Google verification and a live tenant are R-12. |
-| `EDIT-003` | Comments, annotations and tasks on files | target | partial | `tests/chest/annotation-flow.mjs`; `tests/chest/annotation-recipients.mjs`; `tests/chest/role-review-flow.mjs`; `tests/chest/browser-new-files.mjs`; `tests/chest/files.mjs`; `tests/chest/office.mjs` | PDF regions, version-bound replies, resolve and reopen, unresolved retained-PDF navigation and explicit carry-forward of a thread to a retained destination PDF, once only across concurrent retries, restart and a completed retry after the current version changes, with every recipient's destination-version access rechecked (out-of-version mentions and assignees refuse publication; out-of-version participants and file creators get no copied text) and a resolved selected thread still reachable from the file page, exist; Side-by-side retained-version comparison uses the file page and current preview authority, proven by `tests/chest/annotation-flow.mjs` (annotationFlow and annotationBrowserFlow). An owner-reviewed source-thread receiver, source attribution and missing-anchor quotes, assigned-comment lists and general unresolved navigation are implemented. Exact-candidate journey proof for migrated-thread fidelity and non-PDF anchor coverage remains pending. |
+| `EDIT-003` | Comments, annotations and tasks on files | target | done | `tests/chest/annotation-flow.mjs` (annotationFlow and annotationBrowserFlow: PDF mentions and refusal, retained anchors, side-by-side originals, unresolved navigation and linked carry-forward); `tests/chest/annotation-recipients.mjs` (annotationRecipientsFlow: version-scoped recipients); `tests/chest/imported-review-flow.mjs` (importedReviewFlow and importedReviewBrowserFlow: source times, IDs, states, former authors, missing-anchor quotes, replies, resolution, tasks, erasure and reviewed import authority); `tests/chest/role-review-flow.mjs` (roleReviewFlow); `tests/chest/browser-new-files.mjs`; `tests/chest/files.mjs`; `tests/chest/office.mjs` |  |
 | `EDIT-007` | Review loop: attribution and @mentions | target | partial | `tests/chest/wopi-flow.mjs`; `tests/chest/collabora-live.mjs`; `tests/chest/role-review-flow.mjs` | Attributed comments and forged-author refusal are proven with real CODE; the mention people list, grant offers and notifications inside the editor remain. |
 | `EDIT-008` | Review loop: assigned comments and one thread everywhere | target | partial | `tests/chest/role-review-flow.mjs`; `tests/chest/annotation-flow.mjs` | File-page mentions and assignment exist; the editor-to-thread sync both ways, tasks from in-document comments and email replies reaching the document do not. |
 | `EDIT-009` | Review loop: commenters suggest, contributors decide | target | partial | `tests/chest/wopi-flow.mjs`; `tests/chest/collabora-live.mjs`; `tests/chest/role-review-flow.mjs` | DOCX tracked typing, refusals, decisions and read-only viewers are proven with real CODE; the XLSX, PPTX and ODT steps, the pending list and the suggestion notice remain. |

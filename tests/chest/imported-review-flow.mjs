@@ -14,6 +14,7 @@ export async function importedReviewFlow({h,people,owner,bytes}){
  const state=async()=>{const v=await h.api(`/items/${key}`,owner);return {comments:v.comments,versions:v.versions,grants:v.grants,mails:h.mails.length}},before=await state();
  const preview=await h.api(`${path}/preview`,owner,{archive,version});assert.equal(preview.threads.length,2);assert.equal(preview.threads[0].author,'Former collaborator (Sam Archive)');assert.equal(preview.threads[1].author,address('commenter'));assert.deepEqual(await state(),before,'preview is read only');
  const input={archive,version,fingerprint:preview.fingerprint,confirm:true};
+ await h.api(`${path}/preview`,people.contributor,{archive,version},403);await h.api(`${path}/preview`,people.viewer,{archive,version},403);
  await h.api(`${path}/apply`,people.viewer,input,403);await h.api(`${path}/apply`,people.contributor,input,403);await h.api(`${path}/apply`,owner,{...input,confirm:false},400);
  await h.api(`${path}/apply`,owner,{...input,archive:{...archive,file:'changed-source'}},409);
  await h.api(`${path}/preview`,owner,{archive:source(99),version},400);
