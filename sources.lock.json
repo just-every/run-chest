@@ -341,7 +341,7 @@
       "executable": false
     },
     "docs/review-threads.md": {
-      "sha256": "c73826468d953b9bc0e3f5f6c56386d24856d26469b137a42d5c5a94726d4be7",
+      "sha256": "2617e8adbc4cc9a9d157f8bb7e5564688c1f682b76496fd3a74cd51568df8ecc",
       "executable": false
     },
     "docs/scale.md": {
@@ -1737,7 +1737,7 @@
       "executable": false
     },
     "src/chest/files/compare.ts": {
-      "sha256": "9309b76cc300ba3b13a903ab4883554abb20c727019c9cc0d53aff4bb1b4250b",
+      "sha256": "1a07a8f848f47e7ed2a102f55af4e223a0ed02c2c37a039825821fbd3d09b652",
       "executable": false
     },
     "src/chest/files/devices.ts": {
@@ -5005,7 +5005,7 @@
       "executable": false
     },
     "tests/chest/imported-review-flow.mjs": {
-      "sha256": "1aa2c9a2a57552ff9605067081be3fedbd3ad5a1288c21b43af32916502f0f48",
+      "sha256": "4b97e21fe3aa09a60ffc38706edc371a3d92783ac04a695102f96aad0bc4efdd",
       "executable": false
     },
     "tests/chest/integration-client.mjs": {

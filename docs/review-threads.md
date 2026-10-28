@@ -1,7 +1,9 @@
 # Review threads on retained originals
 
 On a file page, **Compare versions** opens two retained versions beside each
-other. Choose the left and right originals independently. Each preview uses your
+other. Choose the left and right originals independently. On a reviewed file, the
+default pair keeps the approved current original beside the newest distinct
+retained version; comparison never changes the approved pointer. Each preview uses your
 current file permissions, including a link's version scope and download policy.
 An unsupported format shows a download option where allowed; comparison does not
 convert it or change either original.
