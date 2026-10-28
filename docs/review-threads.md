@@ -31,7 +31,7 @@ The export has these fields:
   never matched automatically.
 - `threads`: up to 100 entries. Each has its source `id`, `author` with `id` and
   `name`, original ISO `at`, `message`, boolean `resolved`, optional
-  `resolvedAt`, and optional `replies` with source `id`, `author`, `at` and
+  `resolvedAt` and `resolver` (a source identity with `id` and `name`), and optional `replies` with source `id`, `author`, `at` and
   `message`. Replies retain their source times and appear chronologically.
 - Each thread has either an `anchor` containing `kind: "pdf"`, a one-based
   `page` and a four-number `region` in page fractions, or `quotedText` when its
@@ -101,3 +101,8 @@ silently reused as a PDF location. If it cannot be located, the source
 that has neither a verified location nor a quote is refused for review.
 This supports supplied API exports; Chest does not fetch a Drive account or
 claim the rest of its migration and delta workflow is complete.
+
+A source resolution action retains its own actor and time where exposed. When
+the resolver is absent, Chest labels the state as recorded in the source and
+does not attribute the resolution to the comment author. The original source
+state stays in provenance after a later Chest resolve or reopen.

@@ -9,7 +9,7 @@ import { anchorOf, type Comment, type Reply } from './comments'
 import { live } from './model'
 
 type Source = { provider: string; file: string; id: string; authorId: string; authorName: string }
-export type ImportedSource = Source & { fingerprint: string; by: string; at: string; anchorMissing?: boolean; quotedText?: string; mappingEvidence?: string }
+export type ImportedSource = Source & { fingerprint: string; by: string; at: string; state: 'open'|'resolved'; anchorMissing?: boolean; quotedText?: string; mappingEvidence?: string }
 const hash = (v: unknown) => digest(new TextEncoder().encode(JSON.stringify(v)))
 function timestamp(v: unknown) {
  insist(typeof v === 'string' && /^\d{4}-\d\d-\d\dT/.test(v) && Number.isFinite(Date.parse(v)), 'invalid_source_time')
@@ -24,7 +24,9 @@ function archiveOf(input: any) {
   archive = { format: 'chest-review-1', provider: 'Google Drive', file: archive.file, mappings: archive.mappings,
    threads: archive.comments.filter((c: any) => !c.deleted).map((c: any) => ({
     id: c.id, author: { id: `comment:${c.id}`, name: c.author?.displayName }, at: c.createdTime,
-    message: c.content, resolved: c.resolved, resolvedAt: c.modifiedTime,
+    message: c.content, resolved: c.resolved,
+    resolvedAt: c.replies?.findLast((r: any) => !r.deleted && r.action === 'resolve')?.createdTime ?? c.modifiedTime,
+    resolver: c.replies?.some((r: any) => !r.deleted && r.action === 'resolve') ? (() => { const r = c.replies.findLast((r: any) => !r.deleted && r.action === 'resolve'); return { id: `reply:${c.id}:${r.id}`, name: r.author?.displayName } })() : undefined,
     anchor: archive.anchors?.[c.id], quotedText: c.quotedFileContent?.value,
     anchorMissing: !!c.anchor && !archive.anchors?.[c.id],
     ...(c.assigneeEmailAddress ? { assignee: `assignee:${c.id}` } : {}),
@@ -106,15 +108,15 @@ export async function previewCommentImport(env: Bindings, s: Session, w: Who, ke
   }
   const payload = { item: key, version: version.id, author: identity.author, message, at, replies, mentions: mappedMentions,
    ...(assignee ? { assignee } : {}), ...(taskCustodians.length ? { taskCustodians } : {}), ...(anchor ? { anchor } : {}), ...(assignmentGap ? { assignmentGap } : {}),
-   resolved: t.resolved ? { by: identity.author, at: timestamp(t.resolvedAt ?? t.at) } : null,
-   imported: { ...identity.source, ...(evidence.has(identity.source.authorId) ? { mappingEvidence: evidence.get(identity.source.authorId) } : {}), anchorMissing: !anchor && !!quotedText, ...(quotedText ? { quotedText } : {}) } }
+   resolved: t.resolved ? { by: t.resolver ? author(t.resolver, sourceId).author : 'Source resolver unavailable', at: timestamp(t.resolvedAt ?? t.at), ...(!t.resolver ? { source: true as const } : {}) } : null,
+   imported: { ...identity.source, state: t.resolved ? 'resolved' as const : 'open' as const, ...(evidence.has(identity.source.authorId) ? { mappingEvidence: evidence.get(identity.source.authorId) } : {}), anchorMissing: !anchor && !!quotedText, ...(quotedText ? { quotedText } : {}) } }
   const fingerprint = await hash(payload), id = `comment:import:${await hash([key, provider, file, sourceId])}`
   const existing = await maybe<Comment>(env, 'comment', id)
   // Replays never overwrite native replies, resolution, redacted identities or source provenance.
   if (existing) insist(existing.payload.imported?.fingerprint === fingerprint, 'source_comment_conflict', 409)
   rows.push(existing ?? fresh<Comment>('comment', { ...payload, imported: { ...payload.imported, fingerprint, by: s.operator.email, at: importedAt } }, id))
  }
- const fingerprint = await hash([key, version.id, item.revision, archive])
+ const fingerprint = await hash([key, version.id, item.revision, archive, rows.map(r => r.payload.imported?.fingerprint)])
  return { fingerprint, version: version.id, rows, fences: [...new Map(fences.map(r => [r.id, r])).values()], recipients: [...new Set([...recipients, ...mapped.values()])], summary: rows.map(r => ({ id: r.id, ...r.payload })) }
 }
 

@@ -24,3 +24,7 @@ rer-package/
 delivery-artifact/
 
 server.env
+
+# Generated from the locked PDF dependency during app builds.
+/public/chest-pdfjs.mjs
+/public/chest-pdfjs.LICENSE.txt
