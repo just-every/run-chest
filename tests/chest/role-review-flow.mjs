@@ -10,7 +10,7 @@ const b64=v=>Buffer.from(v).toString('base64');
 export async function roleReviewFlow({browserProof=false}={}){
  const h=await harness();let browser;
  try{
-  await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Owner'});const owner=await h.signIn(h.vars.OWNER_EMAIL),setup=new FormData();setup.set('confirm','yes');await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin},body:setup});
+  await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Owner'});const owner=await h.signIn(h.vars.OWNER_EMAIL),setup=await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});assert.equal(setup.status,303,'the owner completes first-run setup before the browser review journey');
   const roles=['viewer','commenter','contributor','content_manager','manager'],people={};
   for(const role of [...roles,'outsider']){await h.api('/people',owner,{action:'invite',email:`${role}@example.test`,name:role});people[role]=await h.signIn(`${role}@example.test`,true)}
   const space=await h.api('/spaces',people.manager,{name:'Review operations'}),members=roles.map(role=>({principal:`${role}@example.test`,role}));await h.api(`/spaces/${space.id}/members`,people.manager,{members});
