@@ -1,5 +1,8 @@
 import { pdfNavigation } from './comments'
 import { compareVersions, comparisonPage } from './compare'
+import { commentImportForm, commentImportPreview } from './ui-comment-import'
+import { assignedComments } from './comments'
+import { owner } from '../access'
 import { canAdmin } from '../administration/roles'
 import { guestPolicyCard } from './guest-policy'
 import { contentCard } from '../content-security/ui'
@@ -79,6 +82,7 @@ export function filesInput(input: any) {
 }
 // Pages that must show a one-time secret instead of redirecting.
 export function filesReceipt(input: any, result: any) {
+ if (/^\/items\/[^/]+\/comment-import\/preview$/.test(input.path)) return commentImportPreview(input, result)
  if (input.path === '/devices') return secretPage('Companion key created',result.token,'This key is shown once. Store it privately and supply it to the companion through CHEST_DEVICE_TOKEN. It authorizes this device with your current file permissions. Revoke it from Sync devices.','/app/devices')
  if (input.path === '/transfers') return secretPage('Delivery package created',result.url,`Copy this link now. Email: ${result.email}. Email acknowledgment is not a recipient receipt.`, '/app/transfers/'+result.id)
  if (input.path === '/space-requests') return `<div class="page-head"><h1>Space request sent</h1></div><p>Your request is recorded and appears in Notices for ${esc(result.notifiedAdmins)} service-settings admin(s).</p><p><a class="link" href="/app/files">Back to Files</a></p>`
@@ -133,6 +137,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (parts[1] === 'spaces' && parts[2]) { const d = await spaceView(env, w, parts[2]), creation = d.can.contribute ? await listTemplates(env, s, w, { space: d.id }) : null, folder = await browser(env, s, w, d.id, null, d.children.map((c: any) => c.id), url); return { body: spacePage({ ...d, folder, creation, serviceAdmin: isAdmin(s), quotaOwner: s.operator.role === 'owner', manage: url.searchParams.has('manage') }, people, groups), bar: bar([{ label: d.name }], creation, { space: d.id }, `/app/spaces/${d.id}`) } }
  if (parts[1] === 'items' && parts[2]) {
   try {
+   if (parts[3] === 'import-comments') { owner(s); return { body: commentImportForm(await itemView(env, s, w, parts[2])) } }
    if (parts[3] === 'compare') return { body: comparisonPage(await compareVersions(env, w, parts[2], url.searchParams.get('left'), url.searchParams.get('right'))) }
    const d = await itemView(env, s, w, parts[2]), returnTo = `/app/items/${d.id}`, officeEdit = url.searchParams.get('edit') === '1' && d.can.download ? await readOffice(env, w, parts[2], undefined, true, url.searchParams.get('mode')==='suggest') : null
    const selectedThread = url.searchParams.get('thread')
@@ -147,7 +152,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (path === '/app/shared') return { body: sharedPage(await sharedWithMe(env, w, url.searchParams), url.searchParams) }
  if (path === '/app/requests') return { body: requestsPage(await filesExecute(env, request, s, 'GET', ['requests'], {}, url)) }
  if (parts[1] === 'requests' && parts[2]) return { body: requestPage(await requestView(env, s, w, parts[2])) }
- if (path === '/app/notices') return { body: noticesPage(await notices(env, w)) }
+ if (path === '/app/notices') return { body: noticesPage(await notices(env, w), await assignedComments(env, w)) }
  if (path === '/app/links') return { body: linksPage({ ...await linksView(env, s, w), repairs: await repairView(env,s), policy: ['owner','admin'].includes(s.operator.role) ? await linkPolicies(env,s) : null, policyScope: url.searchParams.get('policyScope') ?? 'organisation' })+await guestPolicyCard(env,s) }
  if (path === '/app/devices') return { body: devicesPage(await devices(env, s),await repairs(env,s)) }
  if (path === '/app/move-in') { await personal(env, s); return { body: moveInPage(await destinations(env, w), s.operator.role === 'owner') } }

@@ -14,6 +14,7 @@
         { "slug": "files", "title": "Folders and files", "file": "files.md", "summary": "Team spaces and folders, uploads that resume, search, and going back to an earlier version or date." },
         { "slug": "sharing", "title": "Share files and folders", "file": "sharing.md", "summary": "Share with colleagues and groups, make a link for anyone with a password, expiry and download limit, or ask for files with a file request." },
         { "slug": "reading", "title": "Text inside files and scans", "file": "reading.md", "summary": "How Chest reads PDFs, Office files, scans and photos so search finds the words inside, and how values read from a scan are accepted." },
+        { "slug": "review-threads", "title": "Review threads and version comparison", "file": "review-threads.md", "summary": "Compare retained originals, follow assigned comments and receive reviewed source threads without changing attribution." },
         { "slug": "guest-collaboration", "title": "Work with external guests", "file": "guest-collaboration.md", "summary": "PIN verification, uploads, retained versions and the Collabora editor for named guests." }
       ]
     },

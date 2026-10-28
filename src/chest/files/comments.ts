@@ -7,14 +7,18 @@ import { allowed, context, demand, whoFor, type Ctx, type Who } from './access'
 import { deliver, notice } from './notify'
 import { personLine } from '../names'
 import { digest } from '../blobs'
+import type { ImportedSource } from './comment-import'
 
 export type PdfAnchor = { kind: 'pdf'; page: number; region: [number, number, number, number] }
-export type Reply = { id: string; author: string; message: string; at: string; mentions?: string[] }
+export type Reply = { id: string; author: string; message: string; at: string; mentions?: string[]; imported?: Pick<ImportedSource, 'provider'|'file'|'id'|'authorId'|'authorName'> }
 export type Comment = {
  item: string; version: string | null; author: string; message: string; at: string
  mentions?: string[]; assignee?: string; anchor?: PdfAnchor; replies?: Reply[]
  carriedFrom?: { thread: string; version: string; anchor: PdfAnchor; by: string; at: string }
  resolved?: { by: string; at: string } | null
+ imported?: ImportedSource
+ assignmentGap?: string
+ taskCustodians?: string[]
 }
 const activePerson = (env: Bindings, email: string) => env.DB.prepare("SELECT 1 FROM oa_operators WHERE email=? AND status='active'").bind(email).first()
 const activeGuard = (email: string) => ({ sql: "INSERT INTO chest_assert(ok) SELECT CASE WHEN EXISTS(SELECT 1 FROM oa_operators WHERE email=? AND status='active') THEN 1 ELSE 0 END", params: [email] })
@@ -33,7 +37,7 @@ async function recipient(env: Bindings, key: string, version: string | null, ema
 }
 // Coordinates are fractions of the visible page, measured from its top left. The page is checked against
 // the retained PDF itself, so replacing the file cannot retarget an annotation.
-async function anchorOf(env: Bindings, ctx: Ctx, version: string | null, input: any): Promise<PdfAnchor | undefined> {
+export async function anchorOf(env: Bindings, ctx: Ctx, version: string | null, input: any): Promise<PdfAnchor | undefined> {
  const raw = input.anchor ?? (input.anchorType === 'pdf' ? { kind: 'pdf', page: Number(input.page), region: [input.left, input.top, input.right, input.bottom].map(v => v === '' || v === undefined ? NaN : Number(v) / 100) } : undefined)
  if (raw === undefined) return undefined
  insist(raw && raw.kind === 'pdf' && Number.isSafeInteger(raw.page) && raw.page > 0, 'invalid_annotation_page')
@@ -93,7 +97,7 @@ async function thread(env: Bindings, w: Who, key: string, id: string) {
 }
 async function participants(env: Bindings, key: string, row: Row<Comment>, explicit: string[] = [], version = row.payload.version) {
  const people = new Map<string, { ctx: Ctx; type: string }>()
- for (const email of new Set([row.payload.author, ...(row.payload.mentions ?? []), ...(row.payload.assignee ? [row.payload.assignee] : []), ...(row.payload.replies?.map(r => r.author) ?? []), ...explicit])) {
+ for (const email of new Set([row.payload.author, ...(row.payload.mentions ?? []), ...(row.payload.assignee ? [row.payload.assignee] : []), ...(row.payload.taskCustodians ?? []), ...(row.payload.replies?.map(r => r.author) ?? []), ...explicit])) {
   const ctx = await recipient(env, key, version, email, explicit.includes(email))
   if (ctx) people.set(email, { ctx, type: explicit.includes(email) ? 'comment.mention' : 'comment.reply' })
  }
@@ -118,21 +122,38 @@ export async function resolveComment(env: Bindings, s: Session, w: Who, key: str
 }
 export const comments = (env: Bindings, key: string) => where<Comment>(env, 'comment', '$.item', key)
 
+export async function assignedComments(env: Bindings, w: Who) {
+ const { decode } = await import('../store')
+ const rows = (await env.DB.prepare("SELECT * FROM chest_records WHERE kind='comment' AND (json_extract(payload,'$.assignee')=? OR EXISTS(SELECT 1 FROM json_each(payload,'$.taskCustodians') WHERE value=?)) ORDER BY id").bind(w.email, w.email).all()).results.map(decode<Comment>), result = []
+ for (const row of rows) {
+  if (row.payload.resolved) continue
+  const ctx = await context(env, w, row.payload.item)
+  if (ctx.state.trash || !allowed(ctx, 'view') || row.payload.version && !ctx.chain.at(-1)!.payload.versions.some(v => v.id === row.payload.version)) continue
+  result.push({ id: row.id, item: row.payload.item, name: ctx.chain.at(-1)!.payload.name, message: row.payload.message, at: row.payload.at })
+ }
+ return result.sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id))
+}
+
 // Navigation includes only unresolved annotations on this item's retained PDF originals.
 export function pdfThreads(rows: { id: string; version: string | null; anchor?: PdfAnchor; resolved?: Comment['resolved']; at: string }[], versions: { id: string; mediaType: string }[]) {
  return rows.filter(c => !c.resolved && c.anchor?.kind === 'pdf' && versions.some(v => v.id === c.version && v.mediaType === 'application/pdf'))
   .sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id)).map(c => ({ id: c.id, version: c.version, anchor: c.anchor! }))
 }
 export function pdfNavigation(threads: ReturnType<typeof pdfThreads>, selected: string | null) {
+ return threadNavigation(threads, selected)
+}
+export function threadNavigation<T extends { id: string }>(threads: T[], selected: string | null) {
  const index = selected ? threads.findIndex(c => c.id === selected) : 0
  insist(!selected || index >= 0, 'comment_not_found', 404)
  return { threads, selected: threads[index]?.id ?? null, position: threads.length ? index + 1 : 0,
   previous: threads.length > 1 ? threads[(index + threads.length - 1) % threads.length].id : null,
   next: threads.length > 1 ? threads[(index + 1) % threads.length].id : null }
 }
-export async function unresolvedComments(env: Bindings, w: Who, key: string, selected: string | null) {
+export async function unresolvedComments(env: Bindings, w: Who, key: string, selected: string | null, all = false) {
  const ctx = await context(env, w, key); demand(ctx, 'view')
- return pdfNavigation(pdfThreads((await comments(env, key)).map(c => ({ id: c.id, ...c.payload })), ctx.chain.at(-1)!.payload.versions), selected)
+ const versions = ctx.chain.at(-1)!.payload.versions, rows = (await comments(env, key)).map(c => ({ id: c.id, ...c.payload }))
+ if (all) return threadNavigation(rows.filter(c => !c.resolved && (c.version === null || versions.some(v => v.id === c.version))).sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id)).map(c => ({ id: c.id, version: c.version, ...(c.anchor ? { anchor: c.anchor } : {}) })), selected)
+ return pdfNavigation(pdfThreads(rows, versions), selected)
 }
 export async function carryComment(env: Bindings, s: Session, w: Who, key: string, id: string, input: any) {
  const { ctx, row: source } = await thread(env, w, key, id), item = ctx.chain.at(-1)!

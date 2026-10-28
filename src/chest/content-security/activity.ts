@@ -39,7 +39,13 @@ export async function activity(env:Bindings,s:Session|null,kind:'download'|'dele
 }
 export async function activityAudits(env:Bindings,s:Session|null,audits:Audit[]) {
  if(!s)return
- for(const a of audits)if(['item.trash','item.erase','document.trash','document.erase'].includes(a.action))await activity(env,s,'delete',0,undefined,Number(a.detail?.items??1))
+ for(const a of audits)if(['item.trash','item.erase','document.trash','document.erase'].includes(a.action)){
+  const count=Number(a.detail?.items??1)
+  // Identity erasure can remove credentials and attribution without deleting a file.
+  // Keep that audit, but do not submit an empty file-deletion event to the counter.
+  if(count===0)continue
+  await activity(env,s,'delete',0,undefined,count)
+ }
 }
 export async function resumeActivity(env:Bindings,s:Session,subject:string,input:any) {
  const row=await env.DB.prepare('SELECT * FROM chest_activity_pauses WHERE subject=?').bind(subject).first<any>();insist(row,'not_found',404)

@@ -33,7 +33,7 @@ export async function roleReviewFlow({browserProof=false}={}){
   await h.api(`/items/${id}/office-decisions`,people.contributor,{version:second.version,decision:'reject'},409);assert.equal((await h.api(`/items/${id}`,people.manager)).versions.length,5);
   const comment=await h.api(`/items/${id}/comments`,people.commenter,{message:'Please check the revised terms.',mentions:['viewer@example.test'],assignee:'contributor@example.test'});assert.equal(comment.payload.assignee,'contributor@example.test');assert.ok((await h.api('/notices',people.contributor)).some(n=>n.payload.type==='comment.assignment'&&n.payload.item===id));assert.ok(h.mails.some(m=>[m.to].flat().includes('viewer@example.test')&&m.text.includes('mentioned')));
   before=await snapshot(id);await h.api(`/items/${id}/comments`,people.commenter,{message:'No implied access',assignee:'outsider@example.test'},403);await h.api(`/items/${id}`,people.outsider,undefined,403);assert.deepEqual(await snapshot(id),before);
-  await annotationFlow({h,people,parent:folder.id});
+  await annotationFlow({h,people,parent:folder.id,owner});
   // Every current role's ordinary content and management rights, including refused mutations.
   for(const [index,role] of roles.entries()){
    const cookie=people[role],item=await create(),key=item.id,version=item.payload.current;
@@ -95,7 +95,7 @@ export async function roleReviewFlow({browserProof=false}={}){
     // Audit existing icon controls on the changed file screen; labels appear on focus and delayed hover.
     const icons=v.locator('button,a,summary').filter({has:v.locator('svg')});for(const control of await icons.all()){if((await control.innerText()).trim()||!await control.isVisible())continue;assert.ok(await control.getAttribute('data-tooltip'),'icon control has a tooltip');await control.focus();await v.getByRole('tooltip').waitFor({state:'visible'});await v.locator('h1').click();await control.hover();await v.waitForTimeout(350);assert.equal(await v.getByRole('tooltip').isVisible(),true)}
     await roleBrowserMatrix(h,browser,people,roles,space,width);
-    await annotationBrowserFlow({h,people,parent:folder.id,browser,width});
+    await annotationBrowserFlow({h,people,parent:folder.id,browser,width,owner});
     for(const ctx of Object.values(contexts))await ctx.close();
    }
   }
