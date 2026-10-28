@@ -15,7 +15,7 @@ export type Comment = {
  item: string; version: string | null; author: string; message: string; at: string
  mentions?: string[]; assignee?: string; anchor?: PdfAnchor; replies?: Reply[]
  carriedFrom?: { thread: string; version: string; anchor: PdfAnchor; by: string; at: string }
- resolved?: { by: string; at: string } | null
+ resolved?: { by: string; at: string; source?: true } | null
  imported?: ImportedSource
  assignmentGap?: string
  taskCustodians?: string[]
