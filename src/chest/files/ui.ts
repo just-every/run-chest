@@ -1,4 +1,5 @@
 import { pdfNavigation } from './comments'
+import { compareVersions, comparisonPage } from './compare'
 import { canAdmin } from '../administration/roles'
 import { guestPolicyCard } from './guest-policy'
 import { contentCard } from '../content-security/ui'
@@ -132,6 +133,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (parts[1] === 'spaces' && parts[2]) { const d = await spaceView(env, w, parts[2]), creation = d.can.contribute ? await listTemplates(env, s, w, { space: d.id }) : null, folder = await browser(env, s, w, d.id, null, d.children.map((c: any) => c.id), url); return { body: spacePage({ ...d, folder, creation, serviceAdmin: isAdmin(s), quotaOwner: s.operator.role === 'owner', manage: url.searchParams.has('manage') }, people, groups), bar: bar([{ label: d.name }], creation, { space: d.id }, `/app/spaces/${d.id}`) } }
  if (parts[1] === 'items' && parts[2]) {
   try {
+   if (parts[3] === 'compare') return { body: comparisonPage(await compareVersions(env, w, parts[2], url.searchParams.get('left'), url.searchParams.get('right'))) }
    const d = await itemView(env, s, w, parts[2]), returnTo = `/app/items/${d.id}`, officeEdit = url.searchParams.get('edit') === '1' && d.can.download ? await readOffice(env, w, parts[2], undefined, true, url.searchParams.get('mode')==='suggest') : null
    const selectedThread = url.searchParams.get('thread')
    if (selectedThread && d.comments.some(c => c.id === selectedThread && c.resolved && c.anchor?.kind === 'pdf')) {

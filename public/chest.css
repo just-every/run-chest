@@ -95,3 +95,9 @@
 /* One shared tooltip stays inside the viewport even beside the rail or a clipped panel. */
 .chest-tooltip { position: fixed; z-index: 10000; max-width: calc(100vw - 16px); padding: 6px 9px; border-radius: 6px; background: var(--chest-ink); color: var(--chest-surface); font-size: 12px; line-height: 1.4; pointer-events: none; }
 .chest-tooltip[hidden] { display: none; }
+
+/* Keep both retained originals visible together, including on a phone. */
+.version-comparison{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:24px}
+.comparison-side{min-width:0;overflow-wrap:anywhere;padding:16px}
+.comparison-side .office-frame{width:100%;min-width:0;height:65vh}
+@media(max-width:600px){.version-comparison{gap:8px}.comparison-side{padding:8px}.comparison-side .office-frame{height:55vh}}

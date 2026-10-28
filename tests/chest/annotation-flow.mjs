@@ -39,6 +39,12 @@ export async function annotationFlow({h,people,parent}){
  await h.api(`${thread}/reply`,people.commenter,{message:'Closed thread'},409);
  const changedBytes=await pdf(true),replacement=await h.api(`/items/${key}/versions`,people.contributor,{base64:b64(changedBytes)});
  let view=await h.api(`/items/${key}`,people.manager),retained=view.comments.find(c=>c.id===row.id);
+ const comparison=await h.api(`/items/${key}/compare?left=${version}&right=${replacement.payload.current}`,people.viewer);
+ assert.deepEqual(comparison.sides.map(s=>s.id),[version,replacement.payload.current]);assert.deepEqual(comparison.sides.map(s=>s.number),[1,2]);
+ await h.api(`/items/${key}/compare?left=${version}&right=foreign-version`,people.viewer,undefined,404);
+ await h.api(`/items/${key}/compare`,people.outsider,undefined,403);
+ const frame=await h.raw(`/api/chest/items/${key}/comparison-preview/${version}`,people.viewer);assert.equal(frame.status,303);assert.equal(frame.headers.get('location'),`/api/chest/items/${key}/bytes/${version}`);
+ assert.deepEqual(new Uint8Array(await(await h.raw(frame.headers.get('location'),people.viewer)).arrayBuffer()),bytes);
  assert.notEqual(replacement.payload.current,version);assert.equal(retained.version,version);assert.deepEqual(retained.anchor,target);assert.equal(retained.resolved.by,'commenter@example.test');assert.equal(retained.replies.length,1);
  const original=await h.raw(`/api/chest/items/${key}/bytes/${version}`,people.commenter);assert.equal(original.status,200);assert.deepEqual(new Uint8Array(await original.arrayBuffer()),bytes);
  await h.api(`${thread}/resolve`,people.contributor,{decision:'reopen'});view=await h.api(`/items/${key}`,people.manager);assert.equal(view.comments.find(c=>c.id===row.id).resolved,null);
@@ -145,6 +151,14 @@ export async function annotationBrowserFlow({h,people,parent,browser,width}){
   thread=page.locator(`[data-comment="${comment.id}"]`);await press(page,thread,'Resolve thread');await page.getByText('Resolved threads (1)',{exact:true}).click();thread=page.locator(`[data-comment="${comment.id}"]`);await thread.getByText(/Resolved by commenter/).waitFor();await shot(page,'resolved');
   const contributor=await pageFor('contributor');await contributor.goto(h.origin+`/app/items/${key}`);await Promise.all([contributor.waitForNavigation(),contributor.locator('[data-upload] input[data-pick]').first().setInputFiles({name:'Changed review.pdf',mimeType:'application/pdf',buffer:Buffer.from(await pdf(true))})]);
   await page.reload();await page.getByText('Resolved threads (1)',{exact:true}).click();thread=page.locator(`[data-comment="${comment.id}"]`);await thread.getByText(/earlier version/).waitFor();const original=thread.getByRole('link',{name:'Open original page',exact:true});assert.equal(await original.getAttribute('href'),`/api/chest/items/${key}/bytes/${version}#page=2`);const response=await page.request.get(h.origin+await original.getAttribute('href'));assert.equal(response.status(),200);assert.deepEqual(await response.body(),Buffer.from(bytes));await shot(page,'retained');
+  await page.getByRole('link',{name:'Compare versions',exact:true}).click();await page.getByRole('heading',{name:'Compare versions',exact:true}).waitFor();await shot(page,'comparison');
+  if(width===1440){
+   assert.equal(await page.getByLabel('Left version',{exact:true}).inputValue(),version);assert.equal(await page.getByLabel('Right version',{exact:true}).inputValue(),(await h.api(`/items/${key}`,people.manager)).item.current);
+   const left=page.getByRole('region',{name:'Left version',exact:true}),right=page.getByRole('region',{name:'Right version',exact:true}),a=await left.boundingBox(),b=await right.boundingBox();assert.ok(a.x+a.width<=b.x&&Math.abs(a.y-b.y)<2,'retained versions sit side by side');
+   assert.equal(await left.locator('iframe').getAttribute('src'),`/api/chest/items/${key}/comparison-preview/${version}`);
+   const secondVersion=(await h.api(`/items/${key}`,people.manager)).item.current;await page.getByLabel('Left version',{exact:true}).selectOption(secondVersion);await page.getByLabel('Right version',{exact:true}).selectOption(version);await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Compare selected versions',exact:true}).click()]);assert.equal(await page.getByLabel('Left version',{exact:true}).inputValue(),secondVersion);assert.equal(await page.getByLabel('Right version',{exact:true}).inputValue(),version);
+  }
+  await page.getByRole('link',{name:'Back to version history',exact:true}).click();await page.getByText('Resolved threads (1)',{exact:true}).click();thread=page.locator(`[data-comment="${comment.id}"]`);
   await press(page,thread,'Reopen thread');thread=page.locator(`[data-comment="${comment.id}"]`);await thread.getByRole('button',{name:'Resolve thread',exact:true}).waitFor();assert.equal((await h.api(`/items/${key}`,people.manager)).comments[0].version,version);
   const second=await h.api(`/items/${key}/comments`,people.commenter,{message:'Review the changed first page.',version:(await h.api(`/items/${key}`,people.manager)).item.current,anchor:{...target,page:1}});
   await page.reload();const nav=page.getByRole('navigation',{name:'Unresolved PDF threads',exact:true});
