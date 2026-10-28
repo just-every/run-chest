@@ -8,7 +8,8 @@ export async function compareVersions(env: Bindings, w: Who, key: string, left: 
  const ctx = await context(env, w, key); demand(ctx, 'view')
  const item = ctx.chain.at(-1)!
  insist(item.payload.type === 'file', 'version_not_found', 404)
- const versions = item.payload.versions, ids = [left ?? versions.at(-2)?.id, right ?? item.payload.current]
+ const versions = item.payload.versions, rightId = right ?? item.payload.current
+ const ids = [left ?? versions.findLast(v => v.id !== rightId)?.id, rightId]
  insist(ids[0] && ids[1] && ids[0] !== ids[1], 'choose_two_versions')
  const sides = ids.map(id => {
   const v = versions.find(v => v.id === id); insist(v, 'version_not_found', 404)

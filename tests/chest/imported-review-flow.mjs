@@ -45,6 +45,18 @@ export async function importedReviewFlow({h,people,owner,bytes}){
  await h.api('/erasure',owner,{email:erasedAddress,confirm:erasedAddress});
  await h.api('/files',erasedCookie,undefined,401);await h.api(`${path}/apply`,owner,privateInput,409);
  const erasedView=await h.api(`/items/${key}`,owner);assert.ok(!JSON.stringify(erasedView.comments).includes(erasedAddress));assert.equal(erasedView.comments.find(c=>c.imported.file==='synthetic-chest-private'&&c.imported.id==='synthetic-chest-4').author.startsWith('Erased person '),true);const erasedThread=erasedView.comments.find(c=>c.imported.file==='synthetic-chest-private'&&c.imported.id==='synthetic-chest-4');assert.equal(erasedThread.imported.authorName,erasedThread.author);assert.ok(!erasedThread.imported.mappingEvidence);
+ // A reviewed fallback plan becomes stale if its space managers change before confirmation.
+ const group=await h.api('/groups',owner,{name:'Review custodians',members:[address('manager')]}),team=await h.api('/spaces',owner,{name:'Imported team reviews'});
+ const teamMembers=[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:group.id,role:'manager'}];await h.api(`/spaces/${team.id}/members`,owner,{members:teamMembers});
+ const reviewedFolder=await h.api('/items',owner,{space:team.id,type:'folder',name:'Reviewed originals'});await h.api(`/items/${reviewedFolder.id}/governance`,owner,{reviewer:h.vars.OWNER_EMAIL});
+ const teamFile=await h.api('/items',owner,{parent:reviewedFolder.id,name:'Team review.pdf',base64:Buffer.from(bytes).toString('base64')}),teamPath=`/items/${teamFile.id}/comment-import`,teamInput={archive,version:teamFile.payload.current};
+ await h.api(`/items/${teamFile.id}/versions/${teamFile.payload.current}/review`,owner,{action:'approve'});const pending=await h.api(`/items/${teamFile.id}/versions`,owner,{base64:Buffer.from(bytes).toString('base64')});assert.equal(pending.payload.current,teamFile.payload.current);const comparison=await h.api(`/items/${teamFile.id}/compare`,owner);assert.deepEqual(comparison.sides.map(v=>v.id),[pending.payload.versions.at(-1).id,teamFile.payload.current]);assert.equal((await h.api(`/items/${teamFile.id}`,owner)).item.approved,teamFile.payload.current,'comparison preserves the approved pointer');
+ const teamPreview=await h.api(`${teamPath}/preview`,owner,teamInput);await h.api(`/spaces/${team.id}/members`,owner,{members:teamMembers.slice(0,1)});
+ await h.api(`${teamPath}/apply`,owner,{...teamInput,fingerprint:teamPreview.fingerprint,confirm:true},409);assert.deepEqual((await h.api(`/items/${teamFile.id}`,owner)).comments,[],'a stale manager plan publishes no thread');
+ await h.api(`/spaces/${team.id}/members`,owner,{members:teamMembers});const current=await h.api(`${teamPath}/preview`,owner,teamInput);await h.api(`${teamPath}/apply`,owner,{...teamInput,fingerprint:current.fingerprint,confirm:true});
+ const task=current.threads.find(t=>t.imported.id==='synthetic-chest-2');assert.ok((await h.api('/tasks',people.manager)).some(t=>t.id===task.id));assert.ok(!(await h.api('/tasks',people.contributor)).some(t=>t.id===task.id));assert.deepEqual((await h.api(`/items/${teamFile.id}`,owner)).grants,[]);await h.api(`/items/${teamFile.id}`,people.contributor,undefined,403);
+ await h.api(`/spaces/${team.id}/members`,owner,{members:teamMembers.slice(0,1)});assert.ok(!(await h.api('/tasks',people.manager)).some(t=>t.id===task.id));
+
 }
 export async function importedReviewBrowserFlow({h,people,owner,bytes,browser,width}){
  const {item,archive,version}=await prepare({h,people,owner,bytes}),contexts=[];
