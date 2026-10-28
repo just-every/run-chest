@@ -1697,7 +1697,7 @@
       "executable": false
     },
     "src/chest/files/api.ts": {
-      "sha256": "b70cbdad7cc03ee4e01346a7541af05301f3efccc5776e9f02cb778ef8f0ab90",
+      "sha256": "3af998100c91514fae4edc9f6c6f04d051836868890c97b4d02e17f4695bd063",
       "executable": false
     },
     "src/chest/files/archive-preview.ts": {
@@ -4917,7 +4917,7 @@
       "executable": false
     },
     "tests/chest/files.mjs": {
-      "sha256": "caed8cbd7440bd258f114431c4b646e0d010ea1adef60c3e32c9403c0603d2f3",
+      "sha256": "a6eaf3be1620bba644a0072ac2c5372e61b5589ef7b04532da0d356f4e07b593",
       "executable": false
     },
     "tests/chest/filing.mjs": {

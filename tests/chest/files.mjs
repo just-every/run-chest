@@ -19,6 +19,22 @@ const bytesOf=async(who,item,version,status=200,query='?download=true')=>{const 
 const audit=async action=>(await h.api('/audit',people.owner)).filter(e=>e.action===action);
 try{
  await staff();
+ await check('Inherited item actions stay unknown',async()=>{
+  const folder=await h.api('/items',people.ana,{space:personalOf.ana,type:'folder',name:'Dispatch sanity'});
+  const post=action=>h.raw(`/api/chest/items/${folder.id}/${action}`,people.ana,{name:'Renamed dispatch sanity'});
+  const unknown=await post('unknown-action'),unknownBody=await unknown.text();
+  assert.equal(unknown.status,404,'an unregistered action is not found');
+  assert.ok(unknownBody===JSON.stringify({error:'not_found'}),'unknown actions return only the public error');
+  for(const action of ['constructor','__proto__','hasOwnProperty']){
+   const response=await post(action),body=await response.text();
+   assert.equal(response.status,unknown.status,`${action} has the unknown-action status`);
+   assert.ok(body===unknownBody,`${action} has only the unknown-action response`);
+   assert.ok(!Object.entries(h.vars).some(([key,value])=>body.includes(key)||(typeof value==='string'&&value.length>5&&body.includes(value))),`${action} exposes no binding names or values`);
+  }
+  const renamed=await post('rename');
+  assert.equal(renamed.status,200,'a registered action still works');
+  assert.ok((await renamed.json()).payload.name==='Renamed dispatch sanity','the registered rename takes effect');
+ });
  await check('SPACE-001',async()=>{
   space=await h.api('/spaces',people.mo,{name:'Projects'});
   await h.api(`/spaces/${space.id}/members`,people.ana,{members:[]},403);
