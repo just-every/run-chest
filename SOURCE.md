@@ -1,5 +1,17 @@
 # Chest source ownership
 
+Agent-door adoption preparation copies `modules/agent-door` and
+`modules/business-settings` from Base
+`d555e789cffb744a9f83d76ebe42a2e3bdd7a055`. These are separately pinned in
+`base-copies.json`, `edition.json` and `sources.lock.json`; the existing
+application has not switched to this door. Migrations `0029`–`0031` add Business
+settings, durable Business person bindings and door storage without changing an
+applied migration. Business settings uses the existing `src/base/theme-frame.ts`
+`ink` helper through a recorded import-path adaptation. Base's test signers,
+fixtures, module tests and CLI conformance tooling are not application source
+and are not copied. See [the adoption status](management/agent-door-adoption.md) for
+the pinned hook blockers and the remaining native work.
+
 Chest adopts Base revision `9eb83c85a9088c16ffe94a3af43e8a2e95acc377` (tag `rer-v0.2.40`) for its
 runtime, operator-auth, mail, dependencies, owner-claim, import-kit and
 edition-authoring source. `base-copies.json` records verbatim copies;
