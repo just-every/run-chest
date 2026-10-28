@@ -173,7 +173,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "11affddf404e5e221ae0fa47c570a0586621ea99215ef07b50a31a3534469588",
+      "sha256": "0b1c519ac200d9f4ea2da79dbb6756f73b27ba7ff3dd1b3b6fac5ddb239159b4",
       "executable": false
     },
     ".gitignore": {
@@ -305,7 +305,7 @@
       "executable": false
     },
     "docs/hosting.md": {
-      "sha256": "c3a3f82ac7d54804a2cd548c124704965c2e50fa0e856c5111a9e72f0a99c273",
+      "sha256": "7a0ea6dca6c1fa722a53bd0462a7ef76c7c891be185c270ae593a65c069f5472",
       "executable": false
     },
     "docs/independent-backups.md": {
@@ -377,7 +377,7 @@
       "executable": false
     },
     "docs/site.json": {
-      "sha256": "3a1eb8f750bd3f880e13e225849aa59c26b658f386ddc4c9e052aab51b1986d2",
+      "sha256": "d0dbdb7386941d2432d6b84b4b03c79668f57c21850f6a6fdf410fb910569051",
       "executable": false
     },
     "docs/sync-repair.md": {
@@ -5345,7 +5345,7 @@
       "executable": false
     },
     "src/site/pages.tsx": {
-      "sha256": "33ff39125e4dcb7ebdfafaafcb61446657d576a3a49bf0c85402c4bddcd8bc7b",
+      "sha256": "0e9a323619ce169f6407f6435b56d9b5450c170331553b77655636350f442a6c",
       "executable": false
     },
     "src/site/run.ts": {
