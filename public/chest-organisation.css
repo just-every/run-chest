@@ -2,4 +2,4 @@
 .organisation-settings { overflow-wrap: anywhere; min-width: 0; }
 .organisation-settings ol { padding-left: 22px; }
 .organisation-settings li + li { margin-top: 10px; }
-.organisation-settings .mono { font-size: 12.5px; }
+.organisation-settings .mono { font-size: var(--chest-fs-small); }

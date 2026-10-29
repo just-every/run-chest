@@ -52,7 +52,10 @@ export function fileKind(name: string, type = 'file'): FileKind {
   return /^(docx?|odt|rtf)$/.test(ext) ? 'word' : /^(xlsx?|ods|csv|numbers)$/.test(ext) ? 'sheet' : /^(pptx?|odp|key)$/.test(ext) ? 'slides' : ext === 'pdf' ? 'pdf' : /^(jpe?g|png|gif|webp|heic|svg|tiff?)$/.test(ext) ? 'image' : /^(zip|tar|gz|7z|rar)$/.test(ext) ? 'archive' : /^(txt|md|markdown|json|log)$/.test(ext) ? 'text' : 'file'
 }
 const page = (fill: string, inner: string, fold = 'rgba(255,255,255,.45)') => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5.5 2h9.25L20 7.25V21a1 1 0 0 1-1 1H5.5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" fill="${fill}"/><path d="M14.75 2v4.25a1 1 0 0 0 1 1H20" fill="${fold}"/>${inner}</svg>`
-const letter = (l: string) => `<text x="12" y="17.6" text-anchor="middle" fill="#fff" font-family="Inter, system-ui, sans-serif" font-size="9.5" font-weight="700">${l}</text>`
+// The tile's letter is drawn as strokes, not text: a tile is an icon, and no glyph in it is a size of type.
+const mark = (d: string) => `<path d="${d}" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>`
+const letters: Record<string, string> = { W: mark('M7 8.6l1.9 8 3.1-6.4 3.1 6.4 1.9-8'), X: mark('M8.6 8.8l6.8 8.4M15.4 8.8l-6.8 8.4'), P: mark('M9.6 17.4V8.6h3.1a2.7 2.7 0 0 1 0 5.4H9.6') }
+const letter = (l: string) => letters[l]
 const tiles: Record<FileKind, string> = {
   word: page('#2b6ff2', letter('W')),
   sheet: page('#1f9d55', letter('X')),

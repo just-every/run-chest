@@ -37,7 +37,7 @@
 
 .mono { font-family: var(--chest-font-ui); font-variant-numeric: tabular-nums; }
 /* Exact machine facts (checksums, IDs, receipts, code) keep the mono face. */
-.hash, .mono.hash, .receipt, .app code, .app pre { font-family: var(--chest-font-mono); font-size: .92em; }
+.hash, .mono.hash, .receipt, .app code, .app pre { font-family: var(--chest-font-mono); font-size: .93em; }
 .nums { font-variant-numeric: tabular-nums; }
 
 /* Form controls: hairline borders, 8 px corners and a violet focus ring; <select> draws Base #247's two-gradient
@@ -54,22 +54,22 @@
 
 /* Chips: pill, 12 px. Quiet by default; green for approved and done, amber for waiting, red for problems, violet
    for the current version. */
-.chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; background: #f0f1f7; color: var(--chest-body); font: 500 12px/1.5 var(--chest-font-ui); white-space: nowrap; }
+.chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; background: #f0f1f7; color: var(--chest-body); font: 500 var(--chest-fs-small)/1.5 var(--chest-font-ui); white-space: nowrap; }
 .chip-ok { background: var(--chest-ok-soft); color: #1f6e3a; }
 .chip-warn, .chip-upcoming { background: var(--chest-warn-soft); color: var(--chest-warn-ink); box-shadow: inset 0 0 0 1px var(--chest-warn-line); }
 .chip-due, .chip-issue { background: var(--chest-alert-soft); color: #9b2323; }
 .chip-action { background: var(--chest-action-soft); color: var(--chest-action-ink); }
 .chip-dot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.vchip { display: inline-flex; align-items: center; min-width: 26px; justify-content: center; padding: 2px 7px; border-radius: 7px; background: #f0f1f7; color: var(--chest-body); font: 500 12px/1.5 var(--chest-font-ui); font-variant-numeric: tabular-nums; }
+.vchip { display: inline-flex; align-items: center; min-width: 26px; justify-content: center; padding: 2px 7px; border-radius: 7px; background: #f0f1f7; color: var(--chest-body); font: 500 var(--chest-fs-small)/1.5 var(--chest-font-ui); font-variant-numeric: tabular-nums; }
 
 /* Avatars: a round initial in one soft tone per person; +N for the rest. */
-.avatar { display: inline-grid; flex: none; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 600 11px/1 var(--chest-font-ui); }
+.avatar { display: inline-grid; flex: none; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 600 var(--chest-fs-small)/1 var(--chest-font-ui); }
 .tone-1 { background: var(--chest-tone-1); color: var(--chest-tone-1-ink); }
 .tone-2 { background: var(--chest-tone-2); color: var(--chest-tone-2-ink); }
 .tone-3 { background: var(--chest-tone-3); color: var(--chest-tone-3-ink); }
 .tone-4 { background: var(--chest-tone-4); color: var(--chest-tone-4-ink); }
 .tone-5 { background: var(--chest-tone-5); color: var(--chest-tone-5-ink); }
-.avatar-more { background: #eef0f6; color: var(--chest-muted); font-size: 11px; }
+.avatar-more { background: #eef0f6; color: var(--chest-muted); font-size: var(--chest-fs-small); }
 .faces { display: inline-flex; align-items: center; }
 .faces .avatar { box-shadow: 0 0 0 2px var(--chest-surface); }
 .faces .avatar + .avatar { margin-left: -4px; }
@@ -93,7 +93,7 @@
 .link-discussion .action { margin-top: 12px; }
 
 /* One shared tooltip stays inside the viewport even beside the rail or a clipped panel. */
-.chest-tooltip { position: fixed; z-index: 10000; max-width: calc(100vw - 16px); padding: 6px 9px; border-radius: 6px; background: var(--chest-ink); color: var(--chest-surface); font-size: 12px; line-height: 1.4; pointer-events: none; }
+.chest-tooltip { position: fixed; z-index: 10000; max-width: calc(100vw - 16px); padding: 6px 9px; border-radius: 6px; background: var(--chest-ink); color: var(--chest-surface); font-size: var(--chest-fs-small); line-height: 1.4; pointer-events: none; }
 .chest-tooltip[hidden] { display: none; }
 
 /* Keep both retained originals visible together, including on a phone. */

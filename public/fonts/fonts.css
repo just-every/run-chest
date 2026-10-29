@@ -39,10 +39,16 @@
   --chest-tone-4: #ffeadf; --chest-tone-4-ink: #b4501d;
   --chest-tone-5: #fff1d1; --chest-tone-5-ink: #8a5a00;
 
+  /* Smallest text: nothing in the app is set under 13 px; every small size reads this token (H11). */
+  --chest-fs-small: 13px;
+
   /* Type. Inter everywhere: the homepage's heavy tight cut for page titles only, a clean UI weight elsewhere,
      tabular figures for sizes and dates; IBM Plex Mono for exact facts (hashes, IDs, receipts); Caveat only for
      the run site's hand-inked callouts. */
   --chest-font-ui: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* The app's text (body.app, public/chest-app.css): IBM Plex Sans, the sibling of the Plex Mono used for exact facts,
+     not Inter. Inter stays the brand's: the run site, the lockup and Base's own pages (CH13). */
+  --chest-font-app: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --chest-font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
   --chest-font-hand: Caveat, 'Bradley Hand', cursive;
   --chest-font-doc: 'Times New Roman', Tinos, Times, serif;
