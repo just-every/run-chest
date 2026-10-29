@@ -34,14 +34,15 @@ start.
   Acme Supply Co. (Tacoma, WA): Word, Excel, PowerPoint, PDF, photo, ZIP and
   text originals with their versions (the contract's v7 approved under the
   folder's version review), a rate-card sync conflict kept as a copy from
-  Dana's iPhone, links for anyone with expiry and download limits, the sync
+  Dana's MacBook Pro (a command-line companion; no signed sync app ships yet, and the
+  Sync devices page says so), links for anyone with expiry and download limits, the sync
   companions' reports, five files the filing agent filed in the last day (each
   undoable), two copies of an invoice in Accounts payable for the duplicate
   check, an upload of Dana's still going up (62%, one part held in R2), and the
   organization's storage plan (100 GB per team space, 10 GB per person's My
   files), so the rail's storage meter draws. Originals have working sizes:
   scans of about 80 KB a page, Office files with the preview picture Office saves,
-  phone and product photos of several hundred KB to 2 MB (`src/demo-media.ts`).
+  a receipt photographed on a desk and product photos of a few hundred KB (`src/demo-photo.ts`).
 
 Originals go through Chest's own byte inspection and R2 custody
 (`src/chest/blobs.ts`); records go into the same tables with fixed IDs and
