@@ -7,8 +7,11 @@ import {
 } from "../../modules/agent-door/index.ts";
 import { operatorAuth, type Bindings } from "../../auth.server";
 import type { Session } from "../../modules/operator-auth/index.mjs";
-import { assertDomainSession } from "../organisation/domains";
-import { sessionSecurity } from "../security/session";
+import {
+  assertDomainSession,
+  assertCompanyDomain,
+} from "../organisation/domains";
+import { sessionSecurity, requireMfa } from "../security/session";
 import {
   authorize,
   credentialSession,
@@ -54,7 +57,23 @@ export async function nativeSession(
     throw new ToolRefusal("native_proof_required");
   return session;
 }
-export function chestPeople(env: Bindings): PeopleAdapter {
+export type HumanSessions = Map<string, Session>;
+export async function humanSession(
+  env: Bindings,
+  person: Pick<Person, "id">,
+  sessions: HumanSessions,
+): Promise<Session> {
+  const session = sessions.get(person.id);
+  if (!session || session.operator.id !== person.id)
+    throw new ToolRefusal("person_session_required");
+  await assertDomainSession(env, session);
+  await requireMfa(env, session);
+  return session;
+}
+export function chestPeople(
+  env: Bindings,
+  humans: HumanSessions,
+): PeopleAdapter {
   const native = operatorAuthPeople({
     db: env.DB,
     session: (request) => operatorAuth(env).getSession(request),
@@ -63,7 +82,7 @@ export function chestPeople(env: Bindings): PeopleAdapter {
   const admitted = async (person: Person | null) => {
     if (!person?.active) return null;
     try {
-      await nativeSession(env, person);
+      if (!humans.has(person.id)) await assertCompanyDomain(env, person.email);
       roles.set(
         person.id,
         (await native.businessMember?.(person))?.role ??
@@ -81,9 +100,27 @@ export function chestPeople(env: Bindings): PeopleAdapter {
   return {
     ...native,
     businessRole: (person) => roles.get(person.id) ?? null,
-    session: async (request) => admitted(await native.session(request)),
+    async session(request) {
+      try {
+        const session = await operatorAuth(env).getSession(request);
+        if (!session) return null;
+        humans.set(session.operator.id, session);
+        return admitted(await native.person(session.operator.id));
+      } catch {
+        return null;
+      }
+    },
     person: async (id) => admitted(await native.person(id)),
-    sponsor: async (claims) => admitted(await native.sponsor(claims)),
+    async sponsor(claims) {
+      const person = await native.sponsor(claims);
+      if (!person) return null;
+      try {
+        await nativeSession(env, person);
+        return admitted(person);
+      } catch {
+        return null;
+      }
+    },
   };
 }
 export async function localCredential(env: Bindings, request: Request) {

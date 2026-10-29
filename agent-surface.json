@@ -11,26 +11,340 @@
   ],
   "tools": [
     {
-      "name": "chest.spaces.create",
-      "scope": "spaces:write",
+      "name": "chest.access.list",
+      "scope": "share",
+      "readOnly": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-002",
+        "SHARE-004"
+      ]
+    },
+    {
+      "name": "chest.access.narrow",
+      "scope": "share",
       "readOnly": false,
       "classes": [
         "standard"
       ],
       "clauses": [
-        "SURFACE-004",
-        "SPACE-001"
+        "SURFACE-007",
+        "SHARE-007"
       ],
       "inputSchema": {
         "type": "object",
         "properties": {
-          "name": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "principal": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "id",
+          "principal"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.activity.list",
+      "scope": "read",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-002",
+        "AUDIT-001"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.comments.add",
+      "scope": "comments:write",
+      "readOnly": false,
+      "classes": [
+        "standard",
+        "external"
+      ],
+      "clauses": [
+        "SURFACE-004",
+        "EDIT-003",
+        "FOLLOW-001"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "mentions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "maxItems": 20
+          }
+        },
+        "required": [
+          "id",
+          "message"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.decisions.record",
+      "scope": "decisions:write",
+      "readOnly": false,
+      "classes": [
+        "standard",
+        "commitment"
+      ],
+      "clauses": [
+        "SURFACE-011",
+        "CHEST-08"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "action": {
+            "enum": [
+              "assign",
+              "approve",
+              "changes"
+            ]
+          },
+          "reviewer": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "message": {
             "type": "string",
             "maxLength": 1000
           }
         },
         "required": [
-          "name"
+          "id",
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.devices.list",
+      "scope": "devices:read",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-009",
+        "SYNC-003"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.devices.revoke",
+      "scope": "devices:write",
+      "readOnly": false,
+      "classes": [
+        "access"
+      ],
+      "clauses": [
+        "SURFACE-009",
+        "SYNC-003"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "widens": false,
+      "narrowing": {
+        "effect": "revoke",
+        "target": "id"
+      }
+    },
+    {
+      "name": "chest.duplicates.apply",
+      "scope": "filing:write",
+      "readOnly": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "keep": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "duplicate": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "keep",
+          "duplicate"
+        ],
+        "additionalProperties": false
+      },
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-004",
+        "AGENT-002"
+      ]
+    },
+    {
+      "name": "chest.duplicates.propose",
+      "scope": "filing:read",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "AGENT-002",
+        "SURFACE-004"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "space": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "parent": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.events.list",
+      "scope": "events:read",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "BASE-AGENT-010"
+      ]
+    },
+    {
+      "name": "chest.exposure.list",
+      "scope": "share",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-002",
+        "SHARE-007",
+        "AGENT-005"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "intended": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "id"
         ],
         "additionalProperties": false
       }
@@ -85,40 +399,42 @@
       }
     },
     {
-      "name": "chest.folders.create",
-      "scope": "folder",
-      "readOnly": false,
-      "classes": [
-        "standard",
-        "external"
-      ],
-      "clauses": [
-        "SURFACE-004",
-        "SPACE-001"
-      ],
+      "name": "chest.files.read",
+      "scope": "download",
+      "readOnly": true,
       "inputSchema": {
         "type": "object",
         "properties": {
-          "space": {
+          "id": {
             "type": "string",
             "minLength": 1,
             "maxLength": 240
           },
-          "parent": {
+          "version": {
             "type": "string",
             "minLength": 1,
             "maxLength": 240
           },
-          "name": {
+          "range": {
             "type": "string",
             "maxLength": 1000
           }
         },
         "required": [
-          "name"
+          "id",
+          "version"
         ],
         "additionalProperties": false
-      }
+      },
+      "classes": [
+        "standard",
+        "sensitive"
+      ],
+      "clauses": [
+        "SURFACE-003",
+        "ROLE-001",
+        "VERSION-001"
+      ]
     },
     {
       "name": "chest.files.upload",
@@ -158,10 +474,252 @@
           "base64": {
             "type": "string",
             "maxLength": 699052
+          },
+          "filename": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "checksum": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
           }
         },
         "required": [
           "base64"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.filing.apply",
+      "scope": "filing:write",
+      "readOnly": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "classes": [
+        "standard",
+        "external"
+      ],
+      "clauses": [
+        "SURFACE-004",
+        "AGENT-001",
+        "RULE-001"
+      ]
+    },
+    {
+      "name": "chest.filing.propose",
+      "scope": "filing:write",
+      "readOnly": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 240
+            },
+            "minItems": 1,
+            "maxItems": 100
+          },
+          "actions": {
+            "type": "object",
+            "properties": {
+              "rename": {
+                "type": "string",
+                "maxLength": 1000
+              },
+              "tag": {
+                "type": "string",
+                "maxLength": 1000
+              },
+              "destination": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "items",
+          "actions"
+        ],
+        "additionalProperties": false
+      },
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-004",
+        "AGENT-001",
+        "RULE-001"
+      ]
+    },
+    {
+      "name": "chest.folders.create",
+      "scope": "folder",
+      "readOnly": false,
+      "classes": [
+        "standard",
+        "external"
+      ],
+      "clauses": [
+        "SURFACE-004",
+        "SPACE-001"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "space": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "parent": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.items.get",
+      "scope": "read",
+      "readOnly": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-002",
+        "CHEST-06"
+      ]
+    },
+    {
+      "name": "chest.items.list",
+      "scope": "read",
+      "readOnly": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "parent": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "cursor": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-002",
+        "SPACE-001"
+      ]
+    },
+    {
+      "name": "chest.items.trash",
+      "scope": "items:manage",
+      "readOnly": false,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-005",
+        "CHEST-13"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.items.untrash",
+      "scope": "items:manage",
+      "readOnly": false,
+      "classes": [
+        "standard",
+        "external"
+      ],
+      "clauses": [
+        "SURFACE-005",
+        "CHEST-13"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "id"
         ],
         "additionalProperties": false
       }
@@ -228,15 +786,15 @@
       }
     },
     {
-      "name": "chest.versions.name",
-      "scope": "versions",
+      "name": "chest.limits.set",
+      "scope": "settings:write",
       "readOnly": false,
       "classes": [
         "standard"
       ],
       "clauses": [
-        "SURFACE-005",
-        "VERSION-001"
+        "SURFACE-010",
+        "QUOTA-001"
       ],
       "inputSchema": {
         "type": "object",
@@ -246,148 +804,17 @@
             "minLength": 1,
             "maxLength": 240
           },
-          "version": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "name": {
-            "type": "string",
-            "maxLength": 1000
+          "storageLimitBytes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
           }
         },
         "required": [
           "id",
-          "version",
-          "name"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.versions.restore",
-      "scope": "versions",
-      "readOnly": false,
-      "classes": [
-        "standard",
-        "external"
-      ],
-      "clauses": [
-        "SURFACE-005",
-        "VERSION-001"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "version": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [
-          "id",
-          "version"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.items.trash",
-      "scope": "items:manage",
-      "readOnly": false,
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-005",
-        "CHEST-13"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.items.untrash",
-      "scope": "items:manage",
-      "readOnly": false,
-      "classes": [
-        "standard",
-        "external"
-      ],
-      "clauses": [
-        "SURFACE-005",
-        "CHEST-13"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.share",
-      "scope": "share",
-      "readOnly": false,
-      "classes": [
-        "standard",
-        "external"
-      ],
-      "clauses": [
-        "SURFACE-006",
-        "SHARE-004",
-        "POLICY-001"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "principal": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "role": {
-            "enum": [
-              "viewer",
-              "commenter",
-              "editor"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "principal",
-          "role"
+          "storageLimitBytes"
         ],
         "additionalProperties": false
       }
@@ -449,114 +876,6 @@
       }
     },
     {
-      "name": "chest.access.narrow",
-      "scope": "share",
-      "readOnly": false,
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-007",
-        "SHARE-007"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "principal": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [
-          "id",
-          "principal"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.requests.create",
-      "scope": "request",
-      "readOnly": false,
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-008",
-        "SHARE-002"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "title": {
-            "type": "string",
-            "maxLength": 1000
-          },
-          "message": {
-            "type": "string",
-            "maxLength": 1000
-          }
-        },
-        "required": [
-          "id",
-          "title"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.comments.add",
-      "scope": "comments:write",
-      "readOnly": false,
-      "classes": [
-        "standard",
-        "external"
-      ],
-      "clauses": [
-        "SURFACE-004",
-        "EDIT-003",
-        "FOLLOW-001"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "message": {
-            "type": "string",
-            "maxLength": 1000
-          },
-          "mentions": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "maxLength": 1000
-            },
-            "maxItems": 20
-          }
-        },
-        "required": [
-          "id",
-          "message"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
       "name": "chest.members.update",
       "scope": "members:write",
       "readOnly": false,
@@ -609,115 +928,30 @@
       "sponsorEscalation": false
     },
     {
-      "name": "chest.items.list",
-      "scope": "read",
+      "name": "chest.movein.status",
+      "scope": "import:read",
       "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-002",
+        "MIGRATE-001",
+        "AGENT-006",
+        "CHEST-11"
+      ],
       "inputSchema": {
         "type": "object",
         "properties": {
-          "parent": {
+          "id": {
             "type": "string",
             "minLength": 1,
             "maxLength": 240
-          },
-          "cursor": {
-            "type": "string",
-            "maxLength": 1000
-          },
-          "limit": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 100
           }
         },
         "required": [],
         "additionalProperties": false
-      },
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-002",
-        "SPACE-001"
-      ]
-    },
-    {
-      "name": "chest.items.get",
-      "scope": "read",
-      "readOnly": true,
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "additionalProperties": false
-      },
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-002",
-        "CHEST-06"
-      ]
-    },
-    {
-      "name": "chest.versions.list",
-      "scope": "read",
-      "readOnly": true,
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "additionalProperties": false
-      },
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-002",
-        "VERSION-001"
-      ]
-    },
-    {
-      "name": "chest.access.list",
-      "scope": "share",
-      "readOnly": true,
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "additionalProperties": false
-      },
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-002",
-        "SHARE-004"
-      ]
+      }
     },
     {
       "name": "chest.pick",
@@ -742,6 +976,263 @@
       ],
       "clauses": [
         "CONNECT-012"
+      ]
+    },
+    {
+      "name": "chest.quarantine.list",
+      "scope": "security:read",
+      "readOnly": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-010",
+        "SECURITY-002"
+      ]
+    },
+    {
+      "name": "chest.quarantine.release",
+      "scope": "security:write",
+      "readOnly": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "checksum": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "checksum",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "classes": [
+        "security"
+      ],
+      "clauses": [
+        "SURFACE-010",
+        "SECURITY-002"
+      ],
+      "authority": "none",
+      "effect": {
+        "kind": "record",
+        "justification": "Release the exact retained scan verdict; no account, standing grant or credential changes."
+      }
+    },
+    {
+      "name": "chest.reports.get",
+      "scope": "reports:read",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-002",
+        "QUOTA-001",
+        "ADMIN-002",
+        "ADMIN-005"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "enum": [
+              "storage",
+              "audit",
+              "guests",
+              "provider-usage",
+              "egress",
+              "editor-report"
+            ]
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.requests.create",
+      "scope": "request",
+      "readOnly": false,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-008",
+        "SHARE-002"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "maxItems": 20
+          },
+          "maxMegabytes": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "deadline": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "zone": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "checklist": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "maxItems": 20
+          },
+          "verification": {
+            "enum": [
+              "none",
+              "email"
+            ]
+          },
+          "allowReplacement": {
+            "type": "boolean"
+          },
+          "late": {
+            "enum": [
+              "reject",
+              "quarantine"
+            ]
+          },
+          "duplicates": {
+            "enum": [
+              "keep",
+              "reject",
+              "quarantine"
+            ]
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.requests.list",
+      "scope": "request",
+      "readOnly": true,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-002",
+        "SHARE-002"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.rewind",
+      "scope": "items:manage",
+      "readOnly": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "enum": [
+              "preview",
+              "apply"
+            ]
+          },
+          "folder": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "space": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "at": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "fingerprint": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 240
+            },
+            "minItems": 1,
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "mode",
+          "at"
+        ],
+        "additionalProperties": false
+      },
+      "classes": [
+        "standard",
+        "external"
+      ],
+      "clauses": [
+        "SURFACE-005",
+        "RECOVER-001",
+        "ADMIN-006"
       ]
     },
     {
@@ -829,599 +1320,6 @@
         "SEARCH-001",
         "SEARCH-002",
         "SEARCH-003"
-      ]
-    },
-    {
-      "name": "chest.files.read",
-      "scope": "download",
-      "readOnly": true,
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "version": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "range": {
-            "type": "string",
-            "maxLength": 1000
-          }
-        },
-        "required": [
-          "id",
-          "version"
-        ],
-        "additionalProperties": false
-      },
-      "classes": [
-        "standard",
-        "sensitive"
-      ],
-      "clauses": [
-        "SURFACE-003",
-        "ROLE-001",
-        "VERSION-001"
-      ]
-    },
-    {
-      "name": "chest.activity.list",
-      "scope": "read",
-      "readOnly": true,
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-002",
-        "AUDIT-001"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.requests.list",
-      "scope": "request",
-      "readOnly": true,
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-002",
-        "SHARE-002"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.reports.get",
-      "scope": "reports:read",
-      "readOnly": true,
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-002",
-        "QUOTA-001",
-        "ADMIN-002",
-        "ADMIN-005"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "kind": {
-            "enum": [
-              "storage",
-              "audit",
-              "guests",
-              "provider-usage",
-              "egress",
-              "editor-report"
-            ]
-          }
-        },
-        "required": [
-          "kind"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.exposure.list",
-      "scope": "share",
-      "readOnly": true,
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-002",
-        "SHARE-007",
-        "AGENT-005"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "intended": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "maxLength": 1000
-            },
-            "maxItems": 100
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.devices.list",
-      "scope": "devices:read",
-      "readOnly": true,
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-009",
-        "SYNC-003"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "active": {
-            "type": "boolean"
-          }
-        },
-        "required": [],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.movein.status",
-      "scope": "import:read",
-      "readOnly": true,
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-002",
-        "MIGRATE-001",
-        "AGENT-006",
-        "CHEST-11"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.duplicates.propose",
-      "scope": "filing:read",
-      "readOnly": true,
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "AGENT-002",
-        "SURFACE-004"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "space": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "parent": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.devices.revoke",
-      "scope": "devices:write",
-      "readOnly": false,
-      "classes": [
-        "access"
-      ],
-      "clauses": [
-        "SURFACE-009",
-        "SYNC-003"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "additionalProperties": false
-      },
-      "widens": false,
-      "narrowing": {
-        "effect": "revoke",
-        "target": "id"
-      }
-    },
-    {
-      "name": "chest.limits.set",
-      "scope": "settings:write",
-      "readOnly": false,
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-010",
-        "QUOTA-001"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "storageLimitBytes": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "minimum": 0
-          }
-        },
-        "required": [
-          "id",
-          "storageLimitBytes"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.settings.update",
-      "scope": "settings:write",
-      "readOnly": false,
-      "classes": [
-        "security"
-      ],
-      "clauses": [
-        "SURFACE-010",
-        "POLICY-001",
-        "POLICY-002"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "allowPublic": {
-            "type": "boolean"
-          },
-          "allowExternal": {
-            "type": "boolean"
-          },
-          "allowOrganisation": {
-            "type": "boolean"
-          },
-          "allowDiscovery": {
-            "type": "boolean"
-          },
-          "defaultAudience": {
-            "enum": [
-              "restricted",
-              "organisation",
-              "public"
-            ]
-          },
-          "defaultRole": {
-            "enum": [
-              "viewer",
-              "commenter",
-              "editor"
-            ]
-          },
-          "warnExternal": {
-            "type": "boolean"
-          },
-          "organizationDomains": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "maxLength": 1000
-            },
-            "minItems": 1,
-            "maxItems": 50
-          }
-        },
-        "required": [
-          "allowPublic",
-          "allowExternal",
-          "allowOrganisation",
-          "allowDiscovery",
-          "defaultAudience",
-          "defaultRole",
-          "organizationDomains"
-        ],
-        "additionalProperties": false
-      },
-      "sponsorEscalation": false
-    },
-    {
-      "name": "chest.decisions.record",
-      "scope": "decisions:write",
-      "readOnly": false,
-      "classes": [
-        "standard",
-        "commitment"
-      ],
-      "clauses": [
-        "SURFACE-011",
-        "CHEST-08"
-      ],
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "action": {
-            "enum": [
-              "assign",
-              "approve",
-              "changes"
-            ]
-          },
-          "reviewer": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "version": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "message": {
-            "type": "string",
-            "maxLength": 1000
-          }
-        },
-        "required": [
-          "id",
-          "action"
-        ],
-        "additionalProperties": false
-      }
-    },
-    {
-      "name": "chest.filing.propose",
-      "scope": "filing:write",
-      "readOnly": false,
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 240
-            },
-            "minItems": 1,
-            "maxItems": 100
-          },
-          "actions": {
-            "type": "object",
-            "properties": {
-              "rename": {
-                "type": "string",
-                "maxLength": 1000
-              },
-              "tag": {
-                "type": "string",
-                "maxLength": 1000
-              },
-              "destination": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              }
-            },
-            "required": [],
-            "additionalProperties": false
-          }
-        },
-        "required": [
-          "items",
-          "actions"
-        ],
-        "additionalProperties": false
-      },
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-004",
-        "AGENT-001",
-        "RULE-001"
-      ]
-    },
-    {
-      "name": "chest.filing.apply",
-      "scope": "filing:write",
-      "readOnly": false,
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "additionalProperties": false
-      },
-      "classes": [
-        "standard",
-        "external"
-      ],
-      "clauses": [
-        "SURFACE-004",
-        "AGENT-001",
-        "RULE-001"
-      ]
-    },
-    {
-      "name": "chest.duplicates.apply",
-      "scope": "filing:write",
-      "readOnly": false,
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "keep": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "duplicate": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          }
-        },
-        "required": [
-          "keep",
-          "duplicate"
-        ],
-        "additionalProperties": false
-      },
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-004",
-        "AGENT-002"
-      ]
-    },
-    {
-      "name": "chest.rewind",
-      "scope": "items:manage",
-      "readOnly": false,
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "mode": {
-            "enum": [
-              "preview",
-              "apply"
-            ]
-          },
-          "folder": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "space": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240
-          },
-          "at": {
-            "type": "string",
-            "maxLength": 1000
-          },
-          "fingerprint": {
-            "type": "string",
-            "maxLength": 1000
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 240
-            },
-            "minItems": 1,
-            "maxItems": 100
-          }
-        },
-        "required": [
-          "mode",
-          "at"
-        ],
-        "additionalProperties": false
-      },
-      "classes": [
-        "standard",
-        "external"
-      ],
-      "clauses": [
-        "SURFACE-005",
-        "RECOVER-001",
-        "ADMIN-006"
       ]
     },
     {
@@ -1556,69 +1454,291 @@
       ]
     },
     {
-      "name": "chest.quarantine.list",
-      "scope": "security:read",
-      "readOnly": true,
-      "inputSchema": {
-        "type": "object",
-        "properties": {},
-        "required": [],
-        "additionalProperties": false
-      },
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "SURFACE-010",
-        "SECURITY-002"
-      ]
-    },
-    {
-      "name": "chest.quarantine.release",
-      "scope": "security:write",
+      "name": "chest.settings.update",
+      "scope": "settings:write",
       "readOnly": false,
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "checksum": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          },
-          "reason": {
-            "type": "string",
-            "minLength": 5,
-            "maxLength": 1000
-          }
-        },
-        "required": [
-          "checksum",
-          "reason"
-        ],
-        "additionalProperties": false
-      },
       "classes": [
         "security"
       ],
       "clauses": [
         "SURFACE-010",
-        "SECURITY-002"
+        "POLICY-001",
+        "POLICY-002"
       ],
-      "authority": "none",
-      "effect": {
-        "kind": "record",
-        "justification": "Release the exact retained scan verdict; no account, standing grant or credential changes."
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "allowPublic": {
+            "type": "boolean"
+          },
+          "allowExternal": {
+            "type": "boolean"
+          },
+          "allowOrganisation": {
+            "type": "boolean"
+          },
+          "allowDiscovery": {
+            "type": "boolean"
+          },
+          "defaultAudience": {
+            "enum": [
+              "restricted",
+              "organisation",
+              "public"
+            ]
+          },
+          "defaultRole": {
+            "enum": [
+              "viewer",
+              "commenter",
+              "editor"
+            ]
+          },
+          "warnExternal": {
+            "type": "boolean"
+          },
+          "organizationDomains": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "minItems": 1,
+            "maxItems": 50
+          }
+        },
+        "required": [
+          "allowPublic",
+          "allowExternal",
+          "allowOrganisation",
+          "allowDiscovery",
+          "defaultAudience",
+          "defaultRole",
+          "organizationDomains"
+        ],
+        "additionalProperties": false
+      },
+      "sponsorEscalation": false
+    },
+    {
+      "name": "chest.share",
+      "scope": "share",
+      "readOnly": false,
+      "classes": [
+        "standard",
+        "external"
+      ],
+      "clauses": [
+        "SURFACE-006",
+        "SHARE-004",
+        "POLICY-001"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "principal": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "role": {
+            "enum": [
+              "viewer",
+              "commenter",
+              "editor"
+            ]
+          },
+          "expires": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "zone": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "id",
+          "principal",
+          "role"
+        ],
+        "additionalProperties": false
       }
     },
     {
-      "name": "chest.events.list",
-      "scope": "events:read",
-      "readOnly": true,
+      "name": "chest.spaces.create",
+      "scope": "spaces:write",
+      "readOnly": false,
       "classes": [
         "standard"
       ],
       "clauses": [
-        "BASE-AGENT-010"
+        "SURFACE-004",
+        "SPACE-001"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.versions.list",
+      "scope": "read",
+      "readOnly": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-002",
+        "VERSION-001"
       ]
+    },
+    {
+      "name": "chest.versions.name",
+      "scope": "versions",
+      "readOnly": false,
+      "classes": [
+        "standard"
+      ],
+      "clauses": [
+        "SURFACE-005",
+        "VERSION-001"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.versions.restore",
+      "scope": "versions",
+      "readOnly": false,
+      "classes": [
+        "standard",
+        "external"
+      ],
+      "clauses": [
+        "SURFACE-005",
+        "VERSION-001"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "id",
+          "version"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chest.versions.upload",
+      "scope": "versions",
+      "readOnly": false,
+      "classes": [
+        "standard",
+        "external"
+      ],
+      "clauses": [
+        "SURFACE-004",
+        "VERSION-001",
+        "CHEST-03"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "filename": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "base64": {
+            "type": "string",
+            "maxLength": 699052
+          },
+          "checksum": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "base64"
+        ],
+        "additionalProperties": false
+      }
     }
   ],
   "resources": [
@@ -2365,6 +2485,23 @@
       ]
     },
     {
+      "id": "external-version-upload",
+      "tool": "chest.versions.upload",
+      "args": {
+        "id": {
+          "$from": "external-upload",
+          "pointer": "/id"
+        },
+        "filename": "External retained version.txt",
+        "base64": "QSBuZXcgaW1tdXRhYmxlIG9yaWdpbmFsIHVuZGVyIGN1cnJlbnQgb3V0c2lkZSBhY2Nlc3Mu"
+      },
+      "expect": [
+        {
+          "class": "external"
+        }
+      ]
+    },
+    {
       "id": "outside-plan",
       "tool": "chest.filing.propose",
       "args": {
@@ -2451,7 +2588,10 @@
         {
           "class": "external"
         }
-      ]
+      ],
+      "inject": {
+        "mentions": []
+      }
     },
     {
       "id": "external-member",
@@ -3098,6 +3238,23 @@
       ]
     },
     {
+      "id": "internal-version-upload",
+      "tool": "chest.versions.upload",
+      "args": {
+        "id": {
+          "$from": "undo-original",
+          "pointer": "/id"
+        },
+        "filename": "Retained reviewer original.txt",
+        "base64": "QSBuZXcgaW1tdXRhYmxlIG9yaWdpbmFsIGZvciB0aGUgaHVtYW4gcmVuYW1lIHJldmVyc2FsLg=="
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
       "id": "undo-plan",
       "tool": "chest.filing.propose",
       "args": {
@@ -3125,6 +3282,22 @@
           "$from": "undo-plan",
           "pointer": "/id"
         }
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "undo-rename",
+      "tool": "chest.items.update",
+      "args": {
+        "id": {
+          "$from": "undo-original",
+          "pointer": "/id"
+        },
+        "name": "Awaiting human review.txt"
       },
       "expect": [
         {

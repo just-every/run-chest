@@ -7,7 +7,12 @@ import { createAgentDoor, type Trust } from "../../modules/agent-door/index.ts";
 import type { Bindings } from "../../auth.server";
 import { actionTools } from "./actions.ts";
 import { readTools, itemResource } from "./reads.ts";
-import { chestPeople, localCredential, currentScopes } from "./identity.ts";
+import {
+  chestPeople,
+  localCredential,
+  currentScopes,
+  type HumanSessions,
+} from "./identity.ts";
 export const notTools = [
   {
     clauses: [
@@ -92,6 +97,7 @@ function trust(env: Bindings): Trust | null {
   };
 }
 export function chestAgentDoor(env: Bindings) {
+  const humans: HumanSessions = new Map();
   const door = createAgentDoor({
     seed: "chest",
     name: "Chest",
@@ -99,12 +105,12 @@ export function chestAgentDoor(env: Bindings) {
     db: env.DB,
     origin: env.AUTH_ORIGIN,
     trust: trust(env),
-    people: chestPeople(env),
+    people: chestPeople(env, humans),
     tools: [
       ...readTools(env),
-      ...actionTools(env),
+      ...actionTools(env, humans),
       ...workTools(env),
-      ...planTools(env),
+      ...planTools(env, humans),
       ...deliveryTools(env),
     ].map(nativeRefusals),
     resources: [itemResource(env), ...nativeResources(env)],
@@ -139,9 +145,17 @@ export function chestAgentDoor(env: Bindings) {
       try {
         return await door.handle(request);
       } catch (error) {
-        if (String(error).includes("agent_custody_erasure_pending"))
+        if (
+          /agent_custody_erasure_pending|agent_decision_custody_held/.test(
+            String(error),
+          )
+        )
           return Response.json(
-            { code: "agent_custody_erasure_pending" },
+            {
+              code: String(error).includes("agent_decision_custody_held")
+                ? "agent_decision_custody_held"
+                : "agent_custody_erasure_pending",
+            },
             { status: 409 },
           );
         throw error;
@@ -151,10 +165,16 @@ export function chestAgentDoor(env: Bindings) {
       try {
         return await door.invoke(...args);
       } catch (error) {
-        if (String(error).includes("agent_custody_erasure_pending"))
+        if (
+          /agent_custody_erasure_pending|agent_decision_custody_held/.test(
+            String(error),
+          )
+        )
           return {
             outcome: "refused" as const,
-            code: "agent_custody_erasure_pending",
+            code: String(error).includes("agent_decision_custody_held")
+              ? "agent_decision_custody_held"
+              : "agent_custody_erasure_pending",
             decision: null,
           };
         throw error;

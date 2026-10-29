@@ -25,8 +25,20 @@ export function agentAttribution(agent: AgentIdentity) {
 }
 
 /** Audit IDs stay stable; native panels show the recorded named preparer. */
-export function activityActor(row:{actor:string;detail?:unknown},fallback:(actor:string)=>string=actor=>actor):string {
- let detail:any=row.detail
- if(typeof detail==='string')try{detail=JSON.parse(detail)}catch{detail=null}
- return row.actor.startsWith('agent:')&&detail?.agent&&typeof detail.label==='string'?detail.label:fallback(row.actor)
+export function activityActor(
+  row: { actor: string; detail?: unknown },
+  fallback: (actor: string) => string = (actor) => actor,
+): string {
+  let detail: any = row.detail;
+  if (typeof detail === "string")
+    try {
+      detail = JSON.parse(detail);
+    } catch {
+      detail = null;
+    }
+  return row.actor.startsWith("agent:") &&
+    detail?.agent &&
+    typeof detail.label === "string"
+    ? detail.label
+    : fallback(row.actor);
 }

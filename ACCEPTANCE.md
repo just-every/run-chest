@@ -1957,7 +1957,7 @@ Agent surface · target · **partial**
 7. Mail an agent sends to an outside address names `"<agent> for <person>"` as its sender.
 
 **Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; production door conformance 8524/8524 points; `tests/chest/integrations.mjs`
-**Gap.** Declared product records/versions/activity and envelope mail name agent for person; native human filing Undo has its own journey. Full wider surface and asynchronous native completion attribution remain gaps.
+**Gap.** Declared product records/versions/activity and envelope mail name agent for person; native human rename Undo has its own journey. Full wider surface and asynchronous native completion attribution remain gaps.
 
 #### BASE-AGENT-009 — Every agent action is audited with its class and decision
 
@@ -2062,7 +2062,7 @@ Agent surface · target · **partial** · From new · Cites BASE-AGENT-001, BASE
 7. The Base harness passes on Chest's fixtures in CI under both of its policies, all autonomous and held.
 
 **Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; production door conformance 8524/8524 points; `tests/chest/integrations.mjs`
-**Gap.** Declared registry: 41 tools (40 native plus Base events), 40 of 48 target names and seven resources. Eight target jobs remain undeclared; embedded native agents and expanded event family have not adopted this registry. See docs/agent-adoption.md.
+**Gap.** Declared registry: 42 tools (41 native plus Base events), 40 of 48 target names and seven resources. Eight target jobs remain undeclared; embedded native agents and expanded event family have not adopted this registry. See docs/agent-adoption.md.
 
 #### SURFACE-002 — Find and read what the sponsor can open
 

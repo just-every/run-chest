@@ -9,9 +9,11 @@ import type { Bindings } from "../../auth.server";
 import { context, who, start, allowed } from "../files/access";
 import { place } from "../files/items";
 import { get } from "../store";
+import { execute } from "../api";
+import { attach } from "../integrations/policy";
 import { ChestError } from "../model";
 import { rank, type Space } from "../files/model";
-import { agentSession } from "./identity.ts";
+import { agentSession, humanSession, type HumanSessions } from "./identity.ts";
 import { itemContext, mutation } from "./native.ts";
 import { standard, exposure, recipientRisk } from "./risk.ts";
 import { object, text, id, target, result } from "./schemas.ts";
@@ -29,7 +31,10 @@ type Spec = {
   action?: "contribute" | "manage" | "share";
   classify?: (a: any, c: ToolContext) => Promise<ClassAndFacts[]>;
 };
-export function actionTools(env: Bindings): ToolDefinition[] {
+export function actionTools(
+  env: Bindings,
+  humans: HumanSessions,
+): ToolDefinition[] {
   const specs: Spec[] = [
     {
       name: "spaces.create",
@@ -78,6 +83,9 @@ export function actionTools(env: Bindings): ToolDefinition[] {
           parent: id,
           name: text,
           base64: { type: "string", maxLength: 699052 },
+          filename: text,
+          checksum: text,
+          size: { type: "integer", minimum: 0 },
         },
         ["base64"],
       ),
@@ -86,6 +94,24 @@ export function actionTools(env: Bindings): ToolDefinition[] {
         a.id ? `/items/${encodeURIComponent(a.id)}/versions` : "/items",
       input: (a) => ({ ...a, type: "file" }),
       kind: "create",
+      classes: ["standard", "external"],
+    },
+    {
+      name: "versions.upload",
+      scope: "versions",
+      kind: "create",
+      schema: object(
+        {
+          id,
+          filename: text,
+          base64: { type: "string", maxLength: 699052 },
+          checksum: text,
+          size: { type: "integer", minimum: 0 },
+        },
+        ["id", "base64"],
+      ),
+      clauses: ["SURFACE-004", "VERSION-001", "CHEST-03"],
+      path: (a) => `/items/${encodeURIComponent(a.id)}/versions`,
       classes: ["standard", "external"],
     },
     {
@@ -154,6 +180,9 @@ export function actionTools(env: Bindings): ToolDefinition[] {
           id,
           principal: id,
           role: { enum: ["viewer", "commenter", "editor"] },
+          expires: text,
+          zone: text,
+          message: { type: "string", maxLength: 2000 },
         },
         ["id", "principal", "role"],
       ),
@@ -209,7 +238,23 @@ export function actionTools(env: Bindings): ToolDefinition[] {
     {
       name: "requests.create",
       scope: "request",
-      schema: object({ id, title: text, message: text }, ["id", "title"]),
+      schema: object(
+        {
+          id,
+          title: text,
+          message: { type: "string", maxLength: 2000 },
+          types: array,
+          maxMegabytes: { type: ["number", "string"] },
+          deadline: text,
+          zone: text,
+          checklist: array,
+          verification: { enum: ["none", "email"] },
+          allowReplacement: { type: "boolean" },
+          late: { enum: ["reject", "quarantine"] },
+          duplicates: { enum: ["keep", "reject", "quarantine"] },
+        },
+        ["id"],
+      ),
       clauses: ["SURFACE-008", "SHARE-002"],
       path: (a) => `/items/${encodeURIComponent(a.id)}/file-requests`,
       records: ["file-request"],
@@ -223,12 +268,12 @@ export function actionTools(env: Bindings): ToolDefinition[] {
       path: (a) => `/items/${encodeURIComponent(a.id)}/comments`,
       records: ["comment"],
       classes: ["standard", "external"],
-      classify: async (a, c) =>
-        recipientRisk(
-          env,
-          await itemContext(env, c, a.id, "comment"),
-          a.mentions ?? [],
-        ),
+      classify: async (a, c) => {
+        const target = await itemContext(env, c, a.id, "comment"),
+          recipients = await recipientRisk(env, target, a.mentions ?? []);
+        const audience = await exposure(env, target);
+        return audience[0].class === "external" ? audience : recipients;
+      },
     },
     {
       name: "members.update",
@@ -411,8 +456,22 @@ export function actionTools(env: Bindings): ToolDefinition[] {
                 : spec.records?.includes("comment")
                   ? `chest://item/${encodeURIComponent(String(a.id))}`
                   : `chest://item/${encodeURIComponent(result.id)}`;
+        const previous = result.before?.find(
+          (row: any) => row.id === result.id,
+        );
         return {
           result,
+          ...(spec.name === "items.update" &&
+          (a.action ?? "rename") === "rename" &&
+          previous
+            ? {
+                undo: {
+                  id: result.id,
+                  revision: result.revision,
+                  name: previous.name,
+                },
+              }
+            : {}),
           ...(spec.name === "items.trash"
             ? {}
             : {
@@ -421,6 +480,31 @@ export function actionTools(env: Bindings): ToolDefinition[] {
         };
       },
     };
+    if (spec.name === "items.update")
+      tool.undo = async (value, c) => {
+        const saved = value as { id: string; revision: string; name: string },
+          row = await get<any>(env, "item", saved.id);
+        if (row.revision !== saved.revision)
+          throw new ToolRefusal("rename_undo_stale");
+        const session = await humanSession(env, c.person, humans),
+          path = `/items/${encodeURIComponent(saved.id)}/rename`;
+        attach(session, {
+          sql: "EXISTS(SELECT 1 FROM chest_records WHERE kind='item' AND id=? AND revision=?)",
+          params: [row.id, row.revision],
+        });
+        await execute(
+          env,
+          new Request(new URL(`/api/chest${path}`, env.AUTH_ORIGIN), {
+            method: "POST",
+            headers: { origin: env.AUTH_ORIGIN },
+          }),
+          session,
+          "POST",
+          path,
+          { name: saved.name },
+        );
+        c.emit("item.renamed", `chest://item/${saved.id}`, { id: saved.id });
+      };
     if (!["create", "space"].includes(spec.kind ?? "")) {
       tool.revisionType = "string";
       tool.revision = async (a, c) => {
