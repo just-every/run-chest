@@ -14,6 +14,7 @@ async function staff(){
  for(const name of ['ana','ben','cy','mo','dee','eve','fay']){await h.api('/people',people.owner,{action:'invite',email:`${name}@example.test`,name:name[0].toUpperCase()+name.slice(1)});people[name]=await h.signIn(`${name}@example.test`,true);personalOf[name]=(await h.api('/files',people[name])).personal}
 }
 const mail=(to,pattern)=>h.mails.filter(m=>[m.to].flat().includes(to)&&pattern.test(m.text));
+const staffEmail=name=>[name,'example.test'].join('@');
 const upload=(who,input)=>h.api('/items',who,{type:'file',...input});
 const bytesOf=async(who,item,version,status=200,query='?download=true')=>{const r=await h.raw(`/api/chest/items/${item}/bytes/${version}${query}`,people[who]);assert.equal(r.status,status,`${who} bytes ${r.status}`);return status===200?Buffer.from(await r.arrayBuffer()):r.json()};
 const audit=async action=>(await h.api('/audit',people.owner)).filter(e=>e.action===action);
@@ -152,6 +153,31 @@ try{
   const orphan=await upload(people.eve,{space:personalOf.eve,name:'orphan.txt',base64:b64('orphan')});await h.api('/people',people.owner,{action:'deactivate',email:'eve@example.test'});
   const toAdmins=await h.api(`/items/${orphan.id}/access-requests`,people.dee,{role:'viewer'});assert.deepEqual((await h.api(`/requests/${toAdmins.request}`,people.owner)).approvers,[h.vars.OWNER_EMAIL]);
   await h.api('/people',people.owner,{action:'reactivate',email:'eve@example.test'});people.eve=await h.signIn('eve@example.test');
+  // Without a successor, the only remaining sharer of a team file is its active space manager.
+  const fallback=await h.api('/spaces',people.mo,{name:'synthetic-chest-8'});
+  await h.api(`/spaces/${fallback.id}/members`,people.mo,{members:[{principal:staffEmail('mo'),role:'manager'},{principal:staffEmail('eve'),role:'content_manager'}]});
+  const retained=await upload(people.eve,{space:fallback.id,name:'synthetic-chest-8.txt',base64:b64('synthetic-chest-8')});
+  await h.api('/people',people.owner,{action:'deactivate',email:staffEmail('eve')});await h.api('/files',people.eve,undefined,401);
+  assert.equal(JSON.parse((await audit('admin.person.deactivate')).findLast(e=>e.object_id===staffEmail('eve')).detail).successor,null);
+  await h.api(`/items/${retained.id}`,people.dee,undefined,403);await bytesOf('dee',retained.id,retained.payload.current,403);
+  const managed=await h.api(`/items/${retained.id}/access-requests`,people.dee,{role:'editor',message:'Please review my access'});
+  const pending=await h.api(`/requests/${managed.request}`,people.mo);assert.deepEqual(pending.approvers,[staffEmail('mo')]);assert.equal(pending.itemName,retained.payload.name);
+  assert.ok(!JSON.stringify(await h.api(`/requests/${managed.request}`,people.dee)).includes(retained.payload.name));
+  assert.ok(!JSON.stringify(await h.api('/requests',people.dee)).includes(retained.payload.name));
+  const notices=(await h.api('/notices',people.mo)).filter(n=>n.payload.type==='request'&&n.payload.request===managed.request);
+  assert.equal(notices.length,1);assert.equal(notices[0].payload.item,retained.id);assert.equal(notices[0].payload.from,staffEmail('dee'));assert.ok(notices[0].payload.message.includes(retained.payload.name));assert.match(notices[0].payload.email,/^accepted/);
+  assert.equal(mail(staffEmail('mo'),new RegExp(`/app/requests/${managed.request}`)).length,1);assert.equal(mail(staffEmail('eve'),new RegExp(`/app/requests/${managed.request}`)).length,0);
+  await h.api(`/requests/${managed.request}`,people.cy,{decision:'approve'},403);
+  assert.equal((await h.api(`/requests/${managed.request}`,people.mo)).status,'pending');await h.api(`/items/${retained.id}`,people.dee,undefined,403);
+  await h.api(`/requests/${managed.request}`,people.mo,{decision:'approve',role:'viewer'});
+  const granted=await h.api(`/items/${retained.id}`,people.dee);assert.equal(granted.role,'viewer');assert.ok(granted.grants.some(g=>g.principal===staffEmail('dee')&&g.role==='viewer'&&g.by===staffEmail('mo')));assert.equal(sha(await bytesOf('dee',retained.id,retained.payload.current)),sha('synthetic-chest-8'));
+  assert.ok((await h.api('/notices',people.dee)).some(n=>n.payload.type==='request.decision'&&n.payload.request===managed.request&&n.payload.item===retained.id&&n.payload.message.includes('approved as viewer')));
+  assert.equal(mail(staffEmail('dee'),new RegExp(`/app/items/${retained.id}`)).length,1);
+  await h.api(`/requests/${managed.request}`,people.mo,{decision:'approve',role:'editor'},409);
+  for(const [action,actor,role] of [['access.request','dee','editor'],['access.approve','mo','viewer']]){
+   const events=(await audit(action)).filter(e=>e.object_id===retained.id);assert.equal(events.length,1);assert.equal(events[0].actor,staffEmail(actor));const detail=JSON.parse(events[0].detail);assert.equal(detail.request,managed.request);assert.equal(detail.role,role);assert.equal(detail.outcome,'succeeded');
+  }
+  await h.api('/people',people.owner,{action:'reactivate',email:staffEmail('eve')});people.eve=await h.signIn(staffEmail('eve'));
   const spaceRequest=await h.api(`/items/${space.terms}/access-requests`,people.dee,{role:'viewer'});assert.deepEqual((await h.api(`/requests/${spaceRequest.request}`,people.mo)).approvers,['ana@example.test','mo@example.test']);
   // Requests close after 30 days and the requester is told.
   await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.expiresAt',?) WHERE id=?",new Date(Date.now()-1000).toISOString(),spaceRequest.request);

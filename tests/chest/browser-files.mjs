@@ -34,6 +34,34 @@ const audit=async(action,object)=>(await h.api('/audit',cookies.owner)).filter(e
 const row=(page,text)=>page.locator('li').filter({hasText:text});
 // Uploads go through the drop area's picker: a new file opens its page, a new version reloads the file's page.
 const pick=async(page,file)=>{const from=page.url(),input=page.locator('[data-upload] input[data-pick]').first();if(page.url().includes('/items/')&&await page.locator('[data-upload][data-item]').count())await Promise.all([page.waitForNavigation(),input.setInputFiles(file)]);else{await input.setInputFiles(file);await page.waitForURL(u=>u.href!==from&&u.pathname.startsWith('/app/items/'))}};
+async function departedOwnerRequests(p,width){
+ const address=name=>[name,'example.test'].join('@'),assertions=width===1440;
+ for(const [route,number] of [['successor',width+1],['manager',width+2]]){
+  const email=address(`synthetic-chest-${number}`),name=`synthetic-chest-${number}.txt`,original=`synthetic-chest-${number}`;
+  await h.api('/people',cookies.owner,{action:'invite',email,name:`Departing colleague ${number}`});const departed=await h.signIn(email,true);
+  let space;
+  if(route==='manager'){
+   space=(await json(p.mo,'/spaces',{name:`synthetic-chest-${number}`})).id;
+   await json(p.mo,`/spaces/${space}/members`,{members:[{principal:address('mo'),role:'manager'},{principal:email,role:'content_manager'}]});
+  }else space=(await h.api('/files',departed)).personal;
+  const file=await h.api('/items',departed,{type:'file',space,name,base64:b64(original)});
+  await h.api('/people',cookies.owner,{action:route==='successor'?'offboard':'deactivate',email,...(route==='successor'?{to:address('mo')}:{})});
+  if(assertions){await h.api('/files',departed,undefined,401);const event=(await audit(`admin.person.${route==='successor'?'offboard':'deactivate'}`,email)).at(-1);assert.equal(JSON.parse(event.detail).successor,route==='successor'?address('mo'):null)}
+  const refused=await go(p.dee,`/app/items/${file.id}`);await p.dee.getByRole('heading',{name:'Request access'}).waitFor();
+  if(assertions){assert.ok(!(await refused.text()).includes(name));assert.equal((await call(p.dee,`/items/${file.id}/bytes/${file.payload.current}?download=true`)).status(),403)}
+  await fit(p.dee,`${route}-access`,width);
+  await p.dee.getByLabel('Access you need').selectOption('editor');await p.dee.getByLabel('Message (optional)').fill('Please review my access');await press(p.dee,'Request access');
+  const request=(await json(p.dee,'/requests')).mine.find(r=>r.item===file.id),requestPath=`/app/requests/${request.id}`;
+  if(assertions){assert.equal(await p.dee.getByText(name,{exact:true}).count(),0);assert.ok(!JSON.stringify(await json(p.dee,requestPath.slice(4))).includes(name));assert.deepEqual((await json(p.mo,requestPath.slice(4))).approvers,[address('mo')]);const delivered=h.mails.filter(m=>[m.to].flat().includes(address('mo'))&&m.text.includes(requestPath));assert.equal(delivered.length,1);assert.ok(delivered[0].text.includes(name));assert.equal(h.mails.filter(m=>[m.to].flat().includes(email)&&m.text.includes(requestPath)).length,0)}
+  await go(p.mo,'/app/notices');const notice=row(p.mo,name);await notice.getByText('Please review my access',{exact:false}).waitFor();await fit(p.mo,`${route}-notice`,width);await notice.getByRole('link',{name:'Open request',exact:true}).click();
+  await p.mo.getByRole('link',{name,exact:true}).waitFor();await fit(p.mo,`${route}-request`,width);
+  if(assertions){assert.equal((await call(p.cy,requestPath.slice(4),{decision:'approve',role:'editor'})).status(),403);assert.equal((await json(p.mo,requestPath.slice(4))).status,'pending');assert.equal((await call(p.dee,`/items/${file.id}`)).status(),403)}
+  await p.mo.getByLabel('Grant role').selectOption('viewer');await press(p.mo,'Approve');
+  await go(p.dee,'/app/notices');await p.dee.getByText(`"${name}" was approved as viewer`,{exact:false}).waitFor();await fit(p.dee,`${route}-decision`,width);
+  await go(p.dee,`/app/items/${file.id}`);await p.dee.getByRole('heading',{name,exact:true}).waitFor();await fit(p.dee,`${route}-granted`,width);
+  if(assertions){assert.equal((await json(p.dee,`/items/${file.id}`)).role,'viewer');assert.equal(sha(await download(p.dee,p.dee.locator('.doc-actions').getByRole('link',{name:'Download',exact:true}))),sha(original));assert.equal(h.mails.filter(m=>[m.to].flat().includes(address('dee'))&&m.text.includes(`/app/items/${file.id}`)&&m.text.includes('approved as viewer')).length,1);assert.equal((await call(p.mo,requestPath.slice(4),{decision:'approve',role:'editor'})).status(),409);for(const [action,actor,role] of [['access.request','dee','editor'],['access.approve','mo','viewer']]){const events=await audit(action,file.id);assert.equal(events.length,1);assert.equal(events[0].actor,address(actor));const detail=JSON.parse(events[0].detail);assert.equal(detail.request,request.id);assert.equal(detail.role,role);assert.equal(detail.outcome,'succeeded')}}
+ }
+}
 async function journey(width){
  const p=Object.fromEntries(await Promise.all(people.map(async n=>[n,await as(n,width)]))),xlsx=n=>Buffer.concat([Buffer.from([0x50,0x4b,3,4]),Buffer.from(`budget ${width} revision ${n}`)]);
  // Mo creates a team space and its members in the browser; Ana builds a nested tree with an ordinary file.
@@ -102,6 +130,7 @@ async function journey(width){
  await go(p.cy,`/app/items/${plan}`);await p.cy.getByLabel('Access you need').selectOption('viewer');await press(p.cy,'Request access');
  const declined=async()=>(await json(p.cy,'/notices')).filter(n=>n.payload.message.includes('declined')).length,earlier=await declined();
  await go(p.ana,`/app/items/${plan}`);await press(row(p.ana,'cy@example.test asks for viewer'),'Decline');assert.equal(await declined(),earlier+1);await go(p.cy,'/app/notices');await p.cy.getByText('declined',{exact:false}).first().waitFor();
+ await departedOwnerRequests(p,width);
  // Grant expiry: Eve gets commenter for two days; the one-day notice arrives, Ana extends once, then access ends.
  const until=new Date(Date.now()+2*day).toISOString().slice(0,10);await go(p.ana,`/app/items/${plan}`);await p.ana.getByLabel('Person or group').selectOption('eve@example.test');await p.ana.getByLabel(/^Role/).selectOption('commenter');await p.ana.getByLabel('Access expires (optional)').fill(until);await press(p.ana,'Share');
  const age=async ms=>{const at=new Date(Date.now()+ms).toISOString();await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.expires',?) WHERE id=?",at,`expiry:${plan}:eve@example.test`);await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.grants',(SELECT json_group_array(CASE WHEN json_extract(value,'$.principal')='eve@example.test' THEN json_set(value,'$.expires',?) ELSE json(value) END) FROM json_each(payload,'$.grants'))) WHERE id=?",at,plan)};
