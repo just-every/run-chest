@@ -135,8 +135,8 @@ async function journey(width){
  await go(p.eve,`/app/spaces/${managed.id}`);await pick(p.eve,{name:`synthetic-chest-${width}.txt`,mimeType:'text/plain',buffer:Buffer.from('synthetic-chest-1')});const inherited=id(p.eve);
  await h.api('/people',cookies.owner,{action:'deactivate',email:'eve@example.test'});
  const hidden=await go(p.dee,`/app/items/${inherited}`);await p.dee.getByRole('heading',{name:'Request access'}).waitFor();
- if(width===1440){assert.equal(hidden.status(),403);assert.ok(!(await hidden.text()).includes(`synthetic-chest-${width}.txt`));assert.equal((await call(p.eve,'/files')).status(),401)}
- await fit(p.dee,'manager-access-request',width);await p.dee.getByLabel('Access you need').selectOption('editor');await press(p.dee,'Request access');const fallback=id(p.dee);
+ if(width===1440){assert.equal((await call(p.dee,`/items/${inherited}`)).status(),403);assert.ok(!(await hidden.text()).includes(`synthetic-chest-${width}.txt`));assert.equal((await call(p.eve,'/files')).status(),401)}
+ await fit(p.dee,'manager-access-request',width);await p.dee.getByLabel('Access you need').selectOption('editor');await press(p.dee,'Request access');const fallback=(await json(p.dee,'/requests')).mine.find(r=>r.item===inherited&&r.status==='pending').id;
  const request=await json(p.mo,`/requests/${fallback}`),beforeGrant=(await json(p.mo,`/items/${inherited}`)).grants;
  if(width===1440){
   assert.deepEqual(request.approvers,['mo@example.test']);assert.equal((await json(p.dee,`/requests/${fallback}`)).itemName,null);
