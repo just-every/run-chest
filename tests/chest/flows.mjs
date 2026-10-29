@@ -110,9 +110,49 @@ try{
  });
  await check('CHEST-10',async()=>{
   assert.ok((await h.api(`/documents/${doc.id}/readers`,owner)).some(p=>p.email==='reviewer@example.test'));
-  const group=await h.api('/groups',owner,{name:'Temporary readers',members:['outsider@example.test']});await h.api(`/documents/${doc.id}/grants`,owner,{grants:[{principal:group.id,role:'reader'}]});await h.api(`/documents/${doc.id}`,stranger);await h.api(`/groups/${group.id}`,owner,{name:'Temporary readers',members:[]});await h.api(`/documents/${doc.id}`,stranger,undefined,404);
+  const group=await h.api('/groups',owner,{name:'Temporary readers',members:['outsider@example.test']});
+  await h.api(`/documents/${doc.id}/grants`,owner,{grants:[{principal:group.id,role:'reader'}]});
+  const groupEmail=group.payload.members[0],readers=await h.api(`/documents/${doc.id}/readers`,owner);
+  assert.deepEqual(readers.find(p=>p.email===groupEmail).roles,['reader'],'the current group member is an effective reader');
+  const retained=(await h.api(`/documents/${doc.id}`,owner)).payload.versions.map(version=>({version,url:`/api/chest/documents/${doc.id}/bytes/${version.id}`}));
+  const allowedOriginals=async cookie=>{
+   for(const {version,url} of retained){
+    const preview=await h.raw(url,cookie);
+    assert.equal(preview.status,version.preview==='unsupported'?415:200,`authorized preview: ${version.filename}`);
+    if(preview.status===200)assert.equal(hash(Buffer.from(await preview.arrayBuffer())),version.checksum);
+    const download=await h.raw(url+'?download=true',cookie);
+    assert.equal(download.status,200,`authorized download: ${version.filename}`);
+    const original=Buffer.from(await download.arrayBuffer());assert.equal(original.length,version.size);assert.equal(hash(original),version.checksum);
+   }
+  };
+  const refusedOriginals=async cookie=>{
+   for(const {version,url} of retained)for(const suffix of ['', '?download=true']){
+    const response=await h.raw(url+suffix,cookie);
+    assert.equal(response.status,404,`revoked original: ${version.filename}${suffix}`);
+    assert.deepEqual(await response.json(),{error:'not_found'});
+   }
+  };
+  await h.api(`/documents/${doc.id}`,stranger);assert.equal((await h.api('/library?q=Acme',stranger)).count,1);
+  for(const cookie of [stranger,member])await allowedOriginals(cookie);
+  const unchanged=await h.api(`/documents/${doc.id}`,owner);
+  await h.api(`/groups/${group.id}`,owner,{name:'Temporary readers',members:[]});
+  assert.ok(!(await h.api(`/documents/${doc.id}/readers`,owner)).some(p=>p.email===groupEmail),'removed members leave the effective reader list');
+  await h.api(`/documents/${doc.id}`,stranger,undefined,404);assert.equal((await h.api('/library?q=Acme',stranger)).count,0);
+  await refusedOriginals(stranger);
+  await h.api(`/documents/${doc.id}/review/${doc.payload.versions.at(-1).id}`,stranger,{action:'comment',message:'Revoked reader attempt'},404);
+  await allowedOriginals(member);
   await h.api(`/collections/${collection.id}/grants`,owner,{grants:[]});await h.api(`/documents/${doc.id}`,member,undefined,404);assert.equal((await h.api('/library?q=Acme',member)).count,0);await h.api(`/documents/${doc.id}/review/${doc.payload.versions.at(-1).id}`,member,{action:'approve'},404);
+  for(const cookie of [stranger,member])await refusedOriginals(cookie);
+  assert.deepEqual(await h.api(`/documents/${doc.id}`,owner),unchanged,'refused requests preserve every version and decision');
+  await h.stop();await h.start();
+  for(const cookie of [stranger,member]){
+   await h.api(`/documents/${doc.id}`,cookie,undefined,404);assert.equal((await h.api('/library?q=Acme',cookie)).count,0);
+   await refusedOriginals(cookie);
+   await h.api(`/documents/${doc.id}/review/${doc.payload.versions.at(-1).id}`,cookie,{action:'approve'},404);
+  }
+  assert.deepEqual(await h.api(`/documents/${doc.id}`,owner),unchanged,'restart does not restore revoked access or change originals');
   await h.api(`/collections/${collection.id}/grants`,owner,{grants:[{principal:'reviewer@example.test',role:'reviewer'}]});
+  await allowedOriginals(member);await refusedOriginals(stranger);
  });
  await check('CHEST-11',async()=>{
   const item=(path,content='archive secret')=>({path,size:Buffer.byteLength(content),sha256:hash(content),base64:bytes(content),fields:{policy:'P-2'},sourceId:'synthetic-chest-1',timestamp:'2026-10-01T12:00:00Z',principals:['unmapped@example.test'],decisions:[{actor:'source reviewer',decision:'approved'}]});

@@ -5633,7 +5633,7 @@
       "executable": false
     },
     "tests/chest/flows.mjs": {
-      "sha256": "3630f6c3efb1a44164f235d6eab9d93db9375442acd3ac57b6756dad9b6a2581",
+      "sha256": "2068286367819dd642e34f77f46cd2d440e6b9947d6dee356c9b2ad8d379a7a9",
       "executable": false
     },
     "tests/chest/governance.mjs": {
