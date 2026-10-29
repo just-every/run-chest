@@ -157,15 +157,15 @@
       "executable": false
     },
     ".github/workflows/run-demo.yml": {
-      "sha256": "41365ec7c002e9451166313b085f9e64ed2e3ea002c27f3d5ead845bc9c302b2",
+      "sha256": "9adc86e208ff240cdb01694f4b218d02254aa3819866499eacf07406aaf76693",
       "executable": false
     },
     ".github/workflows/run-site.yml": {
-      "sha256": "1466e0cc78eeee30a85f1602c0b4bbb74f053fc9f1aa723635c5f0fc5a0f19b0",
+      "sha256": "6a5c67cd1cf6388253e526c79f8275b759976959ac27b38aba44e102b00cbd9e",
       "executable": false
     },
     ".github/workflows/scale.yml": {
-      "sha256": "36882f23e40b0dae6d07e0784ca3900523548a04704b15d056adcc8bd9a1db84",
+      "sha256": "0e7d5e45dc498236807739ea9981705540c886d05bc41cc15ce222724e4af5e9",
       "executable": false
     },
     ".github/workflows/verify-nightly.yml": {
@@ -173,7 +173,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "0b1c519ac200d9f4ea2da79dbb6756f73b27ba7ff3dd1b3b6fac5ddb239159b4",
+      "sha256": "96da27b56a2e05b3980039ad6767e17a5407041ee0c79b476060152a8d686fce",
       "executable": false
     },
     ".gitignore": {
@@ -205,7 +205,7 @@
       "executable": false
     },
     "base-copies.json": {
-      "sha256": "36e005e7f3836c85be0577fa90f5317fa68ec05eae5e46556e5db137cd3a6d53",
+      "sha256": "693d4d88d4803658eae8745f2d0252ea71fde23c5b12ff69ec7e47de8cdfe222",
       "executable": false
     },
     "CHANGELOG.md": {
@@ -249,7 +249,7 @@
       "executable": false
     },
     "docs/backup-and-restore.md": {
-      "sha256": "f999ba93d93deb9660d5b964a0c49ec8c7d933876608c3f4ed2420d8bcf114b1",
+      "sha256": "14febd4d659ef7bf8d161402a8b2de90ef539214d96a02c53ee412ccd6f1036e",
       "executable": false
     },
     "docs/bulk.md": {
@@ -1737,7 +1737,7 @@
       "executable": false
     },
     "scripts/install-browser.mjs": {
-      "sha256": "e760e2572518ec445f520ca324b2fa9be3801e11dbe2c1f4c59dc9c98da88912",
+      "sha256": "51a307601ed606c7da99306fc0faa83ec61ed6f8dcc44e8d6143d51b7ec85ed4",
       "executable": false
     },
     "scripts/install-chromium-deps.py": {
@@ -5161,7 +5161,7 @@
       "executable": false
     },
     "src/site/docs/docs.css": {
-      "sha256": "d427d5396274c6b59e9c6f2b3ecb95a94ff52838ed62e644cd844f0dd8e9638b",
+      "sha256": "19362f1d6dad6a34aa3923527a7375567872d70a33a3b99f4539d614d9b55723",
       "executable": false
     },
     "src/site/docs/DocsArticle.tsx": {

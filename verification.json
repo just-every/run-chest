@@ -1,0 +1,213 @@
+{
+  "push": [
+    {
+      "name": "rer-verify",
+      "browser": false,
+      "hosted": true,
+      "commands": [
+        "pnpm run check --profile first-party",
+        "pnpm run build",
+        "pnpm run typecheck",
+        "node tests/chest/flows.mjs",
+        "node tests/chest/files.mjs",
+        "node tests/chest/bulk.mjs",
+        "node tests/chest/ownership.mjs",
+        "node tests/chest/space-policy.mjs",
+        "node tests/chest/new-files.mjs",
+        "node tests/chest/governance.mjs",
+        "node tests/chest/link-versions.mjs",
+        "node tests/chest/link-policy.mjs",
+        "node tests/chest/collection.mjs",
+        "node tests/chest/transfers.mjs",
+        "node tests/chest/guest-links.mjs",
+        "node tests/chest/link-discussions.mjs",
+        "node tests/chest/reading.mjs",
+        "node tests/chest/scan-fields.mjs",
+        "node tests/chest/search.mjs",
+        "node tests/chest/quota.mjs",
+        "node tests/chest/open-source.mjs",
+        "node tests/chest/filing.mjs",
+        "node tests/chest/arrival-rules.mjs",
+        "node tests/chest/agent-filing.mjs",
+        "node tests/chest/audit.mjs",
+        "node tests/chest/file-requests.mjs",
+        "node tests/chest/link-repairs.mjs",
+        "node tests/chest/duplicate-reconciliation.mjs",
+        "node tests/chest/backup-archive.mjs",
+        "node tests/chest/erasure.mjs",
+        "node tests/chest/erasure-archive.mjs",
+        "node tests/chest/integrations.mjs",
+        "node tests/chest/site.mjs"
+      ]
+    },
+    {
+      "name": "browser-files",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node tests/chest/browser-files.mjs",
+        "node tests/chest/browser-scan-fields.mjs"
+      ]
+    },
+    {
+      "name": "browser-other",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node tests/chest/browser-bulk.mjs",
+        "node tests/chest/browser-ownership.mjs",
+        "node tests/chest/browser-space-policy.mjs",
+        "node tests/chest/browser-search.mjs",
+        "node tests/chest/browser-links.mjs",
+        "node tests/chest/browser-sharing-policy.mjs",
+        "node tests/chest/browser-backups.mjs",
+        "node tests/chest/browser-governance.mjs",
+        "node tests/chest/browser-collection.mjs",
+        "node tests/chest/browser-transfers.mjs",
+        "node tests/chest/browser-guest-links.mjs",
+        "node tests/chest/browser-link-discussions.mjs",
+        "node tests/chest/browser-approved-links.mjs",
+        "node tests/chest/browser-audit.mjs",
+        "node tests/chest/browser-file-requests.mjs",
+        "node tests/chest/browser-link-repairs.mjs",
+        "node tests/chest/browser-duplicates.mjs",
+        "node tests/chest/browser-arrival-rules.mjs",
+        "node tests/chest/browser-agent-filing.mjs",
+        "node tests/chest/browser-sync-repair.mjs",
+        "node tests/chest/browser-upload-protection.mjs",
+        "node tests/chest/browser-erasure.mjs",
+        "node tests/chest/browser-integrations.mjs",
+        "node tests/chest/administration.mjs",
+        "node tests/chest/browser-quota.mjs"
+      ]
+    },
+    {
+      "name": "browser-office",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node tests/chest/office.mjs",
+        "node tests/chest/browser-new-files.mjs"
+      ]
+    },
+    {
+      "name": "browser-security",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node tests/chest/security.mjs"
+      ]
+    },
+    {
+      "name": "extra",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node tests/chest/signatures.mjs",
+        "node tests/chest/archive-preview.mjs",
+        "node tests/chest/browser-signatures.mjs"
+      ]
+    },
+    {
+      "name": "organisation",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node tests/chest/organisation.mjs"
+      ]
+    }
+  ],
+  "nightly": [
+    {
+      "name": "journey",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node tests/chest/journey.mjs"
+      ]
+    },
+    {
+      "name": "upgrade",
+      "browser": true,
+      "hosted": false,
+      "commands": [
+        "node tests/chest/upgrade.mjs"
+      ]
+    }
+  ],
+  "readers": {
+    "tests/chest/administration.mjs": [],
+    "tests/chest/agent-filing.mjs": [],
+    "tests/chest/archive-preview.mjs": [],
+    "tests/chest/arrival-rules.mjs": [],
+    "tests/chest/audit.mjs": [],
+    "tests/chest/backup-archive.mjs": [],
+    "tests/chest/browser-agent-filing.mjs": [],
+    "tests/chest/browser-approved-links.mjs": [],
+    "tests/chest/browser-arrival-rules.mjs": [],
+    "tests/chest/browser-audit.mjs": [],
+    "tests/chest/browser-backups.mjs": [],
+    "tests/chest/browser-bulk.mjs": [],
+    "tests/chest/browser-collection.mjs": [],
+    "tests/chest/browser-duplicates.mjs": [],
+    "tests/chest/browser-erasure.mjs": [],
+    "tests/chest/browser-file-requests.mjs": [],
+    "tests/chest/browser-files.mjs": [],
+    "tests/chest/browser-governance.mjs": [],
+    "tests/chest/browser-guest-links.mjs": [],
+    "tests/chest/browser-integrations.mjs": [],
+    "tests/chest/browser-link-discussions.mjs": [],
+    "tests/chest/browser-link-repairs.mjs": [],
+    "tests/chest/browser-links.mjs": [],
+    "tests/chest/browser-new-files.mjs": [],
+    "tests/chest/browser-ownership.mjs": [],
+    "tests/chest/browser-quota.mjs": [],
+    "tests/chest/browser-scan-fields.mjs": [],
+    "tests/chest/browser-search.mjs": [],
+    "tests/chest/browser-sharing-policy.mjs": [],
+    "tests/chest/browser-signatures.mjs": [],
+    "tests/chest/browser-space-policy.mjs": [],
+    "tests/chest/browser-sync-repair.mjs": [],
+    "tests/chest/browser-transfers.mjs": [],
+    "tests/chest/browser-upload-protection.mjs": [],
+    "tests/chest/bulk.mjs": [],
+    "tests/chest/collection.mjs": [],
+    "tests/chest/duplicate-reconciliation.mjs": [],
+    "tests/chest/erasure-archive.mjs": [],
+    "tests/chest/erasure.mjs": [],
+    "tests/chest/file-requests.mjs": [],
+    "tests/chest/files.mjs": [],
+    "tests/chest/filing.mjs": [],
+    "tests/chest/flows.mjs": [],
+    "tests/chest/governance.mjs": [],
+    "tests/chest/guest-links.mjs": [],
+    "tests/chest/integrations.mjs": [],
+    "tests/chest/journey.mjs": [],
+    "tests/chest/link-discussions.mjs": [],
+    "tests/chest/link-policy.mjs": [],
+    "tests/chest/link-repairs.mjs": [],
+    "tests/chest/link-versions.mjs": [],
+    "tests/chest/new-files.mjs": [],
+    "tests/chest/office.mjs": [],
+    "tests/chest/open-source.mjs": [],
+    "tests/chest/organisation.mjs": [],
+    "tests/chest/ownership.mjs": [],
+    "tests/chest/quota.mjs": [],
+    "tests/chest/reading.mjs": [],
+    "tests/chest/scan-fields.mjs": [],
+    "tests/chest/search.mjs": [],
+    "tests/chest/security.mjs": [],
+    "tests/chest/signatures.mjs": [],
+    "tests/chest/site.mjs": [
+      "CONTRACT.md",
+      "ACCEPTANCE.md",
+      "CLAIMS.md",
+      "HANDOVER.md",
+      "STATUS.md",
+      "sources.lock.json"
+    ],
+    "tests/chest/space-policy.mjs": [],
+    "tests/chest/transfers.mjs": [],
+    "tests/chest/upgrade.mjs": []
+  }
+}
