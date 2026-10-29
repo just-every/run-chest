@@ -1601,7 +1601,7 @@
       "executable": false
     },
     "src/chest/agent-door/identity.ts": {
-      "sha256": "1b91eb63408bea3aa23f5c6eda6619176241d234d615255ac5e110d4d538e41e",
+      "sha256": "65282420ac69ffe602faabb08a07956e19d6e12f7a64534d002703282b027690",
       "executable": false
     },
     "src/chest/agent-door/index.ts": {
@@ -1621,7 +1621,7 @@
       "executable": false
     },
     "src/chest/agent-door/resources.ts": {
-      "sha256": "5d1256860f9a5b1e31a6346c0f9e0679079c835877760244c8de9a332f6ba242",
+      "sha256": "1e96a29ce43532bd7eccee10a2ca44e168f73aef27813c46b1746a100e41e916",
       "executable": false
     },
     "src/chest/agent-door/risk.ts": {

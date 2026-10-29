@@ -140,9 +140,10 @@ export async function localCredential(env: Bindings, request: Request) {
 }
 export async function currentScopes(
   env: Bindings,
-  principal: { clientId?: string; scopes: readonly string[] },
+  principal: { clientId?: string; consent?: string; scopes: readonly string[] },
 ) {
-  if (!principal.clientId?.startsWith("token:")) return [...principal.scopes];
+  if (principal.consent || !principal.clientId?.startsWith("token:"))
+    return [...principal.scopes];
   try {
     return [
       ...(
@@ -161,9 +162,10 @@ export async function agentSession(
   env: Bindings,
   ctx: ToolContext,
 ): Promise<{ session: Session; local?: Authorized }> {
-  const local = ctx.clientId?.startsWith("token:")
-    ? await credentialSession(env, new Request(env.AUTH_ORIGIN), ctx.clientId)
-    : undefined;
+  const local =
+    !ctx.consent && ctx.clientId?.startsWith("token:")
+      ? await credentialSession(env, new Request(env.AUTH_ORIGIN), ctx.clientId)
+      : undefined;
   const session = local?.session ?? (await nativeSession(env, ctx.person));
   if (session.operator.id !== ctx.person.id)
     throw new ToolRefusal("unauthenticated");
