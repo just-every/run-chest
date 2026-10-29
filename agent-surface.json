@@ -1831,6 +1831,16 @@
         "label": "outside",
         "email": "outside@outside.test",
         "initializer": "tests/agent-door/reviewer.mjs"
+      },
+      {
+        "label": "inactive",
+        "email": "inactive@example.com",
+        "initializer": "tests/agent-door/negative-reviewer.mjs"
+      },
+      {
+        "label": "excluded",
+        "email": "excluded@outside.test",
+        "initializer": "tests/agent-door/negative-reviewer.mjs"
       }
     ],
     "network": {
@@ -1839,7 +1849,29 @@
         "https://scanner.example.invalid"
       ]
     },
-    "journey": "tests/agent-door/native.mjs"
+    "journey": "tests/agent-door/native.mjs",
+    "sponsors": [
+      {
+        "label": "owner"
+      },
+      {
+        "label": "inactive",
+        "email": "inactive@example.com",
+        "role": "member",
+        "negativeOnly": true,
+        "initializer": "tests/agent-door/sponsors.mjs"
+      },
+      {
+        "label": "excluded",
+        "email": "excluded@outside.test",
+        "role": "member",
+        "negativeOnly": true,
+        "initializer": "tests/agent-door/sponsors.mjs"
+      }
+    ],
+    "fixtures": {
+      "module": "tests/agent-door/phase.mjs"
+    }
   },
   "journey": [
     {

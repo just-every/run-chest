@@ -1,6 +1,6 @@
 # Run it locally
 
-Start Chest with one line, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-chest`. git is required; rer brings Node and pnpm. Have Node 22 or later? `npx -y @runeditrun/rer dev just-every/run-chest` does the same; to only set it up, run `npx -y @runeditrun/rer setup just-every/run-chest`. Chest pins the published `@runeditrun/rer` 0.2.88; every verb runs that package. `rer demo` runs a throwaway demo with sample data; see [DEMO.md](DEMO.md).
+Start Chest with one line, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-chest`. git is required; rer brings Node and pnpm. Have Node 22 or later? `npx -y @runeditrun/rer dev just-every/run-chest` does the same; to only set it up, run `npx -y @runeditrun/rer setup just-every/run-chest`. Chest pins the published `@runeditrun/rer` 0.2.91; every verb runs that package. `rer demo` runs a throwaway demo with sample data; see [DEMO.md](DEMO.md).
 
 ## Launch with one command
 

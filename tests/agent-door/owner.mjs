@@ -1,3 +1,4 @@
+import {configureReviewers} from "./sponsors.mjs";
 export default async function ({
   request,
   origin,
@@ -8,6 +9,7 @@ export default async function ({
   fixtures,
   token,
 }) {
+  configureReviewers(reviewers);
   const bootstrap = await request(new URL(claim.path, origin).href, {
     method: "POST",
     headers: { Origin: origin, "Content-Type": "application/json" },
