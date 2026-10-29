@@ -52,8 +52,17 @@ try{
   await h.api('/documents',owner,{...filing(),fields:{policy:'x',amount:'wrong'},filename:'proof.txt',base64:bytes('private original')},400);
   await h.api('/documents',owner,{...filing(),filename:'proof.txt',base64:bytes('private original'),checksum:'wrong'},400);
   assert.equal((await h.api('/library',owner)).count,0);
+  for(const offset of [-1,1]){
+   const original=Buffer.from(`synthetic-chest-size-${offset<0?'under':'over'}`),before=await h.api('/library',owner);
+   const refused=await h.api('/documents',owner,{...filing(),filename:'size-check.txt',base64:original.toString('base64'),checksum:hash(original),size:original.length+offset},400);
+   assert.equal(refused.error,'size_mismatch');
+   const after=await h.api('/library',owner);assert.equal(after.count,before.count);assert.deepEqual(after.documents,before.documents);
+  }
   doc=await h.api('/documents',owner,{...filing(),filename:'proof.txt',base64:bytes('private original'),checksum:hash('private original'),size:16});
+  doc=await h.api(`/documents/${doc.id}`,owner);
   assert.equal(doc.payload.versions[0].checksum,hash('private original'));assert.equal(doc.payload.versions[0].size,16);
+  const downloaded=await h.raw(`/api/chest/documents/${doc.id}/bytes/${doc.payload.versions[0].id}?download=true`,owner);
+  assert.equal(downloaded.status,200);assert.deepEqual(Buffer.from(await downloaded.arrayBuffer()),Buffer.from('private original'));
  });
  await check('CHEST-04',async()=>{
   doc=await h.api(`/documents/${doc.id}/filing`,owner,{...filing(),reference:{kind:'customer',name:'Client'}});assert.equal(doc.payload.reference.kind,'customer');assert.equal(doc.payload.versions[0].filename,'proof.txt');
