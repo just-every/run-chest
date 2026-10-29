@@ -1,13 +1,13 @@
 # Chest source ownership
 
-Chest adopts Base revision `9eb83c85a9088c16ffe94a3af43e8a2e95acc377` (tag `rer-v0.2.40`) for its
+Chest adopts Base revision `f96363bf919ea3e7ed1837daba6894810a50e4a6` (tag `rer-v0.2.86`) for its
 runtime, operator-auth, mail, dependencies, owner-claim, import-kit and
 edition-authoring source. `base-copies.json` records verbatim copies;
 `edition.json`, `.edition/sources` and `sources.lock.json` retain comparison
-provenance. The hydration README is adapted for package-mode commands, with its
+provenance, including their historical comparison origins. The hydration README is adapted for package-mode commands, with its
 original path mapped in `edition.json`; it makes no claim of byte equality.
 
-The published `@runeditrun/rer` 0.2.79 is pinned exactly in `package.json` and
+The published `@runeditrun/rer` 0.2.86 is pinned exactly in `package.json` and
 `pnpm-lock.yaml`. It owns command execution and archive format v2, whose integrity
 digest binds the manifest, including source identity, erasure epoch and journal.
 Version 1 archives require the acknowledged, backup-only recovery procedure in
@@ -45,7 +45,7 @@ remain `documents/chest`, `@documents/chest`, `documents-chest`, `foundation` an
 [just-every/run-chest](https://github.com/just-every/run-chest).
 
 The demo, operator-auth, owner-claim, mail, dependencies and import-kit modules
-are refreshed together from `rer-v0.2.79` (4280971d7c0295b8a88c3e1179048efcbbe14f30) with the edition-authoring tool's `refresh-base`,
+are refreshed together from `rer-v0.2.86` (f96363bf919ea3e7ed1837daba6894810a50e4a6) with the edition-authoring tool's `refresh-base`,
 including import-kit’s shared d1-transport dependency. Their exact copies are
 recorded in `base-copies.json`; applied migrations remain unchanged.
 

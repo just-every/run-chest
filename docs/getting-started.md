@@ -1,11 +1,10 @@
-Chest runs on your own computer with **rer**, the Run Edit Run command. It runs
-on macOS, Linux or Windows with WSL2. Git is required; rer brings Node and pnpm.
-
 ## Get Chest and start it
 
 ```sh
 curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-chest
 ```
+
+macOS, Linux or Windows with WSL2. git is required; rer brings Node and pnpm.
 
 Already have Node 22 or later? `npx -y @runeditrun/rer dev just-every/run-chest` does the same. The installer changes no shell settings, so if it prints an `export PATH=…` line, run that line to use `rer` again later. To set Chest up without starting it, use `setup` in place of `dev`.
 
@@ -60,19 +59,3 @@ lives in the `run-chest` folder on your computer.
 [Set up your library](/docs/set-up): invite your staff and create the first
 collection and document type.
 
-## Start from a fresh clone
-
-On macOS or Ubuntu LTS with Git and Node 22.20.0 or later, these five commands
-install the locked dependencies, claim your owner account and open Chest:
-
-```sh
-git clone https://github.com/just-every/run-chest.git
-cd run-chest
-npx -y @runeditrun/rer install
-npx -y @runeditrun/rer setup --owner-email you@example.com
-npx -y @runeditrun/rer dev
-```
-
-Open the private `RER_OPEN` link and finish setup. This computer installation
-listens on the same computer; staff on other devices cannot reach it. For team
-access on your own Linux host, follow [Linux server installation](/docs/server).

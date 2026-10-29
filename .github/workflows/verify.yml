@@ -1,12 +1,17 @@
 name: Verify
 on:
   push:
-    branches: [main, 'cloud/**', 'sx/**', 'hotfix/**']
-    tags: ['v*']
+    branches: ['**']
   pull_request:
   workflow_dispatch:
-  schedule:
-    - cron: '41 18 * * *'
+  workflow_call:
+    inputs:
+      tier:
+        type: string
+        default: push
+      timeout:
+        type: number
+        default: 15
 permissions:
   contents: read
 concurrency:
@@ -16,98 +21,130 @@ concurrency:
 jobs:
   plan:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 1
     permissions:
       contents: read
       actions: read
     outputs:
-      skip: ${{ steps.reuse.outputs.skip }}
+      skip: ${{ steps.plan.outputs.skip }}
+      coverage: ${{ steps.plan.outputs.coverage }}
+      tier: ${{ steps.plan.outputs.tier }}
+      readers: ${{ steps.plan.outputs.readers }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 2
           persist-credentials: false
-      - id: reuse
+      - name: Check reusable workflow permissions
+        run: node scripts/verify-ci.mjs --check-workflows
+      - name: Look up complete nightly marker
+        id: nightly
+        if: ${{ github.event_name == 'schedule' || inputs.tier == 'nightly' }}
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: ${{ runner.temp }}/nightly-green
+          key: nightly-green-${{ github.sha }}
+          lookup-only: true
+      - id: plan
         env:
-          GH_TOKEN: ${{ github.token }}
-          EVENT: ${{ github.event_name }}
-          REF: ${{ github.ref }}
-          SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
-          PR_HEAD: ${{ github.event.pull_request.head.sha }}
-          WF_REF: ${{ github.workflow_ref }}
-        run: |
-          set -euo pipefail
-          wf="${WF_REF%@*}"; wf="${wf##*/}"
-          # Evidence is only a push run of this workflow from this repository, never this run: a pull request
-          # tests its merge ref, a dispatch may run a subset, and a PR run of this workflow may itself be a skip.
-          # Prints "<status> <conclusion>" of the newest such run on SHA $1, or nothing (any API error: nothing).
-          newest_push() {
-            gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$wf/runs?head_sha=$1&event=push&per_page=100" \
-              --jq "[.workflow_runs[] | select(.head_repository.full_name == \"$GITHUB_REPOSITORY\" and .id != $GITHUB_RUN_ID)] | max_by(.id) | select(. != null) | \"\(.status) \(.conclusion)\"" || true
-          }
-          green() { [ "$(newest_push "$1")" = "completed success" ]; }
-          skip=false
-          # C1: main push of a SHA whose newest push run of this workflow (a branch run) is green.
-          if [ "$EVENT" = push ] && [ "$REF" = refs/heads/main ] && green "$GITHUB_SHA"; then skip=true; fi
-          # C3 (exact): same tree as the parent, and the parent's newest push run is green (e.g. an empty commit).
-          if [ "$skip" = false ] && [ "$EVENT" = push ] && parent=$(git rev-parse -q --verify HEAD~1) \
-             && [ "$(git rev-parse 'HEAD^{tree}')" = "$(git rev-parse 'HEAD~1^{tree}')" ] && green "$parent"; then skip=true; fi
-          # C2: same-repository PR. The lander takes any green same-repo run on the exact SHA as evidence,
-          # pull_request runs included, so this run may pass without shards only when the push run on the
-          # PR head is green: wait for it (at most 25 minutes).
-          # No push run, any other result, or the wait running out: run in full.
-          if [ "$EVENT" = pull_request ] && [ "$SAME_REPO" = true ]; then
-            for _ in $(seq 1 50); do
-              state=$(newest_push "$PR_HEAD")
-              case "$state" in
-                'completed success') skip=true; break ;;
-                ''|completed\ *) break ;;
-                *) sleep 30 ;;
-              esac
-            done
-          fi
-          echo "skip=$skip" >> "$GITHUB_OUTPUT"
-  # Parallel push shards keep the core, role and Office journeys within the job budget.
-  # The fresh-clone installer journey retains coverage on release tags, nightly and manual runs.
+          TIER: ${{ inputs.tier || 'push' }}
+          GITHUB_TOKEN: ${{ github.token }}
+          NIGHTLY_CACHE_HIT: ${{ steps.nightly.outputs.cache-hit }}
+        run: node scripts/verify-ci.mjs --plan
+  # Seven push shards retain Chest's public flows; browser shards share the verified Worker build.
+  # Fresh-clone and upgrade journeys run on release tags and the separate twice-weekly nightly.
   rer-verify:
+    name: shards (rer-verify)
     needs: plan
-    if: needs.plan.outputs.skip != 'true'
+    if: needs.plan.outputs.coverage == 'full' && (needs.plan.outputs.tier == 'push' || needs.plan.outputs.tier == 'all')
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: ${{ inputs.timeout || 15 }}
     env:
       CI: 'true'
       WRANGLER_SEND_METRICS: 'false'
+      PLAYWRIGHT_SKIP_BROWSER_GC: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Prepare runner-owned caches
+        run: |
+          printf 'PLAYWRIGHT_BROWSERS_PATH=%s/ms-playwright\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/pnpm-store" "$RUNNER_TEMP/ms-playwright" "$RUNNER_TEMP/rer-apt/archives"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          # Contract coverage names Chest's historical conversion source.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '22.20.0'
+          package-manager-cache: false
+      - name: Check edition source lock freshness
+        run: node scripts/edition-authoring/cli.mjs check
       - run: npm install --global pnpm@10.12.4
+      - name: Set runner-owned pnpm store
+        run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+      - name: Cache frozen dependencies and Chromium
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ${{ runner.temp }}/pnpm-store
+            ${{ runner.temp }}/ms-playwright
+            ${{ runner.temp }}/rer-apt/archives/*.deb
+          key: chest-ubuntu24-temp-store-${{ runner.arch }}-${{ github.job }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', '.test-auth/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec rer check --profile first-party
       - run: node src/base/contract-docs.mjs check
       - run: pnpm exec rer verify
+      - name: Share the verified Worker build
+        uses: actions/upload-artifact@v4
+        with:
+          name: chest-built-worker
+          path: dist/
+          include-hidden-files: true
+          if-no-files-found: error
   browser:
-    needs: plan
-    if: needs.plan.outputs.skip != 'true'
+    name: shards (browser-${{ matrix.suite }})
+    needs: [plan, rer-verify]
+    if: needs.plan.outputs.coverage == 'full' && (needs.plan.outputs.tier == 'push' || needs.plan.outputs.tier == 'all')
     strategy:
       fail-fast: false
       matrix:
         suite: [files, other, office, security]
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: ${{ inputs.timeout || 15 }}
     env:
       CI: 'true'
       WRANGLER_SEND_METRICS: 'false'
+      PLAYWRIGHT_SKIP_BROWSER_GC: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Prepare runner-owned caches
+        run: |
+          printf 'PLAYWRIGHT_BROWSERS_PATH=%s/ms-playwright\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/pnpm-store" "$RUNNER_TEMP/ms-playwright" "$RUNNER_TEMP/rer-apt/archives"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '22.20.0'
+          package-manager-cache: false
       - run: npm install --global pnpm@10.12.4
+      - name: Set runner-owned pnpm store
+        run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+      - name: Cache frozen dependencies and Chromium
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ${{ runner.temp }}/pnpm-store
+            ${{ runner.temp }}/ms-playwright
+            ${{ runner.temp }}/rer-apt/archives/*.deb
+          key: chest-ubuntu24-temp-store-${{ runner.arch }}-${{ github.job }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', '.test-auth/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
-      - run: node scripts/install-browser.mjs
-      - run: pnpm run build
+      - run: node scripts/install-browser.mjs scripts/install-chromium-deps.py
+      - name: Restore the verified Worker build
+        uses: actions/download-artifact@v4
+        with:
+          name: chest-built-worker
+          path: dist/
       - if: matrix.suite == 'office'
         run: pnpm run test:chest:office
       - run: pnpm run test:browser:${{ matrix.suite }}
@@ -117,18 +154,27 @@ jobs:
           name: chest-files-pages-${{ matrix.suite }}
           path: test-results/*.png
   journey:
+    name: shards (journey)
     needs: plan
-    if: needs.plan.outputs.skip != 'true' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/'))
+    if: needs.plan.outputs.coverage == 'full' && (needs.plan.outputs.tier == 'nightly' || needs.plan.outputs.tier == 'all')
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: ${{ inputs.timeout || 15 }}
     env:
       CI: 'true'
       WRANGLER_SEND_METRICS: 'false'
+      PLAYWRIGHT_SKIP_BROWSER_GC: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Prepare runner-owned caches
+        run: |
+          printf 'PLAYWRIGHT_BROWSERS_PATH=%s/ms-playwright\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/pnpm-store" "$RUNNER_TEMP/ms-playwright" "$RUNNER_TEMP/rer-apt/archives"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '22.20.0'
+          package-manager-cache: false
       - name: Recover unused Android SDK space
         # GitHub's Ubuntu image documents this SDK path; Chest uses no Android tools.
         # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#android
@@ -153,9 +199,21 @@ jobs:
             if (free < minimum) throw Error(`${label} volume has insufficient free space for the real RER server`);
           }
           NODE
+      - name: Check edition source lock freshness
+        run: node scripts/edition-authoring/cli.mjs check
       - run: npm install --global pnpm@10.12.4
+      - name: Set runner-owned pnpm store
+        run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+      - name: Cache frozen dependencies and Chromium
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ${{ runner.temp }}/pnpm-store
+            ${{ runner.temp }}/ms-playwright
+            ${{ runner.temp }}/rer-apt/archives/*.deb
+          key: chest-ubuntu24-temp-store-${{ runner.arch }}-${{ github.job }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', '.test-auth/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
-      - run: node scripts/install-browser.mjs
+      - run: node scripts/install-browser.mjs scripts/install-chromium-deps.py
       - run: pnpm run test:journey
         env:
           CHEST_TEST_CHECKOUT: '1'
@@ -166,23 +224,46 @@ jobs:
           path: test-results/*.png
 
   extra:
-    needs: plan
-    if: needs.plan.outputs.skip != 'true'
+    name: shards (extra)
+    needs: [plan, rer-verify]
+    if: needs.plan.outputs.coverage == 'full' && (needs.plan.outputs.tier == 'push' || needs.plan.outputs.tier == 'all')
     # Signatures: HTTP journeys against the built Worker, then their browser journeys at 1440 and 390.
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: ${{ inputs.timeout || 15 }}
     env:
       CI: 'true'
       WRANGLER_SEND_METRICS: 'false'
+      PLAYWRIGHT_SKIP_BROWSER_GC: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Prepare runner-owned caches
+        run: |
+          printf 'PLAYWRIGHT_BROWSERS_PATH=%s/ms-playwright\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/pnpm-store" "$RUNNER_TEMP/ms-playwright" "$RUNNER_TEMP/rer-apt/archives"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '22.20.0'
+          package-manager-cache: false
       - run: npm install --global pnpm@10.12.4
+      - name: Set runner-owned pnpm store
+        run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+      - name: Cache frozen dependencies and Chromium
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ${{ runner.temp }}/pnpm-store
+            ${{ runner.temp }}/ms-playwright
+            ${{ runner.temp }}/rer-apt/archives/*.deb
+          key: chest-ubuntu24-temp-store-${{ runner.arch }}-${{ github.job }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', '.test-auth/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
-      - run: node scripts/install-browser.mjs
-      - run: pnpm run build
+      - run: node scripts/install-browser.mjs scripts/install-chromium-deps.py
+      - name: Restore the verified Worker build
+        uses: actions/download-artifact@v4
+        with:
+          name: chest-built-worker
+          path: dist/
       - run: pnpm run test:chest:extra
       - run: pnpm run test:browser:extra
       - uses: actions/upload-artifact@v4
@@ -191,27 +272,51 @@ jobs:
           name: chest-pages-extra
           path: test-results/*.png
   organisation:
-    needs: plan
-    if: needs.plan.outputs.skip != 'true'
+    name: shards (organisation)
+    needs: [plan, rer-verify]
+    if: needs.plan.outputs.coverage == 'full' && (needs.plan.outputs.tier == 'push' || needs.plan.outputs.tier == 'all')
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: ${{ inputs.timeout || 15 }}
     env:
       CI: 'true'
       WRANGLER_SEND_METRICS: 'false'
+      PLAYWRIGHT_SKIP_BROWSER_GC: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - name: Prepare runner-owned caches
+        run: |
+          printf 'PLAYWRIGHT_BROWSERS_PATH=%s/ms-playwright\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/pnpm-store" "$RUNNER_TEMP/ms-playwright" "$RUNNER_TEMP/rer-apt/archives"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
           repository: just-every/run-auth
           ref: ba5db7d3747fc6a8ecbfb82e0e5c55f81b45b0f3
           path: .test-auth
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '22.20.0'
+          package-manager-cache: false
       - run: npm install --global pnpm@10.12.4
+      - name: Set runner-owned pnpm store
+        run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+      - name: Cache frozen dependencies and Chromium
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ${{ runner.temp }}/pnpm-store
+            ${{ runner.temp }}/ms-playwright
+            ${{ runner.temp }}/rer-apt/archives/*.deb
+          key: chest-ubuntu24-temp-store-${{ runner.arch }}-${{ github.job }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', '.test-auth/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
-      - run: node scripts/install-browser.mjs
-      - run: pnpm run build
+      - run: node scripts/install-browser.mjs scripts/install-chromium-deps.py
+      - name: Restore the verified Worker build
+        uses: actions/download-artifact@v4
+        with:
+          name: chest-built-worker
+          path: dist/
       - run: pnpm install --frozen-lockfile && pnpm exec vite build
         working-directory: .test-auth
       - run: pnpm run test:organisation
@@ -224,21 +329,42 @@ jobs:
           path: test-results/*-lifecycle-*.png
 
   upgrade:
+    name: shards (upgrade)
     needs: plan
-    if: needs.plan.outputs.skip != 'true' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/'))
+    if: needs.plan.outputs.coverage == 'full' && (needs.plan.outputs.tier == 'nightly' || needs.plan.outputs.tier == 'all')
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: ${{ inputs.timeout || 15 }}
     env:
       CI: 'true'
       WRANGLER_SEND_METRICS: 'false'
+      PLAYWRIGHT_SKIP_BROWSER_GC: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Prepare runner-owned caches
+        run: |
+          printf 'PLAYWRIGHT_BROWSERS_PATH=%s/ms-playwright\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/pnpm-store" "$RUNNER_TEMP/ms-playwright" "$RUNNER_TEMP/rer-apt/archives"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '22.20.0'
+          package-manager-cache: false
+      - name: Check edition source lock freshness
+        run: node scripts/edition-authoring/cli.mjs check
       - run: npm install --global pnpm@10.12.4
+      - name: Set runner-owned pnpm store
+        run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+      - name: Cache frozen dependencies and Chromium
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ${{ runner.temp }}/pnpm-store
+            ${{ runner.temp }}/ms-playwright
+            ${{ runner.temp }}/rer-apt/archives/*.deb
+          key: chest-ubuntu24-temp-store-${{ runner.arch }}-${{ github.job }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', '.test-auth/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
-      - run: node scripts/install-browser.mjs
+      - run: node scripts/install-browser.mjs scripts/install-chromium-deps.py
       - run: pnpm run test:upgrade
       - uses: actions/upload-artifact@v4
         if: always()
@@ -246,18 +372,108 @@ jobs:
           name: chest-upgrade-pages
           path: test-results/*-upgrade-*.png
 
-  verify:
+  light:
+    needs: plan
+    if: needs.plan.outputs.coverage == 'light'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          # Contract coverage names Chest's historical conversion source.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22.20.0'
+          package-manager-cache: false
+      - run: npm install --global pnpm@10.12.4
+      - run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: ${{ runner.temp }}/pnpm-store
+          key: chest-ubuntu24-temp-store-${{ runner.arch }}-light-${{ hashFiles('pnpm-lock.yaml', 'package.json') }}
+      - run: pnpm install --frozen-lockfile
+      - name: Run reviewed readers and build the run site
+        env:
+          LIGHT_READERS: ${{ needs.plan.outputs.readers }}
+        run: node scripts/verify-ci.mjs --light
+
+  full-push-proof:
     needs: [plan, rer-verify, browser, extra, organisation]
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && needs.plan.outputs.tier == 'push' && needs.plan.outputs.coverage == 'full' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Require every full push shard
+        env:
+          RESULTS: ${{ needs.rer-verify.result }} ${{ needs.browser.result }} ${{ needs.extra.result }} ${{ needs.organisation.result }}
+        run: for result in $RESULTS; do test "$result" = success; done
+
+  nightly-proof:
+    needs: [plan, rer-verify, browser, extra, organisation, journey, upgrade]
+    if: ${{ always() && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && needs.plan.result == 'success' && needs.plan.outputs.coverage == 'full' && needs.journey.result == 'success' && needs.upgrade.result == 'success' && (needs.plan.outputs.tier == 'nightly' || (needs.plan.outputs.tier == 'all' && needs.rer-verify.result == 'success' && needs.browser.result == 'success' && needs.extra.result == 'success' && needs.organisation.result == 'success')) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Mark successful complete nightly coverage
+        run: mkdir -p "$RUNNER_TEMP/nightly-green" && printf '%s\n' '${{ github.sha }}' > "$RUNNER_TEMP/nightly-green/sha"
+      - uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: ${{ runner.temp }}/nightly-green
+          key: nightly-green-${{ github.sha }}
+
+  verify:
+    needs: [plan, rer-verify, browser, extra, organisation, journey, upgrade, light, full-push-proof, nightly-proof]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
-      - name: Require the plan and every shard
+      - name: Require the selected coverage and its proof
         env:
           PLAN: ${{ needs.plan.result }}
           SKIP: ${{ needs.plan.outputs.skip }}
-          RESULTS: ${{ join(needs.*.result, ' ') }}
+          COVERAGE: ${{ needs.plan.outputs.coverage }}
+          TIER: ${{ needs.plan.outputs.tier }}
+          PUSH_RESULTS: ${{ needs.rer-verify.result }} ${{ needs.browser.result }} ${{ needs.extra.result }} ${{ needs.organisation.result }}
+          NIGHTLY_RESULTS: ${{ needs.journey.result }} ${{ needs.upgrade.result }}
+          LIGHT: ${{ needs.light.result }}
+          PUSH_PROOF: ${{ needs.full-push-proof.result }}
+          NIGHTLY_PROOF: ${{ needs.nightly-proof.result }}
+          EXPECT_PUSH_PROOF: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && needs.plan.outputs.tier == 'push' && needs.plan.outputs.coverage == 'full' }}
+          EXPECT_NIGHTLY_PROOF: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && (needs.plan.outputs.tier == 'nightly' || needs.plan.outputs.tier == 'all') && needs.plan.outputs.coverage == 'full' }}
         run: |
+          set -euo pipefail
           test "$PLAN" = success
-          if [ "$SKIP" = true ]; then exit 0; fi
-          for result in $RESULTS; do test "$result" = success; done
+          case "$PUSH_PROOF:$NIGHTLY_PROOF" in
+            *failure*|*cancelled*) exit 1 ;;
+          esac
+          require_results() { for result in $2; do test "$result" = "$1"; done; }
+          case "$COVERAGE" in
+            reuse)
+              test "$SKIP" = true
+              test "$LIGHT" = skipped
+              require_results skipped "$PUSH_RESULTS $NIGHTLY_RESULTS"
+              ;;
+            light)
+              test "$SKIP" = false
+              test "$LIGHT" = success
+              require_results skipped "$PUSH_RESULTS $NIGHTLY_RESULTS"
+              ;;
+            full)
+              test "$SKIP" = false
+              test "$LIGHT" = skipped
+              case "$TIER" in
+                push) require_results success "$PUSH_RESULTS"; require_results skipped "$NIGHTLY_RESULTS" ;;
+                nightly) require_results skipped "$PUSH_RESULTS"; require_results success "$NIGHTLY_RESULTS" ;;
+                all) require_results success "$PUSH_RESULTS $NIGHTLY_RESULTS" ;;
+                *) exit 1 ;;
+              esac
+              ;;
+            *) exit 1 ;;
+          esac
+          if [ "$EXPECT_PUSH_PROOF" = true ]; then test "$PUSH_PROOF" = success; fi
+          if [ "$EXPECT_NIGHTLY_PROOF" = true ]; then test "$NIGHTLY_PROOF" = success; fi

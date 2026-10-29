@@ -33,7 +33,16 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .node-version
-      - run: corepack enable && pnpm install --frozen-lockfile
+      - run: corepack enable
+      - name: Set runner-owned pnpm store
+        run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+        env:
+          COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: ${{ runner.temp }}/pnpm-store
+          key: chest-ubuntu24-temp-store-${{ runner.arch }}-run-demo-${{ hashFiles('pnpm-lock.yaml', 'package.json') }}
+      - run: pnpm install --frozen-lockfile
         env:
           COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
       - name: Scope the test host
