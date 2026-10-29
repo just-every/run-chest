@@ -17,7 +17,7 @@
     "deploy": "rer deploy",
     "onboard": "node scripts/install.mjs",
     "build:app": "rer queue build:app -- sh -c \"node scripts/generate-agent-docs.mjs --check && node scripts/build-review-viewer.mjs && node scripts/check-public-assets.mjs && vite build\"",
-    "verify:app": "rer queue verify:app -- sh -c \"pnpm run build && pnpm run typecheck && pnpm run test:chest:core && pnpm run test:site\"",
+    "verify:app": "rer queue verify:app -- node scripts/verify-chest.mjs",
     "reset": "rer reset",
     "export": "rer export",
     "import": "rer import",
