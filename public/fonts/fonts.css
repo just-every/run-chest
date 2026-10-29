@@ -48,6 +48,7 @@
   --chest-font-ui: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   /* The app's text (body.app, public/chest-app.css): IBM Plex Sans, the sibling of the Plex Mono used for exact facts,
      not Inter. Inter stays the brand's: the run site, the lockup and Base's own pages (CH13). */
+  --chest-font-brand: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --chest-font-app: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --chest-font-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
   --chest-font-hand: Caveat, 'Bradley Hand', cursive;

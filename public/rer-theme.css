@@ -6,8 +6,8 @@
    token below is a literal copy of the --chest-* token it stands for (fonts/fonts.css): change both.
    The Inter faces name format('woff2'), the hint the reader takes; the file is the same variable font. */
 /* Chest's faces, all SIL Open Font License 1.1, self-hosted: the page makes no third-party request.
-   Inter (variable weight and optical size) for the run site, the brand and the app: display cuts at headline
-   sizes, text cuts below; IBM Plex Mono for exact facts and the terminal; Caveat for handwriting (sticky notes,
+   Inter (variable weight and optical size) for the run site and the brand; IBM Plex Sans (variable weight) for the app's text,
+   the sibling of the Plex Mono beside it; IBM Plex Mono for exact facts and the terminal; Caveat for handwriting (sticky notes,
    filled-in scans). Licenses sit beside each face. */
 @font-face {
   font-family: Inter;
@@ -55,6 +55,22 @@
   font-weight: 500;
   font-display: swap;
   src: url('/fonts/plex-mono/ibm-plex-mono-latin-ext-500-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: swap;
+  src: url('/fonts/plex-sans/ibm-plex-sans-latin-wght-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: swap;
+  src: url('/fonts/plex-sans/ibm-plex-sans-latin-ext-wght-normal.woff2') format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 @font-face {
