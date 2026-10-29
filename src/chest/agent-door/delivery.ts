@@ -1,0 +1,244 @@
+import {
+  defineTool,
+  ToolRefusal,
+  type ToolContext,
+  type ToolDefinition,
+  type ClassAndFacts,
+} from "../../modules/agent-door/index.ts";
+import type { Bindings } from "../../auth.server";
+import { get } from "../store";
+import { scanRecord, canReleaseScan } from "../content-security/scan";
+import { agentSession } from "./identity.ts";
+import { itemContext, mutation, nativeCall } from "./native.ts";
+import { recipientRisk, sensitivity, standard } from "./risk.ts";
+import { object, id, text, target, result } from "./schemas.ts";
+export function deliveryTools(env: Bindings): ToolDefinition[] {
+  async function envelope(a: Record<string, unknown>, c: ToolContext) {
+    const row = await get<any>(env, "signature", String(a.id));
+    await itemContext(env, c, row.payload.item, "contribute");
+    if (row.payload.createdBy !== c.person.email)
+      throw new ToolRefusal("resource_unavailable");
+    return row;
+  }
+  async function quarantine(a: Record<string, unknown>, c: ToolContext) {
+    const row = await scanRecord(env, String(a.checksum)),
+      { session } = await agentSession(env, c);
+    if (!row || !(await canReleaseScan(env, session, row.payload)))
+      throw new ToolRefusal("resource_unavailable");
+    return row;
+  }
+  return [
+    defineTool({
+      name: "chest.send",
+      title: "Prepare or send a signature envelope",
+      description:
+        "Prepare a native PDF/DOCX envelope or send its exact version to named signers in parallel. Automatic reminders and sequential queues are not enabled. Native legal-warning acknowledgments require a person.",
+      scope: "send:write",
+      readOnly: false,
+      inputSchema: object(
+        {
+          phase: { enum: ["prepare", "send"] },
+          id,
+          item: id,
+          version: id,
+          signers: {
+            type: "array",
+            items: object({ email: text, name: text }, ["email", "name"]),
+            minItems: 1,
+            maxItems: 10,
+          },
+          fields: {
+            type: "array",
+            items: object(
+              {
+                signer: text,
+                type: {
+                  enum: ["signature", "initials", "date", "text", "checkbox"],
+                },
+                page: { type: "integer", minimum: 1 },
+                x: { type: "number", minimum: 0, maximum: 1 },
+                y: { type: "number", minimum: 0, maximum: 1 },
+                w: { type: "number", minimum: 0.01, maximum: 1 },
+                h: { type: "number", minimum: 0.01, maximum: 1 },
+                required: { type: "boolean" },
+                label: text,
+              },
+              ["signer", "type", "page", "x", "y", "w", "h"],
+            ),
+            minItems: 1,
+            maxItems: 200,
+          },
+        },
+        ["phase"],
+      ),
+      outputSchema: result,
+      classes: ["standard", "external", "sensitive"],
+      clauses: ["SURFACE-008", "SIGN-001"],
+      async classify(a, c) {
+        if (a.phase === "prepare") {
+          await itemContext(env, c, a.item, "contribute");
+          return standard();
+        }
+        const row = await envelope(a, c);
+        if (row.payload.warnings.length)
+          throw new ToolRefusal("native_proof_required");
+        const target = await itemContext(
+            env,
+            c,
+            row.payload.item,
+            "contribute",
+          ),
+          risk = await recipientRisk(
+            env,
+            target,
+            ((a.signers as any[]) ?? []).map((s) => String(s.email)),
+          ),
+          sensitive = await sensitivity(env, target.chain.at(-1)!);
+        return sensitive[0].class === "sensitive"
+          ? [...risk.filter((r) => r.class !== "standard"), ...sensitive]
+          : risk;
+      },
+      async summary(a, c) {
+        const row = a.phase === "prepare" ? null : await envelope(a, c),
+          item = (
+            await itemContext(env, c, a.item ?? row?.payload.item, "contribute")
+          ).chain.at(-1)!;
+        return {
+          target: { id: item.id, name: item.payload.name },
+          recipients: ((a.signers as any[]) ?? []).map((s) => String(s.email)),
+          items: [
+            a.phase === "prepare"
+              ? "Prepare exact-version signature draft"
+              : `Send native envelope ${row!.id} in parallel; no automatic reminders`,
+          ],
+        };
+      },
+      revisionType: "string",
+      revision: async (a, c) =>
+        a.phase === "prepare"
+          ? (await itemContext(env, c, a.item, "contribute")).chain.at(-1)!
+              .revision
+          : (await envelope(a, c)).revision,
+      async run(a, c) {
+        if (a.phase === "prepare")
+          return {
+            result: await mutation(
+              env,
+              c,
+              "send.prepare",
+              "/signatures",
+              { item: a.item, version: a.version },
+              ["signature"],
+            ),
+          };
+        const row = await envelope(a, c);
+        if (row.payload.warnings.length)
+          throw new ToolRefusal("native_proof_required");
+        return {
+          result: await mutation(
+            env,
+            c,
+            "send",
+            `/signatures/${encodeURIComponent(row.id)}/send`,
+            {
+              signers: a.signers,
+              fields: a.fields,
+              mode: "parallel",
+              reminderDays: null,
+            },
+            ["signature"],
+          ),
+        };
+      },
+    }),
+    defineTool({
+      name: "chest.quarantine.list",
+      title: "Inspect native quarantine",
+      description:
+        "Read metadata for originals the sponsor may release; no original or provider credential is returned.",
+      scope: "security:read",
+      readOnly: true,
+      inputSchema: object(),
+      outputSchema: result,
+      classes: ["standard"],
+      clauses: ["SURFACE-010", "SECURITY-002"],
+      classify: standard,
+      async run(_a, c) {
+        const view = await nativeCall(env, c, "GET", "/content-security");
+        return {
+          result: {
+            scans: view.scans
+              .filter(
+                (r: any) =>
+                  !r.payload.released && r.payload.state === "infected",
+              )
+              .map((r: any) => ({
+                id: r.id,
+                checksum: r.payload.checksum,
+                state: r.payload.state,
+              })),
+          },
+        };
+      },
+    }),
+    defineTool({
+      name: "chest.quarantine.release",
+      title: "Release a quarantined original",
+      description:
+        "Release only the named native scan under the sponsor’s existing release authority, recording the exact reason and agent preparer.",
+      scope: "security:write",
+      readOnly: false,
+      inputSchema: object(
+        {
+          checksum: { type: "string", pattern: "^[a-f0-9]{64}$" },
+          reason: { type: "string", minLength: 5, maxLength: 1000 },
+        },
+        ["checksum", "reason"],
+      ),
+      outputSchema: result,
+      classes: ["security"],
+      clauses: ["SURFACE-010", "SECURITY-002"],
+      authority: "none",
+      effect: {
+        kind: "record",
+        justification:
+          "Release the exact retained scan verdict; no account, standing grant or credential changes.",
+      },
+      classify: async (a, c) => {
+        await quarantine(a, c);
+        return [
+          {
+            class: "security",
+            facts: { measure: 1, setting: "quarantine.release" },
+          },
+        ];
+      },
+      target: async (a, c) => {
+        const row = await quarantine(a, c);
+        return { kind: row.kind, id: row.id };
+      },
+      revisionType: "string",
+      revision: async (a, c) => (await quarantine(a, c)).revision,
+      summary: async (a, c) => {
+        const row = await quarantine(a, c);
+        return {
+          target: { id: row.id, name: "Quarantined original" },
+          items: [String(a.reason)],
+        };
+      },
+      async run(a, c) {
+        await quarantine(a, c);
+        return {
+          result: await mutation(
+            env,
+            c,
+            "quarantine.release",
+            "/content-security/release",
+            { ...a, confirm: true },
+            ["content-scan"],
+          ),
+        };
+      },
+    }),
+  ];
+}

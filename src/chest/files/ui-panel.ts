@@ -1,3 +1,4 @@
+import { activityActor } from '../agent-attribution'
 import { esc, form, icon, when, day } from '../ui-shared'
 import { eventWords } from '../ui-words'
 import { fileKind, fileTile } from '../../ui/icons'
@@ -25,7 +26,7 @@ function versions(d: any, name: Named, returnTo: string) {
  const rows = d.versions.slice(0, 3).map((v: any) => {
   const current = v.id === d.item.current, approved = d.item.approved === v.id
   const restore = !current && d.can.contribute && (!v.sourceItem || v.sourceItem === d.id) ? form(`/items/${d.id}/versions/${v.id}/restore`, '', 'Restore', returnTo, { className: 'form pv-restore', buttonClass: 'link-button' }) : ''
-  return `<li class="tl${current ? ' tl-current' : ''}"><p class="tl-head"><strong>v${number(d, v.id)}</strong>${approved ? '<span class="chip chip-ok">approved</span>' : v.review?.state === 'submitted' ? '<span class="chip chip-warn">in review</span>' : current ? '<span class="quiet">current</span>' : ''}</p><div class="tl-meta"><span>${when(v.at)} <span aria-hidden="true">·</span> ${esc(name(v.actor))}</span>${restore}</div></li>`
+  return `<li class="tl${current ? ' tl-current' : ''}"><p class="tl-head"><strong>v${number(d, v.id)}</strong>${approved ? '<span class="chip chip-ok">approved</span>' : v.review?.state === 'submitted' ? '<span class="chip chip-warn">in review</span>' : current ? '<span class="quiet">current</span>' : ''}</p><div class="tl-meta"><span>${when(v.at)} <span aria-hidden="true">·</span> ${esc(v.preparedBy?.label??name(v.actor))}</span>${restore}</div></li>`
  }).join('')
  return `<section class="ps" id="panel-versions" aria-labelledby="pv-versions"><div class="ps-head"><h3 id="pv-versions">Versions</h3><a class="link-quiet" href="/app/items/${esc(d.id)}#history">See all</a></div><ol class="timeline">${rows}</ol></section>`
 }
@@ -40,7 +41,7 @@ function sharing(d: any, name: Named, returnTo: string) {
 }
 function activity(d: any, name: Named) {
  const rows = (d.activity ?? []).filter((r: any) => !/^(get|post|put|delete|provider|automation|public)\./.test(r.action)).slice(0, 4)
- return `<section class="ps" id="panel-activity" aria-labelledby="pv-activity"><div class="ps-head"><h3 id="pv-activity">Activity</h3><a class="link-quiet" href="/app/audit?object=${esc(d.id)}">History</a></div>${rows.length ? `<ul class="pact">${rows.map((r: any) => `<li><span>${esc(name(r.actor))} ${esc(eventWords(r.action))}</span><span class="quiet">${when(r.at)}</span></li>`).join('')}</ul>` : '<p class="quiet">No activity yet.</p>'}</section>`
+ return `<section class="ps" id="panel-activity" aria-labelledby="pv-activity"><div class="ps-head"><h3 id="pv-activity">Activity</h3><a class="link-quiet" href="/app/audit?object=${esc(d.id)}">History</a></div>${rows.length ? `<ul class="pact">${rows.map((r: any) => `<li><span>${esc(activityActor(r,name))} ${esc(eventWords(r.action))}</span><span class="quiet">${when(r.at)}</span></li>`).join('')}</ul>` : '<p class="quiet">No activity yet.</p>'}</section>`
 }
 // Your uploads still going up into this folder (or as this file's next version), with Cancel.
 export function recentUploads(uploads: any[], returnTo: string) {
@@ -52,7 +53,7 @@ export function recentUploads(uploads: any[], returnTo: string) {
 export function detailsPanel(d: any, name: Named, o: { close?: string; returnTo: string; uploads?: any[]; children?: number; head?: boolean }) {
  const v = d.versions.find((v: any) => v.id === d.item.current), kind = kindOf(d.item.name, d.item.type)
  const where = [d.space.name, ...d.path.map((p: any) => p.name)].join(' / ')
- const facts = [['Type', kind], ...(v ? [['Size', `${size(v.size)} (${v.size.toLocaleString('en-US')} bytes)`]] : [['Contents', `${o.children ?? 0} item${o.children === 1 ? '' : 's'}`]]), ['Location', esc(where)], ...(v ? [['Modified', when(d.item.updatedAt)], ['Modified by', esc(name(v.actor))]] : []), ['Created', when(d.item.createdAt)], ['Created by', esc(name(d.item.createdBy))]]
+ const facts = [['Type', kind], ...(v ? [['Size', `${size(v.size)} (${v.size.toLocaleString('en-US')} bytes)`]] : [['Contents', `${o.children ?? 0} item${o.children === 1 ? '' : 's'}`]]), ['Location', esc(where)], ...(v ? [['Modified', when(d.item.updatedAt)], ['Modified by', esc(v.preparedBy?.label??name(v.actor))]] : []), ['Created', when(d.item.createdAt)], ['Created by', esc(name(d.item.createdBy))]]
  const tabs = `<nav class="ptabs" aria-label="Details sections"><a href="#panel-details" class="is-on">Details</a>${d.item.type === 'file' ? '<a href="#panel-versions">Versions</a>' : ''}<a href="#panel-sharing">Sharing</a>${o.head === false ? '' : '<a href="#panel-activity">Activity</a>'}</nav>`
  const head = o.head === false ? '' : `<div class="panel-head">${fileTile(fileKind(d.item.name, d.item.type))}<div><h2>${esc(d.item.name)}</h2><p class="quiet">${v ? `${esc(size(v.size))} <span aria-hidden="true">·</span> ` : ''}${esc(kind)}</p></div>${o.close ? `<a class="icon-button panel-close" href="${esc(o.close)}" aria-label="Close details" data-tooltip="Close details">${icon('close')}</a>` : ''}</div>`
  return `<aside class="panel" aria-label="Details of ${esc(d.item.name)}">${head}
