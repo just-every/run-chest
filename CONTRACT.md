@@ -2295,6 +2295,8 @@ The owner-approved page-s1 homepage (the hero, then one supplier's folder from t
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026).
 
+CHEST-09 is judged from the named journeys on the candidate tree. Its exact commit and push Verify run are recorded in the fleet handoff; the earlier judgment above remains provenance for unchanged rows.
+
 EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fbfbf114 (28 October 2026). Its final candidate strengthens the preview-authority journey and records the exact candidate in Verify; the runtime bytes are unchanged from that source commit.
 
 | Clauses | Done | Partial | Missing | Total |
