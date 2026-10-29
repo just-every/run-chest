@@ -2,7 +2,7 @@ import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { owner } from '../access'
 import { digest } from '../blobs'
-import { id, insist, now, type Row } from '../model'
+import { ChestError, id, insist, now, type Row } from '../model'
 import { decode, get, list } from '../store'
 import { commit, fresh, maybe, next, type Op } from '../files/repo'
 import { eraseReading } from '../read/jobs'
@@ -58,7 +58,7 @@ export async function requestErasure(env:Bindings,s:Session,input:any,authorized
  // A preservation request is deliberately recorded without touching the held object or its bytes.
  if(targets.length){await commit(env,s,[{row:receipt}],{audits:[{action:'erasure.held',object:key,detail:{outcome:'held'}}]});return receipt}
  // Custody erasure happens before native removal; interruption leaves an inspectable pending operation.
- await commit(env,s,[{row:receipt}],{audits:[{action:'erasure.request',object:key,detail:{outcome:'pending'}}]})
+ try{await commit(env,s,[{row:receipt}],{preconditions:[{sql:`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${agentCustodySql}) THEN 1 ELSE 0 END`,params:[]}],audits:[{action:'erasure.request',object:key,detail:{outcome:'pending'}}]})}catch(error){if(String(error).includes('CHECK constraint failed'))throw new ChestError('agent_custody_changed',409);throw error}
  return continueErasure(env,s,receipt,{records,selected,personal,person,email})
 }
 type Plan={records:Row[];selected:Row[];personal:Row[];person:Awaited<ReturnType<typeof identityPlan>>|null;email:string|null}

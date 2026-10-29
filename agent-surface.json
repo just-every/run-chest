@@ -754,11 +754,70 @@
           "q": {
             "type": "string",
             "maxLength": 1000
+          },
+          "type": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "owner": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "creator": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "sharedBy": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "modified": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "modifiedFrom": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "modifiedTo": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "space": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "versions": {
+            "enum": [
+              "current",
+              "any"
+            ]
+          },
+          "timeZone": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "parent": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "cursor": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
           }
         },
-        "required": [
-          "q"
-        ],
+        "required": [],
         "additionalProperties": false
       },
       "classes": [
@@ -767,7 +826,9 @@
       ],
       "clauses": [
         "SURFACE-002",
-        "SEARCH-001"
+        "SEARCH-001",
+        "SEARCH-002",
+        "SEARCH-003"
       ]
     },
     {
@@ -1645,7 +1706,8 @@
     "owner": {
       "initializer": "tests/agent-door/owner.mjs",
       "bindings": {
-        "CONTENT_SCANNER_TOKEN": "token"
+        "CONTENT_SCANNER_TOKEN": "token",
+        "MAIL_FROM": "email"
       }
     },
     "reviewers": [
@@ -1665,7 +1727,8 @@
       "origins": [
         "https://scanner.example.invalid"
       ]
-    }
+    },
+    "journey": "tests/agent-door/native.mjs"
   },
   "journey": [
     {
@@ -3014,6 +3077,58 @@
       "expect": [
         {
           "class": "sensitive"
+        }
+      ]
+    },
+    {
+      "id": "undo-original",
+      "tool": "chest.files.upload",
+      "args": {
+        "space": {
+          "$from": "private-space",
+          "pointer": "/id"
+        },
+        "name": "Reversible filing.txt",
+        "base64": "VGhlIGV4YWN0IHJldGFpbmVkIG9yaWdpbmFsIGZvciBhIG5hdGl2ZSBodW1hbiBVbmRvLg=="
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "undo-plan",
+      "tool": "chest.filing.propose",
+      "args": {
+        "items": [
+          {
+            "$from": "undo-original",
+            "pointer": "/id"
+          }
+        ],
+        "actions": {
+          "rename": "Reviewed filing.txt"
+        }
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
+      "id": "undo-apply",
+      "tool": "chest.filing.apply",
+      "args": {
+        "id": {
+          "$from": "undo-plan",
+          "pointer": "/id"
+        }
+      },
+      "expect": [
+        {
+          "class": "standard"
         }
       ]
     },

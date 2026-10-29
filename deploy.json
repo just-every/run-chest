@@ -58,11 +58,6 @@
       "binding": "COLLABORA_URL",
       "environment": "COLLABORA_URL",
       "optional": true
-    },
-    {
-      "binding": "MAIL_FROM",
-      "environment": "MAIL_FROM",
-      "verifyStandIn": "Chest <auth@example.invalid>"
     }
   ],
   "r2": [
