@@ -20,10 +20,11 @@ export async function reminder(env: Bindings, r: SignRequest, key: string, signe
 // Outcomes go to the requester as notices (in app and by mail); completion also mails every signer the completed-copy link.
 export async function tell(env: Bindings, r: SignRequest, key: string, outcome: 'completed' | 'declined' | 'voided' | 'expired', detail = '') {
  const text = { completed: `Everyone signed ${r.name}. The signed PDF and its audit certificate are now versions of the file.`, declined: `${detail || 'A signer'} declined to sign ${r.name}. Nothing was signed or filed.`, voided: `The request to sign ${r.name} was voided. Nothing was signed or filed.`, expired: `The request to sign ${r.name} expired before everyone signed. Nothing was signed or filed.` }[outcome]
- const n = notice(r.createdBy, `signature.${outcome}`, r.item, r.createdBy, text)
+ const attributed=r.preparedBy?`${r.preparedBy.label}: ${text}`:text
+ const n = notice(r.createdBy, `signature.${outcome}`, r.item, r.preparedBy?.label??r.createdBy, attributed)
  await commit(env, null, [{ row: n }], { by: 'chest:signing' })
  await deliver(env, null, [n])
 }
-export const completedMail = async (env: Bindings, r: SignRequest, key: string, signer: Signer) => sendMail(env, signer.email, `Signed: ${r.name}`, `Everyone has signed ${r.name}. Open your link to download the signed PDF and its audit certificate. You will be asked to verify again.\n\n${link(env, await signerToken(env, key, signer))}`, id(), key, 'completed')
-export const cancelled = (env: Bindings, r: SignRequest, key: string, signer: Signer, why: string) => sendMail(env, signer.email, `${r.name}: signing ${why}`, `The request to sign ${r.name} was ${why}. Nothing was signed, and your earlier link no longer opens the document.`, id(), key, why)
+export const completedMail = async (env: Bindings, r: SignRequest, key: string, signer: Signer) => sendMail(env, signer.email, `Signed: ${r.name}`, `${r.preparedBy?`${r.preparedBy.label} prepared this envelope.\n\n`:''}Everyone has signed ${r.name}. Open your link to download the signed PDF and its audit certificate. You will be asked to verify again.\n\n${link(env, await signerToken(env, key, signer))}`, id(), key, 'completed')
+export const cancelled = (env: Bindings, r: SignRequest, key: string, signer: Signer, why: string) => sendMail(env, signer.email, `${r.name}: signing ${why}`, `${r.preparedBy?`${r.preparedBy.label} prepared this envelope.\n\n`:''}The request to sign ${r.name} was ${why}. Nothing was signed, and your earlier link no longer opens the document.`, id(), key, why)
 export { getRequest }
