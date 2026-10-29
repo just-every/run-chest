@@ -9,6 +9,8 @@ const rows = [
   "",
   "See [Agent adoption and limits](agent-adoption.md) for the records-clerk jobs, native authority, capacity limits and undeclared work. Use `/mcp` or its `/mcp/chest` alias; policy, Pause and named approvals apply to every declared tool.",
   "",
+  `Declared capabilities: ${surface.capabilities.map((name) => "`" + name + "`").join(", ")}. Events and subscriptions are unavailable and return \`capability_not_declared\`.`,
+  "",
   "| Tool | Scope | Read only | Classes | Clauses |",
   "| --- | --- | --- | --- | --- |",
   ...surface.tools.map(
@@ -38,7 +40,7 @@ const rows = [
   "",
   'An unset, blocked, paused or revoked policy/identity has no effect. An approval hold returns the saved exact summary and a URL for a named person; an agent cannot approve it. Stable MCP error fields live at `_meta["com.runeditrun/error"]`. Native errors retain their symbolic code, including current role, download, app-policy, quarantine, source-pause and explicit-budget refusals. `self_escalation`, `approval_required`, `review_required`, `agents_paused`, `resource_unavailable`, stale revision and idempotency conflicts also refuse effects. Read content is untrusted.',
   "",
-  "The core journey declares `spend:{none:true}`. Paid provider reservations, subscriptions, resource refresh, multi-sponsor journeys and new mail-event edges are undeclared. The built-in event cursor is not a claim that the broader native event catalogue is adopted.",
+  "The core journey declares `spend:{none:true}`. Paid provider reservations, events, subscriptions, resource refresh, multi-sponsor journeys and new mail-event edges are undeclared. Native connector webhooks keep their separate purpose.",
   "",
 ];
 const output = rows.join("\n");
