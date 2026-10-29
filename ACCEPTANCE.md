@@ -8,10 +8,10 @@ The primary journey: create a team space, move originals and rights in, install 
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 37 | 48 | 38 | 123 |
+| Core | 39 | 46 | 38 | 123 |
 | Agent surface | 0 | 2 | 24 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 38 | 54 | 78 | 170 |
+| Full target | 40 | 52 | 78 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -49,7 +49,7 @@ Core · published · **done**
 
 #### CHEST-03 — Validate before publishing originals
 
-Core · published · **partial** · Cites BASE-INPUT-003
+Core · published · **done** · Cites BASE-INPUT-003
 
 **Requirement.** Uploads validate actual bytes, SHA-256 and size. Durable original custody comes before atomic record admission, so an invalid or failed upload never appears as a library file.
 
@@ -57,8 +57,8 @@ Core · published · **partial** · Cites BASE-INPUT-003
 1. An uploaded original's retained hash, size and downloaded bytes match.
 2. Bad checksum, size and filing values create no visible record.
 
-**Evidence.** `tests/chest/flows.mjs`
-**Gap.** Point 1 passes, and point 2's bad checksum and bad filing values are asserted to create no visible record (`tests/chest/flows.mjs`); no test submits a mismatched size, so the size refusal is not asserted.
+**Evidence.** `tests/chest/flows.mjs` — CHEST-03: retained hash, size and original download; checksum, understated size, overstated size and filing refusals leave the library unchanged.
+**Gap.** None.
 
 #### CHEST-04 — Accountable filing and safe moves
 
@@ -141,7 +141,7 @@ Core · published · **partial**
 
 #### CHEST-10 — People and group grants
 
-Core · published · **partial**
+Core · published · **done**
 
 **Requirement.** The owner grants and revokes reader, editor and reviewer access for people and groups. Effective readers need active local identities, current group membership governs access, and imported people have no sign-in authority. These rules keep holding under the five-level roles (ROLE-001) and item sharing (SHARE-004).
 
@@ -149,8 +149,8 @@ Core · published · **partial**
 1. A group grant shows its effective readers.
 2. After a member is removed and collection access revoked, details, search, previews, downloads and review mutations are refused.
 
-**Evidence.** `tests/chest/flows.mjs`; `tests/chest/restore.mjs`
-**Gap.** After the member is removed and collection access revoked, details, search and review mutations are asserted refused, and readers are listed for a person grant (`tests/chest/flows.mjs`); the group grant's effective readers are never listed, and no preview or download is attempted after the revoke.
+**Evidence.** `tests/chest/flows.mjs` — CHEST-10: active group readers, removal from effective readers, authorized original downloads and next-request refusal of every retained preview and download after membership removal or collection revocation; detail, search and review refusals. `tests/chest/restore.mjs`.
+**Gap.** None.
 
 #### CHEST-11 — Reviewed, reversible archive admission
 

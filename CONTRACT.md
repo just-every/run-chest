@@ -2295,26 +2295,28 @@ The owner-approved page-s1 homepage (the hero, then one supplier's folder from t
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026).
 
+CHEST-03 and CHEST-10 are judged from the code and tests at commit bdb9e2e6c8c2ed019229ba9c1e10905775a23db7 (29 October 2026). The final candidate changes only contract status, generated views and the source lock; its exact commit and Verify receipt are recorded in the fleet report.
+
 EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fbfbf114 (28 October 2026). Its final candidate strengthens the preview-authority journey and records the exact candidate in Verify; the runtime bytes are unchanged from that source commit.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 9 | 4 | 0 | 13 |
+| Published | 11 | 2 | 0 | 13 |
 | Target and push further | 29 | 50 | 78 | 157 |
-| All | 38 | 54 | 78 | 170 |
+| All | 40 | 52 | 78 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
 | `CHEST-01` | Owner claim and staff identity | published | done | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-02` | Typed filing without lost values | published | done | `tests/chest/flows.mjs` |  |
-| `CHEST-03` | Validate before publishing originals | published | partial | `tests/chest/flows.mjs` | Point 1 passes, and point 2's bad checksum and bad filing values are asserted to create no visible record (`tests/chest/flows.mjs`); no test submits a mismatched size, so the size refusal is not asserted. |
+| `CHEST-03` | Validate before publishing originals | published | done | `tests/chest/flows.mjs` — CHEST-03: retained hash, size and original download; checksum, understated size, overstated size and filing refusals leave the library unchanged. |  |
 | `CHEST-04` | Accountable filing and safe moves | published | done | `tests/chest/flows.mjs` |  |
 | `CHEST-05` | Safe basic previews | published | done | `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs` |  |
 | `CHEST-06` | Current access governs every private door | published | done | `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs` |  |
 | `CHEST-07` | Immutable versions and exact approved pointers | published | done | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-08` | Exact-version human decisions | published | done | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-09` | Review and expiry work keep evidence | published | partial | `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs` | Point 2 passes, and point 1's completion record and expiry date are asserted (`tests/chest/flows.mjs`), with the review work item selected on the document page (`tests/chest/browser-flow.mjs`); no test reads the work list, so both dates appearing there is not asserted. |
-| `CHEST-10` | People and group grants | published | partial | `tests/chest/flows.mjs`; `tests/chest/restore.mjs` | After the member is removed and collection access revoked, details, search and review mutations are asserted refused, and readers are listed for a person grant (`tests/chest/flows.mjs`); the group grant's effective readers are never listed, and no preview or download is attempted after the revoke. |
+| `CHEST-10` | People and group grants | published | done | `tests/chest/flows.mjs` — CHEST-10: active group readers, removal from effective readers, authorized original downloads and next-request refusal of every retained preview and download after membership removal or collection revocation; detail, search and review refusals. `tests/chest/restore.mjs`. |  |
 | `CHEST-11` | Reviewed, reversible archive admission | published | partial | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` | Point 1 passes, and point 2's undo of untouched records after a restart and the kept native edit are asserted (`tests/chest/flows.mjs`); the apply completes before the restart, so an interrupted apply resuming after a restart is not asserted. |
 | `CHEST-12` | Complete independent local export and restore | published | done | `tests/chest/restore.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-13` | Self-service reversible trash | published | done | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
