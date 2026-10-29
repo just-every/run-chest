@@ -4,6 +4,7 @@ import { repairPanel } from '../sync-repair/ui'
 import type { Diagnosis } from '../sync-repair/model'
 import { esc, field, select, form, hidden, card, details, personPicker, stamp } from '../ui-shared'
 import { noticeWords } from '../ui-words'
+import { filterBar } from '../ui-lists'
 import { addHere, listing, restores, rewindForm } from './ui-item'
 import { folderTable } from './ui-table'
 import { agentStrip, conflictBanner, emptyFolder, folderTitle, manageTools } from './ui-folder'
@@ -13,6 +14,7 @@ import { storagePanel } from '../quota/ui'
 import { spaceCreationPanel, spaceSettingsCard } from './ui-space-policy'
 // Files pages: the files home, a space, Shared with me, trash, notices, access requests and sync devices.
 const inline = { className: 'form form-inline', buttonClass: 'btn btn-outline' }
+const quietInline = { className: 'form form-inline', buttonClass: 'btn btn-quiet btn-sm' }
 const head = (title: string, lede = '') => `<div class="page-head"><h1>${esc(title)}</h1>${lede ? `<p class="lede">${lede}</p>` : ''}</div>`
 // Every Files page is reached from the rail (src/chest/ui-rail.ts); this row is the place each page's own tools sit.
 const tools = (body = '') => body ? `<div class="lib-tools">${body}</div>` : ''
@@ -60,7 +62,7 @@ export function spacePage(d: any, people: any[], groups: any[]) {
 export function searchPage(q: string, r: any, scansUnread: string | null = null) { return head('Search files', `${r.count} accessible result(s).`) + `<div class="lib-tools">${searchFilters(r)}</div>${scansUnread ? `<p class="quiet">Words in scanned images and photos are not searchable yet. ${esc(scansUnread)}</p>` : ''}${listing(r.results, 'No accessible file matches.',true)}` }
 export function sharedPage(rows: any[], q: URLSearchParams) {
  const filter = `<form class="form form-inline" method="get" action="/app/shared">${field('Shared by (email)', 'sharer', q.get('sharer') || '', 'text', false)}${field('From', 'from', q.get('from') || '', 'date', false)}${field('To', 'to', q.get('to') || '', 'date', false)}<button class="btn btn-outline">Filter</button></form>`
- return head('Shared with me', 'Files and folders colleagues shared with you, newest first.') + `<div class="lib-tools">${filter}</div>${listing(rows.map(r => ({ ...r, space: { name: `Shared by ${r.sharer}` }, sharedAt: r.at, until: r.expires })), 'Nothing has been shared with you.')}`
+ return head('Shared with me', 'Files and folders colleagues shared with you, newest first.') + filterBar('/app/shared', q, { sharer: 'Shared by', from: 'From', to: 'To' }, filter) + `${listing(rows.map(r => ({ ...r, space: { name: `Shared by ${r.sharer}` }, sharedAt: r.at, until: r.expires })), 'Nothing has been shared with you.')}`
 }
 export function trashPage(rows: any[]) {
  const item = (t: any) => `<li class="row-tabbed"><div class="row-card person"><div class="person-facts"><strong>${esc(t.name ?? `Item in ${t.space.name}`)}</strong><span class="mono">${esc(t.type)} · ${esc(t.space.name)} · trashed by ${esc(t.trashedBy)} ${stamp(t.trashedAt)}</span></div><div class="row-actions">${form(`/items/${t.id}/restore`, '', 'Restore', '/app/files/trash', inline)}${t.erasable ? form(`/items/${t.id}/erase`, '', 'Erase permanently', '/app/files/trash', inline) : ''}</div></div></li>`
@@ -68,7 +70,7 @@ export function trashPage(rows: any[]) {
 }
 export function noticesPage(rows: any[], tasks: any[] = []) {
  const assigned = `<section id="tasks" aria-label="Assigned comments"><h2 class="section-title">Assigned comments</h2>${tasks.length ? `<ol class="events">${tasks.map(t => `<li data-task="${esc(t.id)}"><a class="link" href="/app/items/${esc(t.item)}?comment=${esc(t.id)}#comment-${esc(t.id)}">${esc(t.name)}</a><p>${esc(t.message)}</p><p class="mono">Assigned since ${stamp(t.at)}</p></li>`).join('')}</ol>` : '<p>No open assigned comments.</p>'}</section>`
- return head('Notices') + assigned + `<div class="lib-tools">${form('/notices/read', '', 'Mark all read', '/app/notices', inline)}</div>${rows.length ? `<ol class="events">${rows.map(n => `<li><span>${n.payload.read ? '<strong>New</strong> · ' : ''}${esc(noticeWords(n.payload.type))} · ${stamp(n.payload.at)}</span><p>${esc(n.payload.message)}</p>${n.canUndo?form('/filing/moves/'+n.payload.undo+'/undo','','Undo','/app/notices',inline):''}${n.payload.request ? `<a class="link" href="/app/${n.payload.type.startsWith('ownership') ? 'ownership' : 'requests'}/${n.payload.request}">Open request</a>` : n.payload.item ? `<a class="link" href="/app/items/${n.payload.item}">Open</a>` : ''}</li>`).join('')}</ol>` : '<p class="quiet">No notices.</p>'}`
+ return head('Notices') + assigned + `<div class="lib-tools">${form('/notices/read', '', 'Mark all read', '/app/notices', inline)}</div>${rows.length ? `<ol class="events notice-list">${rows.map(n => { const to = n.payload.request ? `/app/${n.payload.type.startsWith('ownership') ? 'ownership' : 'requests'}/${n.payload.request}` : n.payload.item ? `/app/items/${n.payload.item}` : '', text = esc(n.payload.message); return `<li class="has-actions"><span>${n.payload.read ? '<strong>New</strong> · ' : ''}${esc(noticeWords(n.payload.type))} · ${stamp(n.payload.at)}</span><p>${to ? `<a class="notice-link" href="${esc(to)}">${text}</a>` : text}</p>${n.canUndo ? `<div class="hover-actions">${form('/filing/moves/' + n.payload.undo + '/undo', '', 'Undo', '/app/notices', quietInline)}</div>` : ''}</li>` }).join('')}</ol>` : '<p class="quiet">No notices.</p>'}`
 }
 export function requestsPage(d: any) {
  const decide = d.decide.map((r: any) => `<li><span>${esc(r.requester)} asks for ${esc(r.role)} access to ${r.itemName ? `<a class="link" href="/app/items/${esc(r.item)}">${esc(r.itemName)}</a>` : 'an item that is gone'} · ${stamp(r.at)}</span> <a class="link" href="/app/requests/${r.id}">Decide</a></li>`).join('')

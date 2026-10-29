@@ -54,7 +54,7 @@ export async function guestInventoryJourney(h,browser,{owner,staff,admin,outside
    await card.getByText(verified,{exact:true}).waitFor();await card.getByText('claimed@vendors.test',{exact:true}).waitFor();
    assert.ok(!(await card.innerText()).includes('hidden@private.test'));assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`test-results/${width}-report-external-guests.png`,fullPage:true});
-   await page.getByLabel('Guest email or audience (guest evidence only)',{exact:true}).fill(verified);
+   await page.locator('details.filter-fold > summary').click();await page.getByLabel('Guest email or audience (guest evidence only)',{exact:true}).fill(verified);
    await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Apply filters',exact:true}).click()]);
    assert.equal(await card.locator('ul.events > li').count(),1);assert.ok(!(await card.innerText()).includes('claimed@vendors.test'));
    await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`test-results/${width}-report-external-guests-filtered.png`,fullPage:true});

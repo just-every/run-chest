@@ -85,14 +85,14 @@
 [data-request-upload] [hidden] { display: none !important; }
 /* Search filters: the same form controls as the file pages; type choices are soft chips. */
 .search-filters { width: 100%; max-width: 76rem; }
-.search-types { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.search-types { display: flex; flex-wrap: wrap; gap: 4px 18px; min-width: 0; margin: 0; padding: 0; border: 0; }
 .search-types legend { margin-bottom: 8px; font-weight: 600; }
-.search-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border: 1px solid var(--chest-line-strong); border-radius: 999px; background: var(--chest-surface); font-size: 13px; white-space: nowrap; }
-.search-chip:has(input:checked) { border-color: var(--chest-action); background: var(--chest-selected); color: var(--chest-action-ink); }
-.search-chip input { width: auto; min-height: 0; margin: 0; }
+.search-type { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; font-size: 13px; white-space: nowrap; cursor: pointer; }
+.search-type input { width: 16px; height: 16px; margin: 0; accent-color: var(--chest-action); }
+.search-type input:focus-visible { outline: 2px solid var(--chest-action); outline-offset: 2px; }
 .search-filter-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .search-filter-grid label, .search-filter-grid select, .search-filter-grid input { min-width: 0; max-width: 100%; }
-@media (max-width: 760px) { .search-filter-grid { grid-template-columns: minmax(0, 1fr); } .search-chip { font-size: var(--chest-fs-small); } .search-filters { padding: 0; } }
+@media (max-width: 760px) { .search-filter-grid { grid-template-columns: minmax(0, 1fr); }  .search-filters { padding: 0; } }
 /* Collection evidence includes stable version and submission identifiers. */
 .collection-wrap { overflow-wrap: anywhere; }
 /* Sync diagnosis keeps full checksums without widening a phone viewport. */

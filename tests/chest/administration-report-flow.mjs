@@ -102,7 +102,7 @@ export async function reportingJourney(h,browser,owner){
    await page.screenshot({path:`test-results/${width}-report-storage-owner.png`,fullPage:true});
    await context.clearCookies();await context.addCookies(cookieRows(admin,h.origin));
    await page.goto(h.origin+'/app/administration/audit');
-   await page.getByLabel('Exact action',{exact:true}).fill('version.download');await page.getByLabel('Actor email or identity',{exact:true}).fill(email);
+   await page.locator('details.filter-fold > summary').click();await page.getByLabel('Exact action',{exact:true}).fill('version.download');await page.getByLabel('Actor email or identity',{exact:true}).fill(email);
    await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Apply filters',exact:true}).click()]);
    await page.getByRole('link',{name:'Next page',exact:true}).waitFor();
    const download=page.waitForEvent('download');await page.getByRole('link',{name:'Export CSV',exact:true}).click();await(await download).path();

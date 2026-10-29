@@ -434,3 +434,41 @@ blockquote { margin: 0; }
   .audit td::before { content: attr(data-label); display: block; color: var(--chest-muted); font: 400 var(--chest-fs-small)/1.4 var(--chest-font-ui); }
   .audit td:empty { display: none; }
 }
+
+/* Lists (H16, U20): filters fold behind one control and show as chips once set; a row's own actions show on hover and
+   focus (touch has no hover, so there they stay as quiet text buttons); one border per field. */
+.filter-bar { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 12px; margin: 0 0 12px; }
+.filter-bar > .search-field { flex: 1 1 260px; display: grid; gap: 6px; }
+.filter-fold > summary { list-style: none; cursor: pointer; }
+.filter-fold > summary::-webkit-details-marker { display: none; }
+.filter-fold[open] { flex: 1 1 100%; }
+.filter-body { padding: 14px 0 4px; }
+.filter-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--chest-action-soft); color: var(--chest-action-ink); font-size: var(--chest-fs-small); }
+.filter-chips { display: flex; flex-wrap: wrap; gap: 6px 8px; margin: 0 0 14px; }
+.chip-filter { gap: 6px; max-width: 100%; background: var(--chest-action-soft); color: var(--chest-action-ink); text-decoration: none; white-space: normal; overflow-wrap: anywhere; }
+.chip-filter:hover { background: #e4dfff; }
+.filter-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+.filter-row > .filter-bar { margin-bottom: 8px; }
+.row-quiet { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
+.row-quiet > .person-facts { flex: 1 1 260px; }
+.row-quiet .row-actions { flex: 0 1 auto; gap: 4px; }
+.row-quiet .row-actions .form-inline { margin: 0; }
+.row-more { position: relative; }
+.row-more > summary { list-style: none; cursor: pointer; }
+.row-more > summary::-webkit-details-marker { display: none; }
+.row-more-body { display: grid; gap: 12px; min-width: 260px; margin-top: 6px; padding: 12px 0 4px; }
+.admin-person { margin: 0; }
+.has-actions { position: relative; }
+.has-actions .hover-actions { margin-top: 4px; }
+.notice-link { color: inherit; text-decoration: none; }
+.notice-link:hover { color: var(--chest-action-ink); text-decoration: underline; text-underline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) {
+  /* The actions float over the row's right end, so a row at rest is one quiet line and nothing is reserved for them. */
+  .row-quiet, .has-actions { position: relative; }
+  .row-quiet .row-actions, .has-actions .hover-actions { position: absolute; right: 10px; top: 50%; z-index: 2; transform: translateY(-50%); padding-left: 24px; background: linear-gradient(90deg, transparent, var(--chest-surface) 24px); opacity: 0; transition: opacity .12s ease; }
+  .row-quiet:hover .row-actions, .row-quiet:focus-within .row-actions, .has-actions:hover .hover-actions, .has-actions:focus-within .hover-actions { opacity: 1; }
+  .has-actions .hover-actions { margin-top: 0; }
+  .row-more-body { position: absolute; right: 0; top: 100%; width: 320px; padding: 14px; background: var(--chest-surface); border-radius: var(--chest-radius); box-shadow: var(--chest-shadow-pop); }
+}
+@media (prefers-reduced-motion: reduce) { .row-quiet .row-actions, .has-actions .hover-actions { transition: none; } }
+.search-filters .search-field input { padding-left: 12px; }

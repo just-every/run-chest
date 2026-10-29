@@ -1,13 +1,13 @@
 import { esc,field,form,details,filingFields,icon,kindLabel,isoDay } from './ui-shared'
 import { icons } from '../ui/icons'
 const relation=(d:any)=>d.reference?.kind?`${esc(kindLabel(d.reference.kind))} <span aria-hidden="true">·</span> ${esc(d.reference.name)}`:'Unfiled'
-// One record row: its status on a folder tab, title and relationship, then the mono facts and a chevron to the record.
+// One record row: its status on a folder tab, title and relationship, then the mono facts; the title is the one link (it covers the card), the chevron is only a drawing.
 function row(r:any,q:string){const d=r.payload,v=d.versions.find((v:any)=>v.id===d.approved),href=`/app/documents/${r.id}`
  return `<article class="rec"><span class="chip${v?' chip-action':''} rec-tag">${v?'Approved':'Awaiting approval'}</span><div class="rec-card">
  <div class="rec-name">${icon('document')}<div><h2><a href="${href}">${esc(d.title)}</a></h2><p class="rec-rel">${relation(d)}</p></div></div>
  <dl class="rec-facts"><div><dt>${v?'Approved:':'Awaiting approval'}</dt><dd>${v?`<span class="mono one-line" title="${esc(v.filename)}">${esc(v.filename)}</span>`:''}<span class="mono">${d.versions.length} version(s)</span></dd></div><div><dt>Owner:</dt><dd class="mono one-line" title="${esc(d.owner)}">${esc(d.owner)}</dd></div><div><dt>Review:</dt><dd class="mono">${isoDay(d.reviewDate||'Not scheduled')}</dd></div><div><dt>Expiry:</dt><dd class="mono">${isoDay(d.expiryDate||'Not scheduled')}</dd></div></dl>
  ${r.fieldIssues.length?`<p class="rec-issue"><a class="chip chip-issue" href="${href}">${r.fieldIssues.length} field issue(s) under the current document type</a></p>`:''}${q?`<p class="rec-match mono">${esc((d.versions.find((v:any)=>v.text.toLowerCase().includes(q.toLowerCase()))?.text||'').slice(0,180))}</p>`:''}
- <a class="rec-open" href="${href}" tabindex="-1" aria-hidden="true">${icon('chevron')}</a></div></article>`}
+ <span class="rec-open" aria-hidden="true">${icon('chevron')}</span></div></article>`}
 // The review and expiry work panel: every scheduled date on an accessible record, with its state.
 function work(data:any){const today=new Date().toISOString().slice(0,10)
  const items=data.documents.flatMap((r:any)=>['review','expiry'].filter(kind=>r.payload[kind+'Date']).map(kind=>{const date=r.payload[kind+'Date'],done=r.payload.completions.some((c:any)=>c.kind===kind&&c.date===date),state=done?'Completed with evidence':date<=today?'Due':'Upcoming'

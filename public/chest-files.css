@@ -53,9 +53,11 @@
 .ftable { display: grid; margin: 0; padding: 0; list-style: none; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: 10px; font-size: var(--chest-fs-small); font-variant-numeric: tabular-nums; }
 .ft-head, .ft-row { display: grid; align-items: center; column-gap: 8px; min-height: 37px; padding: 0 10px 0 2px; }
 /* Modified is sized for the longest time ("Oct 19, 2026, 12:59 PM"), so a date never loses its time. */
-.ftable-folder .ft-head, .ftable-folder .ft-row { grid-template-columns: 24px minmax(0, 1.8fr) 74px 140px minmax(0, 0.9fr) 60px minmax(0, 1.05fr) 86px; font-size: var(--chest-fs-small); }
-.ftable-list .ft-head, .ftable-list .ft-row { grid-template-columns: 34px minmax(180px, 1.6fr) minmax(110px, 1fr) 146px 72px 104px; }
-.ftable-list.no-check .ft-head, .ftable-list.no-check .ft-row { grid-template-columns: minmax(180px, 1.6fr) minmax(110px, 1fr) 146px 72px 104px; padding-left: 14px; }
+.ftable-folder .ft-head, .ftable-folder .ft-row { grid-template-columns: 24px minmax(0, 1.8fr) 164px minmax(0, 0.9fr) 72px minmax(0, 1fr); }
+.ftable-list .ft-head, .ftable-list .ft-row { grid-template-columns: 34px minmax(180px, 1.6fr) minmax(110px, 1fr) 164px 80px 104px; }
+.ftable-list.no-access .ft-head, .ftable-list.no-access .ft-row { grid-template-columns: 34px minmax(180px, 1.6fr) minmax(110px, 1fr) 164px 80px; }
+.ftable-list.no-check .ft-head, .ftable-list.no-check .ft-row { grid-template-columns: minmax(180px, 1.6fr) minmax(110px, 1fr) 164px 80px 104px; padding-left: 14px; }
+.ftable-list.no-check.no-access .ft-head, .ftable-list.no-check.no-access .ft-row { grid-template-columns: minmax(180px, 1.6fr) minmax(110px, 1fr) 164px 80px; }
 .ft-head { min-height: 38px; color: var(--chest-muted); font-size: var(--chest-fs-small); border-bottom: 1px solid var(--chest-line); }
 .ft-head .icon, .ft-head svg { width: 13px; height: 13px; vertical-align: -2px; }
 .ft-row { position: relative; border-bottom: 1px solid #eef0f6; color: var(--chest-body); }
@@ -76,9 +78,9 @@
 .ft-by { display: flex; align-items: center; gap: 8px; color: var(--chest-ink); }
 .ft-by > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ft-link { display: block; overflow: hidden; color: var(--chest-body); text-overflow: ellipsis; white-space: nowrap; }
-.ft-vers, .ft-vers > span { display: flex; align-items: center; gap: 5px; }
-.ft-vers { flex-direction: column; align-items: flex-start; gap: 3px; padding-block: 4px; }
-.ft-ver .chip { padding: 1px 7px; font-size: var(--chest-fs-small); }
+.ft-status { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.ft-vers { display: inline-flex; align-items: center; gap: 5px; }
+.chip-more { background: none; color: var(--chest-muted); padding-inline: 2px; }
 .ft-sync { display: flex; align-items: center; }
 .sync { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; line-height: 1; }
 .sync .icon { width: 17px; height: 17px; }
@@ -88,6 +90,7 @@
 .sync-conflict .icon { color: #e09a00; }
 .sync-failed .icon { color: var(--chest-alert); }
 .sync-paused .icon, .sync-cloud .icon { color: #8d93a8; }
+.ft-foot[hidden] { display: none; }
 .ft-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 2px 0; }
 .ft-foot [data-selection-count] { margin-right: auto; color: var(--chest-muted); font-size: var(--chest-fs-small); }
 .ft-foot [data-selection-count]:empty { margin-right: auto; }
@@ -101,17 +104,20 @@
   .cf-actions .btn { padding-inline: 11px; font-size: var(--chest-fs-small); }
 }
 
-/* Narrow work column: each row becomes the name over one wrapping line of its facts. */
+/* Narrow work column: each row becomes the name over one quiet line of its facts (date, size, who, then the status). */
 @container (max-width: 700px) {
   .ft-head { display: none; }
-  .ftable .ft-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 10px 12px 11px 40px; }
+  .ftable .ft-row { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 0; padding: 10px 12px 11px 40px; }
   .ftable-list.no-check .ft-row { padding-left: 14px; }
   .ft-row > .ft-check { position: absolute; left: 6px; top: 8px; z-index: 1; width: 28px; height: 28px; min-height: 0; }
   .ft-row > .ft-name { flex: 1 1 100%; }
   .ft-row .ft-name a, .ft-row .ft-sub { white-space: normal; overflow-wrap: anywhere; }
-  .ft-row > :not(.ft-check):not(.ft-name):not(.ft-pick) { flex: 0 1 auto; font-size: var(--chest-fs-small); white-space: normal; }
-  .ft-row > .ft-sync:empty, .ft-row > .ft-size:empty, .ft-row > .ft-ver:empty { display: none; }
-  .ft-mod::before, .ft-size::before, .ft-place::before, .ft-role::before { content: attr(data-label) " · "; color: var(--chest-muted); white-space: pre; }
+  .ft-row > :not(.ft-check):not(.ft-name):not(.ft-pick) { flex: 0 1 auto; white-space: normal; }
+  .ft-row > :empty { display: none; }
+  .ft-row > .ft-by { gap: 0; }
+  .ft-row > .ft-by .avatar { display: none; }
+  .ft-row > .ft-size::before, .ft-row > .ft-by::before, .ft-row > .ft-role::before, .ft-row > .ft-place + .ft-mod::before, .ft-row > .ft-mod + .ft-size::before { content: "\00b7"; margin: 0 6px; color: var(--chest-muted); }
+  .ft-row > .ft-status { margin-left: 8px; }
   .ft-mod, .ft-size, .ft-place, .ft-role { overflow: visible; text-overflow: clip; }
   .ft-name > .ftile { margin-left: -2px; }
 }

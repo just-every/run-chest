@@ -48,8 +48,9 @@ export async function folderRows(env: Bindings, s: Session, w: Who, space: strin
   // The chip names the current version (numbered oldest first) with its own state, and a newer version waiting for
   // review beside it, so a reviewer never reads a pending version as approved.
   const newest = p.versions.at(-1), pending = newest && newest.id !== p.current && newest.review?.state === 'submitted' ? p.versions.length : null
-  const members = p.restricted ? [] : e.space.payload.members.filter(m => live(m) && people.has(m.principal)).map(m => m.principal)
-  const share = [...new Set([...members, ...p.grants.filter(g => live(g) && people.has(g.principal)).map(g => g.principal)])].map(email => ({ email, name: personName(people, email) }))
+  // The row's own sharing: the people it was shared with by name. The space's members see every row of the space, so
+  // they are the folder's sharing (its details panel), not each row's.
+  const share = [...new Set(p.grants.filter(g => live(g) && people.has(g.principal)).map(g => g.principal))].map(email => ({ email, name: personName(people, email) }))
   const link = links.filter(l => l.payload.item === e.row.id).sort((a, b) => (a.payload.expires ?? '9').localeCompare(b.payload.expires ?? '9'))[0]
   const sync: Sync = originals.has(e.row.id) || copies.has(e.row.id) ? 'conflict' : report ? states[report.state] ?? 'syncing' : 'cloud'
   const syncNote = originals.has(e.row.id) || copies.has(e.row.id) ? 'Edited on two devices; both copies are kept' : report ? `As ${report.device} last reported` : 'In Chest; no sync device holds a copy'

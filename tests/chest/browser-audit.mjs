@@ -12,7 +12,7 @@ try{
  browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
  for(const width of [1440,390]){
   const ctx=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width,height:1000}});await ctx.addCookies(cookie.split('; ').map(c=>{const i=c.indexOf('=');return{name:c.slice(0,i),value:c.slice(i+1),url:h.origin}}));const page=await ctx.newPage();
-  await page.goto(h.origin+'/app/audit');await page.getByLabel('Search history',{exact:true}).fill('item.rename');await page.getByRole('button',{name:'Search history',exact:true}).click();await page.waitForURL('**/app/audit?**');await page.getByRole('heading',{name:'Audit trail',exact:true}).waitFor();
+  await page.goto(h.origin+'/app/audit');await page.locator('details.filter-fold > summary').click();await page.getByLabel('Search history',{exact:true}).fill('item.rename');await page.getByRole('button',{name:'Search history',exact:true}).click();await page.waitForURL('**/app/audit?**');await page.getByRole('heading',{name:'Audit trail',exact:true}).waitFor();
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:`test-results/${width}-audit-history.png`,fullPage:true});
   const download=page.waitForEvent('download');await page.getByRole('link',{name:'Export all matching history'}).click();assert.equal((await download).suggestedFilename(),'chest-audit.ndjson');
   await page.getByRole('button',{name:'Hide my views',exact:true}).click();await page.getByRole('button',{name:'Show my views',exact:true}).waitFor();

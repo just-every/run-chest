@@ -2,7 +2,7 @@
 (() => {
  const key='chest-selected-items',forms=[...document.querySelectorAll('.bulk-selection')];let selected;
  try{const raw=JSON.parse(sessionStorage.getItem(key)||'[]');selected=new Set(Array.isArray(raw)?raw.filter(x=>typeof x==='string').slice(0,1000):[])}catch{selected=new Set()}
- const save=()=>{try{sessionStorage.setItem(key,JSON.stringify([...selected]))}catch{};for(const form of forms){form.querySelector('[data-selection-count]').textContent=`${selected.size} selected across folders and search`;for(const input of form.querySelectorAll('input[name=items]'))input.checked=selected.has(input.value);for(const all of form.querySelectorAll('[data-select-all]')){const inputs=[...form.querySelectorAll('input[name=items]')];all.checked=inputs.length>0&&inputs.every(i=>i.checked)}}};
+ const save=()=>{try{sessionStorage.setItem(key,JSON.stringify([...selected]))}catch{};for(const form of forms){form.querySelector('[data-selection-count]').textContent=`${selected.size} selected across folders and search`;form.querySelector('.ft-foot')?.toggleAttribute('hidden',!selected.size);for(const input of form.querySelectorAll('input[name=items]'))input.checked=selected.has(input.value);for(const all of form.querySelectorAll('[data-select-all]')){const inputs=[...form.querySelectorAll('input[name=items]')];all.checked=inputs.length>0&&inputs.every(i=>i.checked)}}};
  for(const form of forms){
   for(const input of form.querySelectorAll('input[name=items]')){input.checked=selected.has(input.value);input.addEventListener('change',()=>{if(input.checked)selected.add(input.value);else selected.delete(input.value);save()})}
   // The table header's box selects or clears every row in this list.
