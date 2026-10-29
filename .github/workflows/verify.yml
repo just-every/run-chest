@@ -51,7 +51,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           NIGHTLY_CACHE_HIT: ${{ steps.nightly.outputs.cache-hit }}
         run: node scripts/verify-ci.mjs --plan
-  # Seven push shards retain Chest's public flows; browser shards share the verified Worker build.
+  # Native shards retain every public flow; all shards share the verified Worker build.
   # Fresh-clone and upgrade journeys run on release tags and the separate twice-weekly nightly.
   rer-verify:
     name: shards (rer-verify)
@@ -94,6 +94,8 @@ jobs:
       - run: pnpm exec rer check --profile first-party
       - run: node src/base/contract-docs.mjs check
       - run: pnpm exec rer verify
+        env:
+          SEED_VERIFY_SHARD: rer-verify
       - name: Share the verified Worker build
         uses: actions/upload-artifact@v4
         with:
@@ -101,6 +103,43 @@ jobs:
           path: dist/
           include-hidden-files: true
           if-no-files-found: error
+  native:
+    name: shards (native-${{ matrix.suite }})
+    needs: [plan, rer-verify]
+    if: needs.plan.outputs.coverage == 'full' && (needs.plan.outputs.tier == 'push' || needs.plan.outputs.tier == 'all')
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [files, sharing, transfer, filing, archive]
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ inputs.timeout || 15 }}
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22.20.0'
+          package-manager-cache: false
+      - run: npm install --global pnpm@10.12.4
+      - name: Set runner-owned pnpm store
+        run: |
+          mkdir -p "$RUNNER_TEMP/pnpm-store"
+          pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: ${{ runner.temp }}/pnpm-store
+          key: chest-ubuntu24-temp-store-${{ runner.arch }}-${{ github.job }}-${{ hashFiles('pnpm-lock.yaml', 'package.json') }}
+      - run: pnpm install --frozen-lockfile
+      - name: Restore the verified Worker build
+        uses: actions/download-artifact@v4
+        with:
+          name: chest-built-worker
+          path: dist/
+      - run: node scripts/verify-ci.mjs native-${{ matrix.suite }}
   browser:
     name: shards (browser-${{ matrix.suite }})
     needs: [plan, rer-verify]
@@ -403,19 +442,19 @@ jobs:
         run: node scripts/verify-ci.mjs --light
 
   full-push-proof:
-    needs: [plan, rer-verify, browser, extra, organisation]
+    needs: [plan, rer-verify, native, browser, extra, organisation]
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && needs.plan.outputs.tier == 'push' && needs.plan.outputs.coverage == 'full' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
       - name: Require every full push shard
         env:
-          RESULTS: ${{ needs.rer-verify.result }} ${{ needs.browser.result }} ${{ needs.extra.result }} ${{ needs.organisation.result }}
+          RESULTS: ${{ needs.rer-verify.result }} ${{ needs.native.result }} ${{ needs.browser.result }} ${{ needs.extra.result }} ${{ needs.organisation.result }}
         run: for result in $RESULTS; do test "$result" = success; done
 
   nightly-proof:
-    needs: [plan, rer-verify, browser, extra, organisation, journey, upgrade]
-    if: ${{ always() && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && needs.plan.result == 'success' && needs.plan.outputs.coverage == 'full' && needs.journey.result == 'success' && needs.upgrade.result == 'success' && (needs.plan.outputs.tier == 'nightly' || (needs.plan.outputs.tier == 'all' && needs.rer-verify.result == 'success' && needs.browser.result == 'success' && needs.extra.result == 'success' && needs.organisation.result == 'success')) }}
+    needs: [plan, rer-verify, native, browser, extra, organisation, journey, upgrade]
+    if: ${{ always() && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && needs.plan.result == 'success' && needs.plan.outputs.coverage == 'full' && needs.journey.result == 'success' && needs.upgrade.result == 'success' && (needs.plan.outputs.tier == 'nightly' || (needs.plan.outputs.tier == 'all' && needs.rer-verify.result == 'success' && needs.native.result == 'success' && needs.browser.result == 'success' && needs.extra.result == 'success' && needs.organisation.result == 'success')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
@@ -427,7 +466,7 @@ jobs:
           key: nightly-green-${{ github.sha }}
 
   verify:
-    needs: [plan, rer-verify, browser, extra, organisation, journey, upgrade, light, full-push-proof, nightly-proof]
+    needs: [plan, rer-verify, native, browser, extra, organisation, journey, upgrade, light, full-push-proof, nightly-proof]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 1
@@ -438,7 +477,7 @@ jobs:
           SKIP: ${{ needs.plan.outputs.skip }}
           COVERAGE: ${{ needs.plan.outputs.coverage }}
           TIER: ${{ needs.plan.outputs.tier }}
-          PUSH_RESULTS: ${{ needs.rer-verify.result }} ${{ needs.browser.result }} ${{ needs.extra.result }} ${{ needs.organisation.result }}
+          PUSH_RESULTS: ${{ needs.rer-verify.result }} ${{ needs.native.result }} ${{ needs.browser.result }} ${{ needs.extra.result }} ${{ needs.organisation.result }}
           NIGHTLY_RESULTS: ${{ needs.journey.result }} ${{ needs.upgrade.result }}
           LIGHT: ${{ needs.light.result }}
           PUSH_PROOF: ${{ needs.full-push-proof.result }}
