@@ -142,9 +142,11 @@ try{
   await h.api(`/documents/${doc.id}/review/${doc.payload.versions.at(-1).id}`,stranger,{action:'comment',message:'Revoked reader attempt'},404);
   await allowedOriginals(member);
   await h.api(`/collections/${collection.id}/grants`,owner,{grants:[]});await h.api(`/documents/${doc.id}`,member,undefined,404);assert.equal((await h.api('/library?q=Acme',member)).count,0);await h.api(`/documents/${doc.id}/review/${doc.payload.versions.at(-1).id}`,member,{action:'approve'},404);
+  assert.deepEqual((await h.api(`/documents/${doc.id}/readers`,owner)).map(p=>p.email),[h.vars.OWNER_EMAIL],'only the owner remains after both access paths are revoked');
   for(const cookie of [stranger,member])await refusedOriginals(cookie);
   assert.deepEqual(await h.api(`/documents/${doc.id}`,owner),unchanged,'refused requests preserve every version and decision');
   await h.stop();await h.start();
+  assert.deepEqual((await h.api(`/documents/${doc.id}/readers`,owner)).map(p=>p.email),[h.vars.OWNER_EMAIL],'revoked readers remain excluded after restart');
   for(const cookie of [stranger,member]){
    await h.api(`/documents/${doc.id}`,cookie,undefined,404);assert.equal((await h.api('/library?q=Acme',cookie)).count,0);
    await refusedOriginals(cookie);

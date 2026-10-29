@@ -8,10 +8,10 @@ The primary journey: create a team space, move originals and rights in, install 
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 37 | 48 | 38 | 123 |
+| Core | 38 | 47 | 38 | 123 |
 | Agent surface | 0 | 2 | 24 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 38 | 54 | 78 | 170 |
+| Full target | 39 | 53 | 78 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -141,7 +141,7 @@ Core · published · **partial**
 
 #### CHEST-10 — People and group grants
 
-Core · published · **partial**
+Core · published · **done**
 
 **Requirement.** The owner grants and revokes reader, editor and reviewer access for people and groups. Effective readers need active local identities, current group membership governs access, and imported people have no sign-in authority. These rules keep holding under the five-level roles (ROLE-001) and item sharing (SHARE-004).
 
@@ -149,8 +149,8 @@ Core · published · **partial**
 1. A group grant shows its effective readers.
 2. After a member is removed and collection access revoked, details, search, previews, downloads and review mutations are refused.
 
-**Evidence.** `tests/chest/flows.mjs`; `tests/chest/restore.mjs`
-**Gap.** After the member is removed and collection access revoked, details, search and review mutations are asserted refused, and readers are listed for a person grant (`tests/chest/flows.mjs`); the group grant's effective readers are never listed, and no preview or download is attempted after the revoke.
+**Evidence.** `tests/chest/flows.mjs` (CHEST-10: effective group readers; removed membership; collection revocation refuses details, search, every retained preview and download, and review mutations; unchanged history and refusal after restart); `tests/chest/restore.mjs` (restoreJourney: portable groups and fresh sign-in authority)
+**Gap.** None.
 
 #### CHEST-11 — Reviewed, reversible archive admission
 

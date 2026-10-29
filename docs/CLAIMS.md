@@ -8,7 +8,7 @@ A product claim is done when every clause behind it is done, missing when every 
 | --- | --- | --- | --- | --- |
 | 1 | Hero | "Chest stores … your team's files" | `SPACE-001` partial; `CHEST-03` partial | partial |
 | 2 | Hero | "syncs" | `SYNC-001` partial; `SYNC-008` missing; `SYNC-002` partial | partial |
-| 3 | Hero | "shares your team's files" | `SHARE-004` partial; `SHARE-001` done; `CHEST-10` partial | partial |
+| 3 | Hero | "shares your team's files" | `SHARE-004` partial; `SHARE-001` done; `CHEST-10` done | partial |
 | 4 | Hero | "reads every scan" | `SEARCH-001` partial | partial |
 | 5 | Hero | "quietly files what arrives" | `AGENT-001` done; `RULE-001` done; `CONNECT-006` partial | partial |
 | 6 | Hero | "100% free, open source" | `OPEN-001` done | done |

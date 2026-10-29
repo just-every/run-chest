@@ -2297,11 +2297,13 @@ Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8a
 
 EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fbfbf114 (28 October 2026). Its final candidate strengthens the preview-authority journey and records the exact candidate in Verify; the runtime bytes are unchanged from that source commit.
 
+CHEST-10 runtime and revocation journey were proven at commit `9b43ae90a47c5c600878d369a5cc279cf4fdfa03` (29 October 2026). The landing candidate also asserts the remaining reader list before and after restart; its exact commit is recorded by Verify and the lane handoff.
+
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 9 | 4 | 0 | 13 |
+| Published | 10 | 3 | 0 | 13 |
 | Target and push further | 29 | 50 | 78 | 157 |
-| All | 38 | 54 | 78 | 170 |
+| All | 39 | 53 | 78 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2314,7 +2316,7 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | `CHEST-07` | Immutable versions and exact approved pointers | published | done | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-08` | Exact-version human decisions | published | done | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-09` | Review and expiry work keep evidence | published | partial | `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs` | Point 2 passes, and point 1's completion record and expiry date are asserted (`tests/chest/flows.mjs`), with the review work item selected on the document page (`tests/chest/browser-flow.mjs`); no test reads the work list, so both dates appearing there is not asserted. |
-| `CHEST-10` | People and group grants | published | partial | `tests/chest/flows.mjs`; `tests/chest/restore.mjs` | After the member is removed and collection access revoked, details, search and review mutations are asserted refused, and readers are listed for a person grant (`tests/chest/flows.mjs`); the group grant's effective readers are never listed, and no preview or download is attempted after the revoke. |
+| `CHEST-10` | People and group grants | published | done | `tests/chest/flows.mjs` (CHEST-10: effective group readers; removed membership; collection revocation refuses details, search, every retained preview and download, and review mutations; unchanged history and refusal after restart); `tests/chest/restore.mjs` (restoreJourney: portable groups and fresh sign-in authority) |  |
 | `CHEST-11` | Reviewed, reversible archive admission | published | partial | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` | Point 1 passes, and point 2's undo of untouched records after a restart and the kept native edit are asserted (`tests/chest/flows.mjs`); the apply completes before the restart, so an interrupted apply resuming after a restart is not asserted. |
 | `CHEST-12` | Complete independent local export and restore | published | done | `tests/chest/restore.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-13` | Self-service reversible trash | published | done | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
