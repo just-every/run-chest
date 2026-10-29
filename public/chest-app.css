@@ -23,15 +23,18 @@ body.app { margin: 0; min-height: 100vh; background: var(--chest-paper); color: 
 .app-menu > summary { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; border: 1px solid var(--chest-line-strong); border-radius: var(--chest-radius); background: var(--chest-surface); font: 500 14px/1 var(--chest-font-ui); cursor: pointer; list-style: none; }
 .app-menu > summary::-webkit-details-marker { display: none; }
 .app-menu > summary svg { width: 18px; height: 18px; }
-.app-menu-panel { display: flex; flex: 1; flex-direction: column; gap: 18px; }
+.app-menu-panel { display: flex; flex: 1; flex-direction: column; gap: 18px; min-width: 0; }
+/* The demo's Run Chest link sits out of flow under the lockup: clear it from the first menu row, and at phone width give it a 44 px target. */
+@media (min-width: 761px) { .wordmark + [data-rer-demo-exit] + .app-menu { margin-top: 40px; } }
+@media (max-width: 760px) { .rail > [data-rer-demo-exit]:not(:popover-open) { height: auto !important; padding: 13px 0 !important; margin: -13px 0 !important; } }
 @supports selector(::details-content) {
   @media (min-width: 761px) {
     .app-menu > summary { display: none; }
     .app-menu::details-content { content-visibility: visible; display: contents; }
   }
 }
-.app-nav { display: grid; gap: 4px; }
-.nav-list, .nav-tree, .nav-tree ul { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; }
+.app-nav { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+.nav-list, .nav-tree, .nav-tree ul { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1px; margin: 0; padding: 0; list-style: none; }
 .app-nav a { display: flex; align-items: center; gap: 11px; min-height: 36px; padding: 6px 10px; border-radius: 8px; color: #343a52; font-size: 14px; text-decoration: none; }
 .app-nav a:hover { background: var(--chest-hover); color: var(--chest-ink); }
 .app-nav a[aria-current=page] { background: var(--chest-selected); color: var(--chest-action-ink); font-weight: 550; }
