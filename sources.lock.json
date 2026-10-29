@@ -589,7 +589,7 @@
       "executable": false
     },
     "public/chest-app.css": {
-      "sha256": "a736d420e1d7233aa4401c84805ff969216b64f37400b8ccc1dcee2117f433cc",
+      "sha256": "1a31f73c637467ebcb7411c3b3ef0b5fcf30f29d75d7c9d0073c306834478a8b",
       "executable": false
     },
     "public/chest-ask.js": {
@@ -5577,7 +5577,7 @@
       "executable": false
     },
     "tests/chest/browser-sync-repair.mjs": {
-      "sha256": "58cda26a14d679716b22399187f6c04faa2377acdfbe8f2439f5c4da7117aaa8",
+      "sha256": "f1623b412239ed2e8e023c7bd04ab5b2a051c17e8611c66d85940b97738b4293",
       "executable": false
     },
     "tests/chest/browser-transfers.mjs": {
