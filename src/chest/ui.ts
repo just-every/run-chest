@@ -23,6 +23,7 @@ import { get,list } from './store'
 import { typedValues } from './ui-fields'
 import { checkPage } from './signatures/ui'
 import { notFoundPage,page,refusedPage } from './ui-shell'
+import { flashRedirect,showFlash } from './ui-flash'
 import { withRail } from './ui-rail'
 import { auditPage,mappingPage,receiptPage } from './ui-receipts'
 import { library } from './ui-library'
@@ -43,7 +44,9 @@ import { history } from './audit/history'
 import { privacy } from './audit/privacy'
 import { auditScreen } from './audit/ui'
 import { quotaAdminCard } from './quota/ui'
-export async function uiResponse(request:Request,original:Bindings){const url=new URL(request.url);if(url.pathname!=='/app'&&!url.pathname.startsWith('/app/')&&!url.pathname.startsWith('/s/'))return null;const env=runtimeBindings(original)
+// A page that follows a one-time secret shows it once (src/chest/ui-flash.ts).
+export async function uiResponse(request:Request,original:Bindings){const response=await ui(request,original);return response&&request.method==='GET'?showFlash(request,response):response}
+async function ui(request:Request,original:Bindings){const url=new URL(request.url);if(url.pathname!=='/app'&&!url.pathname.startsWith('/app/')&&!url.pathname.startsWith('/s/'))return null;const env=runtimeBindings(original)
  let back='/app/files'
  try {
  // Sign out: revoke this session (the auth service checks method and origin), clear the cookie, go to sign-in.
@@ -80,6 +83,7 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   if(input.path==='/organisation/sso')return page(ssoReceipt(result),me,'/app/admin')
   if(input.path==='/signatures'&&result?.id)return new Response(null,{status:303,headers:{...headers,location:`/app/signatures/${result.id}`}})
   if(input.path==='/signatures/validate')return page(checkPage(result),me,returnTo)
+  if(/^\/items\/[^/]+\/(links|public-links)$/.test(input.path)&&result?.url)return flashRedirect({title:'Link created',url:result.url,note:`Copy it now: it is not shown again.${result.link?.password?' Send the password separately.':''} Revoke it any time from this page or Links.`},returnTo,headers)
   const secret=filesReceipt(input,result);if(secret)return page(secret,me,returnTo)
   if(input.path==='/reading/settings/test')return page(testReceipt(result),me,'/app/admin')
   if(input.path==='/archive/preview')return page(mappingPage(input,result),me,'/app/archive')
