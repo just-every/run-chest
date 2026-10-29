@@ -20,4 +20,4 @@ jobs:
     uses: ./.github/workflows/verify.yml
     with:
       tier: ${{ github.event_name == 'schedule' && 'nightly' || 'all' }}
-      timeout: 45
+      timeout: 15
