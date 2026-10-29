@@ -26,7 +26,7 @@ A product claim is done when every clause behind it is done, missing when every 
 | 18 | Follow one folder | The company drive: My files, Shared with me, Recent, team spaces Finance, Ops, Sales, Vendors | `SPACE-001` partial; `SHARE-004` partial | partial |
 | 19 | Follow one folder | Role chips "Dana · manager", "Luis · contributor", "Priya · guest"; "Shared with 4 people" | `ROLE-001` partial; `SHARE-005` partial | partial |
 | 20 | Files that file themselves | "The Chest agent reads what arrives by email and from apps, names it, files it" (NDA.pdf from legal@acme.example, insurance certificate, Invoice-0042, scan_0931.pdf renamed W-9 Acme Supply.pdf; each with Undo) | `AGENT-001` done; `CONNECT-006` partial; `SEARCH-002` partial | partial |
-| 21 | Files that file themselves | Insurance certificate "expires Sep 30, 2027 · reminder set" | `CHEST-09` partial | partial |
+| 21 | Files that file themselves | Insurance certificate "expires Sep 30, 2027 · reminder set" | `CHEST-09` done | done |
 | 22 | Files that file themselves | "and closes links shared too widely" (Rate card.xlsx public link "limited to the Acme team", Undo) | `AGENT-005` done | done |
 | 23 | On every desk and phone | "Files open on demand on Mac and Windows" (Finder with Chest, on-demand and downloaded states, "Free up space") | `SYNC-008` missing | missing |
 | 24 | On every desk and phone | "photos upload from the phone" ("45 of 48 uploaded · 3 waiting for Wi-Fi") | `MOBILE-001` missing; `TRANSFER-001` partial | partial |
@@ -47,4 +47,4 @@ A product claim is done when every clause behind it is done, missing when every 
 | 39 | Closing | "Open source file storage for your whole team." | `OPEN-001` done; `SPACE-001` partial | partial |
 | 40 | Closing | "Free and open source, MIT licensed." | `OPEN-001` done | done |
 
-Claims: 40; 15 done, 23 partial, 2 missing.
+Claims: 40; 16 done, 22 partial, 2 missing.

@@ -106,7 +106,18 @@ try{
 
  });
  await check('CHEST-09',async()=>{
-  await h.api(`/documents/${doc.id}/lifecycle`,owner,{action:'complete',kind:'review',evidence:''},400);doc=await h.api(`/documents/${doc.id}/lifecycle`,owner,{action:'complete',kind:'review',evidence:'Called supplier; verified coverage against original'});assert.equal(doc.payload.completions[0].date,'2026-12-01');assert.equal(doc.payload.expiryDate,'2027-01-01');
+  const before=await h.api(`/documents/${doc.id}`,owner),evidence='Called supplier; verified coverage against original';
+  await h.api(`/documents/${doc.id}/lifecycle`,owner,{action:'complete',kind:'review',evidence:''},400);
+  assert.deepEqual(await h.api(`/documents/${doc.id}`,owner),before,'empty evidence leaves the record unchanged');
+  doc=await h.api(`/documents/${doc.id}/lifecycle`,owner,{action:'complete',kind:'review',evidence});
+  assert.equal(doc.payload.completions.length,1);
+  const completion=doc.payload.completions[0];
+  assert.deepEqual({kind:completion.kind,date:completion.date,actor:completion.actor,evidence:completion.evidence},{kind:'review',date:'2026-12-01',actor:h.vars.OWNER_EMAIL,evidence});
+  assert.ok(Number.isFinite(Date.parse(completion.at)),'completion records its timestamp');
+  assert.equal(doc.payload.expiryDate,'2027-01-01');assert.equal(doc.payload.trash,false);
+  assert.deepEqual(doc.payload.versions,before.payload.versions,'completion preserves all retained versions');
+  const original=await h.raw(`/api/chest/documents/${doc.id}/bytes/${doc.payload.versions[0].id}?download=true`,owner);
+  assert.equal(original.status,200);assert.equal(await original.text(),'private original','review completion leaves original bytes unchanged');
  });
  await check('CHEST-10',async()=>{
   assert.ok((await h.api(`/documents/${doc.id}/readers`,owner)).some(p=>p.email==='reviewer@example.test'));

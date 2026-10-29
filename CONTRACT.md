@@ -2299,9 +2299,9 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 9 | 4 | 0 | 13 |
+| Published | 10 | 3 | 0 | 13 |
 | Target and push further | 29 | 50 | 78 | 157 |
-| All | 38 | 54 | 78 | 170 |
+| All | 39 | 53 | 78 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2313,7 +2313,7 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | `CHEST-06` | Current access governs every private door | published | done | `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs` |  |
 | `CHEST-07` | Immutable versions and exact approved pointers | published | done | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-08` | Exact-version human decisions | published | done | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
-| `CHEST-09` | Review and expiry work keep evidence | published | partial | `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs` | Point 2 passes, and point 1's completion record and expiry date are asserted (`tests/chest/flows.mjs`), with the review work item selected on the document page (`tests/chest/browser-flow.mjs`); no test reads the work list, so both dates appearing there is not asserted. |
+| `CHEST-09` | Review and expiry work keep evidence | published | done | `tests/chest/browser-flow.mjs` — libraryWorkJourney, invoked by `tests/chest/browser-files.mjs` in push Verify: both labeled work dates, review-only completion and outstanding expiry after reload; `tests/chest/flows.mjs` — CHEST-09: empty-evidence refusal, actor, date, timestamp and evidence, retained versions and unchanged original download. | |
 | `CHEST-10` | People and group grants | published | partial | `tests/chest/flows.mjs`; `tests/chest/restore.mjs` | After the member is removed and collection access revoked, details, search and review mutations are asserted refused, and readers are listed for a person grant (`tests/chest/flows.mjs`); the group grant's effective readers are never listed, and no preview or download is attempted after the revoke. |
 | `CHEST-11` | Reviewed, reversible archive admission | published | partial | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` | Point 1 passes, and point 2's undo of untouched records after a restart and the kept native edit are asserted (`tests/chest/flows.mjs`); the apply completes before the restart, so an interrupted apply resuming after a restart is not asserted. |
 | `CHEST-12` | Complete independent local export and restore | published | done | `tests/chest/restore.mjs`; `tests/chest/journey.mjs` |  |

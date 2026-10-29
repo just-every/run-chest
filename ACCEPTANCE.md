@@ -8,10 +8,10 @@ The primary journey: create a team space, move originals and rights in, install 
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 37 | 48 | 38 | 123 |
+| Core | 38 | 47 | 38 | 123 |
 | Agent surface | 0 | 2 | 24 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 38 | 54 | 78 | 170 |
+| Full target | 39 | 53 | 78 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -128,7 +128,7 @@ Core · published · **done** · Rules D-3
 
 #### CHEST-09 — Review and expiry work keep evidence
 
-Core · published · **partial**
+Core · published · **done**
 
 **Requirement.** Separate review and expiry dates create due and upcoming work. Completion records actor, date and evidence, never destroys the file, and never treats an expiry as a deletion. Automated reminders are FOLLOW-001.
 
@@ -136,8 +136,8 @@ Core · published · **partial**
 1. Both dates appear in the work list.
 2. An empty completion is refused, and completing only the review with evidence leaves the expiry and the original in place.
 
-**Evidence.** `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs`
-**Gap.** Point 2 passes, and point 1's completion record and expiry date are asserted (`tests/chest/flows.mjs`), with the review work item selected on the document page (`tests/chest/browser-flow.mjs`); no test reads the work list, so both dates appearing there is not asserted.
+**Evidence.** `tests/chest/browser-flow.mjs` — libraryWorkJourney, invoked by `tests/chest/browser-files.mjs` in push Verify: both labeled work dates, review-only completion and outstanding expiry after reload; `tests/chest/flows.mjs` — CHEST-09: empty-evidence refusal, actor, date, timestamp and evidence, retained versions and unchanged original download.
+**Gap.** None.
 
 #### CHEST-10 — People and group grants
 
