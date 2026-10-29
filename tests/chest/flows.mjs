@@ -119,8 +119,20 @@ try{
  });
  await check('CHEST-10',async()=>{
   assert.ok((await h.api(`/documents/${doc.id}/readers`,owner)).some(p=>p.email==='reviewer@example.test'));
-  const group=await h.api('/groups',owner,{name:'Temporary readers',members:['outsider@example.test']});await h.api(`/documents/${doc.id}/grants`,owner,{grants:[{principal:group.id,role:'reader'}]});await h.api(`/documents/${doc.id}`,stranger);await h.api(`/groups/${group.id}`,owner,{name:'Temporary readers',members:[]});await h.api(`/documents/${doc.id}`,stranger,undefined,404);
+  const group=await h.api('/groups',owner,{name:'Temporary readers',members:['outsider@example.test']});await h.api(`/documents/${doc.id}/grants`,owner,{grants:[{principal:group.id,role:'reader'}]});await h.api(`/documents/${doc.id}`,stranger);
+  assert.ok((await h.api(`/documents/${doc.id}/readers`,owner)).some(p=>p.email==='outsider@example.test'));
+  for(const version of doc.payload.versions){
+   const original=await h.raw(`/api/chest/documents/${doc.id}/bytes/${version.id}?download=true`,stranger);assert.equal(original.status,200);assert.equal(hash(Buffer.from(await original.arrayBuffer())),version.checksum);
+  }
+  await h.api(`/groups/${group.id}`,owner,{name:'Temporary readers',members:[]});await h.api(`/documents/${doc.id}`,stranger,undefined,404);
+  assert.ok(!(await h.api(`/documents/${doc.id}/readers`,owner)).some(p=>p.email==='outsider@example.test'));
+  for(const version of doc.payload.versions)for(const suffix of ['', '?download=true']){
+   const denied=await h.raw(`/api/chest/documents/${doc.id}/bytes/${version.id}${suffix}`,stranger);assert.equal(denied.status,404);assert.deepEqual(await denied.json(),{error:'not_found'});
+  }
   await h.api(`/collections/${collection.id}/grants`,owner,{grants:[]});await h.api(`/documents/${doc.id}`,member,undefined,404);assert.equal((await h.api('/library?q=Acme',member)).count,0);await h.api(`/documents/${doc.id}/review/${doc.payload.versions.at(-1).id}`,member,{action:'approve'},404);
+  for(const version of doc.payload.versions)for(const suffix of ['', '?download=true']){
+   const denied=await h.raw(`/api/chest/documents/${doc.id}/bytes/${version.id}${suffix}`,member);assert.equal(denied.status,404);assert.deepEqual(await denied.json(),{error:'not_found'});
+  }
   await h.api(`/collections/${collection.id}/grants`,owner,{grants:[{principal:'reviewer@example.test',role:'reviewer'}]});
  });
  await check('CHEST-11',async()=>{
