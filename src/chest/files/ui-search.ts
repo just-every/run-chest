@@ -1,12 +1,13 @@
-import { esc, field, select } from '../ui-shared'
+import { esc, field, nameOf, select } from '../ui-shared'
 import { fileTypes } from './search-filters'
 
 // Ordinary GET controls keep a search bookmarkable and usable without a script, at phone and desktop widths. Until a
 // zone is chosen, dates are read on the person's own clock (chest-time.js picks it), the zone every page shows times in.
-export function searchFilters(r: any) {
- const f = r.filters, people = [{id:'',label:'Anyone'},{id:'me',label:'Me'},...r.options.people.map((id: string) => ({id,label:id}))]
+export function searchFilters(r: any, people: { id: string; payload: { name: string } }[] = []) {
+ const named = nameOf(people), person = (id: string) => { const name = named(id), clash = r.options.people.some((o: string) => o !== id && named(o) === name); return clash ? `${name} · ${id}` : name }
+ const f = r.filters, choices = [{id:'',label:'Anyone'},{id:'me',label:'Me'},...r.options.people.map((id: string) => ({id,label:person(id)}))]
  const types = `<fieldset class="search-types"><legend>Type</legend>${fileTypes.map(type => `<label class="search-chip"><input type="checkbox" name="type" value="${type}"${f.type.includes(type) ? ' checked' : ''}> ${type === 'pdfs' ? 'PDFs' : type[0].toUpperCase()+type.slice(1)}</label>`).join('')}</fieldset>`
  const locations = [{id:'anywhere',label:'Anywhere'},{id:'personal',label:'My files'},{id:'shared',label:'Shared with me'},{id:'starred',label:'Starred'},{id:'trash',label:'Trash'},...r.options.locations.map((l: any) => ({id:l.id,label:l.name}))]
- const selection = (name: string, key: string) => select(name,key,people,f[key][0] ?? '',false) + f[key].slice(1).map((v: string) => `<input type="hidden" name="${key}" value="${esc(v)}">`).join('')
+ const selection = (name: string, key: string) => select(name,key,choices,f[key][0] ?? '',false) + f[key].slice(1).map((v: string) => `<input type="hidden" name="${key}" value="${esc(v)}">`).join('')
  return `<form method="get" action="/app/files/search" class="form search-filters" aria-label="Search filters"><label class="search-field">Search names and text<input name="q" type="search" value="${esc(r.q)}" placeholder="Search names and text"></label>${types}<div class="search-filter-grid">${selection('Owned by','owner')}${selection('Created by','creator')}${selection('Shared by','sharedBy')}${select('Location','location',locations,f.location)}${select('Version','versions',[{id:'current',label:'Current versions'},{id:'any',label:'Any retained version'}],f.versions)}${select('Modified','modified',[{id:'',label:'Any time'},{id:'today',label:'Today'},{id:'7',label:'Last 7 days'},{id:'30',label:'Last 30 days'},{id:'year',label:'This year'},{id:'lastYear',label:'Last year'}],f.modified,false)}${field('Modified from','modifiedFrom',f.customFrom,'date',false)}${field('Modified through','modifiedTo',f.customTo,'date',false)}${select('Dates in time zone','timeZone',[{id:'America/New_York',label:'Eastern'},{id:'America/Chicago',label:'Central'},{id:'America/Denver',label:'Mountain'},{id:'America/Phoenix',label:'Arizona'},{id:'America/Los_Angeles',label:'Pacific'},{id:'America/Anchorage',label:'Alaska'},{id:'Pacific/Honolulu',label:'Hawaii'}],f.timeZone).replace('<select ', f.timeZoneChosen ? '<select ' : '<select data-zone ')}</div><div class="doc-actions"><button class="btn">Apply filters</button><a class="link" href="/app/files/search">Clear filters</a></div></form>`
 }

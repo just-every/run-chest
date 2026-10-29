@@ -79,7 +79,7 @@ async function journey(width){
  await go(p.mo,`/app/items/${budget}`);await pick(p.mo,{name:'budget-v3.xlsx',mimeType:'application/octet-stream',buffer:xlsx(3)});
  await go(p.ana,`/app/items/${budget}`);await p.ana.getByLabel('Link role').selectOption('viewer');await press(p.ana,'Create link');const link=new URL((await p.ana.locator('pre').innerText()).trim());
  await go(p.cy,`/app/items/${budget}`);const versions=p.cy.locator('article.ver');assert.equal(await versions.count(),3);
- for(const [file,who] of [['budget-v3.xlsx','mo'],['budget-v2.xlsx','ana'],['budget.xlsx','ana']])await versions.filter({has:p.cy.getByRole('heading',{name:file})}).getByText(`By ${who}@example.test`).waitFor();
+ for(const [file,who] of [['budget-v3.xlsx','mo'],['budget-v2.xlsx','ana'],['budget.xlsx','ana']])await versions.filter({has:p.cy.getByRole('heading',{name:file})}).getByText(`By ${who}`).waitFor();
  const v2=versions.filter({has:p.cy.getByRole('heading',{name:'budget-v2.xlsx'})});assert.equal(sha(await download(p.cy,v2.getByRole('link',{name:'Download this version'}))),sha(xlsx(2)));
  await v2.getByLabel('Version name').fill('Before Q3 edits');await press(v2,'Save version name');
  await press(versions.filter({has:p.cy.getByRole('heading',{name:'Before Q3 edits'})}),'Restore as current version');
