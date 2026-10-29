@@ -8,10 +8,10 @@ The primary journey: create a team space, move originals and rights in, install 
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 37 | 48 | 38 | 123 |
+| Core | 38 | 47 | 38 | 123 |
 | Agent surface | 0 | 2 | 24 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 38 | 54 | 78 | 170 |
+| Full target | 39 | 53 | 78 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -609,7 +609,7 @@ Core · target · **done** · Cites BASE-MAIL-001
 
 #### SHARE-004 — Item sharing and Shared with me
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Any staff member shares a personal-area item, and editors and content managers share space items, with colleagues or groups at viewer, commenter or editor, with an optional message, under POLICY-001. Recipients get an in-app notice and an email (and Slack or Teams where connected) and find the item under **Shared with me**, filterable by sharer and date, with add-to-my-area shortcuts that grant nothing more.
 
@@ -617,8 +617,8 @@ Core · target · **partial**
 1. A personal-area file shared at commenter reaches the colleague by notice and email; they find it under Shared with me and can comment but not edit.
 2. The audit records the share.
 
-**Evidence.** `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`
-**Gap.** Point 1 passes (`tests/chest/files.mjs`, `tests/chest/browser-files.mjs`); no test asserts the share's audit row (point 2).
+**Evidence.** `tests/chest/files.mjs` — SHARE-004; `tests/chest/browser-files.mjs` — Files browser journey: commenter sharing, notices, email, Shared with me, comment permission, edit refusal and the successful share audit
+**Gap.** None.
 
 #### SHARE-008 — Access requests
 

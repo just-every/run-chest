@@ -8,7 +8,7 @@ A product claim is done when every clause behind it is done, missing when every 
 | --- | --- | --- | --- | --- |
 | 1 | Hero | "Chest stores … your team's files" | `SPACE-001` partial; `CHEST-03` partial | partial |
 | 2 | Hero | "syncs" | `SYNC-001` partial; `SYNC-008` missing; `SYNC-002` partial | partial |
-| 3 | Hero | "shares your team's files" | `SHARE-004` partial; `SHARE-001` done; `CHEST-10` partial | partial |
+| 3 | Hero | "shares your team's files" | `SHARE-004` done; `SHARE-001` done; `CHEST-10` partial | partial |
 | 4 | Hero | "reads every scan" | `SEARCH-001` partial | partial |
 | 5 | Hero | "quietly files what arrives" | `AGENT-001` done; `RULE-001` done; `CONNECT-006` partial | partial |
 | 6 | Hero | "100% free, open source" | `OPEN-001` done | done |
@@ -23,7 +23,7 @@ A product claim is done when every clause behind it is done, missing when every 
 | 15 | Move in | Import ledger "Links inside files · 312 rewritten" | `MIGRATE-007` missing | missing |
 | 16 | Move in | "7 file names too long for Windows" · "Renamed and retried · 7 of 7 imported" | `MIGRATE-001` partial | partial |
 | 17 | Move in | Terminal: `rer setup` · "Chest is ready" | `OWN-001` done | done |
-| 18 | Follow one folder | The company drive: My files, Shared with me, Recent, team spaces Finance, Ops, Sales, Vendors | `SPACE-001` partial; `SHARE-004` partial | partial |
+| 18 | Follow one folder | The company drive: My files, Shared with me, Recent, team spaces Finance, Ops, Sales, Vendors | `SPACE-001` partial; `SHARE-004` done | partial |
 | 19 | Follow one folder | Role chips "Dana · manager", "Luis · contributor", "Priya · guest"; "Shared with 4 people" | `ROLE-001` partial; `SHARE-005` partial | partial |
 | 20 | Files that file themselves | "The Chest agent reads what arrives by email and from apps, names it, files it" (NDA.pdf from legal@acme.example, insurance certificate, Invoice-0042, scan_0931.pdf renamed W-9 Acme Supply.pdf; each with Undo) | `AGENT-001` done; `CONNECT-006` partial; `SEARCH-002` partial | partial |
 | 21 | Files that file themselves | Insurance certificate "expires Sep 30, 2027 · reminder set" | `CHEST-09` partial | partial |

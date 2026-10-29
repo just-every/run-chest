@@ -2300,8 +2300,8 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 9 | 4 | 0 | 13 |
-| Target and push further | 29 | 50 | 78 | 157 |
-| All | 38 | 54 | 78 | 170 |
+| Target and push further | 30 | 49 | 78 | 157 |
+| All | 39 | 53 | 78 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2350,7 +2350,7 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | `SHARE-007` | Link list, Shared too widely and one-click revoke | target | done | `tests/chest/organization-link-controls-flow.mjs`; `tests/chest/browser-links.mjs`; `tests/chest/files.mjs` |  |
 | `SHARE-002` | Upload-only file requests | target | done | `tests/chest/file-requests.mjs`; `tests/chest/browser-file-requests.mjs`; `tests/chest/request-browser-flow.mjs`; `tests/chest/files.mjs` |  |
 | `SHARE-003` | Large-file transfers and delivery receipts | target | done | `tests/chest/transfers.mjs`; `tests/chest/transfer-large-flow.mjs`; `tests/chest/browser-transfers.mjs`; `docs/deliveries.md` |  |
-| `SHARE-004` | Item sharing and Shared with me | target | partial | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` | Point 1 passes (`tests/chest/files.mjs`, `tests/chest/browser-files.mjs`); no test asserts the share's audit row (point 2). |
+| `SHARE-004` | Item sharing and Shared with me | target | done | `tests/chest/files.mjs` — SHARE-004; `tests/chest/browser-files.mjs` — Files browser journey: commenter sharing, notices, email, Shared with me, comment permission, edit refusal and the successful share audit |  |
 | `SHARE-008` | Access requests | target | partial | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` | Points 1 and 2 pass, and point 3's routing to a deactivated owner's successor is asserted (`tests/chest/files.mjs`); a file whose deactivated owner has no successor is never routed to a space manager. |
 | `SHARE-009` | Expiring grants | target | done | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
 | `SHARE-005` | Guests: sign-in, scope and expiry | target | partial | `tests/chest/guest-editing-flow.mjs`; `tests/chest/guest-links.mjs`; `tests/chest/wopi-flow.mjs`; `docs/guest-collaboration.md` | Guest sign-in with a verified Google or Microsoft identity is not in the evidence, which covers PIN sign-in only. |
