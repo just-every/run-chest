@@ -174,9 +174,11 @@ try{
   assert.ok((await h.api('/notices',people.dee)).some(n=>n.payload.type==='request.decision'&&n.payload.request===managed.request&&n.payload.item===retained.id&&n.payload.message.includes('approved as viewer')));
   assert.equal(mail(staffEmail('dee'),new RegExp(`/app/items/${retained.id}`)).length,1);
   await h.api(`/requests/${managed.request}`,people.mo,{decision:'approve',role:'editor'},409);
+  assert.equal((await h.api(`/items/${retained.id}`,people.dee)).role,'viewer','replaying a decision cannot raise the granted role');
   for(const [action,actor,role] of [['access.request','dee','editor'],['access.approve','mo','viewer']]){
    const events=(await audit(action)).filter(e=>e.object_id===retained.id);assert.equal(events.length,1);assert.equal(events[0].actor,staffEmail(actor));const detail=JSON.parse(events[0].detail);assert.equal(detail.request,managed.request);assert.equal(detail.role,role);assert.equal(detail.outcome,'succeeded');
   }
+  console.log('SHARE-008 manager fallback passed');
   await h.api('/people',people.owner,{action:'reactivate',email:staffEmail('eve')});people.eve=await h.signIn(staffEmail('eve'));
   const spaceRequest=await h.api(`/items/${space.terms}/access-requests`,people.dee,{role:'viewer'});assert.deepEqual((await h.api(`/requests/${spaceRequest.request}`,people.mo)).approvers,['ana@example.test','mo@example.test']);
   // Requests close after 30 days and the requester is told.
