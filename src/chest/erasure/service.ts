@@ -10,6 +10,11 @@ import { identityPlan } from './identity'
 import { eraseImportCustody, eraseIdentityCustody } from './custody'
 import { erasureJournal, portableFences, sourceIdentity } from './journal'
 import type { BackupLocation, ErasureReceipt, ErasureTarget, Hold, JournalEntry } from './model'
+// Base retains original arguments, results and named decision evidence. Until its
+// client-custody mapping/redaction fence exists, retain them under a visible hold.
+// An agent registration precedes reads, so the destructive native batch also
+// refuses a new registration that appeared after this preservation decision.
+const agentCustodySql="NOT EXISTS(SELECT 1 FROM agent_door_agents) AND NOT EXISTS(SELECT 1 FROM agent_door_calls) AND NOT EXISTS(SELECT 1 FROM agent_door_approvals) AND NOT EXISTS(SELECT 1 FROM agent_door_reviews) AND NOT EXISTS(SELECT 1 FROM agent_door_audit)"
 const allRecords=async(env:Bindings)=>(await env.DB.prepare('SELECT * FROM chest_records ORDER BY id').all()).results.map(decode)
 const refers=(value:any,ids:Set<string>):boolean=>typeof value==='string'?ids.has(value):Array.isArray(value)?value.some(v=>refers(v,ids)):!!value&&typeof value==='object'&&Object.values(value).some(v=>refers(v,ids))
 export async function erasureView(env:Bindings,s:Session){
@@ -46,10 +51,12 @@ export async function requestErasure(env:Bindings,s:Session,input:any,authorized
  const selected=records.filter(r=>items.has(r.id)||documents.has(r.id)),checksums=[...new Set([...selected.flatMap(r=>(r.payload.versions??[]).map((v:any)=>v.checksum as string)),...records.filter(r=>r.kind==='signature'&&items.has(r.payload.item)&&r.payload.rendition).map(r=>r.payload.rendition.checksum as string)])],at=now(),key=id()
  const entry:JournalEntry={id:key,at,items:[...items],documents:[...documents],identities:person?[person.hash]:[],checksums}
  const holds=(await list<Hold>(env,'erasure-hold')).filter(h=>h.payload.active&&((h.payload.scope==='item'&&items.has(h.payload.subject))||(h.payload.scope==='document'&&documents.has(h.payload.subject))||(h.payload.scope==='identity'&&h.payload.subject===email)))
+ const custody=!(await env.DB.prepare(`SELECT (${agentCustodySql}) AS clear`).first<{clear:number}>())?.clear
  const targets:ErasureTarget[]=holds.map(h=>({store:'preservation hold',status:'held',detail:h.payload.reason}))
- const receipt=fresh<ErasureReceipt>('erasure',{...entry,by:s.operator.email,state:holds.length?'held':'pending',targets,originals:{pending:checksums,removed:[],shared:[]},versions:selected.reduce((n,r)=>n+(r.payload.versions??[]).length,0),bytes:selected.reduce((n,r)=>n+(r.payload.versions??[]).reduce((a:number,v:any)=>a+v.size,0),0),scope:person?'identity and personal files':documents.size?'governed records':'files'},key)
+ if(custody)targets.push({store:'agent decision custody',status:'held',detail:'Shared agent records retain client data and named decision evidence. Client-scoped redaction and a concurrent-capture fence require the next Base custody adapter. No selected originals or identities were erased.'})
+ const receipt=fresh<ErasureReceipt>('erasure',{...entry,by:s.operator.email,state:targets.length?'held':'pending',targets,originals:{pending:checksums,removed:[],shared:[]},versions:selected.reduce((n,r)=>n+(r.payload.versions??[]).length,0),bytes:selected.reduce((n,r)=>n+(r.payload.versions??[]).reduce((a:number,v:any)=>a+v.size,0),0),scope:person?'identity and personal files':documents.size?'governed records':'files'},key)
  // A preservation request is deliberately recorded without touching the held object or its bytes.
- if(holds.length){await commit(env,s,[{row:receipt}],{audits:[{action:'erasure.held',object:key,detail:{outcome:'held'}}]});return receipt}
+ if(targets.length){await commit(env,s,[{row:receipt}],{audits:[{action:'erasure.held',object:key,detail:{outcome:'held'}}]});return receipt}
  // Custody erasure happens before native removal; interruption leaves an inspectable pending operation.
  await commit(env,s,[{row:receipt}],{audits:[{action:'erasure.request',object:key,detail:{outcome:'pending'}}]})
  return continueErasure(env,s,receipt,{records,selected,personal,person,email})
@@ -78,7 +85,7 @@ async function continueErasure(env:Bindings,s:Session,receipt:Row<ErasureReceipt
  for(const b of await list<BackupLocation>(env,'erasure-backup'))targets.push({store:b.payload.name,backup:b.id,status:'pending',detail:`Delete affected copy and report its verified result. Retention: ${b.payload.retention}`})
  for(const b of await list(env,'backup-run'))if(b.payload.state==='complete')targets.push({store:'independent backup',backup:b.id,status:'pending',detail:'This pre-erasure archive may contain selected data; its independent runner must confirm removal under provider retention.'})
  const after=next(receipt,{...p,targets})
- await commit(env,s,[...ops,{row:journal},{row:after,previous:receipt}],{fences:plan.records.filter(r=>!p.documents.includes(r.id)),statements:[{sql:'INSERT INTO chest_assert(ok) SELECT CASE WHEN (SELECT COUNT(*) FROM chest_records)=? THEN 1 ELSE 0 END',params:[plan.records.length+2-removed.size]},...(plan.person?.statements??[]),...portable],changes:[...ids].map(item=>({item,space:'erased',kind:'erase'})),audits:[{action:'item.erase',object:receipt.id,detail:{outcome:'records_erased',items:ids.size}}]})
+ await commit(env,s,[...ops,{row:journal},{row:after,previous:receipt}],{fences:plan.records.filter(r=>!p.documents.includes(r.id)),statements:[{sql:`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${agentCustodySql}) THEN 1 ELSE 0 END`,params:[]},{sql:'INSERT INTO chest_assert(ok) SELECT CASE WHEN (SELECT COUNT(*) FROM chest_records)=? THEN 1 ELSE 0 END',params:[plan.records.length+2-removed.size]},...(plan.person?.statements??[]),...portable],changes:[...ids].map(item=>({item,space:'erased',kind:'erase'})),audits:[{action:'item.erase',object:receipt.id,detail:{outcome:'records_erased',items:ids.size}}]})
  for(const key of stageKeys)await env.BLOBS.delete(key)
  if(plan.person)await plan.person.redactAudit()
  await minimizeAudit(env,ids)

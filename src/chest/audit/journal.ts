@@ -1,3 +1,4 @@
+import { sessionAgent,agentAttribution } from '../agent-attribution'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { ChestError, id, now } from '../model'
@@ -37,7 +38,8 @@ export async function operation(env: Bindings, s: Session, method: string, path:
  const row = await env.DB.prepare('SELECT kind,payload FROM chest_records WHERE id=?').bind(key).first<{ kind: string; payload: string }>()
  const payload = row ? JSON.parse(row.payload) : null
  const version = parts[2] === 'bytes' ? parts[3] : payload?.current ?? (Array.isArray(payload?.versions)?payload.versions.at(-1)?.id:null) ?? null
- return attempt(env, s.operator.email, `${method.toLowerCase()}.${parts[0]}.${parts[2] ?? (parts[1] ? 'open' : 'create')}`, key, { authority: `${s.kind}:${s.operator.role}`, version }, run)
+ const agent=sessionAgent(s)
+ return attempt(env, agent?'agent:'+agent.id:s.operator.email, `${method.toLowerCase()}.${parts[0]}.${parts[2] ?? (parts[1] ? 'open' : 'create')}`, key, { authority: `${s.kind}:${s.operator.role}`, version,...(agent?agentAttribution(agent):{}) }, run)
 }
 // Old unfinished work is explicitly uncertain. It stays uncertain after restart and is never changed to success by time.
 export async function interrupted(env: Bindings) {
