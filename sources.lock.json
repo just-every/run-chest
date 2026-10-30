@@ -217,7 +217,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "26626471449f42bb6552610b3187b0d4485b1099903779221d8b0837dfd5a899",
+      "sha256": "e16b91dad8cd39652d3d40fe0594a96b6c0b412d06e937befd4b484d7d9a9273",
       "executable": false
     },
     "DEMO.md": {
@@ -537,7 +537,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "b71c9d1369bc764705b178ecf679e8ada729bb8593b2f69e58e9e62378183152",
+      "sha256": "33b0baf8f283b3c0c1485785dd830d10e9de11869eb62ad21286542e0bafa0ee",
       "executable": false
     },
     "packaging.json": {
@@ -677,7 +677,7 @@
       "executable": false
     },
     "public/chest-tools.css": {
-      "sha256": "bf8912ee4cd1578339108d24cf15936f7609c244f4e973d67c90a97260249385",
+      "sha256": "c138ede10e61b2307fbca606b3af022351002bdb04c99712c70be8d69446da2d",
       "executable": false
     },
     "public/chest-tooltip.js": {
@@ -2669,7 +2669,7 @@
       "executable": false
     },
     "src/chest/filing/intake.ts": {
-      "sha256": "01f1baed5af36f0f22fe1b70a1f533312f23add7d2d1acf43eec6cb9d8ff0525",
+      "sha256": "8e70d40011af92f29bc207e77e923bf06955263222baaa498098f498e183c26e",
       "executable": false
     },
     "src/chest/filing/link-model.ts": {
@@ -2721,7 +2721,7 @@
       "executable": false
     },
     "src/chest/filing/ui-intake.ts": {
-      "sha256": "88d8853fc0573eaffe7656cbfa034484cd11609045f887df9179faae11967fa0",
+      "sha256": "640b54394ee118eab3d6fabf28652267d02c8e7623c95e82f01074b881272931",
       "executable": false
     },
     "src/chest/filing/ui-link-repairs.ts": {
@@ -2729,7 +2729,7 @@
       "executable": false
     },
     "src/chest/filing/ui.ts": {
-      "sha256": "e1119d5897283841a92bd2ded55dcb3896f6255d0cb82625048661aa7ba62c0c",
+      "sha256": "d852cc22d07940454cd14f34ff546c42074ad3c881c5c12880c942e93241f702",
       "executable": false
     },
     "src/chest/identity.ts": {
@@ -5508,6 +5508,10 @@
       "sha256": "fd8cc6c5ec42e3ad0f83d9def3fade35a11d0780babf39aaf95b75e26e597454",
       "executable": false
     },
+    "tests/chest/browser-intake.mjs": {
+      "sha256": "eab59bb9e781ab40e14f287824ef7bcdb1bb6fb8295c6f26b682a2be7ec447f7",
+      "executable": false
+    },
     "tests/chest/browser-integrations.mjs": {
       "sha256": "2dddd4e26b9118948a41419c32da6c5a7c3f6b85e130ba1a0c134003d37e2acb",
       "executable": false
@@ -5601,7 +5605,7 @@
       "executable": false
     },
     "tests/chest/duplicate-reconciliation.mjs": {
-      "sha256": "6d26d092463aa0a4eec4c807b372a17703d63dcca69853786d368995608d4bc6",
+      "sha256": "d6a488245da49426f58d4ad42ecf49e8e42800c52eb57a9fbe545e23147eab77",
       "executable": false
     },
     "tests/chest/erasure-archive.mjs": {
@@ -5621,7 +5625,7 @@
       "executable": false
     },
     "tests/chest/filing.mjs": {
-      "sha256": "89479e1d7401431648e697d6528c75d25bc9fd84b2493b13a2c4d26c84170d41",
+      "sha256": "80f8779915dfd196e142baadb17060c37fd769d5837582b9393a380b387763ba",
       "executable": false
     },
     "tests/chest/first-run.mjs": {
@@ -5929,7 +5933,7 @@
       "executable": false
     },
     "verification.json": {
-      "sha256": "679468dd93847a6787124d2e9a5457ee7e13e351d2ee9f1419518ecfbe1a2795",
+      "sha256": "16579c9ceeb208b64fb7066e2cb62fa326ffb6e9c4e2cc06452917fc0fef93b6",
       "executable": false
     },
     "vite.config.ts": {
