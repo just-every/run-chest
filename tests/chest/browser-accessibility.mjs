@@ -24,6 +24,8 @@ async function focusProof(page) {
  assert.ok(proof.name, `keyboard control has an accessible name: ${JSON.stringify(proof)}`);
  assert.ok(proof.visible && proof.unobscured, `keyboard focus is visible and unobscured: ${JSON.stringify(proof)}`);
  assert.ok(proof.ring, `keyboard focus has a visible indicator: ${JSON.stringify(proof)}`);
+ const tooltip = await page.locator(':focus').getAttribute('data-tooltip');
+ if (tooltip) await expect(page.getByRole('tooltip')).toHaveText(tooltip);
 }
 
 async function tabTo(page, target, backwards = false) {
@@ -42,7 +44,12 @@ async function tabTo(page, target, backwards = false) {
    for (let at = element; at && at !== document.body; at = at.parentElement) path.unshift(`${at.tagName}:${[...at.parentElement.children].indexOf(at)}`);
    return path.join(' > ');
   });
-  assert.ok(!seen.has(identity), `no keyboard trap while reaching ${target}: ${identity}`);
+  // Native date controls visit several segments without changing activeElement.
+  if (await focused.evaluate(element => ['date','datetime-local','time'].includes(element.type))) continue;
+  if (seen.has(identity)) {
+   await page.screenshot({path:'test-results/keyboard-trap-failure.png',fullPage:false});
+   assert.fail(`no keyboard trap while reaching ${target}: ${JSON.stringify(await target.evaluateAll(elements => elements.map(element => element.outerHTML)))}; active=${await focused.evaluate(element => element.outerHTML)}`);
+  }
   seen.add(identity);
  }
  assert.fail(`keyboard target was not reachable: ${target}`);
@@ -91,9 +98,21 @@ export async function accessibilityJourney({h, page, cookie, reader, width, asse
  if (width === 390) {
   await activate(page, menu.locator(':scope > summary'), 'Space', false);
   await expect(menu).toHaveAttribute('open');
-  await tabTo(page, page.getByRole('navigation', {name:'Chest'}).getByRole('link', {name:'My files',exact:true}));
+  const icon = page.getByRole('link', {name:'New team space',exact:true});
+  await tabTo(page, icon);
+  await expect(page.getByRole('tooltip')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('tooltip')).toBeHidden();
+  await expect(menu).toHaveAttribute('open');
+  await expect(icon).toBeFocused();
   await escapeDisclosure(page, menu);
   await activate(page, menu.locator(':scope > summary'), 'Enter', false);
+  await tabTo(page, menu.getByRole('button', {name:'Sign out',exact:true}));
+  await page.keyboard.press('Tab');
+  await expect(menu).not.toHaveAttribute('open');
+  await focusProof(page);
+  await tabTo(page, menu.locator(':scope > summary'), true);
+  await activate(page, menu.locator(':scope > summary'), 'Space', false);
  }
  await activate(page, page.getByRole('navigation', {name:'Chest'}).getByRole('link', {name:'My files',exact:true}));
  for (const name of [`synthetic-chest-47-${width}`, 'Harbor launch', 'Delivery originals']) {
@@ -127,13 +146,14 @@ export async function accessibilityJourney({h, page, cookie, reader, width, asse
  await preview.close();
  await snapshot(page, width, 'open');
 
- await activate(page, page.locator('.bar-actions').getByRole('link', {name:'Share',exact:true}));
+ await tabTo(page, page.locator('.bar-actions').getByRole('link', {name:'Share',exact:true}), true);
+ await Promise.all([page.waitForNavigation(), page.keyboard.press('Enter')]);
  const share = page.locator('form').filter({has:page.getByRole('button', {name:'Share',exact:true})});
- await tabTo(page, share.getByLabel('Person or group', {exact:true}));
+ await tabTo(page, share.getByLabel('Person or group'));
  await page.keyboard.press('Home');
  await page.keyboard.press('b'); // Ben is the real invited colleague in the parent journey.
  if (assertions) await expect(share.getByLabel('Person or group')).toHaveValue(reader.principal);
- await tabTo(page, share.getByLabel('Role', {exact:true}));
+ await tabTo(page, share.getByLabel(/^Role/));
  await page.keyboard.press('Home');
  await page.keyboard.press('ArrowDown');
  await tabTo(page, share.getByLabel('Message (optional)', {exact:true}));
