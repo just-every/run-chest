@@ -6,6 +6,7 @@ import {createHash} from 'node:crypto';
 import {mkdir,readFile} from 'node:fs/promises';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
+import {libraryWorkJourney} from './browser-flow.mjs';
 import {zip} from './fixtures.mjs';
 import {uploadResumeJourney} from './upload-resume-flow.mjs';
 import {archivePreviewJourney} from './browser-preview.mjs';
@@ -129,6 +130,12 @@ try{
  await mkdir('test-results',{recursive:true});await staff();
  browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{}),args:['--use-mock-keychain','--password-store=basic',...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?['--no-sandbox']:[])]});
  for(const width of [1440,390]){const page=await as('owner',width);await archivePreviewJourney({page,owner:cookies.owner,h,width,assertions:width===1440});await page.context().close()}
+ // The same Library journey runs on push, with assertions at desktop width and phone proof.
+ const collection=await h.api('/collections',cookies.owner,{name:'synthetic-chest-work'}),schema=await h.api('/schemas',cookies.owner,{name:'synthetic-chest-work',fields:[]});
+ for(const width of [1440,390]){
+  const document=await h.api('/documents',cookies.owner,{title:`synthetic-chest-work-${width}`,collection:collection.id,schema:schema.id,fields:{},owner:h.vars.OWNER_EMAIL,reviewer:h.vars.OWNER_EMAIL,reviewDate:'2026-12-01',expiryDate:'2027-01-01',filename:'synthetic-chest-work.txt',base64:b64('synthetic-chest-work original')});
+  const page=await as('owner',width);await libraryWorkJourney({page,origin:h.origin,docId:document.id,width});await page.context().close();
+ }
  for(const width of [1440,390])await journey(width);
  console.log('CHEST-13, VERSION-001 and SHARE-004 browser journeys passed');
 }finally{await browser?.close();await h.close()}
