@@ -8,10 +8,10 @@ The primary journey: create a team space, move originals and rights in, install 
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 37 | 48 | 38 | 123 |
+| Core | 38 | 47 | 38 | 123 |
 | Agent surface | 0 | 2 | 24 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 38 | 54 | 78 | 170 |
+| Full target | 39 | 53 | 78 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -154,7 +154,7 @@ Core · published · **partial**
 
 #### CHEST-11 — Reviewed, reversible archive admission
 
-Core · published · **partial**
+Core · published · **done**
 
 **Requirement.** An archive preview writes nothing and lists every item, hash, duplicate, mapping and gap. Apply binds the reviewed fingerprint and current authority, publishes inert records, resumes after restart, and undoes only untouched batches. Unsafe paths or corrupt bytes publish nothing. Source decisions never become new Chest approvals. The import journal is described in `docs/move-in.md`.
 
@@ -162,8 +162,8 @@ Core · published · **partial**
 1. A bounded archive previews and applies; a changed fingerprint, path traversal and corruption are refused.
 2. After a restart the apply resumes, untouched records undo, and a conflicting native edit is kept.
 
-**Evidence.** `tests/chest/flows.mjs`; `tests/chest/journey.mjs`
-**Gap.** Point 1 passes, and point 2's undo of untouched records after a restart and the kept native edit are asserted (`tests/chest/flows.mjs`); the apply completes before the restart, so an interrupted apply resuming after a restart is not asserted.
+**Evidence.** `tests/chest/flows.mjs` — CHEST-11: archive preview, fingerprint and byte refusals; unfinished apply resumed after Worker restart, inert originals, repeated resume, untouched undo and native-edit conflict.
+**Gap.** None.
 
 #### CHEST-12 — Complete independent local export and restore
 

@@ -2295,13 +2295,15 @@ The owner-approved page-s1 homepage (the hero, then one supplier's folder from t
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026).
 
+CHEST-11 archive restart proof is judged from commit `276efe477f4c947dadcaa6f0e4b7b149b0f3a14d` (30 October 2026); the landing candidate also checks downloaded originals after repeated resume. Its exact candidate revision is recorded by Verify.
+
 EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fbfbf114 (28 October 2026). Its final candidate strengthens the preview-authority journey and records the exact candidate in Verify; the runtime bytes are unchanged from that source commit.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Published | 9 | 4 | 0 | 13 |
+| Published | 10 | 3 | 0 | 13 |
 | Target and push further | 29 | 50 | 78 | 157 |
-| All | 38 | 54 | 78 | 170 |
+| All | 39 | 53 | 78 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2315,7 +2317,7 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | `CHEST-08` | Exact-version human decisions | published | done | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-09` | Review and expiry work keep evidence | published | partial | `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs` | Point 2 passes, and point 1's completion record and expiry date are asserted (`tests/chest/flows.mjs`), with the review work item selected on the document page (`tests/chest/browser-flow.mjs`); no test reads the work list, so both dates appearing there is not asserted. |
 | `CHEST-10` | People and group grants | published | partial | `tests/chest/flows.mjs`; `tests/chest/restore.mjs` | After the member is removed and collection access revoked, details, search and review mutations are asserted refused, and readers are listed for a person grant (`tests/chest/flows.mjs`); the group grant's effective readers are never listed, and no preview or download is attempted after the revoke. |
-| `CHEST-11` | Reviewed, reversible archive admission | published | partial | `tests/chest/flows.mjs`; `tests/chest/journey.mjs` | Point 1 passes, and point 2's undo of untouched records after a restart and the kept native edit are asserted (`tests/chest/flows.mjs`); the apply completes before the restart, so an interrupted apply resuming after a restart is not asserted. |
+| `CHEST-11` | Reviewed, reversible archive admission | published | done | `tests/chest/flows.mjs` — CHEST-11: archive preview, fingerprint and byte refusals; unfinished apply resumed after Worker restart, inert originals, repeated resume, untouched undo and native-edit conflict. |  |
 | `CHEST-12` | Complete independent local export and restore | published | done | `tests/chest/restore.mjs`; `tests/chest/journey.mjs` |  |
 | `CHEST-13` | Self-service reversible trash | published | done | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
 | `SPACE-001` | Team spaces, personal areas and ordinary files | target | partial | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `tests/chest/ownership.mjs`; `tests/chest/governance.mjs`; `tests/chest/browser-governance.mjs` | Fresh-judge candidate: the old gap named only the EDIT-004 provider experience and the SCALE-001 run, both now in their own clauses. |
