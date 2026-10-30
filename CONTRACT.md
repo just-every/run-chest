@@ -2295,6 +2295,8 @@ The owner-approved page-s1 homepage (the hero, then one supplier's folder from t
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026).
 
+CHEST-11 retains main’s partial judgment pending a new ruling. The replay preserves the unfinished archive apply restart, current-session refusal, repeated resume, original download and untouched undo assertions in `tests/chest/flows.mjs`; this landing does not promote the clause.
+
 SHARE-004 and SHARE-008 retain main’s partial judgments pending a new ruling. The personal commenter audit and deactivated-owner manager fallback assertions are preserved in `tests/chest/files.mjs` and `tests/chest/browser-files.mjs`.
 
 CHEST-03 and CHEST-10 are judged from the code and tests at commit bdb9e2e6c8c2ed019229ba9c1e10905775a23db7 (29 October 2026). The final candidate changes only contract status, generated views and the source lock; its exact commit and Verify receipt are recorded in the fleet report.

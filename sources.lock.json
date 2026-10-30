@@ -217,7 +217,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "f4d152ff590ab40add78cb60bd8736319467689198cd637be14e139f75fd8ee9",
+      "sha256": "2df48a6c4b9a6d440c50641ff18b9f4462c503116774594cd378d79db37e1887",
       "executable": false
     },
     "DEMO.md": {
@@ -5633,7 +5633,7 @@
       "executable": false
     },
     "tests/chest/flows.mjs": {
-      "sha256": "38696fd563e1cc764966db04e255d2bb79f079ede2cac5e5cf533e09d4530f13",
+      "sha256": "e56eab22d6a609fe03414845367966831358387d69cdc118b1b3fff713f62cde",
       "executable": false
     },
     "tests/chest/governance.mjs": {
