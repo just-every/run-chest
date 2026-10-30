@@ -2295,6 +2295,8 @@ The owner-approved page-s1 homepage (the hero, then one supplier's folder from t
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026).
 
+SHARE-008 manager fallback retains the candidate’s test-backed judgment. SHARE-004 retains main’s partial judgment pending a new ruling; its audit assertions are preserved.
+
 CHEST-03 and CHEST-10 are judged from the code and tests at commit bdb9e2e6c8c2ed019229ba9c1e10905775a23db7 (29 October 2026). The final candidate changes only contract status, generated views and the source lock; its exact commit and Verify receipt are recorded in the fleet report.
 
 EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fbfbf114 (28 October 2026). Its final candidate strengthens the preview-authority journey and records the exact candidate in Verify; the runtime bytes are unchanged from that source commit.
@@ -2302,8 +2304,8 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 11 | 2 | 0 | 13 |
-| Target and push further | 29 | 50 | 78 | 157 |
-| All | 40 | 52 | 78 | 170 |
+| Target and push further | 30 | 49 | 78 | 157 |
+| All | 41 | 51 | 78 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2353,7 +2355,7 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | `SHARE-002` | Upload-only file requests | target | done | `tests/chest/file-requests.mjs`; `tests/chest/browser-file-requests.mjs`; `tests/chest/request-browser-flow.mjs`; `tests/chest/files.mjs` |  |
 | `SHARE-003` | Large-file transfers and delivery receipts | target | done | `tests/chest/transfers.mjs`; `tests/chest/transfer-large-flow.mjs`; `tests/chest/browser-transfers.mjs`; `docs/deliveries.md` |  |
 | `SHARE-004` | Item sharing and Shared with me | target | partial | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` | Point 1 passes (`tests/chest/files.mjs`, `tests/chest/browser-files.mjs`); no test asserts the share's audit row (point 2). |
-| `SHARE-008` | Access requests | target | partial | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` | Points 1 and 2 pass, and point 3's routing to a deactivated owner's successor is asserted (`tests/chest/files.mjs`); a file whose deactivated owner has no successor is never routed to a space manager. |
+| `SHARE-008` | Access requests | target | done | `tests/chest/files.mjs` — SHARE-004: access requests, successor and manager fallback; `tests/chest/browser-files.mjs` — Files browser journey: concealed requests, approval from email, decline and manager fallback with delivery, granted access and audited decisions |  |
 | `SHARE-009` | Expiring grants | target | done | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` |  |
 | `SHARE-005` | Guests: sign-in, scope and expiry | target | partial | `tests/chest/guest-editing-flow.mjs`; `tests/chest/guest-links.mjs`; `tests/chest/wopi-flow.mjs`; `docs/guest-collaboration.md` | Guest sign-in with a verified Google or Microsoft identity is not in the evidence, which covers PIN sign-in only. |
 | `SHARE-010` | Guests edit, upload and manage versions | target | partial | `tests/chest/guest-editing-flow.mjs`; `tests/chest/wopi-flow.mjs`; `tests/chest/collabora-live.mjs` | Resumable guest uploads above the 8 MB direct-form limit are unproved. Native guest collaboration in the apps and desktop clients (MOBILE-001, SYNC-008) remains. |

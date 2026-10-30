@@ -8,10 +8,10 @@ The primary journey: create a team space, move originals and rights in, install 
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 39 | 46 | 38 | 123 |
+| Core | 40 | 45 | 38 | 123 |
 | Agent surface | 0 | 2 | 24 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 40 | 52 | 78 | 170 |
+| Full target | 41 | 51 | 78 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -622,7 +622,7 @@ Core · target · **partial**
 
 #### SHARE-008 — Access requests
 
-Core · target · **partial** · From SHARE-004
+Core · target · **done** · From SHARE-004
 
 **Requirement.** A signed-in person who opens a link they cannot use sees **Request access** with an optional message and role, never the item's name or contents. The request goes to the item's sharers with share rights (owner, file editors, then space managers), who approve at the requested or a lower role, or decline, from the email, the notice or the share dialog; the requester is told. If the owner has left, the request goes to the successor set at offboarding, then space managers, then content-recovery admins; it never stalls silently. Requests expire after 30 days with the requester told. Each request, decision and grant is audited.
 
@@ -631,8 +631,8 @@ Core · target · **partial** · From SHARE-004
 2. A second request is declined from the share dialog and the requester is told.
 3. With the owner of a third file deactivated, the request reaches the successor, and with none, a space manager.
 
-**Evidence.** `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`
-**Gap.** Points 1 and 2 pass, and point 3's routing to a deactivated owner's successor is asserted (`tests/chest/files.mjs`); a file whose deactivated owner has no successor is never routed to a space manager.
+**Evidence.** `tests/chest/files.mjs` — SHARE-004: access requests, successor and manager fallback; `tests/chest/browser-files.mjs` — Files browser journey: concealed requests, approval from email, decline and manager fallback with delivery, granted access and audited decisions
+**Gap.** None.
 
 #### SHARE-009 — Expiring grants
 
