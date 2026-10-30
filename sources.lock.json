@@ -673,7 +673,7 @@
       "executable": false
     },
     "public/chest-time.js": {
-      "sha256": "48348f0e5221d3533a5c7025f162d126c45bc04f0eaf8a2c70bd9d6f17304387",
+      "sha256": "0a7f695269b8fc548cb4252a8eb6e020d5678c2576ba087c6f49ca12fb4d41cf",
       "executable": false
     },
     "public/chest-tools.css": {
@@ -2109,7 +2109,7 @@
       "executable": false
     },
     "src/chest/administration/report-ui.ts": {
-      "sha256": "5c1dae27fa153d5dd19e039ff2cda2ad18bfce873fa0a559813c725a585bf79a",
+      "sha256": "fd437ffaaa690573760c8e6676ee712a396428ee0982fdb00b2abcc20d40af9e",
       "executable": false
     },
     "src/chest/administration/reports.ts": {
@@ -2129,7 +2129,7 @@
       "executable": false
     },
     "src/chest/administration/ui.ts": {
-      "sha256": "d1589fa3eddcf9b6955f6353847c67ae1a2907bd987648914ba8c4a08bac7b20",
+      "sha256": "fe2e154feddb958af419baadaf149b0bee26d2082cd26a4faa8c9c0e304ac9b3",
       "executable": false
     },
     "src/chest/agent-policy.ts": {
@@ -2533,7 +2533,7 @@
       "executable": false
     },
     "src/chest/files/ui-link-form.ts": {
-      "sha256": "71bf2c4f7316da57aa5899e65973fcbbe5acea468a86e9dd36b2e16e682f0623",
+      "sha256": "f034e1a396b1114fd772d7dfa7d0594fee6acb640d18e70c2d0a41a14a9c169d",
       "executable": false
     },
     "src/chest/files/ui-link-policy.ts": {
@@ -2593,7 +2593,7 @@
       "executable": false
     },
     "src/chest/files/zone.ts": {
-      "sha256": "c1b6a4c6d78ed9bd3c89fc7e9dade9db56799fc93da5e99924f804bab2d5b6c0",
+      "sha256": "35670307a5ccccd6de69f2d7dda09dadd3d45d4c3c5cb86ccd67b3a91091e114",
       "executable": false
     },
     "src/chest/filing/agent-arrivals.ts": {
@@ -3273,7 +3273,7 @@
       "executable": false
     },
     "src/chest/ui-document.ts": {
-      "sha256": "b56f0f7d100b438255eea0986d3ae87447cbe55ffa79d62a247a20a4c16807f8",
+      "sha256": "2e78397a7b40f85a9e14ce31c25dc80a65d08df1b22eb4cdcd6c336fb35c76fa",
       "executable": false
     },
     "src/chest/ui-fields.ts": {
@@ -3301,7 +3301,7 @@
       "executable": false
     },
     "src/chest/ui-shared.ts": {
-      "sha256": "1312e3110a4d5d1d5a2c2b2d3237904ba627c297996669998eb23d07f1dc00ea",
+      "sha256": "497d9cf8459060cc5bee0cc39f71da44477c4f9ac334deabbe4a3e38f211282f",
       "executable": false
     },
     "src/chest/ui-shell.ts": {
@@ -5397,7 +5397,7 @@
       "executable": false
     },
     "tests/chest/administration.mjs": {
-      "sha256": "7f2a7006aa22a057cf1a71b47aff54c352d00f57f6ad7626950fb15f25dc3590",
+      "sha256": "50fef438ece7c5927cb30ff1a5d1f0c0b2e5f848db11d9334f2013fa7adabead",
       "executable": false
     },
     "tests/chest/agent-filing.mjs": {
