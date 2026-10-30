@@ -2440,8 +2440,8 @@ Later · target · **partial** · From AUDIT-001
 1. Two colleagues view a space file; a contributor sees both names and times, and a viewer sees edits but no view history.
 2. A colleague who hides their views leaves the list, and turning view history off for the group removes it.
 
-**Evidence.** `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs`
-**Gap.** Point 2 passes, and point 1's one colleague's view shown to a contributor and no view history for a viewer are asserted (`tests/chest/audit.mjs`); the second colleague's name, the view times, and the viewer seeing edits are not.
+**Evidence.** `tests/chest/audit.mjs` — authenticated colleague views and times, viewer edits, hiding, organization and group suppression, erasure and current-access refusal; `tests/chest/browser-audit.mjs` — Activity panels with both colleague identities and public-event timestamps, viewer edits without view history, individual hiding, group suppression and replacement labels matching Version history.
+**Gap.** Activity labels a newly uploaded Version 2 as Version 1; activity version labels must agree with Version history.
 
 ### Move-in from incumbents
 
