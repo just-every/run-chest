@@ -32,6 +32,8 @@
 .link-quiet { color: var(--chest-action); font-size: 13.5px; font-weight: 500; text-decoration: none; }
 .link-quiet:hover { text-decoration: underline; text-underline-offset: 3px; }
 
+/* Keep keyboard controls and their rings clear of the sticky bar and viewport edge. */
+.app :where(a, button, input, select, textarea, summary, [tabindex]) { scroll-margin-block: 128px 8px; }
 /* Focus: a 2px violet outline everywhere; form controls take the soft ring on their own border instead. */
 :where(a, button, summary, [tabindex]):focus-visible { outline: 2px solid var(--chest-action); outline-offset: 2px; border-radius: 6px; }
 
