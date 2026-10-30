@@ -2304,8 +2304,8 @@ ADMIN-006 runtime source is judged from commit 9d951ccdecac60aea1be5f560119bf2cd
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 11 | 2 | 0 | 13 |
-| Target and push further | 30 | 49 | 78 | 157 |
-| All | 41 | 51 | 78 | 170 |
+| Target and push further | 30 | 50 | 77 | 157 |
+| All | 41 | 52 | 77 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2450,7 +2450,7 @@ ADMIN-006 runtime source is judged from commit 9d951ccdecac60aea1be5f560119bf2cd
 | `SURFACE-004` | Add and organize files | target | missing |  | No resumable agent upload, move, field or selection tools, job handles or exposure rule. Today `chest_upload` (base64 in one call) and `chest_create_folder` exist, and the integration API renames and adds versions. |
 | `SURFACE-005` | Recovery stays standard; destruction is its own class | target | missing |  | No trash, rewind, purge or erasure tools, class declarations or policy decisions; today the integration API restores and names versions. |
 | `SURFACE-006` | Sharing is classified by its recipient, never by the agent | target | missing |  | No recipient classification, policy decision, pending actions or receipts. Today `chest_share` forwards the agent's own `confirmExternal`, which the sharing policy (`src/chest/files/sharing-policy.ts`) accepts as the browser's confirmation, and the API's `/links` creates links under policy with no class or decision. |
-| `SURFACE-007` | Narrowing access and repairing links | target | missing |  | No narrowing tool, class declaration or policy decision; today the integration API removes grants (`/unshare`), and revoke and Make private are browser-only (SHARE-007, AGENT-005). |
+| `SURFACE-007` | Narrowing access and repairing links | target | partial | `tests/chest/integrations.mjs` — SURFACE-007 point 1: OAuth Make private preserves named people and group grants and every original, refuses out-of-grant and current-viewer calls, denies the next anonymous request and publishes one mutation and audit across retry and Worker restart; `tests/chest/browser-integrations.mjs` — Make private reconciles Links, the folder page and retained downloads. | Point 1 is implemented through the existing OAuth integration API only. Shared Base Agent integration, canonical narrowing tools, standard classification and policy decisions remain missing. The restorable audience record and external, public restoration classification, review-feed execution, expired-guest removal with manager notification and agent-for-person activity, and the autonomous AGENT-005 two-link repair journey remain unproved. |
 | `SURFACE-008` | Collect documents in, send files out | target | missing |  | No send or reminder tools, class declarations or policy decisions; today `chest_create_request` exists, and sending, transfers and signing are browser-only. |
 | `SURFACE-009` | Devices and sync | target | missing |  | No device tools; the client states are themselves missing in SYNC-003, and the device list, revoke and deactivation are browser-only. |
 | `SURFACE-010` | Administration and security settings are classified, not withheld | target | missing |  | No admin tools, and the integration API has no admin scope; ADMIN-002 itself is partial. |
