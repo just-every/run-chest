@@ -2165,7 +2165,7 @@
       "executable": false
     },
     "src/chest/audit/ui.ts": {
-      "sha256": "70311e29df383401f7f73486e4131f56aed2404b0ebfa18bf53065a70280f4ab",
+      "sha256": "be7b8968c9be899265115d84202f3da9515a880ee0607ac9796b619e519ed5ae",
       "executable": false
     },
     "src/chest/backups/service.ts": {
@@ -2529,7 +2529,7 @@
       "executable": false
     },
     "src/chest/files/ui-item.ts": {
-      "sha256": "ad8bd70b1dea106e87b93ab57699f92cef8b82e6278afe6c681285d71ffa6377",
+      "sha256": "235b87d3dd934576bdf4900672615e026f9c4db9e8b54f3dcf0decf697d6cc80",
       "executable": false
     },
     "src/chest/files/ui-link-form.ts": {
@@ -2553,7 +2553,7 @@
       "executable": false
     },
     "src/chest/files/ui-pages.ts": {
-      "sha256": "bac16931eecf3c69305dfba074d63b92fc082bcf50c0db2c5bf43aa7acf73697",
+      "sha256": "c2de9a360c72e891b540958484bae93269a37a58ef021acf9a8205681898cba0",
       "executable": false
     },
     "src/chest/files/ui-panel.ts": {
@@ -2569,7 +2569,7 @@
       "executable": false
     },
     "src/chest/files/ui-search.ts": {
-      "sha256": "349645a0fe04fd2f41388281761dc961532139e19f6ed5f8bf631f0e92becdeb",
+      "sha256": "ac049c44d4752d610f0954d2113ea140710695e7d4ce3d8595c6b163fdca3376",
       "executable": false
     },
     "src/chest/files/ui-space-policy.ts": {
@@ -2581,7 +2581,7 @@
       "executable": false
     },
     "src/chest/files/ui.ts": {
-      "sha256": "68ae6ada3c9b45d8b988dba518851324ac69e93eff6aa749eac02e5ff8b77858",
+      "sha256": "7fefd3e03446536ebc1b2b6ef6cea22722a1b0a2707558a880525925f0d9dc74",
       "executable": false
     },
     "src/chest/files/uploads.ts": {
@@ -3273,7 +3273,7 @@
       "executable": false
     },
     "src/chest/ui-document.ts": {
-      "sha256": "2e78397a7b40f85a9e14ce31c25dc80a65d08df1b22eb4cdcd6c336fb35c76fa",
+      "sha256": "49b52726c3b86fe70886bdbd8f98644799eb658d88d9ddbfb0bbe0269ecf369e",
       "executable": false
     },
     "src/chest/ui-fields.ts": {
@@ -3285,7 +3285,7 @@
       "executable": false
     },
     "src/chest/ui-library.ts": {
-      "sha256": "7f4847ced3d4705cec887e5e2a31710ac02e995ee9541c2ae7a75e2c39b77005",
+      "sha256": "743d6b7c249f1ea79ba436379265f228ce1290128a2a70dd44cca123b56e2e24",
       "executable": false
     },
     "src/chest/ui-problems.ts": {
@@ -3301,7 +3301,7 @@
       "executable": false
     },
     "src/chest/ui-shared.ts": {
-      "sha256": "497d9cf8459060cc5bee0cc39f71da44477c4f9ac334deabbe4a3e38f211282f",
+      "sha256": "f057223ec2bdece293cadd35eb78f3f29e76aba153388f8902b0f6286ae6dcc9",
       "executable": false
     },
     "src/chest/ui-shell.ts": {
@@ -5497,7 +5497,7 @@
       "executable": false
     },
     "tests/chest/browser-files.mjs": {
-      "sha256": "73bcf0945cd232dc5e151393fc57144b9dcacd66a21112ececa7d22015bb8b03",
+      "sha256": "edb906c3fa8c88788303990978b5e0192fb6b1454074fc1b905e951253995c59",
       "executable": false
     },
     "tests/chest/browser-flow.mjs": {
