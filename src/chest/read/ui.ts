@@ -14,19 +14,20 @@ export function readingLine(r: NonNullable<Summary>) {
  if (r.state === 'reading') return `Reading: ${read} of ${r.pages.length} page${r.pages.length === 1 ? '' : 's'} done.`
  if (r.state === 'unsupported' || r.state === 'failed') return r.problem ?? 'This file could not be read.'
  const words = `${r.chars.toLocaleString('en-US')} characters searchable${r.method ? `, ${r.method}` : ''}.`
- if (r.state === 'needs_key' || r.state === 'unavailable') return `${r.chars ? words + ' ' : ''}${scans.length} scanned page${scans.length === 1 ? ' is' : 's are'} not read yet. ${r.problem ?? ''}`.trim()
+ // Without a reading key a scan is simply not offered: only the words already readable are said.
+ if (r.state === 'needs_key') return r.chars ? words : ''
+ if (r.state === 'unavailable') return `${r.chars ? words + ' ' : ''}${scans.length} scanned page${scans.length === 1 ? ' is' : 's are'} not read yet. ${r.problem ?? ''}`.trim()
  return `${words}${r.state === 'partial' ? ` ${r.pages.filter(p => p.state === 'failed').length} page(s) could not be read.` : ''}${r.truncatedAt ? ` Partially indexed: the first ${r.truncatedAt.toLocaleString('en-US')} characters.` : ''}${r.problem ? ` ${r.problem}` : ''}`
 }
 const pageNotes = (r: NonNullable<Summary>) => r.pages.filter(p => p.source !== 'text' || p.problem).map(p => `<li class="mono">Page ${p.n} · ${p.source === 'text' ? 'text layer' : p.source === 'photo' ? 'photo' : 'scan'} · ${p.state === 'done' ? `${p.chars.toLocaleString('en-US')} characters${p.language ? ` · ${esc(p.language)}` : ''}${p.confidence !== null ? ` · ${pct(p.confidence)}` : ''}` : esc(p.state)}${p.problem ? ` · ${esc(p.problem)}` : ''}</li>`).join('')
 // "Text inside" on a file page: the reading line, the text, and for photos the page image that was read.
 export function textInside(r: Summary | null, base: { poll: string; page: (n: number) => string; retry?: string; returnTo: string; owner: boolean; showPhoto?: boolean }) {
- if (!r) return ''
- const retry = base.retry && ['partial', 'failed', 'needs_key'].includes(r.state) && !(r.state === 'needs_key' && !base.owner) ? form(base.retry, '', 'Read again', base.returnTo, inline) : ''
- const settings = r.state === 'needs_key' && base.owner ? `<p><a class="link" href="/app/admin#reading">Add an AI model key</a></p>` : ''
+ if (!r || (r.state === 'needs_key' && !r.chars)) return ''
+ const retry = base.retry && ['partial', 'failed'].includes(r.state) ? form(base.retry, '', 'Read again', base.returnTo, inline) : ''
  const photo = base.showPhoto === false ? undefined : r.pages.find(p => p.image && p.source === 'photo')
- return `<h2 class="section-title">Text inside</h2><section class="card read-card" aria-label="Text inside"${busy(r.state) ? ` data-reading-poll="${esc(base.poll)}"` : ''}><p class="read-line" data-reading-line>${esc(readingLine(r))}</p>${busy(r.state) ? '<p class="read-meter" aria-hidden="true"><span></span></p>' : ''}${settings}
+ return `<h2 class="section-title">Text inside</h2><section class="card read-card" aria-label="Text inside"${busy(r.state) ? ` data-reading-poll="${esc(base.poll)}"` : ''}><p class="read-line" data-reading-line>${esc(readingLine(r))}</p>${busy(r.state) ? '<p class="read-meter" aria-hidden="true"><span></span></p>' : ''}
  ${photo ? `<img class="read-photo" src="${esc(base.page(photo.n))}" alt="The photo as Chest read it" width="${photo.width}" height="${photo.height}">` : ''}
- ${r.pages.some(p => p.source !== 'text' || p.problem) ? `<ul class="read-pages">${pageNotes(r)}</ul>` : ''}${r.excerpt ? details('Read the text', `<pre class="receipt">${esc(r.excerpt)}</pre>${r.chars > 20_000 ? '<p class="quiet">The first 20,000 characters are shown; search covers all of the indexed text.</p>' : ''}`, 'link-summary') : ''}${retry}</section>`
+ ${r.state !== 'needs_key' && r.pages.some(p => p.source !== 'text' || p.problem) ? `<ul class="read-pages">${pageNotes(r)}</ul>` : ''}${r.excerpt ? details('Read the text', `<pre class="receipt">${esc(r.excerpt)}</pre>${r.chars > 20_000 ? '<p class="quiet">The first 20,000 characters are shown; search covers all of the indexed text.</p>' : ''}`, 'link-summary') : ''}${retry}</section>`
 }
 type Proposal = { field: string; found: boolean; value: unknown; page: number; box: number[] | null; confidence: number; note: string; decision?: { status: string; value: unknown; by: string; at: string } }
 const shown = (v: unknown) => v === null || v === undefined ? '' : typeof v === 'string' ? v : JSON.stringify(v)
@@ -38,10 +39,11 @@ function correctInput(type: string, value: unknown) {
 // beside it the list to accept, correct or reject. Saved values are never replaced from here.
 export function readFields(doc: { id: string; fields: Record<string, unknown> }, v: { id: string; label?: string }, r: Summary | null, f: { state: string; problem: string | null; model: string | null; proposals: Proposal[]; unchanged?: number } | null, types: Record<string, string>, editor: boolean, owner: boolean, returnTo: string, kind: 'items' | 'documents' = 'documents') {
  const poll = `/api/chest/${kind}/${doc.id}/reading`
+ if (r?.state === 'needs_key' || f?.state === 'needs_key') return ''
  if (!f) return editor && r && r.pages.some(p => p.source !== 'text') ? `<div class="read-fields">${form(`/${kind}/${doc.id}/reading/${v.id}`, '', 'Read fields from this scan', returnTo, inline)}</div>` : ''
  if (busy(f.state) || busy(r?.state)) return `<div class="read-fields" data-reading-poll="${esc(poll)}"><p class="read-line" data-reading-line>Reading fields from this scan…</p><p class="read-meter" aria-hidden="true"><span></span></p></div>`
  if (f.state === 'not_scan' || f.state === 'no_fields') return ''
- if (f.state !== 'done') return `<div class="read-fields"><p class="read-line">${esc(f.problem ?? 'Fields could not be read from this scan.')}</p>${f.state === 'needs_key' && owner ? '<p><a class="link" href="/app/admin#reading">Add an AI model key</a></p>' : ''}${editor && f.state !== 'unavailable' && !(f.state === 'needs_key' && !owner) ? form(`/${kind}/${doc.id}/reading/${v.id}`, '', 'Read again', returnTo, inline) : ''}</div>`
+ if (f.state !== 'done') return `<div class="read-fields"><p class="read-line">${esc(f.problem ?? 'Fields could not be read from this scan.')}</p>${editor && f.state !== 'unavailable' ? form(`/${kind}/${doc.id}/reading/${v.id}`, '', 'Read again', returnTo, inline) : ''}</div>`
  const numbered = f.proposals.map((p, i) => ({ ...p, n: i + 1 })), pages = [...new Set(numbered.filter(p => p.box).map(p => p.page))].sort((a, b) => a - b)
  const figure = (n: number) => { const page = r?.pages.find(p => p.n === n); if (!page?.width || !page.height) return ''
   const dot = Math.round(page.width! / 52), boxes = numbered.filter(p => p.page === n && p.box).map(p => { const [x0, y0, x1, y1] = p.box!.map((c, i) => Math.round(c * (i % 2 ? page.height! : page.width!))), state = p.decision?.status ?? 'open'
