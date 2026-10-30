@@ -1,9 +1,14 @@
-import { card, esc, field, form, hidden, select, stamp } from '../ui-shared'
-export function transferForm(item:string,title:string,back:string) {
- return card('Send a delivery package',`<p>Freeze the current file or folder versions. Recipients can resume interrupted downloads; receipts distinguish views, bytes served and explicit confirmation.</p>${form('/transfers',hidden('item',item)+field('Package title','title',title)+select('Delivery audience','audience',[{id:'public',label:'Anyone with the link'},{id:'guests',label:'Invited emails (verification required)'}])+field('Invited emails (comma separated)','guests','','text',false)+field('Email the package to (optional)','sendTo','','email',false)+field('Expires','expires','','date',false)+field('Download sessions allowed','limit','','number',false)+select('Ask recipients to confirm receipt','receipt',[{id:'false',label:'No'},{id:'true',label:'Yes'}]),'Create delivery package',back)}`,'side-card')
+import { card, details, esc, field, form, hidden, select, stamp } from '../ui-shared'
+// The package form: on a file or folder page the item is fixed; on Deliveries the person picks one.
+function packageForm(first:string,back:string) {
+ return form('/transfers',first+select('Delivery audience','audience',[{id:'public',label:'Anyone with the link'},{id:'guests',label:'Invited emails (verification required)'}])+field('Invited emails (comma separated)','guests','','text',false)+field('Email the package to (optional)','sendTo','','email',false)+field('Expires','expires','','date',false)+field('Download sessions allowed','limit','','number',false)+select('Ask recipients to confirm receipt','receipt',[{id:'false',label:'No'},{id:'true',label:'Yes'}]),'Create delivery package',back)
 }
-export function transfersPage(rows:any[]) {
- return `<div class="page-head"><h1>Deliveries</h1><p class="lede">Pinned packages and their delivery evidence.</p></div>${rows.length?`<ul class="events">${rows.map(r=>`<li><a class="link" href="/app/transfers/${esc(r.id)}">${esc(r.title)}</a> · ${r.started} download sessions · ${stamp(r.at)}</li>`).join('')}</ul>`:'<p>No deliveries yet. Create a delivery package from a file or folder page.</p>'}`
+export function transferForm(item:string,title:string,back:string) {
+ return card('Send a delivery package',`<p>Freeze the current file or folder versions. Recipients can resume interrupted downloads; receipts distinguish views, bytes served and explicit confirmation.</p>${packageForm(hidden('item',item)+field('Package title','title',title),back)}`,'side-card')
+}
+export function transfersPage(rows:any[],targets:{id:string;label:string}[]=[]) {
+ const create=targets.length?packageForm(select('File or folder to send','item',targets)+field('Package title','title'),'/app/transfers'):'<p class="quiet">Nothing here can be sent yet.</p>'
+ return `<div class="page-head"><h1>Deliveries</h1><p class="lede">Pinned packages and their delivery evidence.</p></div>${rows.length?`<ul class="events">${rows.map(r=>`<li><a class="link" href="/app/transfers/${esc(r.id)}">${esc(r.title)}</a> · ${r.started} download sessions · ${stamp(r.at)}</li>`).join('')}</ul>${targets.length?details('New delivery package',create):''}`:card('Send a delivery package',create)}`
 }
 const labels:Record<string,string>={view:'Page viewed (human not proven)',scanner_view:'Scanner or preview-bot view',started:'Download session started',bytes_completed:'Complete file bytes served',confirmed:'Recipient explicitly confirmed',mail_accepted:'Email provider accepted (receipt not proven)'}
 export function transferPage(d:any) {

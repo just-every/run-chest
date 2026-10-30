@@ -2229,7 +2229,7 @@
       "executable": false
     },
     "src/chest/collection/ui.ts": {
-      "sha256": "d50ff8a79ffae91b9fa40f8261345784b4a19848e8dcc197c57e7897fcb5b3d9",
+      "sha256": "7f1aeb889b9e1b93630e5a2d0760f1c182b4bae18eaf835edea9c3e8aabe33b4",
       "executable": false
     },
     "src/chest/content-security/activity.ts": {
@@ -2468,6 +2468,10 @@
       "sha256": "bfcc99e8b767fae9bf3ffc9e40ab9b1339b754c39637a13ee30f3d5453ced8e2",
       "executable": false
     },
+    "src/chest/files/share-targets.ts": {
+      "sha256": "e58e9dc5253c0693a7be8f7717481ecd28dfd9c781a65d1cc12cd034afed5fe4",
+      "executable": false
+    },
     "src/chest/files/shares.ts": {
       "sha256": "8dba2d93e2f793cb68fc71e3e03b1f4cb4024e4e40b8aa28dc42d5c26f17dfea",
       "executable": false
@@ -2577,7 +2581,7 @@
       "executable": false
     },
     "src/chest/files/ui.ts": {
-      "sha256": "79795e27a6590e09fdf24f861d0c48c76bd35156aa31f486ef90ea82c37fcce8",
+      "sha256": "a4a83094fb48dae799c81588fee00595f6727aeceb7ce79cd908d7699863e6ae",
       "executable": false
     },
     "src/chest/files/uploads.ts": {
@@ -2861,7 +2865,7 @@
       "executable": false
     },
     "src/chest/office/new-ui.ts": {
-      "sha256": "7ac13a22216e71a110bbf093af1b8b95e17a7f7b313dd1adbd8c4d88a27a3ebb",
+      "sha256": "3c6dc41335240c989d518b7ce695a53b8ae5cdbb52f594321e9a99d37eab356b",
       "executable": false
     },
     "src/chest/office/presence.ts": {
@@ -3261,7 +3265,7 @@
       "executable": false
     },
     "src/chest/transfers/ui.ts": {
-      "sha256": "0e62973779f36fd9d294c2b9e78d4684466367aef9fcae3a58f6b8d3a77ebb9f",
+      "sha256": "53a3678b2f1c6ecd0072bf4cda36166bca27cd535459bc6402b50c554c5051dd",
       "executable": false
     },
     "src/chest/ui-admin.ts": {
@@ -5493,7 +5497,7 @@
       "executable": false
     },
     "tests/chest/browser-files.mjs": {
-      "sha256": "31624e0e6be08c17143ee40d40921706c2d030af84a1b79240a5254733d5e8e1",
+      "sha256": "73bcf0945cd232dc5e151393fc57144b9dcacd66a21112ececa7d22015bb8b03",
       "executable": false
     },
     "tests/chest/browser-flow.mjs": {
@@ -5525,7 +5529,7 @@
       "executable": false
     },
     "tests/chest/browser-new-files.mjs": {
-      "sha256": "af2083da2ec5b036acb01dca75ec659604aa81e544f93b6b0f7829660780e967",
+      "sha256": "fb2fe4585deda3434e0f8202f15683de3188be263a9e1b3858500939dedfdcaa",
       "executable": false
     },
     "tests/chest/browser-ownership.mjs": {
