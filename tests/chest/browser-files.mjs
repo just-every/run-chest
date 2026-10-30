@@ -91,6 +91,14 @@ async function journey(width){
  // SHARE-004: Ana shares a personal file with Ben as commenter; Dee asks for access and Ana approves from the email.
  const mine=(await json(p.ana,'/files')).personal;await go(p.ana,`/app/spaces/${mine}`);await pick(p.ana,{name:`plan-${width}.txt`,mimeType:'text/plain',buffer:Buffer.from('launch plan')});const plan=id(p.ana);
  await p.ana.getByLabel('Person or group').selectOption('ben@example.test');await p.ana.getByLabel(/^Role/).selectOption('commenter');await p.ana.getByLabel('Message (optional)').fill('Please check section 2');await press(p.ana,'Share');
+ if(width===1440){
+  const grants=await audit('share.grant',plan);assert.equal(grants.length,1,'the Share button records one grant');
+  const shareGrant=grants[0],shareDetail=JSON.parse(shareGrant.detail);
+  assert.equal(shareGrant.actor,'ana@example.test');assert.equal(shareGrant.object_id,plan);
+  assert.equal(shareDetail.principal,'ben@example.test');assert.equal(shareDetail.role,'commenter');assert.equal(shareDetail.outcome,'succeeded');
+  const shareMail=h.mails.filter(m=>[m.to].flat().includes('ben@example.test')&&m.text.includes(`/app/items/${plan}`));
+  assert.equal(shareMail.length,1,'the colleague receives the shared file by email');
+ }
  await go(p.ben,'/app/notices');await p.ben.getByText(`shared "plan-${width}.txt" with you as commenter`,{exact:false}).waitFor();await fit(p.ben,'notices',width);
  await go(p.ben,'/app/shared');await fit(p.ben,'shared',width);await p.ben.getByRole('link',{name:`plan-${width}.txt`}).click();
  assert.equal(await p.ben.locator('[data-upload]').count(),0);await p.ben.getByLabel('Comment',{exact:true}).fill('Section 2 is right');await press(p.ben,'Post comment');await p.ben.getByText('Section 2 is right').waitFor();
