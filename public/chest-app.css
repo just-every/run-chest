@@ -435,3 +435,10 @@ blockquote { margin: 0; }
   .audit td::before { content: attr(data-label); display: block; color: var(--chest-muted); font: 400 12px/1.4 var(--chest-font-ui); }
   .audit td:empty { display: none; }
 }
+
+/* A one-time secret shown once at the top of the page the person returns to (src/chest/ui-flash.ts). */
+.flash { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin: 0 0 20px; padding: 14px 18px; background: var(--chest-selected); border: 1px solid var(--chest-line); border-radius: var(--chest-card-radius); }
+.flash p { margin: 2px 0 0; }
+.flash-copy { display: flex; flex: 1 1 360px; gap: 10px; min-width: 0; }
+.flash-copy input { flex: 1; min-width: 0; min-height: 44px; padding: 0 12px; border: 1px solid var(--chest-line-strong); border-radius: var(--chest-radius); background: var(--chest-surface); font-size: 13px; }
+.flash-copy .btn { flex: none; min-height: 44px; }
