@@ -10,6 +10,7 @@ import {libraryWorkJourney} from './browser-flow.mjs';
 import {zip} from './fixtures.mjs';
 import {uploadResumeJourney} from './upload-resume-flow.mjs';
 import {archivePreviewJourney} from './browser-preview.mjs';
+import {accessibilityJourney} from './browser-accessibility.mjs';
 const h=await harness(),sha=v=>createHash('sha256').update(v).digest('hex'),day=86_400_000,cookies={},b64=v=>Buffer.from(v).toString('base64');
 let browser;
 const people=['ana','ben','cy','mo','dee','eve'];
@@ -129,6 +130,7 @@ async function journey(width){
 try{
  await mkdir('test-results',{recursive:true});await staff();
  browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{}),args:['--use-mock-keychain','--password-store=basic',...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?['--no-sandbox']:[])]});
+ for(const width of [1440,390]){const page=await as('ana',width);await accessibilityJourney({h,page,cookie:cookies.ana,reader:{cookie:cookies.ben,principal:['ben','example.test'].join('@')},width});await page.context().close()}
  for(const width of [1440,390]){const page=await as('owner',width);await archivePreviewJourney({page,owner:cookies.owner,h,width,assertions:width===1440});await page.context().close()}
  // The same Library journey runs on push, with assertions at desktop width and phone proof.
  const collection=await h.api('/collections',cookies.owner,{name:'synthetic-chest-work'}),schema=await h.api('/schemas',cookies.owner,{name:'synthetic-chest-work',fields:[]});

@@ -612,6 +612,10 @@
       "sha256": "698944e1ae2fa3cb890cefae0fc8c7ed0431ab56d6f21a3b07308d1be6eca7c4",
       "executable": false
     },
+    "public/chest-keyboard.js": {
+      "sha256": "340723c8c2c20ecd60812cf2c03926b2003b29ba5e04b78a82485458574bb094",
+      "executable": false
+    },
     "public/chest-movein.js": {
       "sha256": "c93e443dc4ba70a4e9e30cde5e0a3b96ceb2d30367c495f2509b519e2139a8a0",
       "executable": false
@@ -3301,7 +3305,7 @@
       "executable": false
     },
     "src/chest/ui-shell.ts": {
-      "sha256": "f65c15100a76fdd23e9945ec463a7a9d1f4d5fd9a46148f5685f7780d6c576e6",
+      "sha256": "3d76668cd759f8cea7aa24349095f1f3302906fc517b5bc617a4fb1857f38afd",
       "executable": false
     },
     "src/chest/ui-words.ts": {
@@ -5448,6 +5452,10 @@
       "sha256": "130d3e8840dbe85e72ecbb8e50f3b5298c25812290ff91f4a52201436c34c962",
       "executable": false
     },
+    "tests/chest/browser-accessibility.mjs": {
+      "sha256": "7ac53da0fcb707f0a74cbe5e5e18988e4a709058c696ba918161d98ba8e3011b",
+      "executable": false
+    },
     "tests/chest/browser-agent-filing.mjs": {
       "sha256": "3fb6612be9737ba0d75ad82bef48cb0a495f0bfd725cd0af214dc0541d99f762",
       "executable": false
@@ -5493,7 +5501,7 @@
       "executable": false
     },
     "tests/chest/browser-files.mjs": {
-      "sha256": "5755c8ca2937e7df154a200a2887eb45e3ac7501094ac7f0345ffa437f8c416c",
+      "sha256": "1b54e33726d526ee2a3467a56d75a4ae480e965aac693a307c09c1fdb57766ba",
       "executable": false
     },
     "tests/chest/browser-flow.mjs": {
