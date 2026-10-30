@@ -61,6 +61,45 @@ async function journey(width){
  await uploadResumeJourney(h,p.ana,width,space,contracts);await go(p.ana,`/app/items/${contracts}`);
  await pick(p.ana,{name:'terms.txt',mimeType:'text/plain',buffer:Buffer.from(`Payment terms ${width}`)});const terms=id(p.ana);
  await go(p.ana,`/app/items/${client}`);await fit(p.ana,'folder',width);
+ // ROLE-001: the viewer's space, folder and file, including their management views, offer only permitted actions.
+ const viewerState=async()=>({children:(await json(p.mo,`/spaces/${space}`)).children.map(c=>[c.id,c.name]),items:await Promise.all([client,contracts,terms].map(async key=>{const d=await json(p.mo,`/items/${key}`);return {item:d.item,versions:d.versions,children:d.children.map(c=>[c.id,c.name])}}))});
+ const viewerBefore=width===1440?await viewerState():null;
+ for(const [kind,path,title] of [['space',`/app/spaces/${space}`,`Projects ${width}`],['folder',`/app/items/${contracts}`,'Contracts'],['file',`/app/items/${terms}`,'terms.txt']]){
+  for(const manage of [false,true]){
+   const response=await go(p.ben,path+(manage?'?manage':''));
+   if(width===1440){
+    assert.equal(response.status(),200);await p.ben.getByRole('heading',{name:title,exact:true,level:1}).waitFor();
+    const actions=(await p.ben.locator('a,button,summary').allTextContents()).map(t=>t.trim());
+    assert.deepEqual(actions.filter(t=>/^(New|Upload|New folder|Upload file|Upload a new version|Upload new version|Share|Rename|Save name|Move to trash)$/.test(t)),[],`${kind} has no viewer mutation controls, including management views`);
+    assert.equal(await p.ben.locator('[data-upload],input[type=file]').count(),0,'no hidden upload picker');
+    for(const control of await p.ben.locator('button,a,summary').filter({has:p.ben.locator('svg')}).all()){
+     if((await control.innerText()).trim()||!await control.isVisible())continue;
+     assert.ok(await control.getAttribute('data-tooltip'));await control.focus();await p.ben.getByRole('tooltip').waitFor({state:'visible'});
+     await p.ben.locator('h1').click();await control.hover();await p.ben.waitForTimeout(350);assert.equal(await p.ben.getByRole('tooltip').isVisible(),true);
+    }
+   }
+   await fit(p.ben,`viewer-${kind}${manage?'-manage':''}`,width);
+  }
+ }
+ if(width===1440){
+  for(const [key,name] of [[contracts,'Renamed contracts'],[terms,'renamed-terms.txt']]){
+   const response=await p.ben.request.post(h.origin+'/app/action',{headers:{origin:h.origin},form:{path:`/items/${key}/rename`,returnTo:`/app/items/${key}`,name}});
+   assert.equal(response.status(),403,'a valid rename through the browser form door is refused');
+   assert.deepEqual(await viewerState(),viewerBefore,'refused renames keep names, hierarchy and retained versions');
+  }
+ }
+ const admin=await go(p.ben,'/app/admin');
+ if(width===1440){
+  assert.equal(admin.status(),403,'People & settings refuses the viewer');
+  assert.deepEqual(await viewerState(),viewerBefore);
+  await go(p.ben,`/app/items/${terms}`);
+  assert.deepEqual(await download(p.ben,p.ben.locator('.doc-actions').getByRole('link',{name:'Download',exact:true})),Buffer.from(`Payment terms ${width}`));
+ }
+ await go(p.ben,'/app/admin');await fit(p.ben,'viewer-admin-refused',width);
+ const privateSpace=(await json(p.mo,'/files')).personal,privateFile=await json(p.mo,'/items',{space:privateSpace,name:`private-counterpart-${width}.txt`,base64:b64('Private counterpart original')});
+ const concealed=await go(p.ben,`/app/items/${privateFile.id}`);
+ if(width===1440){assert.equal(concealed.status(),200);await p.ben.getByRole('heading',{name:'Request access',exact:true}).waitFor();assert.ok(!(await concealed.text()).includes(privateFile.payload.name),'another space conceals its private file name')}
+ await fit(p.ben,'viewer-request-access',width);
  // CHEST-13: a contributor has no trash action and is refused; the content manager trashes and restores her own folder.
  const tree=async()=>{const a=await json(p.ana,`/items/${client}`),b=await json(p.ana,`/items/${contracts}`),c=await json(p.ana,`/items/${terms}`);return [a.children.map(x=>x.id),b.children.map(x=>x.id),c.versions.map(v=>[v.id,v.checksum])]},before=await tree();
  await go(p.cy,`/app/items/${client}`);assert.equal(await p.cy.getByRole('button',{name:'Move to trash'}).count(),0);assert.equal((await call(p.cy,`/items/${client}/trash`,{})).status(),403);

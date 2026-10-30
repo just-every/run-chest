@@ -189,7 +189,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "42c4de5208853f8de293d2a7e3ffe92fda70b8356ddab8871e2c1c74c81c6e51",
+      "sha256": "3a31aa47d5a493ed3a501c2db302695bc8dbfed5587d03619b311005b6f1b82a",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -217,7 +217,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "f4d152ff590ab40add78cb60bd8736319467689198cd637be14e139f75fd8ee9",
+      "sha256": "7d1eb6ab2ee4e5a72b04e2c16a3b3f6c2f47d960800f343dd9dae9b4dceb330c",
       "executable": false
     },
     "DEMO.md": {
@@ -2577,7 +2577,7 @@
       "executable": false
     },
     "src/chest/files/ui.ts": {
-      "sha256": "681c95adb1eea321a845cb5a4f03127f8718408283a81f809214dcce43c79ffd",
+      "sha256": "bbd96cbd13c89b9ecab409c65485676cc3e48b55677ef6ed455dab944310e8ae",
       "executable": false
     },
     "src/chest/files/uploads.ts": {
@@ -3301,7 +3301,7 @@
       "executable": false
     },
     "src/chest/ui-shell.ts": {
-      "sha256": "f65c15100a76fdd23e9945ec463a7a9d1f4d5fd9a46148f5685f7780d6c576e6",
+      "sha256": "e7ac68118e5ab550e2bc61d7905d5744a4a52efc9465bd838f4f46c7c836cbe0",
       "executable": false
     },
     "src/chest/ui-words.ts": {
@@ -5493,7 +5493,7 @@
       "executable": false
     },
     "tests/chest/browser-files.mjs": {
-      "sha256": "31624e0e6be08c17143ee40d40921706c2d030af84a1b79240a5254733d5e8e1",
+      "sha256": "eb02ad0520d0b48449a09746cd1361c2a6f5d13e8aeb52f4efec3c318b6ef109",
       "executable": false
     },
     "tests/chest/browser-flow.mjs": {
@@ -5617,7 +5617,7 @@
       "executable": false
     },
     "tests/chest/files.mjs": {
-      "sha256": "a0bcbc1a518351c651a7d345a3628e8a27395e34fb3b21d34279346296e75058",
+      "sha256": "ec927b034c1fea3d968b87d408589701b2c5903d665f7c804b6ee9551a2d67eb",
       "executable": false
     },
     "tests/chest/filing.mjs": {
