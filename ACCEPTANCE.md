@@ -1852,7 +1852,7 @@ Agent surface · target · **partial**
 6. The seed's embedded agents appear in the audit as calls to the same tools.
 
 **Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
-**Gap.** Declared native registry is proven; eight target jobs and embedded agent/independent-runner continuations remain undeclared. No target-only service is registered.
+**Gap.** Declared native registry is proven; nine target jobs and embedded agent/independent-runner continuations remain undeclared. No target-only service is registered.
 
 #### BASE-AGENT-003 — Records are resources
 
@@ -1992,7 +1992,7 @@ Agent surface · target · **partial**
 6. `approval.pending`, `approval.decided`, `review.flagged` and `policy.adopted` carry the class and decision and nothing the subscriber may not read.
 
 **Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
-**Gap.** Undeclared optional events/subscriptions family: only Base built-in event cursor is retained. Native webhook IDs, expanded native event types, subscriptions and external event handoffs are not claimed.
+**Gap.** Undeclared optional events/subscriptions family: discovery omits both and attempted calls refuse without effects. Native webhook IDs, expanded native event types, subscriptions and external event handoffs are not claimed.
 
 #### BASE-AGENT-011 — Limits are policy, and Pause stops everything
 
@@ -2026,7 +2026,7 @@ Agent surface · target · **partial**
 5. A job handle used by another person's token reads as not found.
 
 **Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
-**Gap.** Declared writes retain atomic native effect receipts and current admission on replay, conflicts and stale target checks. Trusted queued/embedded continuation proof is not exposed by the installed CLI native-journey hook.
+**Gap.** Declared writes retain atomic native effect receipts and current admission on replay, conflicts and stale target checks. Base 0.2.88 exposes trusted invocation verification; Chest has not yet integrated native queued/embedded continuations or proved their lifecycle.
 
 #### BASE-AGENT-013 — Manifest, docs and the conformance journey
 

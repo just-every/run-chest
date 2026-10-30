@@ -7,7 +7,9 @@
     "policy",
     "pause",
     "audit",
-    "idempotency"
+    "idempotency",
+    "resources",
+    "prompts"
   ],
   "tools": [
     {
@@ -302,17 +304,6 @@
         "required": [],
         "additionalProperties": false
       }
-    },
-    {
-      "name": "chest.events.list",
-      "scope": "events:read",
-      "readOnly": true,
-      "classes": [
-        "standard"
-      ],
-      "clauses": [
-        "BASE-AGENT-010"
-      ]
     },
     {
       "name": "chest.exposure.list",
@@ -3298,18 +3289,6 @@
           "pointer": "/id"
         },
         "name": "Awaiting human review.txt"
-      },
-      "expect": [
-        {
-          "class": "standard"
-        }
-      ]
-    },
-    {
-      "id": "events",
-      "tool": "chest.events.list",
-      "args": {
-        "limit": 200
       },
       "expect": [
         {

@@ -6,7 +6,7 @@ The records clerk can inspect accessible originals and metadata, organize files,
 
 ## Declared registry
 
-The live schemas and catalogue are generated at `/docs/agents` and returned by discovery. This implementation declares core tools, policy, Pause, audit and idempotency. Resource templates describe sanitized native metadata. Optional subscriptions, resource refresh, multi-sponsor journeys, mail-event edges and the expanded native event catalogue are undeclared; Base’s built-in `chest.events.list` remains present. The pinned Base runtime still advertises subscription support unconditionally; honoring this declared subset in discovery is a Base edge for the next pin, and Chest does not claim that optional family. Native OAuth webhooks retain their separate connector purpose and uncertain-delivery controls.
+The live schemas and catalogue are generated at `/docs/agents` and returned by discovery. This implementation declares core tools, policy, Pause, audit and idempotency, plus the existing resources and specialist prompt. Seven resource templates describe sanitized native metadata. Events and subscriptions are undeclared: discovery omits them, `chest.events.list` is absent, and attempted calls return `capability_not_declared` without effects. Resource refresh, multi-sponsor journeys and new mail-event edges remain undeclared. Base 0.2.88 gates discovery and runtime against the same capability declaration. Native OAuth webhooks retain their separate connector purpose and uncertain-delivery controls.
 
 The [generated agent catalogue](agents.md) lists every tool, scope, possible class, clause and schema from the declared registry.
 
