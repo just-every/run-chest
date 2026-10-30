@@ -2258,8 +2258,8 @@ Agent surface · target · **partial** · From new · Cites BASE-AGENT-004, BASE
 5. Connected apps shows calls, decisions by class and spend per agent.
 6. A grant whose granter set no budget files 500 arrivals in one day, paced within the documented rate limit, with none refused.
 
-**Evidence.** `tests/chest/integrations.mjs`
-**Gap.** Points 2 and 3 pass on the integration API with an agent's OAuth token; there is no Pause agents control, spend cap or per-agent usage, MCP calls are not asserted, and the per-grant budgets are fixed values today.
+**Evidence.** `tests/chest/integrations.mjs` — OAuth consent, 500 sequential internal arrivals, unique IDs and original hashes across restart, finite and zero budgets, ACL, app policy and revocation; `tests/chest/browser-integrations.mjs` — consent budget choices, saved limits and built agent docs; `docs/agents.md`
+**Gap.** Points 1 and 6 have the integration API grant-budget and installation-capacity slice: omitted new budgets have no implicit cap and existing numeric limits are preserved. Points 2 and 3 retain integration API proof. The shared Base Agent policy and runtime, MCP budget conformance, company-controlled Ask spend caps and spend reporting, calls and decisions by class per agent, and the global Pause agents control remain unimplemented or unproved. No fixed integration rate throttle is configured; sequential pacing is documented without a throughput claim.
 
 #### SURFACE-013 — The records clerk journey under two company policies
 
