@@ -5,7 +5,7 @@ import { contentReadable, assertContent } from '../content-security/scan'
 import { protect, guardDownload } from '../upload-protection/guard'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
-import { get, recordAccess } from '../store'
+import { get, recordAccess, list } from '../store'
 import { fromBase64, inspect, retain, serve } from '../blobs'
 import { ChestError, id, insist, now, type Row, type Version } from '../model'
 import { commit, fresh, next, spaceItems, folderItems, type Op, type Audit } from './repo'
@@ -35,6 +35,13 @@ export async function createItem(env: Bindings, s: Session, w: Who, input: any, 
  const p = await place(env, w, input.space, input.parent), parent = folderOf(p), value = name(input.name), at = now()
  unique(await siblings(env, p.space.id, parent), value)
  const type = input.type === 'folder' ? 'folder' : 'file', versions: FileVersion[] = []
+ // An upload must not silently trigger a second, differently scoped standing agent effect.
+ // The company door cannot yet reserve paid work or admit the native arrival continuation.
+ if(type==='file'&&w.agent){
+  const automatic=(await list<any>(env,'filing_scope')).some(r=>r.payload.enabled&&r.payload.source===parent&&r.payload.space===p.space.id)
+  const rules=(await list<any>(env,'filing_rule')).some(r=>r.payload.enabled&&r.payload.source===parent&&r.payload.space===p.space.id)
+  insist(!automatic&&!rules,'agent_arrival_continuation_unavailable',409)
+ }
  if (type === 'file') await protect(env,s,{space:p.space.id,parent,name:value},bytes ?? (more.version ? null : fromBase64(input.base64)),more.version)
  if (type === 'file') versions.push(more.version ?? await admit(env, bytes ?? fromBase64(input.base64), value, s.operator.email, arrival, input, input.device ? { device: input.device } : {}))
  const payload: Item = { space: p.space.id, parent, type, name: value, createdBy: s.operator.email, createdAt: at, updatedAt: at, restricted: false, noDownload: false, grants: [], trash: null, versions: [], current: null }
