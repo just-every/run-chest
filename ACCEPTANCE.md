@@ -136,8 +136,8 @@ Core · published · **partial**
 1. Both dates appear in the work list.
 2. An empty completion is refused, and completing only the review with evidence leaves the expiry and the original in place.
 
-**Evidence.** `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs`
-**Gap.** Point 2 passes, and point 1's completion record and expiry date are asserted (`tests/chest/flows.mjs`), with the review work item selected on the document page (`tests/chest/browser-flow.mjs`); no test reads the work list, so both dates appearing there is not asserted.
+**Evidence.** `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs`  Candidate assertions: `tests/chest/browser-flow.mjs` — libraryWorkJourney, invoked by `tests/chest/browser-files.mjs` in push Verify: both labeled work dates, review-only completion and outstanding expiry after reload; `tests/chest/flows.mjs` — empty-evidence refusal, actor, date, timestamp and evidence, retained versions and unchanged original download.
+**Gap.** Latest accepted judgment: Point 2 passes, and point 1's completion record and expiry date are asserted (`tests/chest/flows.mjs`), with the review work item selected on the document page (`tests/chest/browser-flow.mjs`); no test reads the work list, so both dates appearing there is not asserted. Candidate assertions now exercise the Library work list; the clause remains partial pending a fresh judgment.
 
 #### CHEST-10 — People and group grants
 
