@@ -221,7 +221,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "674fb3a1fe960afb07832eb91a124adff78678821f2d3a88309693ba73e4ac52",
+      "sha256": "0ca31cd107d83d8c5fe2d5c66c738f666077602e4d714d283a5412cbac5dc7d4",
       "executable": false
     },
     "DEMO.md": {
@@ -249,7 +249,7 @@
       "executable": false
     },
     "docs/agent-adoption.md": {
-      "sha256": "4e8c1408cde9be7a4972ce801abd4298685d6347cdbbe1ea3141288be1034d93",
+      "sha256": "30ad43b054301804c2ab62bed8dec68e446a5fa3a1c5f3179d391cd263a2f68c",
       "executable": false
     },
     "docs/agents.md": {
@@ -2833,7 +2833,7 @@
       "executable": false
     },
     "src/chest/integrations/http.ts": {
-      "sha256": "8d70785adf202e1505bfe7a54de98e5915ceb06301466d62c42b3b108a2ad9cd",
+      "sha256": "c97902ad9a0708199bd6105c5405b7f55e1f5703eb5d40e82cf9b68bd1de82bf",
       "executable": false
     },
     "src/chest/integrations/model.ts": {

@@ -8,49 +8,7 @@ The records clerk can inspect accessible originals and metadata, organize files,
 
 The live schemas and catalogue are generated at `/docs/agents` and returned by discovery. This implementation declares core tools, policy, Pause, audit and idempotency. Resource templates describe sanitized native metadata. Optional subscriptions, resource refresh, multi-sponsor journeys, mail-event edges and the expanded native event catalogue are undeclared; Base’s built-in `chest.events.list` remains present. The pinned Base runtime still advertises subscription support unconditionally; honoring this declared subset in discovery is a Base edge for the next pin, and Chest does not claim that optional family. Native OAuth webhooks retain their separate connector purpose and uncertain-delivery controls.
 
-| Tool | Possible classes | Contract clauses |
-| --- | --- | --- |
-| `chest.spaces.create` | standard | SURFACE-004, SPACE-001 |
-| `chest.files.create` | standard, external | SURFACE-004, EDIT-004, EDIT-013 |
-| `chest.folders.create` | standard, external | SURFACE-004, SPACE-001 |
-| `chest.files.upload` | standard, external | SURFACE-004, CHEST-03, VERSION-001 |
-| `chest.items.update` | standard, external | SURFACE-004, CHEST-04 |
-| `chest.versions.name` | standard | SURFACE-005, VERSION-001 |
-| `chest.versions.restore` | standard, external | SURFACE-005, VERSION-001 |
-| `chest.items.trash` | standard | SURFACE-005, CHEST-13 |
-| `chest.items.untrash` | standard, external | SURFACE-005, CHEST-13 |
-| `chest.share` | standard, external | SURFACE-006, SHARE-004, POLICY-001 |
-| `chest.links.create` | standard, external | SURFACE-006, SHARE-001, POLICY-002 |
-| `chest.access.narrow` | standard | SURFACE-007, SHARE-007 |
-| `chest.requests.create` | standard | SURFACE-008, SHARE-002 |
-| `chest.comments.add` | standard, external | SURFACE-004, EDIT-003, FOLLOW-001 |
-| `chest.members.update` | access, external | SURFACE-010, SPACE-001, ROLE-001 |
-| `chest.items.list` | standard | SURFACE-002, SPACE-001 |
-| `chest.items.get` | standard | SURFACE-002, CHEST-06 |
-| `chest.versions.list` | standard | SURFACE-002, VERSION-001 |
-| `chest.access.list` | standard | SURFACE-002, SHARE-004 |
-| `chest.pick` | standard | CONNECT-012 |
-| `chest.search` | standard, sensitive | SURFACE-002, SEARCH-001 |
-| `chest.files.read` | standard, sensitive | SURFACE-003, ROLE-001, VERSION-001 |
-| `chest.activity.list` | standard | SURFACE-002, AUDIT-001 |
-| `chest.requests.list` | standard | SURFACE-002, SHARE-002 |
-| `chest.reports.get` | standard | SURFACE-002, QUOTA-001, ADMIN-002, ADMIN-005 |
-| `chest.exposure.list` | standard | SURFACE-002, SHARE-007, AGENT-005 |
-| `chest.devices.list` | standard | SURFACE-009, SYNC-003 |
-| `chest.movein.status` | standard | SURFACE-002, MIGRATE-001, AGENT-006, CHEST-11 |
-| `chest.duplicates.propose` | standard | AGENT-002, SURFACE-004 |
-| `chest.devices.revoke` | access | SURFACE-009, SYNC-003 |
-| `chest.limits.set` | standard | SURFACE-010, QUOTA-001 |
-| `chest.settings.update` | security | SURFACE-010, POLICY-001, POLICY-002 |
-| `chest.decisions.record` | standard, commitment | SURFACE-011, CHEST-08 |
-| `chest.filing.propose` | standard | SURFACE-004, AGENT-001, RULE-001 |
-| `chest.filing.apply` | standard, external | SURFACE-004, AGENT-001, RULE-001 |
-| `chest.duplicates.apply` | standard | SURFACE-004, AGENT-002 |
-| `chest.rewind` | standard, external | SURFACE-005, RECOVER-001, ADMIN-006 |
-| `chest.send` | standard, external, sensitive | SURFACE-008, SIGN-001 |
-| `chest.quarantine.list` | standard | SURFACE-010, SECURITY-002 |
-| `chest.quarantine.release` | security | SURFACE-010, SECURITY-002 |
-| `chest.events.list` | standard | BASE-AGENT-010 |
+The [generated agent catalogue](agents.md) lists every tool, scope, possible class, clause and schema from the declared registry.
 
 ## People, records and proof
 
