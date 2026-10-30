@@ -9,9 +9,9 @@ The primary journey: create a team space, move originals and rights in, install 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Core | 39 | 46 | 38 | 123 |
-| Agent surface | 0 | 2 | 24 | 26 |
+| Agent surface | 0 | 3 | 23 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 40 | 52 | 78 | 170 |
+| Full target | 40 | 53 | 77 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -2139,7 +2139,7 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE
 
 #### SURFACE-006 — Sharing is classified by its recipient, never by the agent
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-005, BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008 · Rules D-3
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-005, BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008 · Rules D-3
 
 **Requirement.** `chest.share` shares with a person or group, or grants a pending access request; `chest.links.create` creates or widens a link. Chest classifies each call from the recipient. A colleague, a group or an organization link is standard. An outside address, a guest or a public link is external, with counterparty known, new or public as computed above. Arguments that stand for a person's confirmation, such as today's `confirmExternal`, are ignored (BASE-AGENT-008). POLICY-001 applies first: a share the organization's sharing policy forbids is refused before the agent policy is consulted. The integration API's `/shares` and `/links` with an agent token reach the same decision.
 
@@ -2153,8 +2153,8 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-005, BASE
 7. Approving with the agent's own token returns 403.
 8. The integration API's `/shares` and `/links` give an agent token the same class and decision as the tools.
 
-**Evidence.** None.
-**Gap.** No recipient classification, policy decision, pending actions or receipts. Today `chest_share` forwards the agent's own `confirmExternal`, which the sharing policy (`src/chest/files/sharing-policy.ts`) accepts as the browser's confirmation, and the API's `/links` creates links under policy with no class or decision.
+**Evidence.** `tests/chest/integrations.mjs` — CONNECT-007 built Worker journey: omitted, false and true confirmation flags through the integration API and legacy MCP keep identical compatibility class and decision fields, authenticated agent, sponsor and grant attribution, and no human confirmation. Disabled public links return the sponsor API and browser form refusal, preserving populated grants, links and successful mutation receipts across retry and Worker restart.
+**Gap.** Shared Base Agent policy and runtime remain unimplemented. The existing external-share class and current-behavior allow decision are compatibility fields, not company-policy conformance. Canonical standard and external known, new and public classification; approval, review and blocked decisions; pending actions and complete policy decision-order proof; agent-token approval refusal; review and Undo; canonical tools and complete cross-door class and decision parity remain unproved.
 
 #### SURFACE-007 — Narrowing access and repairing links
 

@@ -2302,8 +2302,8 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 11 | 2 | 0 | 13 |
-| Target and push further | 29 | 50 | 78 | 157 |
-| All | 40 | 52 | 78 | 170 |
+| Target and push further | 29 | 51 | 77 | 157 |
+| All | 40 | 53 | 77 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2447,7 +2447,7 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | `SURFACE-003` | Original bytes follow download rights | target | partial | `tests/chest/integrations.mjs` | Points 1 and 2 pass on the integration API's byte path with an agent's OAuth token; there is no MCP byte tool, blob resource or expiring byte link, and quarantine, byte-budget exhaustion and mid-stream revocation are not asserted for agent grants. |
 | `SURFACE-004` | Add and organize files | target | missing |  | No resumable agent upload, move, field or selection tools, job handles or exposure rule. Today `chest_upload` (base64 in one call) and `chest_create_folder` exist, and the integration API renames and adds versions. |
 | `SURFACE-005` | Recovery stays standard; destruction is its own class | target | missing |  | No trash, rewind, purge or erasure tools, class declarations or policy decisions; today the integration API restores and names versions. |
-| `SURFACE-006` | Sharing is classified by its recipient, never by the agent | target | missing |  | No recipient classification, policy decision, pending actions or receipts. Today `chest_share` forwards the agent's own `confirmExternal`, which the sharing policy (`src/chest/files/sharing-policy.ts`) accepts as the browser's confirmation, and the API's `/links` creates links under policy with no class or decision. |
+| `SURFACE-006` | Sharing is classified by its recipient, never by the agent | target | partial | `tests/chest/integrations.mjs` — CONNECT-007 built Worker journey: omitted, false and true confirmation flags through the integration API and legacy MCP keep identical compatibility class and decision fields, authenticated agent, sponsor and grant attribution, and no human confirmation. Disabled public links return the sponsor API and browser form refusal, preserving populated grants, links and successful mutation receipts across retry and Worker restart. | Shared Base Agent policy and runtime remain unimplemented. The existing external-share class and current-behavior allow decision are compatibility fields, not company-policy conformance. Canonical standard and external known, new and public classification; approval, review and blocked decisions; pending actions and complete policy decision-order proof; agent-token approval refusal; review and Undo; canonical tools and complete cross-door class and decision parity remain unproved. |
 | `SURFACE-007` | Narrowing access and repairing links | target | missing |  | No narrowing tool, class declaration or policy decision; today the integration API removes grants (`/unshare`), and revoke and Make private are browser-only (SHARE-007, AGENT-005). |
 | `SURFACE-008` | Collect documents in, send files out | target | missing |  | No send or reminder tools, class declarations or policy decisions; today `chest_create_request` exists, and sending, transfers and signing are browser-only. |
 | `SURFACE-009` | Devices and sync | target | missing |  | No device tools; the client states are themselves missing in SYNC-003, and the device list, revoke and deactivation are browser-only. |
