@@ -4,6 +4,8 @@ Generated from `agent-surface.json`; normal `rer verify` requires it to equal th
 
 See [Agent adoption and limits](agent-adoption.md) for the records-clerk jobs, native authority, capacity limits and undeclared work. Use `/mcp` or its `/mcp/chest` alias; policy, Pause and named approvals apply to every declared tool.
 
+Declared capabilities: `tools`, `policy`, `pause`, `audit`, `idempotency`, `resources`, `prompts`. Events and subscriptions are unavailable and return `capability_not_declared`.
+
 | Tool | Scope | Read only | Classes | Clauses |
 | --- | --- | --- | --- | --- |
 | chest.access.list | share | true | standard | SURFACE-002, SHARE-004 |
@@ -15,7 +17,6 @@ See [Agent adoption and limits](agent-adoption.md) for the records-clerk jobs, n
 | chest.devices.revoke | devices:write | false | access | SURFACE-009, SYNC-003 |
 | chest.duplicates.apply | filing:write | false | standard | SURFACE-004, AGENT-002 |
 | chest.duplicates.propose | filing:read | true | standard | AGENT-002, SURFACE-004 |
-| chest.events.list | events:read | true | standard | BASE-AGENT-010 |
 | chest.exposure.list | share | true | standard | SURFACE-002, SHARE-007, AGENT-005 |
 | chest.files.create | upload | false | standard, external | SURFACE-004, EDIT-004, EDIT-013 |
 | chest.files.read | download | true | standard, sensitive | SURFACE-003, ROLE-001, VERSION-001 |
@@ -316,12 +317,6 @@ Input:
   "additionalProperties": false
 }
 ```
-
-The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
-
-### chest.events.list
-
-The built-in input schema is returned by MCP `tools/list`.
 
 The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
@@ -1619,4 +1614,4 @@ The output schema is returned by MCP `tools/list`; normal `rer verify` validates
 
 An unset, blocked, paused or revoked policy/identity has no effect. An approval hold returns the saved exact summary and a URL for a named person; an agent cannot approve it. Stable MCP error fields live at `_meta["com.runeditrun/error"]`. Native errors retain their symbolic code, including current role, download, app-policy, quarantine, source-pause and explicit-budget refusals. `self_escalation`, `approval_required`, `review_required`, `agents_paused`, `resource_unavailable`, stale revision and idempotency conflicts also refuse effects. Read content is untrusted.
 
-The core journey declares `spend:{none:true}`. Paid provider reservations, subscriptions, resource refresh, multi-sponsor journeys and new mail-event edges are undeclared. The built-in event cursor is not a claim that the broader native event catalogue is adopted.
+The core journey declares `spend:{none:true}`. Paid provider reservations, events, subscriptions, resource refresh, multi-sponsor journeys and new mail-event edges are undeclared. Native connector webhooks keep their separate purpose.
