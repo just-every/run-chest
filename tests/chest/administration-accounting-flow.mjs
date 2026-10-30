@@ -152,11 +152,17 @@ export async function accountingJourney(browser){
    if(width===1440)await checkEnabled();
    await page.reload();if(width===1440)await checkEnabled();
    await h.stop();await h.start();await page.reload();if(width===1440){await checkEnabled();console.log('PROBE EDIT-012 2: acknowledged CODE form, reload and Worker restart -> enabled CODE and saved acknowledgement persist; complete production warning and subscription additions remain visible.');}
-   await notice.evaluate(section=>window.scrollTo(0,window.scrollY+section.getBoundingClientRect().top-120));
-   await page.screenshot({path:`test-results/${width}-accounting-code-enabled-restarted.png`});
    await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.expires',0) WHERE kind='editor-session'");
    const opens=await Promise.all([h.raw(`/api/chest/items/${file.id}/collabora`,owner,{}),h.raw(`/api/chest/items/${file.id}/collabora`,owner,{})]);assert.deepEqual(opens.map(r=>r.status).sort(),[200,409]);const denial=await opens.find(r=>r.status===409).json();assert.equal(denial.error,'editor_capacity_reached');assert.equal(denial.limit,'connections');assert.equal(denial.currentUse,1);assert.equal(denial.maximum,1);assert.equal(denial.preview,`/app/items/${file.id}`);
    const launch=await opens.find(r=>r.status===200).text(),token=launch.match(/name="access_token" value="([^"]+)"/)[1];lastSessionToken=token;assert.equal((await h.fetch(`/wopi/files/${file.id}?access_token=${token}`)).status,200,'existing session continues');
+   await page.reload();
+   if(width===1440){
+    assert.equal((await h.api('/administration/editor-report',owner)).usage.connections,1,'CODE is in use through an admitted editor session');
+    await checkEnabled();
+    console.log('PROBE EDIT-012 2 active: admitted CODE session and fresh console page -> complete production warning and subscription additions remain visible with enabled CODE.');
+   }
+   await notice.evaluate(section=>window.scrollTo(0,window.scrollY+section.getBoundingClientRect().top-120));
+   await page.screenshot({path:`test-results/${width}-accounting-code-enabled-restarted.png`});
    await page.goto(h.origin+'/app/items/'+file.id);await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Open in Collabora Online',exact:true}).click()]);await page.getByRole('heading',{name:'Editor capacity reached',exact:true}).waitFor();await page.frameLocator('iframe[title="Read-only file preview"]').locator('body').getByText('Harbor renewal agreement',{exact:false}).waitFor();await tooltips(page,width,'capacity-preview');await page.screenshot({path:`test-results/${width}-accounting-capacity-preview.png`,fullPage:true});
    await page.goto(h.origin+'/app/administration/audit');await page.getByRole('heading',{name:'Editor capacity',exact:true}).waitFor();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await tooltips(page,width,'accounting-report');await page.screenshot({path:`test-results/${width}-accounting-report.png`,fullPage:true});await context.close();
   }
