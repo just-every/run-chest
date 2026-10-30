@@ -24,7 +24,7 @@ A product claim is done when every clause behind it is done, missing when every 
 | 16 | Move in | "7 file names too long for Windows" · "Renamed and retried · 7 of 7 imported" | `MIGRATE-001` partial | partial |
 | 17 | Move in | Terminal: `rer setup` · "Chest is ready" | `OWN-001` done | done |
 | 18 | Follow one folder | The company drive: My files, Shared with me, Recent, team spaces Finance, Ops, Sales, Vendors | `SPACE-001` partial; `SHARE-004` partial | partial |
-| 19 | Follow one folder | Role chips "Dana · manager", "Luis · contributor", "Priya · guest"; "Shared with 4 people" | `ROLE-001` partial; `SHARE-005` partial | partial |
+| 19 | Follow one folder | Role chips "Dana · manager", "Luis · contributor", "Priya · guest"; "Shared with 4 people" | `ROLE-001` done; `SHARE-005` partial | partial |
 | 20 | Files that file themselves | "The Chest agent reads what arrives by email and from apps, names it, files it" (NDA.pdf from legal@acme.example, insurance certificate, Invoice-0042, scan_0931.pdf renamed W-9 Acme Supply.pdf; each with Undo) | `AGENT-001` done; `CONNECT-006` partial; `SEARCH-002` partial | partial |
 | 21 | Files that file themselves | Insurance certificate "expires Sep 30, 2027 · reminder set" | `CHEST-09` partial | partial |
 | 22 | Files that file themselves | "and closes links shared too widely" (Rate card.xlsx public link "limited to the Acme team", Undo) | `AGENT-005` done | done |

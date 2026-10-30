@@ -2295,13 +2295,15 @@ The owner-approved page-s1 homepage (the hero, then one supplier's folder from t
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026).
 
+ROLE-001 viewer runtime and journeys are judged from commit `61b51b665965719b4f86972ac71eb65f950f6a4b` (30 October 2026). The final candidate retains those source and journey bytes; its exact-SHA Verify records the final proof.
+
 EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fbfbf114 (28 October 2026). Its final candidate strengthens the preview-authority journey and records the exact candidate in Verify; the runtime bytes are unchanged from that source commit.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 9 | 4 | 0 | 13 |
-| Target and push further | 29 | 50 | 78 | 157 |
-| All | 38 | 54 | 78 | 170 |
+| Target and push further | 30 | 49 | 78 | 157 |
+| All | 39 | 53 | 78 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2321,7 +2323,7 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | `SPACE-001` | Team spaces, personal areas and ordinary files | target | partial | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `tests/chest/ownership.mjs`; `tests/chest/governance.mjs`; `tests/chest/browser-governance.mjs` | Fresh-judge candidate: the old gap named only the EDIT-004 provider experience and the SCALE-001 run, both now in their own clauses. |
 | `SPACE-003` | Hand ownership of one file to a colleague | target | partial | `tests/chest/ownership.mjs`; `tests/chest/browser-ownership.mjs` | Fresh-judge candidate: the old gap lists ownership offers with acceptance, decline, cancel and notices as delivered. |
 | `SPACE-002` | Who creates spaces, and new-space defaults | target | done | `tests/chest/space-policy.mjs`; `tests/chest/browser-space-policy.mjs` |  |
-| `ROLE-001` | Five-level roles and delegated sharing | target | partial | `tests/chest/role-review-flow.mjs`; `tests/chest/role-browser-matrix.mjs`; `tests/chest/restriction-flow.mjs`; `tests/chest/annotation-flow.mjs`; `tests/chest/wopi-flow.mjs`; `tests/chest/collabora-live.mjs`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` | Points 1 to 4 pass. Point 5's **Request access** without the name, and the viewer's lack of upload and new-folder rights (no contribute right, folder creation 403), are asserted (`tests/chest/files.mjs`, `tests/chest/browser-files.mjs`); a viewer's rename returning 403, People & settings returning 403, and the absence of the share, rename and trash actions for a viewer are not. |
+| `ROLE-001` | Five-level roles and delegated sharing | target | done | `tests/chest/role-review-flow.mjs` — roleReviewFlow (points 1, 3 and 4); `tests/chest/role-browser-matrix.mjs` — roleBrowserMatrix and roleFolderHttpMatrix (points 1 and 3); `tests/chest/restriction-flow.mjs` — restrictionFlow (point 2); `tests/chest/annotation-flow.mjs` — annotationFlow and annotationBrowserFlow (point 1); `tests/chest/wopi-flow.mjs` — wopiFlow (point 4); `tests/chest/collabora-live.mjs` — live editor qualification; `tests/chest/files.mjs` — SPACE-001 (point 5); `tests/chest/browser-files.mjs` — journey, viewer controls, rename refusal, concealed Request access and People & settings refusal (point 5) |  |
 | `VERSION-001` | Version history and restore by editors | target | done | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `tests/chest/office-restore-flow.mjs`; `tests/chest/wopi-flow.mjs`; `tests/chest/signatures.mjs` |  |
 | `TRANSFER-001` | Resumable uploads in the browser and API | target | partial | `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `tests/chest/upload-resume-flow.mjs` | Case-collision and path-length errors are not named in the evidence; the old gap listed only name-taken, too-large and no-access refusals. |
 | `TRANSFER-002` | Whole folders and large originals | target | missing |  | Whole-folder upload, files above 4 GB and the 5 TB limit do not exist. The 5 TB upload itself is register row R-3. |

@@ -8,10 +8,10 @@ The primary journey: create a team space, move originals and rights in, install 
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 37 | 48 | 38 | 123 |
+| Core | 38 | 47 | 38 | 123 |
 | Agent surface | 0 | 2 | 24 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 38 | 54 | 78 | 170 |
+| Full target | 39 | 53 | 78 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -233,7 +233,7 @@ Core · target · **done**
 
 #### ROLE-001 — Five-level roles and delegated sharing
 
-Core · target · **partial** · From ROLE-001, CHEST-22 · Cites BASE-ROLE-001 · Rules D-1
+Core · target · **done** · From ROLE-001, CHEST-22 · Cites BASE-ROLE-001 · Rules D-1
 
 **Requirement.** Spaces, folders and files grant one of five cumulative roles to people, groups and guests.
 
@@ -254,8 +254,8 @@ The CHEST-10 reviewer duty combines with any role from commenter up and adds no 
 4. In the shipped editor, a commenter's DOCX typing is recorded as tracked changes attributed to them, a save with a direct edit is refused with `suggest_only`, a viewer's session is read-only, and a contributor accepts the suggestion as an attributed version.
 5. A space viewer sees no upload, new folder, share, rename or trash action, a rename request returns 403, a file in another space shows **Request access** without its name, and People & settings returns 403.
 
-**Evidence.** `tests/chest/role-review-flow.mjs`; `tests/chest/role-browser-matrix.mjs`; `tests/chest/restriction-flow.mjs`; `tests/chest/annotation-flow.mjs`; `tests/chest/wopi-flow.mjs`; `tests/chest/collabora-live.mjs`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`
-**Gap.** Points 1 to 4 pass. Point 5's **Request access** without the name, and the viewer's lack of upload and new-folder rights (no contribute right, folder creation 403), are asserted (`tests/chest/files.mjs`, `tests/chest/browser-files.mjs`); a viewer's rename returning 403, People & settings returning 403, and the absence of the share, rename and trash actions for a viewer are not.
+**Evidence.** `tests/chest/role-review-flow.mjs` — roleReviewFlow (points 1, 3 and 4); `tests/chest/role-browser-matrix.mjs` — roleBrowserMatrix and roleFolderHttpMatrix (points 1 and 3); `tests/chest/restriction-flow.mjs` — restrictionFlow (point 2); `tests/chest/annotation-flow.mjs` — annotationFlow and annotationBrowserFlow (point 1); `tests/chest/wopi-flow.mjs` — wopiFlow (point 4); `tests/chest/collabora-live.mjs` — live editor qualification; `tests/chest/files.mjs` — SPACE-001 (point 5); `tests/chest/browser-files.mjs` — journey, viewer controls, rename refusal, concealed Request access and People & settings refusal (point 5)
+**Gap.** None.
 
 #### VERSION-001 — Version history and restore by editors
 
