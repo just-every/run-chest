@@ -36,7 +36,7 @@ export async function integrationsResponse(request: Request,original: Bindings):
   if(origin){insist(origin===env.AUTH_ORIGIN||auth.client.payload.pickerOrigins.includes(origin)||auth.client.payload.redirects.some(u=>new URL(u).origin===origin),'oauth_origin_mismatch',403);permittedOrigin=origin}
   insist(request.method==='GET'||request.method==='POST','method_not_allowed',405)
   auth=await requestBudget(env,auth)
-  
+
   const resourcePath=path.slice('/api/chest/integrations/v1'.length),data=request.method==='POST'?await input(request):{},parts=resourcePath.split('/').filter(Boolean);let result:unknown
   if(parts[0]==='webhooks'){
    action(auth,'webhook')

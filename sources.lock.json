@@ -189,7 +189,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "a906f10ad1905e4e89a2917ca0b21e8c1416480ab7f01883ba96b001d0bf761c",
+      "sha256": "413c6e0aa94c91cbf2e5a35c0567533407924fb918746bcabd086fdb2e445523",
       "executable": false
     },
     "agent-surface.json": {
@@ -221,7 +221,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "df3be6f51bb9800db03efb8f919591e6819f168eabdcbd23938bd8ccab22ab8a",
+      "sha256": "492ed234ba37508eda80287a29a147d75477ae46c78fd387a5f0f07cdbc4f796",
       "executable": false
     },
     "DEMO.md": {
@@ -249,7 +249,7 @@
       "executable": false
     },
     "docs/agent-adoption.md": {
-      "sha256": "4e8c1408cde9be7a4972ce801abd4298685d6347cdbbe1ea3141288be1034d93",
+      "sha256": "30ad43b054301804c2ab62bed8dec68e446a5fa3a1c5f3179d391cd263a2f68c",
       "executable": false
     },
     "docs/agents.md": {
@@ -2833,7 +2833,7 @@
       "executable": false
     },
     "src/chest/integrations/http.ts": {
-      "sha256": "8d70785adf202e1505bfe7a54de98e5915ceb06301466d62c42b3b108a2ad9cd",
+      "sha256": "c97902ad9a0708199bd6105c5405b7f55e1f5703eb5d40e82cf9b68bd1de82bf",
       "executable": false
     },
     "src/chest/integrations/model.ts": {
