@@ -217,7 +217,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "26626471449f42bb6552610b3187b0d4485b1099903779221d8b0837dfd5a899",
+      "sha256": "e69a708ba3f848242a2fe211567b86edbc2871eaee3b2a59a5dd2f592817c82f",
       "executable": false
     },
     "DEMO.md": {
@@ -5493,7 +5493,7 @@
       "executable": false
     },
     "tests/chest/browser-files.mjs": {
-      "sha256": "78164cf9822fb858c2c127d54c312f912766c4f68f69e7ae3fbfee2cd3d0c4e7",
+      "sha256": "8dc5a294edfc1a3bea22c6e07ddc03511ad04a6276c49567a69dbca49e60c13e",
       "executable": false
     },
     "tests/chest/browser-flow.mjs": {
@@ -5617,7 +5617,7 @@
       "executable": false
     },
     "tests/chest/files.mjs": {
-      "sha256": "a6eaf3be1620bba644a0072ac2c5372e61b5589ef7b04532da0d356f4e07b593",
+      "sha256": "5e4c4dc8e47971c9601119337abeca52ed73c43e6f7fb41e1471fb5456a68f6a",
       "executable": false
     },
     "tests/chest/filing.mjs": {

@@ -34,6 +34,49 @@ const audit=async(action,object)=>(await h.api('/audit',cookies.owner)).filter(e
 const row=(page,text)=>page.locator('li').filter({hasText:text});
 // Uploads go through the drop area's picker: a new file opens its page, a new version reloads the file's page.
 const pick=async(page,file)=>{const from=page.url(),input=page.locator('[data-upload] input[data-pick]').first();if(page.url().includes('/items/')&&await page.locator('[data-upload][data-item]').count())await Promise.all([page.waitForNavigation(),input.setInputFiles(file)]);else{await input.setInputFiles(file);await page.waitForURL(u=>u.href!==from&&u.pathname.startsWith('/app/items/'))}};
+// Reconcile the rendered access panel with current authority, including a concealed ancestor.
+async function accessJourney(p,width,space){
+ const assertions=width===1440;
+ const emails=Object.fromEntries(await Promise.all(['ben','cy'].map(async name=>[name,(await json(p[name],'/files')).me.email])));
+ const group=await h.api('/groups',cookies.owner,{name:`Restricted reviewers ${width}`,members:[emails.cy]});
+ const folder=await json(p.mo,'/items',{space,type:'folder',name:`Private team ${width}`}),restricted=await json(p.mo,'/items',{parent:folder.id,type:'folder',name:`Restricted records ${width}`});
+ const original=`Restricted original ${width}`,file=await json(p.mo,'/items',{parent:restricted.id,type:'file',name:`Private record ${width}.txt`,base64:b64(original)});
+ const access=page=>page.locator('section.card').filter({has:page.getByRole('heading',{name:'Your access',exact:true})});
+ const allowed=async(name,role,source)=>{
+  const response=await go(p[name],`/app/items/${file.id}`);await access(p[name]).waitFor();
+  if(assertions){
+   assert.equal(response.status(),200);const panel=await access(p[name]).innerText();assert.ok(panel.includes(role));assert.ok(panel.includes(source));
+   assert.equal((await json(p[name],`/items/${file.id}`)).role,role.replace(' ','_'));
+   const bytes=await call(p[name],`/items/${file.id}/bytes/${file.payload.current}?download=true`);assert.equal(bytes.status(),200);assert.equal(sha(await bytes.body()),sha(original));
+  }
+ };
+ await allowed('ana','content manager',`Projects ${width}`);
+ // Restriction and direct sharing are saved through the actual management forms.
+ await go(p.mo,`/app/items/${restricted.id}?manage`);await p.mo.getByLabel('Restricted (stop inherited access)').selectOption('true');await press(p.mo,'Save access settings');
+ await p.mo.getByLabel('Person or group').selectOption(group.id);await p.mo.getByLabel(/^Role/).selectOption('viewer');await press(p.mo,'Share');
+ await go(p.mo,`/app/items/${file.id}`);await p.mo.getByLabel('Person or group').selectOption(emails.ben);await p.mo.getByLabel(/^Role/).selectOption('commenter');await press(p.mo,'Share');
+ const denied=async name=>{
+  const response=await go(p[name],`/app/items/${file.id}`);await p[name].getByRole('heading',{name:'Request access',exact:true}).waitFor();
+  if(!assertions)return;
+  assert.equal(response.status(),200);assert.equal(await access(p[name]).count(),0);
+  const api=await call(p[name],`/items/${file.id}`),bytes=await call(p[name],`/items/${file.id}/bytes/${file.payload.current}?download=true`);
+  assert.equal(api.status(),403);assert.equal(bytes.status(),403);
+  for(const body of [await response.text(),await api.text(),await bytes.text()])for(const hidden of [file.payload.name,restricted.payload.name,group.payload.name,original])assert.ok(!body.includes(hidden),`${name}: no stale authority or concealed names`);
+ };
+ await denied('ana');
+ await allowed('ben','commenter','your named access');
+ if(assertions){assert.ok((await access(p.ben).innerText()).includes('Inherited access stops on an ancestor'));assert.ok(!(await access(p.ben).innerText()).includes(restricted.payload.name))}
+ await fit(p.ben,'access-direct',width);
+ await allowed('cy','viewer',group.payload.name);if(assertions){assert.ok((await access(p.cy).innerText()).includes(restricted.payload.name));assert.ok(!(await access(p.cy).innerText()).includes('contributor'))}
+ await fit(p.cy,'access-group',width);
+ await allowed('mo','manager',`Projects ${width}`);if(assertions)assert.ok((await access(p.mo).innerText()).includes('space managers keep their access'));
+ await h.api(`/groups/${group.id}/members`,cookies.owner,{action:'remove',email:emails.cy});await denied('cy');await allowed('ben','commenter','your named access');
+ await go(p.mo,`/app/items/${file.id}`);await press(row(p.mo,emails.ben),'Remove access');await denied('ben');
+ await h.stop();await h.start();
+ for(const name of ['ana','ben','cy'])await denied(name);
+ await fit(p.cy,'access-revoked',width);await allowed('mo','manager',`Projects ${width}`);
+ console.log(`PROBE SPACE-001 point4 browser ${width}: rendered inherited, direct and group access matches original reads; revocation and Worker restart conceal names and refuse fresh reads`);
+}
 async function journey(width){
  const p=Object.fromEntries(await Promise.all(people.map(async n=>[n,await as(n,width)]))),xlsx=n=>Buffer.concat([Buffer.from([0x50,0x4b,3,4]),Buffer.from(`budget ${width} revision ${n}`)]);
  // Mo creates a team space and its members in the browser; Ana builds a nested tree with an ordinary file.
@@ -45,6 +88,7 @@ async function journey(width){
  await open(p.mo,'Add a person');{const add=p.mo.locator('form').filter({has:p.mo.getByRole('button',{name:'Add to space'})});await add.getByLabel('Email').fill('ben@example.test');await add.getByLabel('Role').selectOption('viewer');await press(add,'Add to space')}
  assert.deepEqual((await json(p.mo,`/spaces/${space}`)).members.map(m=>[m.principal,m.role]),[['mo@example.test','manager'],['ana@example.test','content_manager'],['cy@example.test','contributor'],['eve@example.test','commenter'],['ben@example.test','viewer']]);
  await fit(p.mo,'space',width);
+ await accessJourney(p,width,space);
  await uploadResumeJourney(h,p.mo,width,space);
  // Move in (MIGRATE-002 partial): a Takeout zip arrives with its folder tree under "Google Drive"; running it again adds nothing.
  const takeout={name:`takeout-${width}.zip`,mimeType:'application/zip',buffer:zip([['Takeout/archive_browser.html','<p>index</p>'],[`Takeout/Drive/Clients ${width}/Harbor/MSA.txt`,'Master services '+width],[`Takeout/Drive/Budget ${width}.txt`,'Budget '.repeat(3000)]])};

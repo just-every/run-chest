@@ -46,9 +46,40 @@ try{
   await h.api('/items',people.ben,{parent:contracts.id,type:'folder',name:'Mine'},403);
   const listing=await h.api(`/items/${client.id}`,people.ben);assert.deepEqual(listing.children.map(c=>c.name),['Contracts']);assert.equal(listing.can.download,true);assert.equal(listing.can.contribute,false);
   // A restricted subfolder keeps out inherited members except managers.
-  const hr=await h.api('/items',people.mo,{space:space.id,type:'folder',name:'HR'});await upload(people.mo,{parent:hr.id,name:'salaries.txt',base64:b64('confidential salaries')});
+  const hr=await h.api('/items',people.mo,{parent:client.id,type:'folder',name:'HR'}),salaries=await upload(people.mo,{parent:hr.id,name:'salaries.txt',base64:b64('confidential salaries')});
+  const emails=Object.fromEntries(await Promise.all(['ana','ben','cy'].map(async name=>[name,(await h.api('/files',people[name])).me.email])));
+  const inherited=await h.api(`/items/${salaries.id}`,people.ana);
+  assert.equal(inherited.role,'content_manager');assert.ok(inherited.accessExplanation.some(reason=>reason.includes('content manager')&&reason.includes('Projects')));
+  assert.equal(sha(await bytesOf('ana',salaries.id,salaries.payload.current)),sha('confidential salaries'));
   await h.api(`/items/${hr.id}/settings`,people.ana,{restricted:true},403);await h.api(`/items/${hr.id}/settings`,people.mo,{restricted:true});
   await h.api(`/items/${hr.id}`,people.ana,undefined,403);assert.equal((await h.api('/search?q=salaries',people.ana)).count,0);assert.equal((await h.api('/search?q=salaries',people.mo)).count,1);
+  // The explanation follows the enforced path: a file grant cannot reveal its restricted parent.
+  const group=await h.api('/groups',people.owner,{name:'Restricted reviewers',members:[emails.cy]});
+  await h.api(`/items/${salaries.id}/shares`,people.mo,{principal:emails.ben,role:'commenter'});
+  await h.api(`/items/${hr.id}/shares`,people.mo,{principal:group.id,role:'viewer'});
+  const direct=await h.api(`/items/${salaries.id}`,people.ben),grouped=await h.api(`/items/${salaries.id}`,people.cy),manager=await h.api(`/items/${salaries.id}`,people.mo);
+  assert.equal(direct.role,'commenter');assert.ok(direct.accessExplanation.some(reason=>reason.includes('commenter')&&reason.includes('your named access')&&reason.includes('salaries.txt')));
+  assert.ok(direct.accessExplanation.some(reason=>reason.includes('Inherited access stops')&&reason.includes('on an ancestor')));
+  assert.ok(!JSON.stringify(direct.accessExplanation).includes('HR'));assert.ok(!direct.path.some(node=>node.id===hr.id));
+  assert.equal(grouped.role,'viewer');assert.ok(grouped.accessExplanation.some(reason=>reason.includes('viewer')&&reason.includes('Restricted reviewers')&&reason.includes('HR')));
+  assert.ok(grouped.accessExplanation.some(reason=>reason.includes('Inherited access stops')));
+  assert.ok(!grouped.accessExplanation.some(reason=>reason.includes('contributor')),'stopped space membership is not presented as current access');
+  assert.equal(manager.role,'manager');assert.ok(manager.accessExplanation.some(reason=>reason.includes('manager')&&reason.includes('Projects')));assert.ok(manager.accessExplanation.some(reason=>reason.includes('space managers keep their access')));
+  for(const name of ['ben','cy','mo'])assert.equal(sha(await bytesOf(name,salaries.id,salaries.payload.current)),sha('confidential salaries'));
+  const concealed=async name=>{
+   for(const path of [`/api/chest/items/${hr.id}`,`/api/chest/items/${salaries.id}`,`/app/items/${salaries.id}`,`/api/chest/items/${salaries.id}/bytes/${salaries.payload.current}?download=true`]){
+    const response=await h.raw(path,people[name]);assert.equal(response.status,path.startsWith('/app/')?200:403,`${name}: ${path}`);
+    const body=await response.text();for(const hidden of ['HR','salaries.txt','confidential salaries','Restricted reviewers'])assert.ok(!body.includes(hidden),`${name}: no concealed name or original in ${path}`);
+   }
+  };
+  await concealed('ana');
+  await h.api(`/groups/${group.id}/members`,people.owner,{action:'remove',email:emails.cy});await concealed('cy');
+  assert.equal((await h.api(`/items/${salaries.id}`,people.ben)).role,'commenter','group removal keeps an independent direct grant');
+  await h.api(`/items/${salaries.id}/unshare`,people.mo,{principal:emails.ben});await concealed('ben');
+  await h.stop();await h.start();
+  for(const name of ['ana','ben','cy'])await concealed(name);
+  assert.equal(sha(await bytesOf('mo',salaries.id,salaries.payload.current)),sha('confidential salaries'),'manager access and original survive revocation and restart');
+  console.log('PROBE SPACE-001 point4: restricted nested file; inherited, direct, group and manager reads match explanations; direct and group revocation deny pages and bytes without concealed names before and after Worker restart');
   assert.equal((await h.api('/search?q=net%2030',people.ben)).results[0].id,terms.id);assert.equal((await h.api('/search?q=net%2030',people.dee)).count,0);
   // Moves need manage rights at the source; the stable ID and versions survive and access follows the destination.
   await h.api(`/items/${terms.id}/move`,people.cy,{parent:client.id},403);
