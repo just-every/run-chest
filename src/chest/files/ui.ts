@@ -132,7 +132,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (parts[1] === 'ownership' && parts[2]) return { body: ownershipPage(await ownershipView(env, s, w, parts[2])) }
  if (path === '/app/files/space-policy') { const scope = url.searchParams.get('scope') ?? 'organisation'; return { body: spacePolicyPage(await spacePolicyView(env, s), scope, scope.startsWith('space:') ? await spaceSettingsView(env, s, scope.slice(6)) : undefined) } }
  if (path === '/app/files') return { body: homePage(await home(env, s, w)) }
- if (path === '/app/files/search') { const reader = await readerState(env); return { body: searchPage(url.searchParams.get('q') || '', await search(env, w, url), 'config' in reader ? null : 'unavailable' in reader ? reader.unavailable : reader.missing) } }
+ if (path === '/app/files/search') { const reader = await readerState(env); return { body: searchPage(url.searchParams.get('q') || '', await search(env, w, url), 'config' in reader ? null : 'unavailable' in reader ? reader.unavailable : reader.missing, people) } }
  if (path === '/app/files/trash') return { body: trashPage(await trashView(env, s, w)) }
  if (parts[1] === 'spaces' && parts[2]) { const d = await spaceView(env, w, parts[2]), creation = d.can.contribute ? await listTemplates(env, s, w, { space: d.id }) : null, folder = await browser(env, s, w, d.id, null, d.children.map((c: any) => c.id), url); return { body: spacePage({ ...d, folder, creation, serviceAdmin: isAdmin(s), quotaOwner: s.operator.role === 'owner', manage: url.searchParams.has('manage') }, people, groups), bar: bar([{ label: d.name }], creation, { space: d.id }, `/app/spaces/${d.id}`, d.can.contribute) } }
  if (parts[1] === 'items' && parts[2]) {

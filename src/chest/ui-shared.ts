@@ -24,6 +24,8 @@ export const isoDay=(date:string)=>/^\d{4}-\d{2}-\d{2}$/.test(date)?esc(us(date+
 // A person as a round initial in one of five soft tones, picked from their email so it stays the same everywhere.
 export const tone=(email:string)=>1+[...email].reduce((n,c)=>n+c.charCodeAt(0),0)%5
 export const avatar=(p:{email:string,name:string},label=false)=>`<span class="avatar tone-${tone(p.email)}"${label?` title="${esc(p.name)}"`:' aria-hidden="true"'}>${esc((p.name||p.email).trim()[0]?.toUpperCase()??'?')}</span>`
+// A person by name, from the people the page already has; an address nobody has a name for shows as it is.
+export const nameOf=(people:{id:string,payload:{name:string}}[])=>{const names=new Map(people.map(p=>[p.id,p.payload.name]));return (email:string)=>names.get(email)||email}
 export const hidden=(name:string,value:string)=>`<input type="hidden" name="${name}" value="${esc(value)}">`
 // A disclosure: the summary looks like a button (ink by default) and opens its form in a card below it.
 export const details=(title:string,body:string,summaryClass='btn')=>`<details class="disclosure"><summary class="${summaryClass}">${esc(title)}</summary><div class="disclosure-panel">${body}</div></details>`
