@@ -8,11 +8,11 @@ import {providerTransport} from '../../scripts/backup/accounting.mjs';
 import {tooltips} from './tooltip-proof.mjs';
 export async function accountingJourney(browser){
  await portabilityJourney();
- const engine='https://synthetic-chest-editor.test',model='synthetic-chest-model',png=await readFile('tests/chest/scan-nda.png'),pdf=await PDFDocument.create();pdf.addPage().drawText('synthetic-chest-1');const pdfBytes=await pdf.save();let refused=false,cached=false,cacheWrite=false,openai=false,serviceTier=null,malformed=false;
+ const engine='https://synthetic-chest-editor.test',model='synthetic-chest-model',png=await readFile('tests/chest/scan-nda.png'),pdf=await PDFDocument.create();pdf.addPage().drawText('synthetic-chest-1');const pdfBytes=await pdf.save();let refused=false,cached=false,cacheWrite=false,openai=false,serviceTier=null,malformed=false,primaryUsage;
  const h=await harness({bindings:{COLLABORA_URL:engine},edge:async request=>{
   if(request.url===engine+'/hosting/capabilities')return Response.json({productName:'Collabora Online Development Edition',productVersion:'synthetic-chest-1'});
-  if(request.url==='https://synthetic-chest-model.test/messages'&&openai)return Response.json({choices:[{message:{content:JSON.stringify({readable:true,language:'en',text:'synthetic-chest-1',confidence:1})}}],usage:{prompt_tokens:1000,completion_tokens:100,prompt_tokens_details:{cached_tokens:200}}});
-  if(request.url==='https://synthetic-chest-model.test/messages')return refused?Response.json({error:{message:'synthetic-chest-private-detail'}},{status:429}):Response.json({content:[{type:'text',text:JSON.stringify({readable:true,language:'en',text:'synthetic-chest-1',confidence:1})}],usage:{input_tokens:1000,output_tokens:100,service_tier:serviceTier??undefined,cache_read_input_tokens:malformed?-1:cached?200:0,...(cacheWrite?{cache_creation_input_tokens:300,cache_creation:{ephemeral_5m_input_tokens:100,ephemeral_1h_input_tokens:200}}:{})}});
+  if(request.url==='https://synthetic-chest-model.test/messages'&&openai)return Response.json({choices:[{message:{content:JSON.stringify({readable:true,language:'en',text:'4417-CHEST',confidence:1})}}],...(primaryUsage===null?{}:{usage:primaryUsage??{prompt_tokens:1000,completion_tokens:100,prompt_tokens_details:{cached_tokens:200}}})});
+  if(request.url==='https://synthetic-chest-model.test/messages')return refused?Response.json({error:{message:'synthetic-chest-private-detail'}},{status:429}):Response.json({content:[{type:'text',text:JSON.stringify({readable:true,language:'en',text:'4417-CHEST',confidence:1})}],...(primaryUsage===null?{}:{usage:primaryUsage??{input_tokens:1000,output_tokens:100,service_tier:serviceTier??undefined,cache_read_input_tokens:malformed?-1:cached?200:0,...(cacheWrite?{cache_creation_input_tokens:300,cache_creation:{ephemeral_5m_input_tokens:100,ephemeral_1h_input_tokens:200}}:{})}})});
   if(request.url===engine+'/hosting/discovery')return new Response(`<wopi-discovery><net-zone><app><action name="edit" ext="docx" urlsrc="${engine}/browser/editor?"/></app></net-zone></wopi-discovery>`);
   if(request.url.startsWith(engine+'/cool/convert-to/'))return new Response(request.url.endsWith('/png')?png:pdfBytes);
  }});
@@ -56,6 +56,53 @@ export async function accountingJourney(browser){
   serviceTier='synthetic-chest-private-detail';await h.api('/reading/settings/test',owner,{});assert.doesNotMatch(JSON.stringify(await h.api('/administration/provider-usage',owner)),/synthetic-chest-private-detail/,'unrecognized provider tier text never enters receipts');serviceTier=null;
   openai=true;cacheWrite=false;await h.api('/administration/costs',owner,{...tiers,aiProvider:'openai'});await h.api('/reading/settings',owner,{provider:'openai',endpoint:'https://synthetic-chest-model.test/messages',model,key:'synthetic-chest-1'});await h.api('/reading/settings/test',owner,{});
   const openaiReceipt=(await h.api('/administration/provider-usage',owner)).rows.filter(r=>r.model===model).at(-1);assert.equal(openaiReceipt.usd,0.01204);assert.equal(openaiReceipt.uncachedInput,800,'OpenAI cache hits are included in prompt token totals');
+  // Successful readings do not turn absent or invalid primary units into a zero-priced call.
+  const primaryCases=[
+   {name:'omitted usage',units:null,input:null,output:null,usd:null},
+   {name:'missing input',units:[undefined,100],input:null,output:100,usd:null},
+   {name:'missing output',units:[1000,undefined],input:1000,output:null,usd:null},
+   {name:'negative input',units:[-1,100],input:null,output:100,usd:null},
+   {name:'string input',units:['1000',100],input:null,output:100,usd:null},
+   {name:'unsafe input integer',units:[Number.MAX_SAFE_INTEGER+1,100],input:null,output:100,usd:null},
+   {name:'fractional output',units:[1000,100.5],input:1000,output:null,usd:null},
+   {name:'string output',units:[1000,'100'],input:1000,output:null,usd:null},
+   {name:'valid control',units:[1000,100],input:1000,output:100,usd:0.0124},
+  ];
+  cached=false;cacheWrite=false;
+  for(const provider of ['anthropic','openai']){
+   openai=provider==='openai';await h.api('/administration/costs',owner,{...rates,aiProvider:provider});
+   await h.api('/reading/settings',owner,{provider,endpoint:'https://synthetic-chest-model.test/messages',model,key:'synthetic-chest-1'});
+   for(const scenario of primaryCases){
+    primaryUsage=scenario.units===null?null:Object.fromEntries((openai?['prompt_tokens','completion_tokens']:['input_tokens','output_tokens']).map((key,i)=>[key,scenario.units[i]]));
+    const before=await h.api('/administration/provider-usage',owner);
+    assert.equal((await h.api('/reading/settings/test',owner,{})).ok,true,provider+' '+scenario.name+' still reads the sample');
+    const after=await h.api('/administration/provider-usage',owner),call=after.rows.at(-1);
+    assert.equal(after.rows.length,before.rows.length+1);
+    assert.equal(call.provider,provider);assert.equal(call.model,model);assert.equal(call.outcome,'succeeded');
+    assert.equal(call.input,scenario.input,provider+' '+scenario.name+' input');
+    assert.equal(call.output,scenario.output,provider+' '+scenario.name+' output');
+    assert.equal(call.usd,scenario.usd,provider+' '+scenario.name+' estimated cost');
+    assert.equal(call.quote,rates.quote);assert.ok(call.at&&call.rateAt);assert.ok(call.requestBytes>0&&call.responseBytes>0);
+    assert.equal(after.unknownCosts,before.unknownCosts+(scenario.usd===null?1:0));
+    assert.equal(after.estimatedUsd,Number((before.estimatedUsd+(scenario.usd??0)).toFixed(9)));
+   }
+  }
+  primaryUsage=undefined;
+  const datedPrimary=(await h.api('/administration/provider-usage',owner)).rows.filter(r=>r.model===model);
+  await h.api('/administration/costs',owner,{...rates,quote:'Replacement synthetic quote dated 2026-10-30',aiInputUsdPerMillion:99,aiOutputUsdPerMillion:88,aiRequestUsd:1});
+  await h.stop();await h.start();
+  assert.deepEqual((await h.api('/administration/provider-usage',owner)).rows.filter(r=>r.model===model),datedPrimary,'successful calls retain unknown amounts and dated estimates after quote replacement and restart');
+  const providerCsv=await h.raw('/api/chest/administration/provider-usage/export',owner);assert.equal(providerCsv.status,200);
+  const [columns,...csv]= (await providerCsv.text()).trimEnd().split('\r\n').map(line=>line.split(',').map(value=>value.replace(/^"|"$/g,'').replaceAll('""','"')));
+  const cell=(row,name)=>row[columns.indexOf(name)],exportedPrimary=csv.filter(row=>cell(row,'Model')===model);
+  assert.equal(exportedPrimary.length,datedPrimary.length);
+  for(const [i,call]of datedPrimary.entries()){
+   const row=exportedPrimary[i];assert.equal(cell(row,'Provider'),call.provider);assert.equal(cell(row,'At'),call.at);
+   assert.equal(cell(row,'Input units'),call.input===null?'':String(call.input));
+   assert.equal(cell(row,'Output units'),call.output===null?'':String(call.output));
+   assert.equal(cell(row,'Estimated provider USD'),call.usd===null?'':String(call.usd),'CSV never substitutes a zero amount for unknown cost');
+   assert.equal(cell(row,'Quote'),call.quote);
+  }
   openai=false;cached=false;await h.api('/reading/settings',owner,{provider:'anthropic',endpoint:'https://synthetic-chest-model.test/messages',model,key:'synthetic-chest-1'});
   refused=true;await h.api('/reading/settings/test',owner,{});usage=await h.api('/administration/provider-usage',owner);assert.equal(usage.rows.filter(r=>r.model===model).at(-1).outcome,'refused');assert.equal(usage.rows.filter(r=>r.model===model).at(-1).usd,null);assert.doesNotMatch(JSON.stringify(usage),/synthetic-chest-private-detail|synthetic-chest-1/);
   await h.api('/administration/provider-usage',reader,undefined,403);
@@ -117,7 +164,23 @@ export async function accountingJourney(browser){
    const opens=await Promise.all([h.raw(`/api/chest/items/${file.id}/collabora`,owner,{}),h.raw(`/api/chest/items/${file.id}/collabora`,owner,{})]);assert.deepEqual(opens.map(r=>r.status).sort(),[200,409]);const denial=await opens.find(r=>r.status===409).json();assert.equal(denial.error,'editor_capacity_reached');assert.equal(denial.limit,'connections');assert.equal(denial.currentUse,1);assert.equal(denial.maximum,1);assert.equal(denial.preview,`/app/items/${file.id}`);
    const launch=await opens.find(r=>r.status===200).text(),token=launch.match(/name="access_token" value="([^"]+)"/)[1];lastSessionToken=token;assert.equal((await h.fetch(`/wopi/files/${file.id}?access_token=${token}`)).status,200,'existing session continues');
    await page.goto(h.origin+'/app/items/'+file.id);await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Open in Collabora Online',exact:true}).click()]);await page.getByRole('heading',{name:'Editor capacity reached',exact:true}).waitFor();await page.frameLocator('iframe[title="Read-only file preview"]').locator('body').getByText('Harbor renewal agreement',{exact:false}).waitFor();await tooltips(page,width,'capacity-preview');await page.screenshot({path:`test-results/${width}-accounting-capacity-preview.png`,fullPage:true});
-   await page.goto(h.origin+'/app/administration/audit');await page.getByRole('heading',{name:'Editor capacity',exact:true}).waitFor();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await tooltips(page,width,'accounting-report');await page.screenshot({path:`test-results/${width}-accounting-report.png`,fullPage:true});await context.close();
+   await page.goto(h.origin+'/app/administration/audit');await page.getByRole('heading',{name:'Editor capacity',exact:true}).waitFor();
+   const providerUsage=await h.api('/administration/provider-usage',owner),providerCard=page.getByRole('heading',{name:'Dated provider usage',exact:true}).locator('..');
+   if(width===1440){
+    assert.match(await providerCard.innerText(),new RegExp(providerUsage.unknownCosts+' unknown costs'));
+    assert.ok((await providerCard.innerText()).includes('USD '+providerUsage.estimatedUsd.toFixed(9)+' estimated provider usage'));
+    const rows=providerCard.locator('li');assert.equal(await rows.count(),providerUsage.rows.length);
+    for(const [i,call]of providerUsage.rows.entries()){
+     const row=rows.nth(i),text=await row.innerText();
+     assert.equal(await row.locator('time').getAttribute('datetime'),call.at);
+     assert.ok(text.includes(call.provider+' · '+call.model));assert.ok(text.includes(call.outcome));
+     assert.ok(text.includes('Input units: '+(call.input??'Unknown')));
+     assert.ok(text.includes('Output units: '+(call.output??'Unknown')));
+     assert.ok(text.includes('Estimated provider cost: '+(call.usd===null?'Unknown':'USD '+call.usd.toFixed(9))));
+    }
+   }
+   await providerCard.scrollIntoViewIfNeeded();await page.screenshot({path:`test-results/${width}-accounting-provider-usage.png`,fullPage:true});
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await tooltips(page,width,'accounting-report');await page.screenshot({path:`test-results/${width}-accounting-report.png`,fullPage:true});await context.close();
   }
   const reportOutcome=()=>h.fetch(`/wopi/files/${file.id}/state`,{method:'POST',headers:{authorization:'Bearer '+lastSessionToken,'content-type':'application/json'},body:JSON.stringify({event:'provider-refused',kind:'limitreached'})});
   assert.equal((await reportOutcome()).status,200);assert.equal((await reportOutcome()).status,200);
