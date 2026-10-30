@@ -1,16 +1,16 @@
 import type { Bindings } from '../../auth.server'
 import { insist } from '../model'
 import { fromBase64 } from '../blobs'
-import { commit } from '../files/repo'
 import { demand, who } from '../files/access'
-import { addVersion, createItem, nameVersion, rename, restoreVersion, byteRange, bytes as original } from '../files/items'
+import { addVersion, createItem, nameVersion, rename, restoreVersion } from '../files/items'
 import { createFile } from '../office/create-service'
 import { createLink } from '../files/links'
 import { share, unshare } from '../files/shares'
 import { createFileRequest, requestsOn, describeRequest } from '../files/file-requests'
 import { get } from '../store'
 import type { FileRequest } from '../files/model'
-import { action, live, resource, spend, type Authorized } from './auth'
+import { resource, type Authorized } from './auth'
+import { readOriginal } from './bytes'
 import { brief, listItems, scopedSearch, versions, paginate } from './reads'
 import { hash } from './secrets'
 import { mutate } from './mutations'
@@ -27,22 +27,7 @@ export async function resourceCall(env: Bindings,auth: Authorized,method: string
   if(method==='GET'&&sub==='shares'){const c=await resource(env,auth,key,'share');demand(c,'share');return paginate(c.chain.at(-1)!.payload.grants,url,g=>g.principal)}
   if(method==='GET'&&sub==='requests'){await resource(env,auth,key,'request');const c=await resource(env,auth,key,'request');demand(c,'share');const all=await requestsOn(env,key);return paginate(all.map(({submissions,...r})=>r),url,r=>r.id)}
   if(method==='POST'&&sub==='pick'){const c=await resource(env,auth,key,'picker');return {id:key,name:c.chain.at(-1)!.payload.name,type:c.chain.at(-1)!.payload.type,url:`${env.AUTH_ORIGIN}/app/items/${encodeURIComponent(key)}`}}
-  if(method==='GET'&&sub==='bytes'&&version){const c=await resource(env,auth,key,'download');demand(c,'download');const v=c.chain.at(-1)!.payload.versions.find(v=>v.id===version);insist(v,'version_not_found',404)
-   const range=auth.request.headers.get('range'),size=range?byteRange(v.size,range).length:v.size
-   await commit(env,auth.session,[spend(auth,{bytes:size})],{fences:c.fences});const current=await live(env,auth) as Authorized,response=await original(env,current.session,await who(env,current.session),key,version,true,range)
-   if(!response.body)return response
-   const reader=response.body.getReader();let pending=new Uint8Array(0),cancelled=false
-   // A small original may arrive from storage as one large buffer. Authorize bounded
-   // output chunks at the consumer's pace, including the remainder of that buffer.
-   return new Response(new ReadableStream<Uint8Array>({
-    async pull(controller){try{
-     if(!pending.length){const next=await reader.read();if(cancelled)return;if(next.done){controller.close();reader.releaseLock();return}pending=next.value}
-     await live(env,current,key,'download');if(cancelled)return
-     const chunk=pending.subarray(0,256*1024);pending=pending.subarray(chunk.length);controller.enqueue(chunk)
-    }catch(error){pending=new Uint8Array(0);if(!cancelled)controller.error(error);await reader.cancel()}},
-    async cancel(){cancelled=true;pending=new Uint8Array(0);await reader.cancel()},
-   },{highWaterMark:0}),{status:response.status,headers:response.headers})
-  }
+  if(method==='GET'&&sub==='bytes'&&version)return readOriginal(env,auth,key,version,auth.request.headers.get('range'),url.searchParams.get('link'))
   if(method==='POST'){
    const scope=sub==='versions'?'versions':sub==='rename'?'upload':sub==='requests'?'request':'share';const current=await resource(env,auth,key,scope);demand(current,scope==='versions'||scope==='upload'?'contribute':'share')
    const size=sub==='versions'&&!version?fromBase64(input.base64).length:0

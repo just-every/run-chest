@@ -2,12 +2,14 @@ import type { Bindings } from '../../auth.server'
 import { ChestError, insist } from '../model'
 import { action, type Authorized } from './auth'
 import { resourceCall } from './resources'
+import { originalResource } from './bytes'
 const object=(properties:Record<string,unknown>,required:string[]=[])=>({type:'object',properties,required,additionalProperties:false}),string={type:'string'},id={type:'string',minLength:1},limit={type:'integer',minimum:1,maximum:100}
 const tools=[
  {name:'chest_list',description:'List currently accessible files and folders inside the grant; follow nextCursor.',inputSchema:object({parent:id,cursor:string,limit})},
  {name:'chest_search',description:'Search originals inside the grant with current ACL and named filters.',inputSchema:object({q:string,type:string,owner:string,creator:string,sharedBy:string,modifiedFrom:string,modifiedTo:string,location:string,versions:{enum:['current','any']},cursor:string,limit})},
  {name:'chest_get',description:'Read metadata for one stable item ID.',inputSchema:object({id},['id'])},
  {name:'chest_versions',description:'Read retained immutable versions for one file.',inputSchema:object({id,cursor:string,limit},['id'])},
+ {name:'chest.files.read',description:'Read an exact retained original with current download rights. Small originals are blob resources; larger originals return a five-minute byte link requiring this same grant.',inputSchema:object({id,version:id},['id','version'])},
  {name:'chest_upload',description:'Upload an original into an allowed folder, idempotent on caller key.',inputSchema:object({parent:id,name:string,base64:string,key:string},['parent','name','base64','key'])},
  {name:'chest_create_folder',description:'Create a folder within the grant.',inputSchema:object({parent:id,name:string,key:string},['parent','name','key'])},
  {name:'chest_share',description:'Share an item with a person under current sharing policy.',inputSchema:object({id,principal:string,role:{enum:['viewer','commenter','editor']},confirmExternal:{type:'boolean'},key:string},['id','principal','role','key'])},
@@ -18,14 +20,26 @@ export async function mcp(env: Bindings,auth: Authorized,payload: any) {
  insist(payload&&payload.jsonrpc==='2.0'&&typeof payload.method==='string'&&!Array.isArray(payload),'invalid_json_rpc')
  const id=payload.id??null,reply=(result:unknown)=>({jsonrpc:'2.0',id,result})
  if(payload.method==='notifications/initialized')return undefined
- if(payload.method==='initialize')return reply({protocolVersion:'2025-03-26',capabilities:{tools:{listChanged:false}},serverInfo:{name:'Chest',version:'1.0'}})
+ if(payload.method==='initialize')return reply({protocolVersion:'2025-03-26',capabilities:{tools:{listChanged:false},resources:{subscribe:false,listChanged:false}},serverInfo:{name:'Chest',version:'1.0'}})
  if(payload.method==='ping')return reply({})
  if(payload.method==='tools/list')return reply({tools})
+ if(payload.method===['resources','templates','list'].join('/'))return reply({resourceTemplates:[{uriTemplate:'chest://item/{id}/version/{n}',name:'Retained original',description:'Exact original bytes within current download rights. Originals above 10 MB return a byte link through chest.files.read.'}]})
+ if(payload.method===['resources','list'].join('/'))return reply({resources:[]})
+ if(payload.method===['resources','read'].join('/')){
+  try {
+   const match=/^chest:\/\/item\/([^/?#]+)\/version\/([^/?#]+)$/.exec(payload.params?.uri??'');insist(match,'invalid_resource_uri')
+   const result=await originalResource(env,auth,decodeURIComponent(match[1]),decodeURIComponent(match[2]),true)
+   const embedded=result.content[0]
+   insist('resource' in embedded,'original_requires_byte_link',413)
+   return reply({contents:[embedded.resource]})
+  }catch(error){return {jsonrpc:'2.0',id,error:{code:-32002,message:error instanceof ChestError?error.code:'service_unavailable'}}}
+ }
  if(payload.method!=='tools/call')return {jsonrpc:'2.0',id,error:{code:-32601,message:'Method not found'}}
  const name=payload.params?.name,a=payload.params?.arguments??{},tool=tools.find(t=>t.name===name)
  if(!tool)return {jsonrpc:'2.0',id,error:{code:-32602,message:'Unknown tool'}}
  try {
   const props=tool.inputSchema.properties;insist(a&&typeof a==='object'&&!Array.isArray(a)&&Object.keys(a).every(k=>k in props)&&tool.inputSchema.required.every(k=>a[k]!==undefined),'invalid_tool_arguments')
+  if(name==='chest.files.read'){insist(typeof a.id==='string'&&a.id.length>0&&typeof a.version==='string'&&a.version.length>0,'invalid_tool_arguments');return reply(await originalResource(env,auth,a.id,a.version))}
   let method='GET',path='',input:any={},query=new URLSearchParams()
   for(const [k,v] of Object.entries(a))if(!['id','key','base64'].includes(k))query.set(k,String(v))
   if(name==='chest_list')path='/items';if(name==='chest_search')path='/search';if(name==='chest_get')path=`/items/${encodeURIComponent(a.id)}`;if(name==='chest_versions')path=`/items/${encodeURIComponent(a.id)}/versions`
