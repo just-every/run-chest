@@ -217,7 +217,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "26626471449f42bb6552610b3187b0d4485b1099903779221d8b0837dfd5a899",
+      "sha256": "1b83815c7a9fb152fae151f7072a304c7d4210d9d8069cab70928966e80e1d77",
       "executable": false
     },
     "DEMO.md": {
@@ -5381,7 +5381,7 @@
       "executable": false
     },
     "tests/chest/administration-accounting-flow.mjs": {
-      "sha256": "c0f3cde4dcd977d55dfb66dd0149bf5d4b2f65dd7bf2dd9d52d4b7ff29728931",
+      "sha256": "05c2d88ee2ebd3f32fed87cf200d90db13b6be279d2ebb00dc267378c51cbec5",
       "executable": false
     },
     "tests/chest/administration-guest-flow.mjs": {
