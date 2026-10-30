@@ -96,7 +96,7 @@ export function nativeResources(env: Bindings): ResourceDefinition[] {
           };
     }),
     resource("chest://device/{id}", "Device", async (u, c) => {
-      if (c.clientId?.startsWith("token:")) return null;
+      if (!c.consent && c.clientId?.startsWith("token:")) return null;
       const { session } = await agentSession(env, c);
       return (
         (await devices(env, session)).find(
