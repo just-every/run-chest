@@ -189,7 +189,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "f53b98396b9abbb6ce05adcdff78676a819dfc3997bce400c775bdb4576b0c18",
+      "sha256": "fb961e66dc47bf48e8c61de6e2974f90fe85fedec7aca9a060c5f92df476ae7c",
       "executable": false
     },
     "agent-surface.json": {
@@ -221,7 +221,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "9ec4a3781d2606185b8cef3c9d5d94288c71d474569e1cf822367ca8a1a5daf6",
+      "sha256": "a3d983f17c98eedcb3e93a8ad1a7d3fee5c3db5cc0820ad984093fafd25c4876",
       "executable": false
     },
     "DEMO.md": {
@@ -3505,7 +3505,7 @@
       "executable": false
     },
     "src/modules/agent-door/CLAUSES.md": {
-      "sha256": "0568321ca8cc6c5ff5056d3e12868795aadfedd17c51aa693dd4517450a9e867",
+      "sha256": "1071483a800955f2302b2d29f7e9a18b5d096735b617d4b197fe1e7d107c7973",
       "executable": false
     },
     "src/modules/agent-door/conformance/audit-pages.mjs": {
