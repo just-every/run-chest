@@ -1834,7 +1834,7 @@ Agent surface · target · **done**
 5. A foreign Origin returns 403, and a header and body method mismatch returns `HeaderMismatch`.
 6. An oversized body returns 413 with no effect.
 
-**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
+**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
 **Gap.** None.
 
 #### BASE-AGENT-002 — The seed's jobs are tools, through the UI's own actions
@@ -1851,7 +1851,7 @@ Agent surface · target · **partial**
 5. The UI action and its tool, on the same fixture, give the same record state and the same audit event type.
 6. The seed's embedded agents appear in the audit as calls to the same tools.
 
-**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
+**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
 **Gap.** Declared native registry is proven; nine target jobs and embedded agent/independent-runner continuations remain undeclared. No target-only service is registered.
 
 #### BASE-AGENT-003 — Records are resources
@@ -1868,7 +1868,7 @@ Agent surface · target · **partial**
 5. Bytes over budget return `budget_exhausted` and no partial content.
 6. Customer-sourced text carries the untrusted marker.
 
-**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
+**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
 **Gap.** Seven native metadata resource templates are declared, under current visibility with missing/restricted equivalence and no bearer fields. Optional resource refresh and full primary-record parity are undeclared.
 
 #### BASE-AGENT-004 — Business identity and short-lived, audience-bound tokens
@@ -1886,8 +1886,8 @@ Agent surface · target · **partial**
 6. Revoking consent in the seed or in Business refuses the next call within 60 seconds.
 7. After unpairing, Business tokens are refused and the seed's own sign-in still works.
 
-**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
-**Gap.** Owner-bound signed identity and original scoped local credentials are exercised. Optional multi-sponsor family, and separate native team-admin/member lifecycle proof, are undeclared.
+**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
+**Gap.** Owner-bound signed identity and original scoped local credentials are exercised. Unknown, changed-email, inactive and domain-excluded signed sponsors refuse with unchanged native witnesses; inactive/excluded members use the native invitation and signed Business binding lifecycle. Successful multi-sponsor and native team-admin role-parity journeys remain undeclared.
 
 #### BASE-AGENT-005 — An agent acts as a person in a role, never more
 
@@ -1902,7 +1902,7 @@ Agent surface · target · **partial**
 4. Calls that widen the agent's own grant or its sponsor's role, or change the policy or Pause, return `self_escalation` and change nothing, even under a policy with every class autonomous; dropping a scope from its own grant runs.
 5. An injection fixture yields no out-of-grant call and no change of class: record text asking for a wider action, or claiming that a recipient is internal.
 
-**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
+**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
 **Gap.** Declared native grants, role guards, original OAuth fences, narrow-only device authority and record security are exercised. Remaining native role/security families and embedded continuations are not claimed.
 
 #### BASE-AGENT-006 — Every action declares its risk class
@@ -1919,7 +1919,7 @@ Agent surface · target · **partial**
 5. No tool in `tools / list` declares a class outside the fleet list, and `rer check` fails on one.
 6. A refused call's audit row still records its computed classes.
 
-**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
+**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
 **Gap.** Every declared tool/class pair has native journey calls and server facts. Wider target jobs and provider-cost classes are not registered.
 
 #### BASE-AGENT-007 — The company's policy decides, at one chokepoint
@@ -1938,7 +1938,7 @@ Agent surface · target · **partial**
 7. A policy change applies to the next call within 60 seconds, and the audit cites the new revision.
 8. A policy document with a bad signature or another Business's id is rejected, and the door keeps the last valid revision.
 
-**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
+**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
 **Gap.** Signed policy receiver, unanswered/invalid/blocked/paused states and exact named approval are exercised for declared tools. Embedded native agents and optional mail-event/continuation families remain undeclared.
 
 #### BASE-AGENT-008 — Truthful attribution
@@ -1956,7 +1956,7 @@ Agent surface · target · **partial**
 6. Activity and exports at 1440 and 390 show `"<agent> for <person>"` for every agent act.
 7. Mail an agent sends to an outside address names `"<agent> for <person>"` as its sender.
 
-**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
+**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
 **Gap.** Declared product records/versions/activity and envelope mail name agent for person; native human rename Undo has its own journey. Full wider surface and asynchronous native completion attribution remain gaps.
 
 #### BASE-AGENT-009 — Every agent action is audited with its class and decision
@@ -1974,7 +1974,7 @@ Agent surface · target · **partial**
 6. Removing the agent keeps its rows and its name.
 7. The Agents page works at 1440 and 390 with no serious or critical axe findings.
 
-**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
+**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
 **Gap.** Declared private reads, refusal, policy and native effects have shared audit with zero differs_from_policy in the production harness. Client-scoped retained evidence redaction remains a Base custody boundary.
 
 #### BASE-AGENT-010 — Agents can follow changes
@@ -1991,7 +1991,7 @@ Agent surface · target · **partial**
 5. A failed webhook is visible and replays without duplicate effects.
 6. `approval.pending`, `approval.decided`, `review.flagged` and `policy.adopted` carry the class and decision and nothing the subscriber may not read.
 
-**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
+**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
 **Gap.** Undeclared optional events/subscriptions family: discovery omits both and attempted calls refuse without effects. Native webhook IDs, expanded native event types, subscriptions and external event handoffs are not claimed.
 
 #### BASE-AGENT-011 — Limits are policy, and Pause stops everything
@@ -2009,7 +2009,7 @@ Agent surface · target · **partial**
 6. Pause and Pause all agents each stop the next call within 60 seconds, and resume restores access.
 7. An agent token cannot resume.
 
-**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
+**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
 **Gap.** Declared limits/Pause and optional grant caps are exercised. Undeclared provider-spend reservations and multi-sponsor family; no cost tool is registered and spend is none.
 
 #### BASE-AGENT-012 — Writes are idempotent and conflict-safe
@@ -2025,8 +2025,8 @@ Agent surface · target · **partial**
 4. A stale revision returns a conflict naming the current revision.
 5. A job handle used by another person's token reads as not found.
 
-**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
-**Gap.** Declared writes retain atomic native effect receipts and current admission on replay, conflicts and stale target checks. Base 0.2.88 exposes trusted invocation verification; Chest has not yet integrated native queued/embedded continuations or proved their lifecycle.
+**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
+**Gap.** Declared writes retain atomic native effect receipts and current admission on replay, conflicts and stale target checks. Base 0.2.91 exposes trusted invocation and per-item continuation verification; Chest has not yet integrated native queued/embedded continuations or proved their lifecycle.
 
 #### BASE-AGENT-013 — Manifest, docs and the conformance journey
 
@@ -2041,7 +2041,7 @@ Agent surface · target · **partial**
 4. Every acceptance point runs under both policies, every decision matches the policy in force, and under all autonomous no call waits for a person or is refused by policy.
 5. A stranger agent given only the seed URL completes the specialist journey through MCP.
 
-**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; normal rer verify: 9107/9107 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
+**Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
 **Gap.** Manifest equals the declared production registry and generated docs; autonomous/held conformance is exercised. Wider target jobs, optional families and stock vendor-client/browser parity remain gaps.
 
 ### Agent surface
