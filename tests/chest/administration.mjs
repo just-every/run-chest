@@ -48,9 +48,15 @@ try{
  const finance=await api('/groups',owner,{name:'Finance',members:[people.staff]}),space=await api('/spaces',owner,{name:'Quarterly accounts'});await api(`/spaces/${space.id}/member`,owner,{action:'add',principal:people.staff,role:'manager'});
  const uploaded=await api('/items',sessions.staff,{space:space.id,type:'file',name:'Harbor quarterly forecast.txt',base64:Buffer.from('Original quarterly forecast: revenue 120000 USD.').toString('base64')});await api('/files',sessions.staff);
  const secretFile=await api('/items',owner,{space:space.id,type:'file',name:'Private acquisition plan.txt',base64:Buffer.from('Private acquisition: Harbor Supplier').toString('base64')});
- await grant(owner,people.successor,'',{super:true});const helpGrant=await grant(owner,people.help,'help-desk',{scope:'groups',groups:[finance.id]});
+ const superGrant=await grant(owner,people.successor,'',{super:true});const helpGrant=await grant(owner,people.help,'help-desk',{scope:'groups',groups:[finance.id]});
  const waiting='casey@example.test';await api('/administration/people',owner,{action:'invite',email:waiting,name:'Casey Flores',group:finance.id});await api('/administration/people',sessions.help,{action:'resend-invite',email:waiting});const invitationMail=h.mails.findLast(m=>[m.to].flat().includes(waiting)),invitationToken=new URL(invitationMail.text.match(/https?:\/\/[^\s]+/)[0]).searchParams.get('token');await api('/administration/groups',owner,{group:finance.id,email:waiting,action:'remove'});assert.equal((await h.raw('/auth/confirm',null,{token:invitationToken})).status,403,'removing an invited person from the issuer scope refuses admission');
  await api('/administration/people',sessions.help,{action:'revoke-sessions',email:people.outside},403);await api('/security/reset',sessions.help,{email:people.outside,verified:true},403);await api('/security/policy',sessions.help,{enabled:true},403);
+ // A populated group member's content is available to that member, never through help-desk authority.
+ assert.ok((await api('/search?q=forecast',sessions.staff)).results.some(r=>r.id===uploaded.id));
+ await api(`/items/${uploaded.id}`,sessions.help,undefined,403);
+ await api(`/items/${uploaded.id}/bytes/${uploaded.payload.current}`,sessions.help,undefined,403);
+ await api(`/items/${uploaded.id}/bytes/${uploaded.payload.current}?download=true`,sessions.help,undefined,403);
+ assert.equal((await api('/search?q=forecast',sessions.help)).count,0);
  await api(`/items/${secretFile.id}`,sessions.help,undefined,403);await api(`/items/${secretFile.id}/bytes/${secretFile.payload.current}?download=true`,sessions.help,undefined,403);assert.equal((await api('/search',sessions.help,undefined)).results.length,0);await api('/administration/people',sessions.help,{action:'revoke-sessions',email:people.staff});assert.equal((await h.raw('/api/chest/library',sessions.staff)).status,401);sessions.staff=await login(people.staff);
  const lost=await privateApi('',sessions.staff,{action:'totp-start'});await privateApi('',sessions.staff,{action:'totp-enroll',code:code(lost.secret)});await api('/security/reset',sessions.help,{email:people.staff,verified:true});const mail=h.mails.findLast(m=>m.subject==='Reset your Chest sign-in factors'),token=new URL(mail.text.match(/https:\/\/[^\s]+/)[0]).searchParams.get('reset');await privateApi('',sessions.staff,{action:'reset',reset:token});assert.ok(h.mails.some(m=>m.subject==='Chest notice'&&m.text.includes('Your sign-in factors were reset')));
  // A custom, read-only combination is persisted and remains separate from content roles.
@@ -147,9 +153,60 @@ try{
  }
  assert.deepEqual(contentState(await api(`/items/${uploaded.id}`,sessions.successor)),stableTeam);assert.deepEqual(contentState(await api(`/items/${personalFile.id}`,sessions.successor)),stableAccount);
  const offer=await api('/administration/owner',owner,{email:people.successor,keepGrants:[]});await api(`/administration/owner/${offer.id}`,sessions.successor,{decision:'accept'},403);sessions.successor=await login(people.successor);
- const accepting=await browser.newContext({viewport:{width:1440,height:1000},ignoreHTTPSErrors:true});await accepting.addCookies(cookies(sessions.successor,h.origin));const acceptance=await accepting.newPage();await acceptance.goto(h.origin+'/app/administration');for(const width of [1440,390]){await acceptance.setViewportSize({width,height:1000});await acceptance.getByRole('heading',{name:'Installation ownership',exact:true}).locator('..').screenshot({path:`test-results/${width}-administration-offer.png`})}await acceptance.getByRole('button',{name:'Accept installation ownership',exact:true}).click();await acceptance.waitForURL('**/signin');await accepting.close();assert.equal((await h.raw('/api/chest/library',owner)).status,401);owner=await login(h.vars.OWNER_EMAIL);const newOwner=await login(people.successor);await api('/administration/roles',owner,{email:people.outside,super:true},403);await api('/administration/owner',owner,{email:people.help},403);await api('/organisation/sso',owner,undefined,403);await api('/administration/people',newOwner,{action:'deactivate',email:people.successor},403);assert.equal((await api('/administration',newOwner)).roles.activeSuperCount,1);
+ const accepting=await browser.newContext({viewport:{width:1440,height:1000},ignoreHTTPSErrors:true});await accepting.addCookies(cookies(sessions.successor,h.origin));const acceptance=await accepting.newPage();await acceptance.goto(h.origin+'/app/administration');for(const width of [1440,390]){await acceptance.setViewportSize({width,height:1000});await acceptance.getByRole('heading',{name:'Installation ownership',exact:true}).locator('..').screenshot({path:`test-results/${width}-administration-offer.png`})}await acceptance.getByRole('button',{name:'Accept installation ownership',exact:true}).click();await acceptance.waitForURL('**/signin');await accepting.close();assert.equal((await h.raw('/api/chest/library',sessions.successor)).status,401);assert.equal((await h.raw('/api/chest/library',owner)).status,401);owner=await login(h.vars.OWNER_EMAIL);const newOwner=await login(people.successor);await api('/administration/roles',owner,{email:people.outside,super:true},403);await api('/administration/owner',owner,{email:people.help},403);await api('/organisation/sso',owner,undefined,403);await api('/administration/people',newOwner,{action:'deactivate',email:people.successor},403);assert.equal((await api('/administration',newOwner)).roles.activeSuperCount,1);
+ // Use the same valid promotion on both sides of the transfer, then return to one super admin.
+ const promotion={email:people.outside,role:'user-management',scope:'organization',super:true};
+ const beforePromotion=(await api('/administration',newOwner)).roles;
+ await api('/administration/roles',owner,promotion,403);
+ assert.deepEqual((await api('/administration',newOwner)).roles,beforePromotion,'the former owner cannot change authority');
+ const managing=await browser.newContext({viewport:{width:1440,height:1000},ignoreHTTPSErrors:true});await managing.addCookies(cookies(newOwner,h.origin));
+ const management=await managing.newPage();await management.goto(h.origin+'/app/administration');
+ const assignment=management.locator('form').filter({has:management.getByRole('button',{name:'Assign administrative role',exact:true})});
+ await assignment.getByLabel('Staff email',{exact:true}).fill(promotion.email);await assignment.getByLabel('Administrative role').selectOption(promotion.role);
+ await assignment.getByLabel('Super administrator').selectOption('true');await assignment.getByLabel('Scope').selectOption(promotion.scope);
+ await assignment.getByRole('button',{name:'Assign administrative role',exact:true}).click();await management.waitForLoadState();
+ let authority=(await api('/administration',newOwner)).roles;
+ const promoted=authority.grants.find(g=>g.payload.email===people.outside&&g.payload.super);assert.ok(promoted);
+ const promotedRow=management.getByRole('heading',{name:'Administrative roles',exact:true}).locator('..').getByRole('listitem').filter({hasText:people.outside});
+ await promotedRow.getByRole('button',{name:'Revoke admin role',exact:true}).waitFor();
+ for(const width of [1440,390]){await management.setViewportSize({width,height:1000});await management.getByRole('heading',{name:'Administrative roles',exact:true}).locator('..').screenshot({path:`test-results/${width}-administration-new-owner-promotion.png`})}
+ await management.setViewportSize({width:1440,height:1000});
+ assert.equal(authority.activeSuperCount,2);assert.ok(authority.grants.some(g=>g.id===promoted.id&&g.payload.email===people.outside&&g.payload.super));
+ await promotedRow.getByRole('button',{name:'Revoke admin role',exact:true}).click();await management.waitForLoadState();await managing.close();
+ const beforeDemotion=await api('/administration',newOwner),soleAdmin=beforeDemotion.people.find(p=>p.email===people.successor);
+ assert.ok(soleAdmin?.id);assert.equal(soleAdmin.role,'owner');assert.equal(beforeDemotion.roles.activeSuperCount,1);assert.ok(beforeDemotion.roles.warning);
+ // The legacy identity door must refuse a real demotion, rather than an invalid target or an escalation.
+ const demotion=await h.raw('/auth/operator/role',newOwner,{operatorId:soleAdmin.id,role:'member'});
+ assert.equal(demotion.status,403);assert.equal((await demotion.json()).error,'use_administrative_role_console');
+ const afterDemotion=await api('/administration',newOwner);
+ assert.deepEqual(afterDemotion.roles,beforeDemotion.roles);assert.deepEqual(afterDemotion.people,beforeDemotion.people);
+ assert.equal((await api('/library',newOwner)).me.role,'owner');
+ await api(`/administration/owner/${offer.id}`,newOwner,{decision:'accept'},409);
+ assert.deepEqual((await api('/administration',newOwner)).roles,afterDemotion.roles,'replaying an accepted offer changes no authority');
  assert.equal((await h.raw('/auth/operator/role',newOwner,{operatorId:'anything',role:'owner'})).status,403);assert.ok(h.mails.some(m=>m.text.includes('accepted installation ownership')));
- for(const width of [1440,390]){const context=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});await context.addCookies(cookies(newOwner,h.origin));const p=await context.newPage();await p.goto(h.origin+'/app/administration');await p.getByRole('heading',{name:'Installation ownership'}).scrollIntoViewIfNeeded();await p.getByRole('heading',{name:'Installation ownership'}).locator('..').screenshot({path:`test-results/${width}-administration-transferred.png`});await context.close()}
+ // Read actual public event records; exact targets and outcomes distinguish each step from unrelated activity.
+ const event=async(action,actor,object,outcome='succeeded')=>{
+  const {rows}=await api('/audit?'+new URLSearchParams({action,object,limit:'300',paginate:'true'}),newOwner);
+  const matching=rows.filter(r=>r.actor===actor&&JSON.parse(r.detail).outcome===outcome);
+  assert.equal(matching.length,1,`audit records ${action} by ${actor} on ${object} as ${outcome} once`);const found=matching[0];
+  assert.ok(Number.isFinite(Date.parse(found.at)));return JSON.parse(found.detail);
+ };
+ const promotedAudit=await event('admin.grant.assign',h.vars.OWNER_EMAIL,superGrant.id);
+ assert.equal(promotedAudit.after.email,people.successor);assert.equal(promotedAudit.after.super,true);
+ const delegatedAudit=await event('admin.grant.assign',h.vars.OWNER_EMAIL,helpGrant.id);
+ assert.deepEqual(delegatedAudit.after,{email:people.help,role:'help-desk',super:false,scope:'groups',groups:[finance.id]});
+ await event('admin.person.revoke-sessions',people.help,people.staff);
+ assert.equal((await event('security.mfa.reset.request',people.help,people.staff)).identityVerified,true);
+ const offeredAudit=await event('admin.owner.offer',h.vars.OWNER_EMAIL,offer.id);
+ assert.equal(offeredAudit.by,h.vars.OWNER_EMAIL);assert.equal(offeredAudit.to,people.successor);assert.deepEqual(offeredAudit.keepGrants,[]);
+ const acceptedAudit=await event('admin.owner.accept',people.successor,offer.id);
+ assert.equal(acceptedAudit.by,h.vars.OWNER_EMAIL);assert.equal(acceptedAudit.to,people.successor);assert.deepEqual(acceptedAudit.keepGrants,[]);
+ assert.equal((await event('admin.grant.assign',people.successor,promoted.id)).after.email,people.outside);
+ assert.equal((await event('admin.grant.revoke',people.successor,promoted.id)).before.email,people.outside);
+ const refusedAudit=await event('admin.person.role',people.successor,people.successor,'refused');
+ assert.equal(refusedAudit.role,'member');assert.equal(refusedAudit.code,'use_administrative_role_console');
+ for(const width of [1440,390]){const context=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});await context.addCookies(cookies(newOwner,h.origin));const p=await context.newPage();await p.goto(h.origin+'/app/administration');await p.getByRole('heading',{name:'Administrative roles',exact:true}).locator('..').screenshot({path:`test-results/${width}-administration-last-super-admin.png`});await p.getByRole('heading',{name:'Installation ownership'}).scrollIntoViewIfNeeded();await p.getByRole('heading',{name:'Installation ownership'}).locator('..').screenshot({path:`test-results/${width}-administration-transferred.png`});await context.close()}
  console.log('ADMIN-006 recovery journey passed: selected account and team content, original hashes and conflict copies, authority changes, content denial and immediate scope revocation at 1440 and 390.');
  console.log('ADMIN-003 and ADMIN-004 passed: scoped help desk and resets, custom roles, metadata-only reporting, selected recovery after restart, access refusal, fresh accepted owner transfer and last-owner protection at 1440/390.');
+ console.log('Administration passed: scoped help desk and resets, content refusal, fresh accepted owner transfer, successful new-owner promotion, refused last-owner demotion with unchanged authority, and attributed audit records. Browser proof at 1440 and 390.');
 }finally{await browser?.close();await h.close()}

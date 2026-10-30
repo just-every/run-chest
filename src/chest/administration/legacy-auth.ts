@@ -4,13 +4,22 @@ import { requireMfa } from '../security/session'
 import { failure } from '../api'
 import { insist } from '../model'
 import { administrativePersonAction } from './people'
+import { attempt } from '../audit/journal'
 // Existing identity URLs obey the same delegated scope and last-admin protection as the console.
 export async function administrativeAuthResponse(env:Bindings,request:Request){
  const path=new URL(request.url).pathname
  if(!['/auth/invite','/auth/operator/role','/auth/operator/status','/auth/session/revoke','/auth/invite/cancel'].includes(path))return null
  try{
   const s=await baseOperatorAuth(env).getSession(request);insist(s,'authentication_required',401);await requireMfa(env,s);insist(request.method==='POST','method_not_allowed',405);insist(request.headers.get('origin')===env.AUTH_ORIGIN&&request.headers.get('sec-fetch-site')!=='cross-site','invalid_origin',403)
-  insist(path!=='/auth/operator/role','use_administrative_role_console',403)
+  if(path==='/auth/operator/role'){
+   const input=await readInput(request)
+   const target=await env.DB.prepare('SELECT email FROM oa_operators WHERE id=?').bind(String(input.operatorId??'')).first<{email:string}>()
+   // Record the real target of a refused demotion without exposing whether an identity exists.
+   return await attempt(env,s.operator.email,'admin.person.role',target?.email??'organization',{
+    authority:`${s.kind}:${s.operator.role}`,role:['owner','admin','member'].includes(input.role)?input.role:'unsupported',
+   },async()=>{insist(false,'use_administrative_role_console',403)})
+  }
+
   const input=await readInput(request);if(path==='/auth/invite'){insist(!input.role||input.role==='member','use_administrative_role_console',403);const result=await administrativePersonAction(env,request,s,{action:'invite',email:input.email,name:input.displayName,group:input.group});return Response.json(result,{status:202,headers:{'cache-control':'no-store'}})}
   const target=path==='/auth/session/revoke'?await env.DB.prepare('SELECT o.email FROM oa_sessions s JOIN oa_operators o ON o.id=s.operator_id WHERE s.id=?').bind(input.sessionId).first<{email:string}>():await env.DB.prepare('SELECT email FROM oa_operators WHERE id=?').bind(input.operatorId).first<{email:string}>();insist(target,'person_not_found',404)
   const action=path==='/auth/session/revoke'?'revoke-session':path==='/auth/invite/cancel'?'deactivate':input.status==='active'?'reactivate':'deactivate'
