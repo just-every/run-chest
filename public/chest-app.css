@@ -388,7 +388,7 @@ blockquote { margin: 0; }
   .app-menu:not([open]) > .app-menu-panel { display: none; }
   .app-nav a { min-height: 42px; font-size: 15px; }
   .rail-foot { position: static; padding: 16px 4px 4px; background: none; }
-  .topbar { position: static; padding: 12px 16px; gap: 10px; }
+  .topbar { position: relative; padding: 12px 16px; gap: 10px; }
   .crumbs { flex-basis: 100%; }
   .bar-actions { flex: 1 1 100%; flex-wrap: wrap; }
   .bar-actions > * { flex: 1 1 0; }
