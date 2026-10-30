@@ -20,7 +20,7 @@ try {
   const context=await browser.newContext({viewport:{width,height:950},ignoreHTTPSErrors:true});
   await context.addCookies(member.split('; ').map(c=>{const i=c.indexOf('=');return {name:c.slice(0,i),value:c.slice(i+1),url:h.origin}}));
   const page=await context.newPage(),shot=async(name,mask=[])=>{await page.evaluate(()=>document.fonts.ready);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${width} ${name} fits`);await page.screenshot({path:`test-results/${width}-sync-repair-${name}.png`,fullPage:true,mask})};
-  await page.goto(h.origin+'/app/devices');await page.getByText('Connect the command-line companion',{exact:true}).click();
+  await page.goto(h.origin+'/app/devices');const folded=page.getByText('Command-line companion',{exact:true});if(await folded.count())await folded.click();await page.getByText('Connect the command-line companion',{exact:true}).click();
   const enrollment=page.locator('form').filter({has:page.getByRole('button',{name:'Create companion key',exact:true})});await enrollment.getByLabel('Device name',{exact:true}).fill(`Dana workstation ${width}`);await shot('connect');
   await Promise.all([page.waitForNavigation(),enrollment.getByRole('button',{name:'Create companion key',exact:true}).click()]);
   await page.getByRole('heading',{name:'Companion key created',exact:true}).waitFor();
