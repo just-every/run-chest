@@ -9,9 +9,9 @@ The primary journey: create a team space, move originals and rights in, install 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Core | 40 | 45 | 38 | 123 |
-| Agent surface | 1 | 25 | 0 | 26 |
+| Agent surface | 0 | 26 | 0 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 42 | 74 | 54 | 170 |
+| Full target | 41 | 75 | 54 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -1822,7 +1822,7 @@ Core · push-further · **missing** · From AGENT-007 · Cites BASE-AGENT-002, B
 
 #### BASE-AGENT-001 — One MCP door per seed
 
-Agent surface · target · **done**
+Agent surface · target · **partial**
 
 **Requirement.** Every seed, hosted or self-hosted, serves one remote MCP endpoint at `/mcp` over Streamable HTTP. It speaks the current revision (2026-07-28) and accepts 2025-11-25 clients through the twelve-month deprecation window. It implements `server / discover`, tools, resources and prompts. Lists are deterministic and carry `ttlMs` and `cacheScope: "private"`. Roots, Sampling and Logging are not served.
 
@@ -1835,7 +1835,7 @@ Agent surface · target · **done**
 6. An oversized body returns 413 with no effect.
 
 **Evidence.** `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs`
-**Gap.** None.
+**Gap.** The clause stays partial until a ct judgment.
 
 #### BASE-AGENT-002 — The seed's jobs are tools, through the UI's own actions
 

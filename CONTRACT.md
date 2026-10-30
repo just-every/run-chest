@@ -2308,8 +2308,8 @@ ADMIN-006 runtime source is judged from commit 9d951ccdecac60aea1be5f560119bf2cd
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 11 | 2 | 0 | 13 |
-| Target and push further | 31 | 72 | 54 | 157 |
-| All | 42 | 74 | 54 | 170 |
+| Target and push further | 30 | 73 | 54 | 157 |
+| All | 41 | 75 | 54 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2470,7 +2470,7 @@ ADMIN-006 runtime source is judged from commit 9d951ccdecac60aea1be5f560119bf2cd
 | `AGENT-007` | Cited questions and field jobs | push-further | partial | `tests/chest/ask-flow.mjs`; `tests/chest/ask-live.mjs`; `docs/ask.md` | Fresh-judge candidate: ct ruled on the Ask defaults (RL-102), and the old gap names no other remaining browser work; native-app Ask is AGENT-009's app step. |
 | `AGENT-008` | Custom document agents with tools | push-further | missing |  | No model tools or mutations exist. |
 | `AGENT-009` | Ask panels on file and folder pages | push-further | partial | `tests/chest/ask-browser-flow.mjs` | Browser Ask panels exist; the native apps do not. |
-| `BASE-AGENT-001` | One MCP door per seed | target | done | `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs` | |
+| `BASE-AGENT-001` | One MCP door per seed | target | partial | `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs` | The clause stays partial until a ct judgment. |
 | `BASE-AGENT-002` | The seed's jobs are tools, through the UI's own actions | target | partial | `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs` | Declared native registry is proven; nine target jobs and embedded agent/independent-runner continuations remain undeclared. No target-only service is registered. |
 | `BASE-AGENT-003` | Records are resources | target | partial | `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs` | Seven native metadata resource templates are declared, under current visibility with missing/restricted equivalence and no bearer fields. Optional resource refresh and full primary-record parity are undeclared. |
 | `BASE-AGENT-004` | Business identity and short-lived, audience-bound tokens | target | partial | `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs` | Owner-bound signed identity and original scoped local credentials are exercised. Unknown, changed-email, inactive and domain-excluded signed sponsors refuse with unchanged native witnesses; inactive/excluded members use the native invitation and signed Business binding lifecycle. Successful multi-sponsor and native team-admin role-parity journeys remain undeclared. |
