@@ -34,7 +34,13 @@ export async function libraryWorkJourney({page,origin,docId,width,assertions=wid
   assert.equal(after.completions[0].evidence,evidence);
   assert.deepEqual(after.versions,before.versions,'completion preserves every retained original and version');
   assert.equal(after.expiryDate,'2027-01-01');assert.equal(after.trash,false);
-  await page.getByText(evidence,{exact:true}).waitFor();
+  const record=page.locator('section').filter({has:page.getByRole('heading',{name:'Complete investigated work',exact:true})}).locator('.events li');
+  assert.equal(await record.count(),1,'the completion record is visible after reload');
+  const recorded=await record.innerText();
+  assert.ok(recorded.includes('review 2026-12-01'),'the record identifies the completed work date');
+  assert.ok(recorded.includes(after.completions[0].actor),'the record identifies the completing person');
+  assert.ok(recorded.includes(after.completions[0].at),'the record shows when the work was completed');
+  assert.equal(await record.locator('p').innerText(),evidence,'the investigation evidence remains visible');
  }
  await page.screenshot({path:`test-results/${width}-library-work-completion.png`,fullPage:true});
  await page.goto(origin+'/app/library');await page.reload();
