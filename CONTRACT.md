@@ -2308,6 +2308,8 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 
 ADMIN-006 runtime source is judged from commit 9d951ccdecac60aea1be5f560119bf2cd475db31 (30 October 2026). Its final candidate strengthens selected-item isolation and records the recovery journey in Verify; the runtime bytes are unchanged from that source commit.
 
+The native agent-door subset does not replace main's accepted browser and API judgments. ERASE-001 retains its accepted status; agent decision-custody limits remain recorded under SURFACE-005 and BASE-AGENT-009. BASE-AGENT-001 stays partial pending a ct judgment.
+
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 11 | 2 | 0 | 13 |
