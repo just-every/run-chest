@@ -217,7 +217,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "26626471449f42bb6552610b3187b0d4485b1099903779221d8b0837dfd5a899",
+      "sha256": "2c697ffeab74cc452c03c0fb3926d09fd4ade852297bae7ec3a7e6d5175a691a",
       "executable": false
     },
     "DEMO.md": {
@@ -241,7 +241,7 @@
       "executable": false
     },
     "docs/administration.md": {
-      "sha256": "0cb4c9021a4e5e545f16b14aebc4ec4718da3a0973c29c4e1ab1709cd6231f24",
+      "sha256": "2e434bf031da5034cd4eb174ebec8c84caed8ac671ce6f1bf63dbebae3ebbe18",
       "executable": false
     },
     "docs/ask.md": {
@@ -2073,7 +2073,7 @@
       "executable": false
     },
     "src/chest/administration/legacy-auth.ts": {
-      "sha256": "3933c0647423e5de01841e52f3626ed8ceea8911220e850da72dba2a46742f90",
+      "sha256": "d2b440a41ce0a9ee31bb423cd22d6d1aeb59c49e10952503db44ad08f780688a",
       "executable": false
     },
     "src/chest/administration/owner-transfer.ts": {
@@ -5393,7 +5393,7 @@
       "executable": false
     },
     "tests/chest/administration.mjs": {
-      "sha256": "363b4660a68a87e8143bb3df5fd57203f27a9d3dbf531aec95c9a761aeafaae0",
+      "sha256": "7f2a7006aa22a057cf1a71b47aff54c352d00f57f6ad7626950fb15f25dc3590",
       "executable": false
     },
     "tests/chest/agent-filing.mjs": {
