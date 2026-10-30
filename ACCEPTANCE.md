@@ -9,9 +9,9 @@ The primary journey: create a team space, move originals and rights in, install 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Core | 39 | 46 | 38 | 123 |
-| Agent surface | 0 | 2 | 24 | 26 |
+| Agent surface | 0 | 3 | 23 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 40 | 52 | 78 | 170 |
+| Full target | 40 | 53 | 77 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -2174,7 +2174,7 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE
 
 #### SURFACE-008 — Collect documents in, send files out
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008, BASE-MAIL-001
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008, BASE-MAIL-001
 
 **Requirement.** `chest.requests.create` makes an upload-only request link, sends nothing and exposes no content, so it is standard. `chest.send` emails a request, a reminder, a transfer or a signature envelope. To colleagues it is standard; to outside addresses it is external, with counterparty and recipient count, and sensitive as well when an attached file is. Mail outcomes keep BASE-MAIL-001's separate states, and each submission raises `request.submitted` for the agent that asked.
 
@@ -2187,8 +2187,8 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE
 6. A vendor's upload raises `request.submitted` with the request and item URIs, and the agent reads the file through SURFACE-002.
 7. The vendor's copy of the request email names "<agent> for <person>" as its sender.
 
-**Evidence.** None.
-**Gap.** No send or reminder tools, class declarations or policy decisions; today `chest_create_request` exists, and sending, transfers and signing are browser-only.
+**Evidence.** `tests/chest/integrations.mjs` — SURFACE-008: integration API and legacy request tool create one request and creation audit across retry and Worker restart, with no provider-edge mail; `tests/chest/browser-integrations.mjs` — SURFACE-008: anonymous request links expose upload controls but no populated folder contents or original bytes, and grant no browsing, preview or download authority at 1440 and 390.
+**Gap.** Point 1 is proven only through the existing integration API and legacy `chest_create_request` tool. The shared Base Agent door, canonical `chest.requests.create` tool and standard classification remain missing. Points 2 to 7 remain unproved: company-policy decisions; sending requests, reminders, transfers and signature envelopes; recipient and sensitive classifications; spend and recipient caps; truthful delivery outcomes; `request.submitted` events and attributed outside senders. Existing provider, native-client and scale holds remain unchanged.
 
 #### SURFACE-009 — Devices and sync
 

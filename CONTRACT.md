@@ -2302,8 +2302,8 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 11 | 2 | 0 | 13 |
-| Target and push further | 29 | 50 | 78 | 157 |
-| All | 40 | 52 | 78 | 170 |
+| Target and push further | 29 | 51 | 77 | 157 |
+| All | 40 | 53 | 77 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2449,7 +2449,7 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | `SURFACE-005` | Recovery stays standard; destruction is its own class | target | missing |  | No trash, rewind, purge or erasure tools, class declarations or policy decisions; today the integration API restores and names versions. |
 | `SURFACE-006` | Sharing is classified by its recipient, never by the agent | target | missing |  | No recipient classification, policy decision, pending actions or receipts. Today `chest_share` forwards the agent's own `confirmExternal`, which the sharing policy (`src/chest/files/sharing-policy.ts`) accepts as the browser's confirmation, and the API's `/links` creates links under policy with no class or decision. |
 | `SURFACE-007` | Narrowing access and repairing links | target | missing |  | No narrowing tool, class declaration or policy decision; today the integration API removes grants (`/unshare`), and revoke and Make private are browser-only (SHARE-007, AGENT-005). |
-| `SURFACE-008` | Collect documents in, send files out | target | missing |  | No send or reminder tools, class declarations or policy decisions; today `chest_create_request` exists, and sending, transfers and signing are browser-only. |
+| `SURFACE-008` | Collect documents in, send files out | target | partial | `tests/chest/integrations.mjs` — SURFACE-008: integration API and legacy request tool create one request and creation audit across retry and Worker restart, with no provider-edge mail; `tests/chest/browser-integrations.mjs` — SURFACE-008: anonymous request links expose upload controls but no populated folder contents or original bytes, and grant no browsing, preview or download authority at 1440 and 390. | Point 1 is proven only through the existing integration API and legacy `chest_create_request` tool. The shared Base Agent door, canonical `chest.requests.create` tool and standard classification remain missing. Points 2 to 7 remain unproved: company-policy decisions; sending requests, reminders, transfers and signature envelopes; recipient and sensitive classifications; spend and recipient caps; truthful delivery outcomes; `request.submitted` events and attributed outside senders. Existing provider, native-client and scale holds remain unchanged. |
 | `SURFACE-009` | Devices and sync | target | missing |  | No device tools; the client states are themselves missing in SYNC-003, and the device list, revoke and deactivation are browser-only. |
 | `SURFACE-010` | Administration and security settings are classified, not withheld | target | missing |  | No admin tools, and the integration API has no admin scope; ADMIN-002 itself is partial. |
 | `SURFACE-011` | Decisions and signatures are commitments | target | missing |  | No decision or signature tools, class declarations or agent attribution; decisions and signing are browser-only. |
