@@ -8,6 +8,50 @@ import {signOutFlow} from './browser-session.mjs';
 // The rail's links, as a person reaches them: behind the "Menu" disclosure at phone width (760px and below), and
 // the workspace pages under the rail's "Workspace" fold.
 async function nav(page,name){if(page.viewportSize().width<=760)await page.getByText('Menu',{exact:true}).click();const rail=page.getByRole('navigation',{name:'Chest'}),link=rail.getByRole('link',{name,exact:true});if(!await link.isVisible())await rail.getByText('Workspace',{exact:true}).click();await link.click()}
+// The Library work list and the ordinary completion form share this journey with push Verify.
+export async function libraryWorkJourney({page,origin,docId,width,assertions=width===1440}){
+ const path=`/app/documents/${docId}`,before=(await json(page,origin,`/documents/${docId}`)).payload;
+ const work=page.getByRole('complementary',{name:'Review and expiry work'});
+ const rows=()=>work.getByRole('listitem').filter({has:page.locator(`a[href="${path}"]`)});
+ const review=()=>rows().filter({hasText:'review Dec 1, 2026'}),expiry=()=>rows().filter({hasText:'expiry Jan 1, 2027'});
+ await page.goto(origin+'/app/library');
+ if(assertions){
+  assert.equal(await rows().count(),2,'each scheduled date has its own work row');
+  assert.equal(await review().count(),1,'the review date is labeled in the work list');
+  assert.equal(await expiry().count(),1,'the expiry date is labeled in the work list');
+  for(const item of [review(),expiry()])assert.match(await item.locator('.chip').innerText(),/^(Due|Upcoming)$/);
+ }
+ await page.screenshot({path:`test-results/${width}-library-work-before.png`,fullPage:true});
+ await page.goto(origin+path);await page.getByLabel('Work item').selectOption('review');
+ const evidence='Called supplier and verified coverage against original.';
+ await page.getByLabel('Evidence of investigation').fill(evidence);
+ await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Record completion'}).click()]);
+ await page.reload();
+ const after=(await json(page,origin,`/documents/${docId}`)).payload;
+ if(assertions){
+  assert.equal(after.completions.length,1);
+  assert.equal(after.completions[0].kind,'review');assert.equal(after.completions[0].date,'2026-12-01');
+  assert.equal(after.completions[0].evidence,evidence);
+  assert.deepEqual(after.versions,before.versions,'completion preserves every retained original and version');
+  assert.equal(after.expiryDate,'2027-01-01');assert.equal(after.trash,false);
+  const record=page.locator('section').filter({has:page.getByRole('heading',{name:'Complete investigated work',exact:true})}).locator('.events li');
+  assert.equal(await record.count(),1,'the completion record is visible after reload');
+  const recorded=await record.innerText();
+  assert.ok(recorded.includes('review 2026-12-01'),'the record identifies the completed work date');
+  assert.ok(recorded.includes(after.completions[0].actor),'the record identifies the completing person');
+  assert.ok(recorded.includes(after.completions[0].at),'the record shows when the work was completed');
+  assert.equal(await record.locator('p').innerText(),evidence,'the investigation evidence remains visible');
+ }
+ await page.screenshot({path:`test-results/${width}-library-work-completion.png`,fullPage:true});
+ await page.goto(origin+'/app/library');await page.reload();
+ if(assertions){
+  assert.equal(await rows().count(),2,'completion retains both scheduled work rows');
+  assert.equal(await review().locator('.chip').innerText(),'Completed with evidence');
+  assert.match(await expiry().locator('.chip').innerText(),/^(Due|Upcoming)$/,'expiry remains outstanding');
+ }
+ await page.screenshot({path:`test-results/${width}-library-work-after.png`,fullPage:true});
+ console.log(`Library work dates and independent review completion passed at ${width}`);
+}
 export async function browserFlow({browser,origin,devKey,width}){
  const ownerContext=await browser.newContext({viewport:{width,height:1000}}),owner=await ownerContext.newPage();await browserSignIn(owner,origin,devKey);
  // Staff are dev personas, real operators at <as>@dev.localhost; each width has its own.
@@ -30,7 +74,7 @@ export async function browserFlow({browser,origin,devKey,width}){
  await owner.goto(origin+docPath);await owner.getByText('Submit replacement',{exact:true}).click();await owner.getByLabel('Replacement file').setInputFiles({name:'certificate-B.txt',mimeType:'text/plain',buffer:Buffer.from('Replacement evidence B')});await owner.getByRole('button',{name:'Submit new immutable version'}).click();let doc=await json(owner,origin,`/documents/${docId}`);assert.equal(doc.payload.approved,doc.payload.versions[0].id);
  await reviewer.reload();const replacement=reviewer.locator('article').filter({has:reviewer.getByRole('heading',{name:/certificate-B/})});await replacement.getByLabel('Decision').selectOption('approve');await replacement.getByRole('button',{name:'Record action'}).click();doc=await json(owner,origin,`/documents/${docId}`);assert.equal(doc.payload.approved,doc.payload.versions[1].id);
  await signOutFlow({browser,origin,devKey,persona,width,other:reviewer});
- await owner.goto(origin+docPath);await owner.getByLabel('Work item').selectOption('review');await owner.getByLabel('Evidence of investigation').fill('Called supplier and verified coverage against original.');await owner.getByRole('button',{name:'Record completion'}).click();assert.equal((await json(owner,origin,`/documents/${docId}`)).payload.completions.length,1);
+ await libraryWorkJourney({page:owner,origin,docId,width});assert.equal((await json(owner,origin,`/documents/${docId}`)).payload.completions.length,1);
  await access([]);assert.equal((await reviewer.goto(origin+docPath)).status(),404);await access([{principal:group.id,role:'reviewer'}]);assert.equal((await reviewer.goto(origin+docPath)).status(),200);
  const content='Archive original retained with source gaps',archive={format:'chest-archive-1',source:`browser-archive-${width}`,items:[{path:'Acme/archive.txt',base64:Buffer.from(content).toString('base64'),size:Buffer.byteLength(content),sha256:createHash('sha256').update(content).digest('hex'),fields:{reference:'ARCH-1'},principals:['unresolved@example.test'],decisions:[{actor:'original owner',decision:'approved'}]}]};
  await owner.goto(origin+'/app/archive');await owner.getByLabel('Archive JSON file').setInputFiles({name:'archive.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(archive))});await owner.getByLabel('Destination collection').selectOption(collection.id);await owner.getByLabel(/^Document type/).selectOption(schema.id);await owner.getByLabel(/^Reviewer/).selectOption(email);const before=(await json(owner,origin,'/library')).count;await owner.getByRole('button',{name:'Preview archive'}).click();assert.equal((await json(owner,origin,'/library')).count,before);await owner.getByRole('button',{name:'Apply this reviewed fingerprint'}).click();const job=JSON.parse(await owner.locator('pre').innerText());assert.equal(job.state,'completed');assert.equal((await json(owner,origin,'/library')).count,before+1);
