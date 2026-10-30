@@ -24,8 +24,12 @@ export function homePage(d: any) {
  const tile = (href: string, name: string, meta: string) => `<li class="space-card">${fileTile('folder')}<span><a href="${href}">${esc(name)}</a><span class="quiet">${esc(meta)}</span></span></li>`
  const spaces = [tile(`/app/spaces/${d.personal}`, 'My files', 'Your personal area'), ...d.spaces.map((s: any) => tile(`/app/spaces/${s.id}`, s.name, s.kind === 'personal' ? 'personal area' : `Team space · ${String(s.role).replace('_', ' ')}`))].join('')
  return head('Files') + `<ul class="space-grid" aria-label="Spaces">${spaces}</ul>${d.spaces.length ? '' : '<p class="quiet">You are not a member of a team space yet.</p>'}<section class="card new-space" id="new-space"><h2>New team space</h2>${spaceCreationPanel(d)}</section><h2 class="section-title">Tools</h2>${filesTools()}
- ${d.shortcuts.length ? `<h2 class="section-title">Shortcuts in My files</h2>${listing(d.shortcuts, '')}` : ''}<h2 class="section-title" id="starred">Starred</h2>${listing(d.starred, 'Star a file or folder from its page to keep it here.')}<h2 class="section-title" id="recent">Recent</h2>${listing(d.recent, 'Files you open appear here.')}`
+ ${d.shortcuts.length ? `<h2 class="section-title">Shortcuts in My files</h2>${listing(d.shortcuts, '')}` : ''}`
 }
+// Starred and Recent are pages of their own, reached from the menu.
+export const starredPage = (d: any) => head('Starred') + listing(d.starred, 'Star a file or folder from its page to keep it here.')
+export const recentPage = (d: any) => head('Recent') + listing(d.recent, 'Files you open appear here.')
+export const newSpacePage = (d: any) => head('New team space') + `<section class="card new-space">${spaceCreationPanel(d)}</section>`
 const roleLabel = (r: string) => ({ viewer: 'Viewer', commenter: 'Commenter', contributor: 'Contributor', content_manager: 'Content manager', manager: 'Manager' } as Record<string, string>)[r] ?? r
 const spaceRoleRows = ['viewer', 'commenter', 'contributor', 'content_manager', 'manager'].map(id => ({ id, label: roleLabel(id) }))
 // The Members card: everyone with their role; a manager changes a role or removes someone on their row, and adds a
@@ -51,7 +55,7 @@ export function spacePage(d: any, people: any[], groups: any[]) {
  const table = rows.length ? folderTable(rows, returnTo, sel?.id ?? null, returnTo) : emptyFolder(f.rows.length ? 'Nothing of this kind here.' : 'Nothing here yet.', d.can.contribute)
  const add = d.can.contribute ? `<div id="new" class="add-bar">${addHere({ space: d.id }, returnTo, d.uploads, d.can.administer || d.kind === 'personal' ? rewindForm({ space: d.id }, returnTo) : '', d.creation, '', false)}</div>` : ''
  const lede = d.kind === 'team' ? `<p class="lede ftitle-lede">Team space · your role: ${esc(String(d.role).replace('_', ' '))}</p>` : ''
- const main = folderTitle([], d.name, returnTo, f.show) + lede + agentStrip(f.agent, returnTo) + f.conflicts.map((c: any) => conflictBanner(c, returnTo, d.can.manage, d.can.contribute)).join('') + `<div id="contents">${table}</div>` + add + restores(d.rewinds, returnTo)
+ const main = folderTitle([], d.name, returnTo, f.show) + lede + agentStrip(f.agent, returnTo) + f.conflicts.map((c: any) => conflictBanner(c, returnTo, d.can.manage, d.can.contribute)).join('') + `<div>${table}</div>` + add + restores(d.rewinds, returnTo)
  const own = `<aside class="panel" aria-label="Details of ${esc(d.name)}"><div class="panel-head">${fileTile('folder')}<div><h2>${esc(d.name)}</h2><p class="quiet">${d.kind === 'team' ? `Team space · ${d.members.length} member${d.members.length === 1 ? '' : 's'}` : 'Personal area'} · ${f.rows.length} item${f.rows.length === 1 ? '' : 's'}</p></div></div></aside>`
  const side = sel ? detailsPanel(sel, named, { close: returnTo, returnTo: `${returnTo}?file=${sel.id}`, uploads: d.uploads }) : own + storagePanel(d.storage, d.quotaOwner) + manageTools('space', manager ? 'Members, roles and space settings' : 'Members and their roles', members + settings, d.manage)
  return `<div class="browse"><div class="browse-main">${main}</div><div class="browse-side doc-side">${side}</div></div>`

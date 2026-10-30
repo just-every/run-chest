@@ -21,7 +21,7 @@ import { deploymentHealth } from './base/deployment-health'
 import { lobbyResponse } from './base/lobby'
 import { setupStateResponse } from './base/setup-state'
 import { identity } from './identity'
-import { authResponse, runtimeBindings, businessSettings, type Bindings } from './auth.server'
+import { authResponse, operatorAuth, runtimeBindings, businessSettings, type Bindings } from './auth.server'
 import { sweepAgents } from './chest/filing/agent-arrivals'
 import { sweepLinkRepairs } from './chest/filing/link-repairs'
 import { receiveIntake } from './chest/filing/intake'
@@ -51,7 +51,7 @@ export default withDemo(withOutboundPolicy({
     const agent = await chestAgentDoor(env).handle(metadataAlias?new Request(new URL('/.well-known/oauth-protected-resource/mcp',request.url),request):request)
     if (agent) return documentResponse(agent)
     if(new URL(request.url).pathname.startsWith('/app') || new URL(request.url).pathname.startsWith('/api/chest'))execution.waitUntil(Promise.all([sweepBackups(env),collectionSweep(env),sweepLinkRepairs(env),sweepAgents(env),sweepSignatures(env)]))
-    const publicPage = await setupStateResponse(request, env) ?? await lobbyResponse(request, env, identity)
+    const publicPage = await setupStateResponse(request, env) ?? await lobbyResponse(request, env, identity, undefined, async r => { try { return await operatorAuth(env).getSession(r) } catch { return null } })
     if (publicPage) return documentResponse(publicPage)
     const wopi = await wopiResponse(request,env);if(wopi)return documentResponse(wopi)
     const signing = await signResponse(request, env)

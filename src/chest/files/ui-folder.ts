@@ -13,7 +13,7 @@ export function folderTitle(path: string[], name: string, base: string, show: st
  const filters = [['', 'All files'], ['files', 'Files'], ['folders', 'Folders']]
  const label = filters.find(f => f[0] === show)?.[1] ?? 'All files'
  const menu = `<details class="menu"><summary class="btn btn-outline btn-sm">${esc(label)}${icon('down')}</summary><div class="menu-panel" role="list">${filters.map(([k, l]) => `<a role="listitem" href="${esc(base)}${k ? `?show=${k}` : ''}"${k === show ? ' aria-current="true"' : ''}>${l}</a>`).join('')}</div></details>`
- return `<div class="ftitle"><h1>${path.length ? `<span aria-hidden="true">${esc(path.join(' / '))} / </span>` : ''}<span class="ftitle-open">${esc(name)}</span></h1><div class="ftitle-tools">${menu}<a class="icon-button icon-button-box" href="#contents" aria-label="Jump to the file list" data-tooltip="File list">${icons.list}</a></div></div>`
+ return `<div class="ftitle"><h1>${path.length ? `<span aria-hidden="true">${esc(path.join(' / '))} / </span>` : ''}<span class="ftitle-open">${esc(name)}</span></h1><div class="ftitle-tools">${menu}</div></div>`
 }
 // The agent sits above the table as a quiet colleague: what it filed today with Undo, duplicates it found and links
 // open outside the team, each with Review. Nothing here acts on its own.

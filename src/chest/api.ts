@@ -42,7 +42,7 @@ import { history, exportHistory } from './audit/history'
 import { privacy, savePrivacy, eraseAuditIdentity } from './audit/privacy'
 export const headers={'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'same-origin'}
 export async function overview(env:Bindings,s:Session,url:URL){
- const rows=await documents(env,s,url.searchParams.get('trash')==='true'),q=(url.searchParams.get('q')||'').toLowerCase(),read=await textHits(env,q)
+ const rows=await documents(env,s,url.searchParams.get('trash')==='true'||url.pathname==='/app/library/trash'),q=(url.searchParams.get('q')||'').toLowerCase(),read=await textHits(env,q)
  // Titles, fields, relationship and the text of every version, including text read from PDFs and scans.
  const filtered=rows.filter(r=>JSON.stringify([r.payload.title,r.payload.fields,r.payload.reference,...r.payload.versions.map(v=>v.text)]).toLowerCase().includes(q)||r.payload.versions.some(v=>read.has(v.checksum)))
  const collections=await list(env,'collection'),groups=await list(env,'group'),schemas=await list<Schema>(env,'schema')
