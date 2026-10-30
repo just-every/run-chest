@@ -14,7 +14,7 @@ const fit=async(p,name,width)=>{
  await p.waitForLoadState('load');await p.evaluate(()=>document.fonts.ready);
  await p.evaluate(()=>scrollTo(0,0));assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),name+' fits '+width);
  const path=`test-results/${width}-links-${name}`;
- await p.screenshot({path:path+'.png',fullPage:true,...(name.startsWith('created')?{mask:[p.locator('pre.receipt')]}:{})});
+ await p.screenshot({path:path+'.png',fullPage:true,...(name.startsWith('created')?{mask:[p.locator('.flash input')]}:{})});
  if(['create-pinned','folder-links','restricted-default','restricted-list','restricted-revoked'].includes(name))await p.locator('.side-card').filter({has:p.getByRole('heading',{name:'Create link',exact:true})}).screenshot({path:path+'-card.png'});
  if(name==='policy')await p.locator('#link-policy').screenshot({path:path+'-card.png'});
 };
@@ -30,7 +30,7 @@ try{
   await h.api(`/items/${item.id}/links`,cookies.owner,{audience:'organisation',discoverable:true});
   const folder=await h.api('/items',cookies.owner,{space,type:'folder',name:`Harbor delivery folder ${width}`});await go(a,`/app/items/${folder.id}?manage`);await fit(a,'folder-links',width);
   await go(a,`/app/items/${item.id}`);const form=a.locator('form').filter({has:a.getByRole('button',{name:'Create link',exact:true})});
-  await form.getByLabel('Audience').selectOption('public');await form.getByLabel('Allowed link version').selectOption('pinned:'+v);await form.getByLabel('Link password').fill('harbor-delivery-brief');await form.getByLabel('Expires').fill('2099-11-30');await form.getByLabel('Link download limit').fill('10');await fit(a,'create-pinned',width);await press(form,'Create link');await fit(a,'created',width);const url=(await a.locator('pre.receipt').innerText()).trim(),path=new URL(url).pathname;
+  await form.getByLabel('Audience').selectOption('public');await form.getByLabel('Allowed link version').selectOption('pinned:'+v);await form.getByLabel('Link password').fill('harbor-delivery-brief');await form.getByLabel('Expires').fill('2099-11-30');await form.getByLabel('Link download limit').fill('10');await fit(a,'create-pinned',width);await press(form,'Create link');await fit(a,'created',width);const url=(await a.locator('.flash input').inputValue()).trim(),path=new URL(url).pathname;
   await go(g,path);await fit(g,'password',width);await g.getByLabel('Password',{exact:true}).fill('wrong');await press(g,'Open');await fit(g,'wrong-password',width);await g.getByLabel('Password',{exact:true}).fill('harbor-delivery-brief');await press(g,'Open');await fit(g,'public-file',width);
   const preview=g.getByRole('link',{name:'Preview',exact:true});await preview.click();await fit(g,'pinned-preview',width);await go(g,path);
   for(let i=0;i<3;i++){const [d]=await Promise.all([g.waitForEvent('download'),g.getByRole('link',{name:'Download',exact:true}).click()]);assert.deepEqual(await readFile(await d.path()),Buffer.from(original))}
@@ -41,7 +41,7 @@ try{
   await go(g,new URL(folderLink.url).pathname);assert.equal(await g.getByRole('link',{name:'Download',exact:true}).count(),0);await fit(g,'folder-preview-only',width);await g.getByRole('link',{name:'Preview',exact:true}).click();await g.locator('[data-preview-page]').evaluate(image=>image.decode());assert.deepEqual(renderer.inputs.at(-1),Buffer.from(note));assert.ok(!(await g.locator('body').innerText()).includes(note));await fit(g,'text-preview',width);assert.equal((await h.fetch(new URL(folderLink.url).pathname+'/f/'+child.id)).status,410);
   await go(a,'/app/links');await a.getByText('Link policy',{exact:true}).click();const policy=a.locator('form').filter({has:a.getByRole('button',{name:'Save link policy',exact:true})});await policy.getByLabel('Links for anyone',{exact:false}).selectOption('false');await policy.getByLabel(/^Organization links/).selectOption('false');await policy.getByLabel('Default audience for new links').selectOption('restricted');await fit(a,'policy',width);await press(policy,'Save link policy');await fit(a,'policy-saved',width);
   const blocked=await go(g,new URL(readOnly.url).pathname);assert.equal(blocked.status(),410);await fit(g,'policy-blocked',width);await go(a,`/app/items/${item.id}`);const newForm=a.locator('form').filter({has:a.getByRole('button',{name:'Create link',exact:true})});assert.equal(await newForm.getByLabel('Audience').inputValue(),'restricted');
-  await fit(a,'restricted-default',width);await press(newForm,'Create link');await fit(a,'created-restricted',width);const restrictedToken=new URL((await a.locator('pre.receipt').innerText()).trim()).pathname.split('/s/')[1];
+  await fit(a,'restricted-default',width);await press(newForm,'Create link');await fit(a,'created-restricted',width);const restrictedToken=new URL((await a.locator('.flash input').inputValue()).trim()).pathname.split('/s/')[1];
   await go(a,`/app/items/${item.id}`);const restrictedRow=a.locator('li').filter({hasText:'Restricted link'}).filter({has:a.getByRole('button',{name:'Revoke',exact:true})});await fit(a,'restricted-list',width);await press(restrictedRow,'Revoke');await h.api('/links/open',cookies.owner,{token:restrictedToken},404);await fit(a,'restricted-revoked',width);await context.close();await guest.close();
  }
  console.log('SHARE-001 and POLICY-001 browser links at 1440 and 390 passed');
