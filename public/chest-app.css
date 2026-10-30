@@ -276,7 +276,6 @@ blockquote { margin: 0; }
 .upload-picks label:focus-within { outline: 2px solid var(--chest-action); outline-offset: 2px; }
 .upload-camera { display: none; }
 @media (pointer: coarse) { .upload-camera { display: inline-flex; } }
-.upload-note { max-width: 46ch; font-size: 13px; }
 .upload-waiting { margin-top: 14px; padding: 14px 18px; background: var(--chest-surface); border: 1px solid var(--chest-line); border-radius: var(--chest-card-radius); }
 .upload-waiting h3 { font-size: 14px; }
 .upload-waiting > * + * { margin-top: 8px; }
