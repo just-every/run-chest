@@ -12,6 +12,7 @@ import { resourceCall } from './resources'
 import { mcp } from './mcp'
 import { subscribe, deliverEvent } from './webhooks'
 import { list, get } from '../store'
+import { actions } from './model'
 import type { Client, Subscription, Delivery } from './model'
 import { paginate } from './reads'
 import { mutate } from './mutations'
@@ -22,7 +23,7 @@ export async function integrationsResponse(request: Request,original: Bindings):
  if(!isMetadata&&!isOauth&&!isApi&&!isMcp&&!isUi)return null
  const env=runtimeBindings(original),origin=request.headers.get('origin');let permittedOrigin:string|null=null
  try {
-  if(isMetadata){insist(request.method==='GET','method_not_allowed',405);return Response.json(path==='/.well-known/oauth-authorization-server'?{issuer:env.AUTH_ORIGIN,authorization_endpoint:`${env.AUTH_ORIGIN}/oauth/chest/authorize`,token_endpoint:`${env.AUTH_ORIGIN}/oauth/chest/token`,response_types_supported:['code'],grant_types_supported:['authorization_code'],code_challenge_methods_supported:['S256'],token_endpoint_auth_methods_supported:['none','client_secret_post'],scopes_supported:['read','search','download','upload','folder','versions','share','request','picker','webhook']}:{resource:`${env.AUTH_ORIGIN}/mcp/chest`,authorization_servers:[env.AUTH_ORIGIN],bearer_methods_supported:['header']},{headers:{...headers,'access-control-allow-origin':'*'}})}
+  if(isMetadata){insist(request.method==='GET','method_not_allowed',405);return Response.json(path==='/.well-known/oauth-authorization-server'?{issuer:env.AUTH_ORIGIN,authorization_endpoint:`${env.AUTH_ORIGIN}/oauth/chest/authorize`,token_endpoint:`${env.AUTH_ORIGIN}/oauth/chest/token`,response_types_supported:['code'],grant_types_supported:['authorization_code'],code_challenge_methods_supported:['S256'],token_endpoint_auth_methods_supported:['none','client_secret_post'],scopes_supported:actions}:{resource:`${env.AUTH_ORIGIN}/mcp/chest`,authorization_servers:[env.AUTH_ORIGIN],bearer_methods_supported:['header']},{headers:{...headers,'access-control-allow-origin':'*'}})}
   if(origin){const clients=await list<Client>(env,'integration-client');if(clients.some(c=>!c.payload.revokedAt&&(c.payload.pickerOrigins.includes(origin)||c.payload.redirects.some(u=>new URL(u).origin===origin))))permittedOrigin=origin}
   if(request.method==='OPTIONS'){
    insist(isApi||isMcp||path==='/oauth/chest/token','not_found',404);const clients=await list<Client>(env,'integration-client');insist(origin&&clients.some(c=>!c.payload.revokedAt&&(c.payload.pickerOrigins.includes(origin)||c.payload.redirects.some(u=>new URL(u).origin===origin))),'oauth_origin_mismatch',403);return cross(new Response(null,{status:204}),origin)

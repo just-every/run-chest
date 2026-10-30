@@ -2304,8 +2304,8 @@ ADMIN-006 runtime source is judged from commit 9d951ccdecac60aea1be5f560119bf2cd
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 11 | 2 | 0 | 13 |
-| Target and push further | 30 | 49 | 78 | 157 |
-| All | 41 | 51 | 78 | 170 |
+| Target and push further | 30 | 50 | 77 | 157 |
+| All | 41 | 52 | 77 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2452,7 +2452,7 @@ ADMIN-006 runtime source is judged from commit 9d951ccdecac60aea1be5f560119bf2cd
 | `SURFACE-006` | Sharing is classified by its recipient, never by the agent | target | missing |  | No recipient classification, policy decision, pending actions or receipts. Today `chest_share` forwards the agent's own `confirmExternal`, which the sharing policy (`src/chest/files/sharing-policy.ts`) accepts as the browser's confirmation, and the API's `/links` creates links under policy with no class or decision. |
 | `SURFACE-007` | Narrowing access and repairing links | target | missing |  | No narrowing tool, class declaration or policy decision; today the integration API removes grants (`/unshare`), and revoke and Make private are browser-only (SHARE-007, AGENT-005). |
 | `SURFACE-008` | Collect documents in, send files out | target | missing |  | No send or reminder tools, class declarations or policy decisions; today `chest_create_request` exists, and sending, transfers and signing are browser-only. |
-| `SURFACE-009` | Devices and sync | target | missing |  | No device tools; the client states are themselves missing in SYNC-003, and the device list, revoke and deactivation are browser-only. |
+| `SURFACE-009` | Devices and sync | target | partial | `tests/chest/integrations.mjs` — separately consented own-device inventory, protocol contact and console metadata parity, privileged sponsor self-only bounds, capability refusal, revocation, blocked app and deactivated sponsor across restart; `tests/chest/browser-integrations.mjs` — explicit self-device consent, decline, console last contact and grant revocation at 1440 and 390. | Existing OAuth integration API proves only point 1’s staff-sponsor own-device slice with a separate read-only capability; privileged sponsors remain self-only. Shared Base Agent integration, canonical device tools and resources, classifications and scoped-admin inventory remain missing. Client version and unfinished, failed and conflicted work remain explicitly unavailable; queue pause, resume and retry, conflict preservation, revoke and wipe policy execution and truthful wipe outcomes remain unproved. Signed native clients and device execution remain held under SYNC and MOBILE prerequisites, including developer accounts, signing and distribution. |
 | `SURFACE-010` | Administration and security settings are classified, not withheld | target | missing |  | No admin tools, and the integration API has no admin scope; ADMIN-002 itself is partial. |
 | `SURFACE-011` | Decisions and signatures are commitments | target | missing |  | No decision or signature tools, class declarations or agent attribution; decisions and signing are browser-only. |
 | `SURFACE-012` | Limits and Pause agents | target | partial | `tests/chest/integrations.mjs` | Points 2 and 3 pass on the integration API with an agent's OAuth token; there is no Pause agents control, spend cap or per-agent usage, MCP calls are not asserted, and the per-grant budgets are fixed values today. |
