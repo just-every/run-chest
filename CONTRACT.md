@@ -2295,6 +2295,8 @@ The owner-approved page-s1 homepage (the hero, then one supplier's folder from t
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026).
 
+SHARE-004 and SHARE-008 retain main’s partial judgments pending a new ruling. The personal commenter audit and deactivated-owner manager fallback assertions are preserved in `tests/chest/files.mjs` and `tests/chest/browser-files.mjs`.
+
 CHEST-03 and CHEST-10 are judged from the code and tests at commit bdb9e2e6c8c2ed019229ba9c1e10905775a23db7 (29 October 2026). The final candidate changes only contract status, generated views and the source lock; its exact commit and Verify receipt are recorded in the fleet report.
 
 EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fbfbf114 (28 October 2026). Its final candidate strengthens the preview-authority journey and records the exact candidate in Verify; the runtime bytes are unchanged from that source commit.
