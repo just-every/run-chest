@@ -3,6 +3,7 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
 const h=await harness(),email=name=>[name,'example.test'].join('@'),cookies={};let browser;
+const viewZone='America/New_York',displayTime=at=>new Intl.DateTimeFormat('en-US',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short',timeZone:viewZone}).format(new Date(at));
 try{
  await mkdir('test-results',{recursive:true});await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const cookie=await h.signIn(h.vars.OWNER_EMAIL);
  cookies.owner=cookie;
@@ -31,7 +32,7 @@ try{
  await h.api(`/spaces/${space.id}/members`,cookie,{members:[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:email('jordan'),role:'contributor'},{principal:email('casey'),role:'viewer'},{principal:email('morgan'),role:'contributor'}]});
  const contexts=[];
  const as=async name=>{
-  const context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:1440,height:1000}});contexts.push(context);
+  const context=await browser.newContext({ignoreHTTPSErrors:true,timezoneId:viewZone,viewport:{width:1440,height:1000}});contexts.push(context);
   await context.addCookies(cookies[name].split('; ').map(c=>{const i=c.indexOf('=');return{name:c.slice(0,i),value:c.slice(i+1),url:h.origin}}));
   return context.newPage();
  };
@@ -48,12 +49,12 @@ try{
   const events=contributor.locator('ol.events > li');
   for(const event of recorded){
    const row=events.filter({hasText:event.actor}).filter({hasText:'opened it'}).filter({has:contributor.locator(`time[datetime="${event.at}"]`)});
-   await row.waitFor();assert.equal(await row.locator('time').getAttribute('datetime'),event.at,'the displayed view time matches its public event');assert.ok((await row.locator('time').innerText()).trim(),'the view time is visible');
+   await row.waitFor();assert.equal(await row.locator('time').getAttribute('datetime'),event.at,'the displayed view time matches its public event');assert.equal(await row.locator('time').innerText(),displayTime(event.at),'the visible local time matches the public view record');
   }
   const proof=async(page,name)=>{for(const width of [1440,390]){await page.setViewportSize({width,height:1000});await page.screenshot({path:`test-results/${width}-audit-${name}.png`,fullPage:true})}await page.setViewportSize({width:1440,height:1000})};
   await proof(contributor,'contributor-activity');
   await casey.reload();const viewerEvents=casey.locator('ol.events > li'),editRow=viewerEvents.filter({hasText:email('jordan')}).filter({hasText:'uploaded a new version'});
-  await editRow.waitFor();assert.equal(await editRow.locator('time').getAttribute('datetime'),edit.at,'a viewer sees the actual edit timestamp');
+  await editRow.waitFor();assert.equal(await editRow.locator('time').getAttribute('datetime'),edit.at,'a viewer sees the actual edit timestamp');assert.equal(await editRow.locator('time').innerText(),displayTime(edit.at),'the viewer sees the edit on their own clock');
   assert.equal(await viewerEvents.filter({hasText:'opened it'}).count(),0,'a viewer sees no view-history rows');
   assert.equal(await viewerEvents.filter({hasText:email('casey')}).count(),0,'the viewer identity does not leak through view history');
   await proof(casey,'viewer-activity');

@@ -10,8 +10,8 @@ The primary journey: create a team space, move originals and rights in, install 
 | --- | ---: | ---: | ---: | ---: |
 | Core | 37 | 48 | 38 | 123 |
 | Agent surface | 0 | 2 | 24 | 26 |
-| Later | 1 | 4 | 16 | 21 |
-| Full target | 38 | 54 | 78 | 170 |
+| Later | 2 | 3 | 16 | 21 |
+| Full target | 39 | 53 | 78 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -2432,7 +2432,7 @@ Later · target · **missing** · Register R-22, R-23
 
 #### AUDIT-002 — File activity and view history for collaborators
 
-Later · target · **partial** · From AUDIT-001
+Later · target · **done** · From AUDIT-001
 
 **Requirement.** Each file's activity panel shows everyone with viewer access its edits, versions, comments, moves and sharing changes, and shows people who can edit it which colleagues viewed it and when, as Drive's activity dashboard does. Admins turn view history on or off per organization or group, each user can hide their own views, and guests' and link visitors' views appear only as counts unless the viewer is a manager. The panel follows current access and never reveals a viewer of something the requester cannot see.
 
@@ -2440,8 +2440,8 @@ Later · target · **partial** · From AUDIT-001
 1. Two colleagues view a space file; a contributor sees both names and times, and a viewer sees edits but no view history.
 2. A colleague who hides their views leaves the list, and turning view history off for the group removes it.
 
-**Evidence.** `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs`
-**Gap.** Point 2 passes, and point 1's one colleague's view shown to a contributor and no view history for a viewer are asserted (`tests/chest/audit.mjs`); the second colleague's name, the view times, and the viewer seeing edits are not.
+**Evidence.** `tests/chest/audit.mjs` — authenticated colleague views and times, viewer edits, hiding, organization and group suppression, erasure and current-access refusal; `tests/chest/browser-audit.mjs` — Activity panels with both colleague identities and public-event timestamps, viewer edits without view history, individual hiding and group suppression.
+**Gap.** None.
 
 ### Move-in from incumbents
 

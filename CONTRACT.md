@@ -2297,11 +2297,13 @@ Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8a
 
 EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fbfbf114 (28 October 2026). Its final candidate strengthens the preview-authority journey and records the exact candidate in Verify; the runtime bytes are unchanged from that source commit.
 
+AUDIT-002 runtime source is judged from commit `0303915975a510a6459c780318caf67ae8717143` (30 October 2026). Its final candidate strengthens the visible local-time assertions and records the exact candidate in Verify; the runtime bytes are unchanged from that source commit.
+
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 9 | 4 | 0 | 13 |
-| Target and push further | 29 | 50 | 78 | 157 |
-| All | 38 | 54 | 78 | 170 |
+| Target and push further | 30 | 49 | 78 | 157 |
+| All | 39 | 53 | 78 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2396,7 +2398,7 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | `SECURITY-005` | Client-side ransomware protection | target | missing |  | No native client exists. |
 | `GOVERN-001` | Retention, legal hold and discovery providers | target | missing |  | No delivered workflow (R-22). |
 | `AUDIT-001` | Complete, durable action history | target | done | `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs` |  |
-| `AUDIT-002` | File activity and view history for collaborators | target | partial | `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs` | Point 2 passes, and point 1's one colleague's view shown to a contributor and no view history for a viewer are asserted (`tests/chest/audit.mjs`); the second colleague's name, the view times, and the viewer seeing edits are not. |
+| `AUDIT-002` | File activity and view history for collaborators | target | done | `tests/chest/audit.mjs` — authenticated colleague views and times, viewer edits, hiding, organization and group suppression, erasure and current-access refusal; `tests/chest/browser-audit.mjs` — Activity panels with both colleague identities and public-event timestamps, viewer edits without view history, individual hiding and group suppression. |  |
 | `ERASE-001` | Deliberate erasure, separate from trash | target | done | `tests/chest/erasure.mjs`; `tests/chest/erasure-archive.mjs`; `tests/chest/browser-erasure.mjs`; `tests/chest/backup-archive.mjs`; `docs/erasure.md` |  |
 | `OPS-001` | Clear, accessible and observable operation | target | partial | `tests/chest/browser-flow.mjs`; `tests/chest/journey.mjs`; `docs/hosting.md` | Responsive journeys and a hosted install exist; accessibility checks and per-service disconnect journeys are unproven. The VPAT and a human screen-reader pass are R-21. |
 | `SCALE-001` | Seeded scale run | target | partial | `scripts/scale/generator.mjs`; `tests/chest/scale.mjs`; `tests/chest/scale-sync.mjs`; `.github/workflows/scale.yml`; `docs/scale.md` | The bounded journey exercises 100 nested folders and 600 direct members in one populated space, 300 device credentials and 10,000 remote renames; the combined 2,000,000-item run, 20,000-child scrolling and 500,000-item enumeration have not run. The reference install is R-1, and each buyer's inventory rerun is R-2. |
