@@ -189,7 +189,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "42c4de5208853f8de293d2a7e3ffe92fda70b8356ddab8871e2c1c74c81c6e51",
+      "sha256": "91cba7230d73b42237f505292a16e38699a94e95ce9eee48039eee819ac2e9d1",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -217,7 +217,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "f4d152ff590ab40add78cb60bd8736319467689198cd637be14e139f75fd8ee9",
+      "sha256": "9add44602da0c196d4331ceefa52bf0a751ef294c5f5a9d77c1e5270e7b03458",
       "executable": false
     },
     "DEMO.md": {
@@ -313,7 +313,7 @@
       "executable": false
     },
     "docs/integrations.md": {
-      "sha256": "28e7771a72d3416715e46049e81d4af474a4dd53523cc38f8b02fb41e835af52",
+      "sha256": "de9d628d0b1f6cb13275f65fa20b74941937d47c5c749fdae90a23b988239094",
       "executable": false
     },
     "docs/introduction.md": {
@@ -2365,7 +2365,7 @@
       "executable": false
     },
     "src/chest/files/items.ts": {
-      "sha256": "b3a45f086cd2db51395af62cdd0a1d350a1a0ba82c7759dd9c25a2ea9db0f03e",
+      "sha256": "19ec9da36d972577d87f26e42f0e42efc53d959af706d9c786eb4e816c247f68",
       "executable": false
     },
     "src/chest/files/link-comments.ts": {
@@ -2737,7 +2737,7 @@
       "executable": false
     },
     "src/chest/integrations/auth.ts": {
-      "sha256": "b762ceef06510d1bf0a1d8605b62b4b7b14bd2beb43753da8fe807db451b3430",
+      "sha256": "d870f32f25f2a65260f001be26c372d6e3ee35ecbc51f47752d06b88e83aead5",
       "executable": false
     },
     "src/chest/integrations/clients.ts": {
@@ -2777,7 +2777,7 @@
       "executable": false
     },
     "src/chest/integrations/resources.ts": {
-      "sha256": "cc3c58d087c07cbbea638cbd69437ab94ebfcd9d96e15264feb628eaaeaadb32",
+      "sha256": "109aecbd139027fa5911d3d1cdefbec86c7432cc8ed9774a29e2e609e8216f80",
       "executable": false
     },
     "src/chest/integrations/secrets.ts": {
@@ -5681,7 +5681,7 @@
       "executable": false
     },
     "tests/chest/integrations.mjs": {
-      "sha256": "bc59015715ae84968449b23eac080784f082eb5d4a97dd541d2ea4b5ca4bd1cd",
+      "sha256": "74f9c0f63976b31093e936cc3709e5e1b83e27f4218d51ff1dd991e5cd3f15c9",
       "executable": false
     },
     "tests/chest/journey.mjs": {

@@ -2097,8 +2097,8 @@ Agent surface · target · **partial** · From new · Cites BASE-AGENT-003, BASE
 5. A 20 MB version returns a byte link that resumes a range read, expires after 5 minutes and works only with the same grant.
 6. Access revoked mid-stream ends the stream before the next chunk.
 
-**Evidence.** `tests/chest/integrations.mjs`
-**Gap.** Points 1 and 2 pass on the integration API's byte path with an agent's OAuth token; there is no MCP byte tool, blob resource or expiring byte link, and quarantine, byte-budget exhaustion and mid-stream revocation are not asserted for agent grants.
+**Evidence.** `tests/chest/integrations.mjs` — Current OAuth ACL and SURFACE-003 original byte journey: points 1 and 2; retained full and range hashes; browser quarantine parity; finite and zero byte budgets; interrupted original stream and fresh denial after committed membership revocation and restart (points 3, 4 and 6).
+**Gap.** The shared Base Agent door, canonical MCP byte tool, small-original blob resources and same-grant five-minute resumable byte links for 20 MB originals remain unproved.
 
 #### SURFACE-004 — Add and organize files
 
