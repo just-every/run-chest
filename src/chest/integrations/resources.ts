@@ -41,7 +41,7 @@ export async function resourceCall(env:Bindings,auth:Authorized,method:string,pa
  if(head==='new-files'&&method==='POST')tool='files.create'
  if(head==='items'&&id){
   if(method==='GET'&&sub==='bytes'&&version){tool='files.read';args={id,version,...(auth.request.headers.get('range')?{range:auth.request.headers.get('range')}: {})}}
-  if(method==='POST'&&sub==='versions'){tool=verb==='restore'?'versions.restore':verb==='name'?'versions.name':'files.upload';args={...args,...(version?{version}: {})}}
+  if(method==='POST'&&sub==='versions'){tool=verb==='restore'?'versions.restore':verb==='name'?'versions.name':'versions.upload';args={...args,...(version?{version}: {})}}
   if(method==='POST'&&sub==='rename')tool='items.update'
   if(method==='POST'&&sub==='shares')tool='share'
   if(method==='POST'&&sub==='unshare')tool='access.narrow'

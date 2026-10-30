@@ -26,9 +26,12 @@ export async function savePrivacy(env: Bindings, s: Session, input: any) {
 export async function viewFilter(env: Bindings, editor: boolean, manager: boolean) {
  const policy = (await privacy(env, '')).policy, hidden = new Set((await list<{ hidden: boolean }>(env, 'audit-prefs')).filter(r => r.payload.hidden).map(r => r.id.slice('audit:prefs:'.length)))
  for (const g of await list<Group>(env, 'group')) if (policy.groups.includes(g.id)) for (const member of g.payload.members) hidden.add(member)
+ const people=new Map((await env.DB.prepare('SELECT id,email FROM oa_operators').all<{id:string;email:string}>()).results.map(p=>[p.id,p.email]))
  return (r: any) => {
+  let detail=r.detail;if(typeof detail==='string')try{detail=JSON.parse(detail)}catch{detail=null}
+  const sponsor=r.actor.startsWith('agent:')?people.get(detail?.sponsor)??detail?.sponsor:r.actor
   if (!viewAction(r.action)) return r
-  if (!editor || !policy.enabled || hidden.has(r.actor)) return null
+  if (!editor || !policy.enabled || hidden.has(sponsor)) return null
   if (!manager && (r.action.startsWith('link.') || /via file request$/.test(r.actor))) return { ...r, actor: 'Link visitor' }
   return r
  }
@@ -37,10 +40,10 @@ export async function eraseAuditIdentity(env: Bindings, s: Session, input: any) 
  insist(s.operator.role === 'owner', 'owner_required', 403)
  const email = String(input.email ?? '').trim().toLowerCase(); insist(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && input.confirm === email, 'confirm_identity')
  const native=await env.DB.prepare('SELECT id FROM oa_operators WHERE email=?').bind(email).first<{id:string}>()
- if(native)insist(!await env.DB.prepare('SELECT 1 FROM agent_door_agents WHERE sponsor=?').bind(native.id).first(),'agent_decision_custody_held',409)
+ insist(!await env.DB.prepare('SELECT 1 FROM agent_door_agents').first(),'agent_decision_custody_held',409)
  const hash = await digest(new TextEncoder().encode(email)), alias = `Erased person ${hash.slice(0, 12)}`
  const key = `audit:erased:${hash}`
- if (!await maybe(env, 'audit-erased', key)) await commit(env, s, [{ row: fresh('audit-erased', { alias }, key) }], { audits: [{ action: 'audit.identity.erase', object: alias, detail: { outcome: 'anonymized' } }] })
+ if (!await maybe(env, 'audit-erased', key)) await commit(env, s, [{ row: fresh('audit-erased', { alias }, key) }], { preconditions:native?[{sql:'INSERT INTO chest_assert(ok) SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM agent_door_agents ) THEN 1 ELSE 0 END',params:[]}]:[],statements:native?[{sql:"INSERT INTO chest_agent_custody_blocks(operator_id,reason) VALUES(?,'audit_identity_anonymized') ON CONFLICT(operator_id) DO NOTHING",params:[native.id]}]:[],audits: [{ action: 'audit.identity.erase', object: alias, detail: { outcome: 'anonymized' } }] })
  // All retained actions remain. Keep a one-way tombstone to anonymize later events from the same identity too.
  const redact=await identityRedactor(env)
  for(const event of (await env.DB.prepare('SELECT id,actor,object_id,detail FROM chest_audit').all()).results as any[]) {
