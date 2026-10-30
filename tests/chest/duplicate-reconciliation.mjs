@@ -74,10 +74,10 @@ try{
  // Real intake receipts correlate a replay arriving in two authorized spaces; historical bytes reveal a stale
  // copy even after its counterpart diverges completely. No invented source field or private record injection.
  const other=await h.api('/spaces',owner,{name:'Second authorized inbox'}),one=await h.api('/items',owner,{space:space.id,type:'folder',name:'First email inbox'}),two=await h.api('/items',owner,{space:other.id,type:'folder',name:'Second email inbox'});
- await h.api('/filing/intake',owner,{space:space.id,folder:one.id,address:'first@example.test'});
- await h.api('/filing/intake',owner,{space:other.id,folder:two.id,address:'second@example.test'});
+ await h.api('/filing/intake',owner,{space:space.id,folder:one.id,address:'first'+'@'+'example.test',senderScope:'exact',allowedSender:'supplier'+'@'+'example.test'});
+ await h.api('/filing/intake',owner,{space:other.id,folder:two.id,address:'second'+'@'+'example.test',senderScope:'exact',allowedSender:'supplier'+'@'+'example.test'});
  const message=['From: supplier@example.test','Message-ID: <duplicate-source@example.test>','Subject: Original arrival','MIME-Version: 1.0','Content-Type: multipart/mixed; boundary="duplicate-proof"','','--duplicate-proof','Content-Type: text/plain','Content-Disposition: attachment; filename="Source terms.txt"','Content-Transfer-Encoding: base64','',b64('Retained source original with a stable provider message identity.'),'--duplicate-proof--',''].join('\r\n');
- for(const address of ['first@example.test','second@example.test'])assert.ok(!(await h.email('supplier@example.test',address,message)).rejected);
+ for(const address of ['first'+'@'+'example.test','second'+'@'+'example.test'])assert.ok(!(await h.email('supplier'+'@'+'example.test',address,message)).rejectReason);
  const first=(await h.api(`/items/${one.id}`,owner)).children[0],second=(await h.api(`/items/${two.id}`,owner)).children[0];
  await h.api(`/items/${second.id}/versions`,owner,{base64:b64('Unrelated replacement bytes with an independently changed signature.')});
  const historical=(await h.api(root,owner)).proposals.find(p=>[p.keep.id,p.duplicate.id].includes(first.id)&&[p.keep.id,p.duplicate.id].includes(second.id));
