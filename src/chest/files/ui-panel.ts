@@ -32,7 +32,7 @@ function versions(d: any, name: Named, returnTo: string) {
 function sharing(d: any, name: Named, returnTo: string) {
  const live = (d.publicLinks ?? []).filter((l: any) => l.state === 'active')
  const link = (l: any) => `<div class="pl"><span class="pl-icon">${icon('link')}</span><div class="pl-body"><p><strong>${l.audience === 'guests' ? 'Named guests' : l.audience === 'domain' ? `Verified ${esc(l.domain)}` : 'Link'}${l.expires ? `, expires ${day(l.expires)}` : ', no expiry'}</strong></p><p class="quiet">${l.limit === null ? `${l.downloads} download${l.downloads === 1 ? '' : 's'}` : `${l.downloads} of ${l.limit} downloads used`}</p>${l.limit === null ? '' : `<progress max="${l.limit}" value="${l.downloads}">${l.downloads} of ${l.limit}</progress>`}</div>${d.can.share ? form(`/public-links/${l.id}/revoke`, '', 'Revoke', returnTo, inline) : ''}</div>`
- const manage = `/app/items/${esc(d.id)}${d.item.type === 'folder' ? '?manage' : ''}#share`
+ const manage = `/app/items/${esc(d.id)}${d.item.type === 'folder' ? '?manage' : ''}`
  const who = [...new Set([...(d.members ?? []), ...(d.grants ?? []).map((g: any) => g.principal)])].map(email => ({ email, name: name(email) }))
  const shared = who.length ? `<a class="pl-people" href="${manage}">${people(who)}<span>Shared with ${who.length} ${who.length === 1 ? 'person' : 'people'}</span>${icon('chevron')}</a>` : ''
  const body = live.map(link).join('') + shared

@@ -30,7 +30,7 @@ import { itemCrumbs, itemPage, requestAccessPage, rewindDonePage, rewindPage, re
 import { agentStrip as agentData, folderRows } from './folder-view'
 import { newFileMenu } from '../office/new-ui'
 import type { Bar } from '../ui-shell'
-import { devicesPage, homePage, noticesPage, requestPage, requestsPage, searchPage, secretPage, sharedPage, spacePage, trashPage } from './ui-pages'
+import { devicesPage, homePage, newSpacePage, noticesPage, recentPage, requestPage, requestsPage, searchPage, secretPage, sharedPage, spacePage, starredPage, trashPage } from './ui-pages'
 import { repairView } from '../filing/link-repairs'
 import { linksPage } from './ui-links'
 import { linksView } from './exposure'
@@ -119,7 +119,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  const bulk=await bulkPage(env,s,url);if(bulk)return {body:bulk}
  const path = url.pathname, parts = path.split('/').filter(Boolean)
  if (parts[0] === 's' && parts[1]){try{return {redirect:`/app/items/${(await openLink(env,s,parts[1])).item}`}}catch(e){if(e instanceof ChestError&&e.code==='link_password_required'){const {card,form,hidden,field}=await import('../ui-shared');return {body:card('Enter the link password',form('/links/open',hidden('token',parts[1])+field('Link password','password','','password'),'Open organization link',url.pathname))}}throw e}}
- if (parts[0] !== 'app' || !['upload-protection', 'transfers', 'templates', 'files', 'ownership', 'spaces', 'items', 'shared', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in', 'signatures'].includes(parts[1])) return null
+ if (parts[0] !== 'app' || !['upload-protection', 'transfers', 'templates', 'files', 'ownership', 'spaces', 'items', 'shared', 'recent', 'starred', 'requests', 'notices', 'devices', 'links', 'storage', 'move-in', 'signatures'].includes(parts[1])) return null
  if (path === '/app/upload-protection') return {body:protectionPage(await incidents(env,s))+await contentCard(env,s)}
 
  if (parts[1] === 'signatures' && parts[2]) return { body: await signaturePage(env, s, await who(env, s), parts[2]) }
@@ -132,6 +132,9 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (parts[1] === 'ownership' && parts[2]) return { body: ownershipPage(await ownershipView(env, s, w, parts[2])) }
  if (path === '/app/files/space-policy') { const scope = url.searchParams.get('scope') ?? 'organisation'; return { body: spacePolicyPage(await spacePolicyView(env, s), scope, scope.startsWith('space:') ? await spaceSettingsView(env, s, scope.slice(6)) : undefined) } }
  if (path === '/app/files') return { body: homePage(await home(env, s, w)) }
+ if (path === '/app/recent') return { body: recentPage(await home(env, s, w)) }
+ if (path === '/app/starred') return { body: starredPage(await home(env, s, w)) }
+ if (path === '/app/spaces/new') return { body: newSpacePage(await home(env, s, w)) }
  if (path === '/app/files/search') { const reader = await readerState(env); return { body: searchPage(url.searchParams.get('q') || '', await search(env, w, url), 'config' in reader ? null : 'unavailable' in reader ? reader.unavailable : reader.missing) } }
  if (path === '/app/files/trash') return { body: trashPage(await trashView(env, s, w)) }
  if (parts[1] === 'spaces' && parts[2]) { const d = await spaceView(env, w, parts[2]), creation = d.can.contribute ? await listTemplates(env, s, w, { space: d.id }) : null, folder = await browser(env, s, w, d.id, null, d.children.map((c: any) => c.id), url); return { body: spacePage({ ...d, folder, creation, serviceAdmin: isAdmin(s), quotaOwner: s.operator.role === 'owner', manage: url.searchParams.has('manage') }, people, groups), bar: bar([{ label: d.name }], creation, { space: d.id }, `/app/spaces/${d.id}`) } }

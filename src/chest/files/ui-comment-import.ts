@@ -1,7 +1,8 @@
 import { esc, form, hidden, select, field, stamp } from '../ui-shared'
+import { identity } from '../../identity'
 
 export function commentImportForm(d: any) {
- return `<div class="page-head"><h1>Import review threads</h1><p>${esc(d.item.name)}</p><p>Attach a Chest review export to its exact retained original. Review the source authors and identity mappings before confirming. This creates no grants and sends no notifications.</p></div>${form(`/items/${d.id}/comment-import/preview`, select('Destination original', 'version', d.versions.filter((v: any) => !v.sourceItem || v.sourceItem === d.id).map((v: any, i: number, rows: any[]) => ({ id: v.id, label: `Version ${rows.length - i} · ${v.filename}` })), d.item.current) + field('Review export JSON', 'archiveFile', '', 'file'), 'Preview review import', `/app/items/${d.id}`)}<p><a class="link" href="/docs/review-threads">Review export format</a> · <a class="link" href="/app/items/${d.id}">Back to file</a></p>`
+ return `<div class="page-head"><h1>Import review threads</h1><p>${esc(d.item.name)}</p><p>Attach a Chest review export to its exact retained original. Review the source authors and identity mappings before confirming. This creates no grants and sends no notifications.</p></div>${form(`/items/${d.id}/comment-import/preview`, select('Destination original', 'version', d.versions.filter((v: any) => !v.sourceItem || v.sourceItem === d.id).map((v: any, i: number, rows: any[]) => ({ id: v.id, label: `Version ${rows.length - i} · ${v.filename}` })), d.item.current) + field('Review export JSON', 'archiveFile', '', 'file'), 'Preview review import', `/app/items/${d.id}`)}<p><a class="link" href="${esc(identity.runSite)}/docs/review-threads" target="_blank" rel="noopener">Review export format</a> · <a class="link" href="/app/items/${d.id}">Back to file</a></p>`
 }
 
 export function commentImportPreview(input: any, plan: any) {
