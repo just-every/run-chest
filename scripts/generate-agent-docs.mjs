@@ -28,17 +28,10 @@ const rows = [
   ...surface.tools.flatMap((t) => [
     `### ${t.name}`,
     "",
-    "Input:",
-    "",
-    "```json",
-    JSON.stringify(t.inputSchema, null, 2),
-    "```",
-    "",
-    "Output:",
-    "",
-    "```json",
-    JSON.stringify(t.outputSchema, null, 2),
-    "```",
+    ...(t.inputSchema
+      ? ["Input:", "", "```json", JSON.stringify(t.inputSchema, null, 2), "```", ""]
+      : ["The built-in input schema is returned by MCP `tools/list`.", ""]),
+    "The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.",
     "",
   ]),
   "## Decisions and errors",

@@ -253,7 +253,7 @@
       "executable": false
     },
     "docs/agents.md": {
-      "sha256": "845cbbcb309a663b6337db30541bc7f4e53f3af65fba95c257af69e6a67b632d",
+      "sha256": "52de1d9f1016d1367e6191f802ca63fab1bbca8cbb6ce336cc2dbbf5f6bbaa6b",
       "executable": false
     },
     "docs/ask.md": {
@@ -1749,7 +1749,7 @@
       "executable": false
     },
     "scripts/generate-agent-docs.mjs": {
-      "sha256": "23978b374376eca61184aee2b6cb63ba46140f452b08ebb8d839a22978a97f92",
+      "sha256": "80074c5e863300b07c9747dd9b12b07771ff6cf21a84aca685569dedde7b325e",
       "executable": false
     },
     "scripts/hosted-backup.mjs": {
