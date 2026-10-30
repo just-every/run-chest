@@ -210,6 +210,10 @@ try{
   assert.deepEqual(await h.api(`/archive/${unfinished.id}`,owner,{action:'resume'}),unfinished);
   assert.deepEqual(await admitted(),completed,'repeated resume, including after restart, publishes no duplicate or changed records');
   assert.equal((await h.api('/library',owner)).count,before+items.length);
+  for(const record of completed){
+   const version=record.payload.versions[0],downloaded=await h.raw(`/api/chest/documents/${record.id}/bytes/${version.id}?download=true`,owner);
+   assert.equal(downloaded.status,200);assert.equal(hash(Buffer.from(await downloaded.arrayBuffer())),version.checksum,'replayed continuation preserves original custody');
+  }
   assert.equal((await h.api('/library?q=synthetic-chest-original',member)).count,0);
   // Keep the original untouched undo and conflicting-native-edit journeys independent.
   let reversed=await h.api(`/archive/${unfinished.id}`,owner,{action:'undo'});
