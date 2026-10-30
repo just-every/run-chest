@@ -5,6 +5,8 @@ import { allowed, everything, who } from '../files/access'
 import type { RequestPolicy } from '../files/request-model'
 import { card, esc, field, form, hidden, select, stamp } from '../ui-shared'
 import { collectionExecute } from './api'
+import { requestFields } from '../files/request-panel'
+import { shareTargets } from '../files/share-targets'
 const back='/app/collection',inline={className:'form form-inline',buttonClass:'btn btn-outline'}
 const stateLabel=(state:string)=>({accepted:'Accepted · reminders stopped',mismatch:'Evidence needs attention',awaiting_confirmation:'Waiting for recipient confirmation'}[state]??state)
 function requirementPanel(collection:any,e:any,email:string,owner:boolean) {
@@ -34,12 +36,13 @@ export async function collectionPage(env:Bindings,request:Request,s:Session,url:
  if(owner) {
   const all=await everything(env,await who(env,s)),requests=(await list<RequestPolicy>(env,'file-request')).filter(r=>{const e=all.get(r.payload.folder);return e&&!e.state.trash&&allowed(e,'share')&&r.payload.checklist?.length})
   const choices=requests.flatMap(r=>r.payload.checklist!.map(label=>({id:JSON.stringify({request:r.id,checklist:label,folder:r.payload.folder}),label:`${r.payload.title} · ${label}`})))
-  create=choices.length?card('Start a checklist',form('/collection',`<div class="form-grid">${field('Checklist title','title')}${select('First requested record','request1',choices)}${select('Second requested record','request2',[{id:'',label:'None'},...choices],'',false)}${field('Approved recipient emails','recipients','','text')}${field('Approved reminder cadence (hours)','cadenceHours','24','number')}${select('Reminder authorization','sendReminders',[{id:'false',label:'Draft reminders only'},{id:'true',label:'Send to these approved recipients'}])}</div><p>Choose records from the same request folder. Recipients must have active Chest accounts and current access. Submitters use the original file request; its receipt does not approve the material.</p>`,'Create collection checklist',back)) :card('Start a checklist','<p>Create a file request with named checklist items from a folder’s sharing tools first.</p>')
+  create=choices.length?card('Start a checklist',form('/collection',`<div class="form-grid">${field('Checklist title','title')}${select('First requested record','request1',choices)}${select('Second requested record','request2',[{id:'',label:'None'},...choices],'',false)}${field('Approved recipient emails','recipients','','text')}${field('Approved reminder cadence (hours)','cadenceHours','24','number')}${select('Reminder authorization','sendReminders',[{id:'false',label:'Draft reminders only'},{id:'true',label:'Send to these approved recipients'}])}</div><p>Choose records from the same request folder. Recipients must have active Chest accounts and current access. Submitters use the original file request; its receipt does not approve the material.</p>`,'Create collection checklist',back)) :card('Ask for files',form('/collection-request',select('Folder to receive them','folder',await shareTargets(env,await who(env,s),'folder'))+requestFields(),'Create file request',back))
  }
  return head+panels+(!rows.length?card('No collection checklists','<p>No accessible checklists are assigned to you yet.</p>'):'')+create
 }
 // Browser forms carry choices already shown to the owner; the API still validates every binding and ACL.
 export function collectionInput(input:any) {
+ if(input.path==='/collection-request'&&input.folder)input.path=`/items/${input.folder}/file-requests`
  if(input.path==='/collection'&&input.request1) {
   const selected=[input.request1,input.request2].filter(Boolean).map(v=>JSON.parse(v))
   input.folder=selected[0].folder;input.requirements=selected.map(({request,checklist}:any)=>({request,checklist,label:checklist}))

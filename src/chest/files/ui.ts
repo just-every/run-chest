@@ -14,6 +14,7 @@ import { protectionPage } from '../upload-protection/ui'
 import { transfersExecute, transferView } from '../transfers/service'
 import { repairs } from '../sync-repair/service'
 import { transfersPage, transferPage } from '../transfers/ui'
+import { shareTargets } from './share-targets'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { list } from '../store'
@@ -60,7 +61,7 @@ export function filesInput(input: any) {
  if(input.path.startsWith('/bulk'))bulkInput(input)
  if(input.path.startsWith('/signatures'))signatureInput(input)
  if(input.path==='/link-policy' && input.domainRestriction==='false')input.trustedDomains=null
- if (input.path === '/new-files') { if (input.name === '') delete input.name; if (input.template === '') delete input.template }
+ if (input.path === '/new-files') { const [kind, ...rest] = String(input.start ?? '').split(':'); if (input.start !== undefined) { input.kind = kind; input.template = rest.join(':'); delete input.start } if (input.name === '') delete input.name; if (input.template === '') delete input.template }
  if (input.path === '/templates' && typeof input.templateAudience === 'string') {
   const [type, ...rest] = input.templateAudience.split(':'), value = rest.join(':')
   input.audience = type === 'group' ? { type: 'groups', groups: [value] } : type === 'space' ? { type: 'space', space: value } : { type: 'organisation' }
@@ -126,7 +127,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (path === '/app/storage') return { body: quotasPage(await quotaPolicyView(env, s)) }
  if (parts[1] === 'spaces' && parts[2] && parts[3] === 'quota') return { body: quotaPage(await quotaView(env, s, parts[2])) }
  const w = await who(env, s), people = (await list<Person>(env, 'person')).filter(p => p.payload.status !== 'inactive'), groups = await list<Group>(env, 'group')
- if(parts[1]==='transfers')return {body:parts[2]?transferPage(await transferView(env,s,w,parts[2])):transfersPage(await transfersExecute(env,request,s,'GET',['transfers'],{}) as any[])}
+ if(parts[1]==='transfers')return {body:parts[2]?transferPage(await transferView(env,s,w,parts[2])):transfersPage(await transfersExecute(env,request,s,'GET',['transfers'],{}) as any[],await shareTargets(env,w))}
  if (path === '/app/templates') return { body: templatesPage(await listTemplates(env, s, w), await creationSettings(env, s, w), groups, await canAdmin(env, s, 'service-settings')) }
  if (path === '/app/ownership') return { body: ownershipInboxPage(await ownershipInbox(env, s, w)) }
  if (parts[1] === 'ownership' && parts[2]) return { body: ownershipPage(await ownershipView(env, s, w, parts[2])) }

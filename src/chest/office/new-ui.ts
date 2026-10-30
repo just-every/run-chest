@@ -5,11 +5,12 @@ const where = (target: { space?: string; parent?: string }) => target.parent ? h
 
 export function newFileMenu(target: { space?: string; parent?: string }, returnTo: string, gallery: any, filing = '') {
  if (!gallery) return ''
- const forms = kinds.map(kind => {
+ const group = (kind: { id: string; label: string }) => {
   const templates = gallery.templates.filter((t: any) => t.kind === kind.id)
-  return form('/new-files', where(target) + filing + hidden('kind', kind.id) + hidden('key', crypto.randomUUID()) + field(`New ${kind.id} name (optional)`, 'name', '', 'text', false) + select(`${kind.label} template`, 'template', [{ id: '', label: 'Blank' }, ...templates.map((t: any) => ({ id: t.id, label: `${t.name} · ${t.category}` }))], '', false), `Create ${kind.id}`, returnTo)
- }).join('')
- return details('New', `${forms}`, 'btn')
+  return `<optgroup label="${esc(kind.label)}"><option value="${kind.id}:">Blank ${kind.id}</option>${templates.map((t: any) => `<option value="${kind.id}:${esc(t.id)}">${esc(t.name)} · ${esc(t.category)}</option>`).join('')}</optgroup>`
+ }
+ const start = `<label class="field"><span class="field-label">Start from</span><select name="start">${kinds.map(group).join('')}</select></label>`
+ return details('New', form('/new-files', where(target) + filing + hidden('key', crypto.randomUUID()) + start + field('Name (optional)', 'name', '', 'text', false), 'Create file', returnTo), 'btn')
 }
 
 export function templatePublisher(d: any, people: any[], groups: any[], returnTo: string) {
