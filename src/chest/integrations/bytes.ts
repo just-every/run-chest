@@ -43,7 +43,7 @@ export async function readOriginal(env: Bindings, auth: Authorized, item: string
    const chunk = pending.subarray(0, 256 * 1024); pending = pending.subarray(chunk.length); controller.enqueue(chunk)
   } catch (error) { pending = new Uint8Array(0); if (!cancelled) controller.error(error); await reader.cancel() } },
   async cancel() { cancelled = true; pending = new Uint8Array(0); await reader.cancel() },
- }, {highWaterMark: 0}), {status: response.status, headers: response.headers})
+ }, {highWaterMark: 0}), {status: response.status, headers: {...Object.fromEntries(response.headers), 'accept-ranges': 'bytes'}})
 }
 
 export async function originalResource(env: Bindings, auth: Authorized, item: string, version: string, blobOnly = false) {

@@ -2741,7 +2741,7 @@
       "executable": false
     },
     "src/chest/integrations/bytes.ts": {
-      "sha256": "43c84301a5673fe0cc2e40f7cc00ebfe4b27d9d16481d7fdc640d3a5a21e4666",
+      "sha256": "d6c6d8434a270231eddb74c4cc351545cfcc011bd777f839cc9df300d19982b8",
       "executable": false
     },
     "src/chest/integrations/clients.ts": {
@@ -5685,7 +5685,7 @@
       "executable": false
     },
     "tests/chest/integrations.mjs": {
-      "sha256": "82be369f395660e0097e2214a889b13a6a10907a938d65a5b9fe9613afac171e",
+      "sha256": "50a0d5b41fd517732f9dc91633caec886d0feb06b5a9baa9d8a414a4de8ec77a",
       "executable": false
     },
     "tests/chest/journey.mjs": {
