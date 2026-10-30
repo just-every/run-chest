@@ -2295,6 +2295,8 @@ The owner-approved page-s1 homepage (the hero, then one supplier's folder from t
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026).
 
+SPACE-003's declined-ownership proof from candidate dea33f1c472870b691201094075d3035e53d7c85 is replayed on current main in `tests/chest/ownership.mjs`, `tests/chest/browser-ownership.mjs` and `tests/chest/ownership-proof.mjs`. It reconciles a declined three-version file's identity, location, original bytes, grants, authority and existing link after Worker restart, with exact once-only offer, accept, decline and cancel audits. The current partial Status, Evidence and Gap remain unchanged pending fresh acceptance.
+
 SHARE-004 and SHARE-008 retain main’s partial judgments pending a new ruling. The personal commenter audit and deactivated-owner manager fallback assertions are preserved in `tests/chest/files.mjs` and `tests/chest/browser-files.mjs`.
 ADMIN-003's ownership-authority and attributed-audit assertions from candidate 95409a15f575b3a70b8d365bd37bf0f4c14a9d37 are replayed on current main. Its partial Status, Evidence and Gap below retain main's newer judgment; the strengthened journey does not itself promote the clause.
 
