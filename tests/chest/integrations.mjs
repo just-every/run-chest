@@ -95,8 +95,17 @@ try{
  await h.api('/administration/roles',owner,{id:report.delegation.id,groups:[report.group.id]});
  const revokedReport=await issueReport();await interruptedCsv(revokedReport.access_token,()=>revokeOnAnotherConnection(`/integrations/grants/${revokedReport.grant}/revoke`,report.admin,{}));
  await assertStopped(revokedReport.access_token,401,'oauth_grant_revoked');await h.stop();await h.start();await assertStopped(revokedReport.access_token,401,'oauth_grant_revoked');
+ await h.api('/audit/privacy',report.member,{hidden:true});
+ assert.deepEqual(await pages(),[],'the integration report honors the browser view-history suppression');
+ await h.api('/audit/privacy',report.member,{hidden:false});
+ assert.deepEqual(await pages(),expected.rows);
  await h.api('/administration/roles',owner,{action:'revoke',id:report.delegation.id});
  await assertStopped(reportToken,403,'admin_required');
+ await h.api('/administration/roles',owner,{email:report.adminEmail,role:'audit-reporting',scope:'groups',groups:[report.group.id]});
+ const erasedReport=await issueReport();
+ await h.api('/erasure',owner,{email:report.adminEmail,confirm:report.adminEmail});
+ await assertStopped(erasedReport.access_token,401,'oauth_token_expired');
+ await h.stop();await h.start();await assertStopped(erasedReport.access_token,401,'oauth_token_expired');
  console.log('PROBE SURFACE-010 1: real OAuth activity pages and CSV -> 305 scoped browser rows, content blind, separate consent, live intersection, scope and OAuth revocation stop streams and persisted reads');
  console.log('PROBE SURFACE-010 2: staff OAuth report request -> 403 '+staffBrowser.error+', matching the browser');
  // Pagination returns only stable IDs under the folder; current role/no-download still govern every door.
