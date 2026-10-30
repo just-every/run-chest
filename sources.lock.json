@@ -5429,7 +5429,7 @@
       "executable": false
     },
     "tests/chest/audit.mjs": {
-      "sha256": "649f0d6c11664db3706c77a8a6e36711eddbf3ddddbe4ef7057dc4c8596e6958",
+      "sha256": "2622f8a492a16c966dcb69b4aa7fb6c9c5e9edce43a219d307b016d61a87c2ce",
       "executable": false
     },
     "tests/chest/auth-provider.mjs": {
@@ -5461,7 +5461,7 @@
       "executable": false
     },
     "tests/chest/browser-audit.mjs": {
-      "sha256": "d81ad83f5a894da8b54be4e10d81ec56983f41ebe77241ff890d944efae1d3bb",
+      "sha256": "9016222822ee9356367798bc09da233edd23b1c3a948a400472d82ce00bc94c3",
       "executable": false
     },
     "tests/chest/browser-backups.mjs": {
