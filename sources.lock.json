@@ -5577,7 +5577,7 @@
       "executable": false
     },
     "tests/chest/browser-sync-repair.mjs": {
-      "sha256": "58cda26a14d679716b22399187f6c04faa2377acdfbe8f2439f5c4da7117aaa8",
+      "sha256": "f1623b412239ed2e8e023c7bd04ab5b2a051c17e8611c66d85940b97738b4293",
       "executable": false
     },
     "tests/chest/browser-transfers.mjs": {
