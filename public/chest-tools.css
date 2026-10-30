@@ -47,6 +47,9 @@
 
 /* The email route is a sequence a space manager follows outside Chest. */
 .intake-steps { list-style: decimal; padding-left: 22px; }
+/* Its fold's summary is a sentence: on a narrow screen it wraps instead of widening the page, with a 44 px target. */
+.intake-summary { white-space: normal; }
+@media (max-width: 760px) { .intake-summary { min-height: 44px; } }
 /* Members and access rows: who and their role, with Change role and Remove on the row. */
 .members li.member { display: grid; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--chest-line); font-size: 13.5px; overflow-wrap: anywhere; }
 .members li.member:last-child { border-bottom: 0; }
