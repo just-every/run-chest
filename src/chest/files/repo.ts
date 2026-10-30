@@ -39,14 +39,15 @@ export async function commit(env: Bindings, actor: Session | null, ops: Op[], { 
   attachments.delete(actor)
   ops = [...ops, ...attachment.ops(ops)]; fences = [...fences, ...attachment.fences ?? []]; audits = [...audits, ...attachment.audits ?? []]
  }
+ const agentActor=actor?sessionAgent(actor):undefined
+ if(agentActor?.door)ops=ops.map(op=>op.remove?op:{...op,row:{...op.row,payload:{...op.row.payload,preparedBy:agentAttribution(agentActor)}}})
  const events=integrationEventOps(ops,changes,audits)
  ops=[...ops,...events];statements=[...statements,...integrationEventStatements(events)]
  const statement = (sql: string, params: unknown[] = []) => env.DB.prepare(sql).bind(...params)
  const written = new Set(ops.map(o => o.row.id)), predicates = [...(actor ? [sessionPredicate(actor)] : []), ...fences.filter(f => !written.has(f.id)).map(snapshot), ...ops.map(o => o.previous ? snapshot(o.previous) : { sql: 'NOT EXISTS(SELECT 1 FROM chest_records WHERE id=?)', params: [o.row.id] })]
  const redact=await (await import('../audit/privacy')).identityRedactor(env)
  // Sharing receipts name the authenticated agent; other audit policies keep their existing actor semantics.
- const sharing = audits.some(a => ['share.grant','link.create','link.change','file-request.create','access.approve'].includes(a.action))
- const agent = actor && sharing ? sessionAgent(actor) : undefined
+ const agent = actor ? sessionAgent(actor) : undefined
  const at = now(), who = await redact(agent ? `agent:${agent.id}` : actor?.operator.email ?? by)
  const auditRows=await Promise.all(audits.map(async a=>({...a,detail:await redact(JSON.stringify(facts({version:ops.find(o=>o.row.id===a.object)?.row.payload?.current??null,...a.detail,...(agent ? agentAttribution(agent) : {})},actor?`${actor.kind}:${actor.operator.role}`:by)))})))
  const quotas = storageGuards(ops), warnings = await warningPublication(env,ops)

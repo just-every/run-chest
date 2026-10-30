@@ -1,3 +1,4 @@
+import { createBusinessSettings } from './modules/business-settings/index.ts'
 import { assertDomainSession } from './chest/organisation/domains'
 import { firstRunResponse } from './base/setup'
 import { fontDocumentResponse } from './base/font-response'
@@ -17,6 +18,7 @@ import { namingInviter } from './chest/invitation-mail'
 const theme = { href: '/rer-theme.css', productName: branding.name, accentColor: branding.primaryColor }
 
 export interface Bindings {
+ RER_BUSINESS_TRUST?: string
  CHEST_OUTBOUND_HOSTS?: string
  ASSETS?: { fetch(request: Request): Promise<Response> }
  RER_DEPLOY_SOURCE?: string
@@ -57,8 +59,13 @@ export interface Bindings {
 export const runtimeBindings = (env: Bindings): Bindings => env.RER_DEV_ORIGIN && env.AUTH_LOCAL === 'true' ? { ...env, AUTH_ORIGIN: env.RER_DEV_ORIGIN } : env
 export const authConfig = (env: Bindings): AuthConfig => ({ origin: env.AUTH_ORIGIN, local: env.AUTH_LOCAL === 'true', OWNER_EMAIL: env.OWNER_EMAIL, SESSION_SECRET: env.SESSION_SECRET, SETUP_TOKEN: env.SETUP_TOKEN, MAIL_FROM: env.MAIL_FROM, branding: { productName: branding.name, accentColor: branding.primaryColor, signInPath: '/signin', theme: theme.href } })
 // `inviter` names who sends the invitation this instance mails (src/chest/invitation-mail.ts).
+const business = { settings:1, values:['display_name'], team:{roles:{admin:'admin',member:'member'}} } as const
+export function businessSettings(env:Bindings) {
+ const native=createOperatorAuth({db:env.DB,config:authConfig(env),mailSender:operatorMail(env),clientIp:request=>request.headers.get('CF-Connecting-IP')??'',rolePolicy:input=>identityAdminPolicy(env,input)})
+ return createBusinessSettings({db:env.DB,trust:env.RER_BUSINESS_TRUST,business,team:native.businessTeam})
+}
 export function baseOperatorAuth(env: Bindings, inviter?: string) {
- return createOperatorAuth({ db: env.DB, config: authConfig(env), mailSender: inviter ? namingInviter(operatorMail(env), inviter) : operatorMail(env), clientIp: request => request.headers.get('CF-Connecting-IP') ?? '',rolePolicy:input=>identityAdminPolicy(env,input),hooks:{afterConfirm:async({session,operator})=>{await checkInvitationScope(env,session,operator)}} })
+ return createOperatorAuth({businessSettings:businessSettings(env), db: env.DB, config: authConfig(env), mailSender: inviter ? namingInviter(operatorMail(env), inviter) : operatorMail(env), clientIp: request => request.headers.get('CF-Connecting-IP') ?? '',rolePolicy:input=>identityAdminPolicy(env,input),hooks:{afterConfirm:async({session,operator})=>{await checkInvitationScope(env,session,operator)}} })
 }
 
 export function operatorAuth(env:Bindings,inviter?:string){

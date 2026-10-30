@@ -1,3 +1,4 @@
+import { chestAgentDoor } from './chest/agent-door/index.ts'
 import { withOutboundPolicy } from './chest/outbound'
 import { wopiResponse } from './chest/office/wopi'
 import { integrationsResponse } from './chest/integrations/http'
@@ -20,7 +21,7 @@ import { deploymentHealth } from './base/deployment-health'
 import { lobbyResponse } from './base/lobby'
 import { setupStateResponse } from './base/setup-state'
 import { identity } from './identity'
-import { authResponse, runtimeBindings, type Bindings } from './auth.server'
+import { authResponse, runtimeBindings, businessSettings, type Bindings } from './auth.server'
 import { sweepAgents } from './chest/filing/agent-arrivals'
 import { sweepLinkRepairs } from './chest/filing/link-repairs'
 import { receiveIntake } from './chest/filing/intake'
@@ -44,6 +45,10 @@ export default withDemo(withOutboundPolicy({
     const asset = await staticAssetResponse(request, original)
     if (asset) return documentResponse(asset)
     const env = runtimeBindings(original)
+    const business = await businessSettings(env).handle(request)
+    if (business) return business
+    const agent = await chestAgentDoor(env).handle(request)
+    if (agent) return documentResponse(agent)
     if(new URL(request.url).pathname.startsWith('/app') || new URL(request.url).pathname.startsWith('/api/chest'))execution.waitUntil(Promise.all([sweepBackups(env),collectionSweep(env),sweepLinkRepairs(env),sweepAgents(env),sweepSignatures(env)]))
     const publicPage = await setupStateResponse(request, env) ?? await lobbyResponse(request, env, identity)
     if (publicPage) return documentResponse(publicPage)
