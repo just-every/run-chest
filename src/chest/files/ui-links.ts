@@ -1,5 +1,5 @@
 import { linkRepairsPanel } from '../filing/ui-link-repairs'
-import { esc, form, hidden, stamp } from '../ui-shared'
+import { details, esc, form, hidden, stamp } from '../ui-shared'
 import { linkPolicyPanel } from './ui-link-policy'
 // Links: what is shared too widely (with Make private), every link with its expiry and downloads (with Revoke), and
 // every file request (with Close). Each action is one button; nothing asks a second time.
@@ -17,9 +17,10 @@ export function linksPage(d: any) {
  const pub = d.public.map((l: any) => row(l.name, `/app/items/${l.item}`, `${l.audience==='guests'?'Named guests':l.audience==='domain'?`Verified domain · ${esc(l.domain)}`:'Link for anyone'} · ${esc(l.role??'viewer')} · ${linkFacts(l)} · by ${esc(l.createdBy)}`, l.state === 'revoked' ? '' : form(`/public-links/${l.id}/revoke`, '', 'Revoke', back, inline)))
  const org = d.organisation.map((l: any) => row(l.name, `/app/items/${l.item}`, `${l.audience==='restricted'?'Restricted link':'Organization link'} · ${esc(l.role)} · ${l.discoverable ? 'discoverable' : 'not discoverable'}${l.summary?` · ${esc(l.summary)}`:l.expires?` · expires ${stamp(l.expires)}`:''}${l.policyBlocked?' · blocked by link policy':''}${l.unavailable?' · item removed':''}${l.state==='expired'?' · expired':''} · by ${esc(l.createdBy)}`, form(`/links/${l.id}`, hidden('remove', 'true'), 'Revoke', back, inline)))
  const req = d.requests.map((r: any) => row(r.title, `/app/items/${r.folder}`, `Into ${esc(r.path)} · ${r.uploads} file${r.uploads === 1 ? '' : 's'} received · ${r.verification==='email'?'verified email':'any submitter'} · duplicates ${esc(r.duplicates??'keep')} · late ${esc(r.late??'reject')} · ${r.open ? r.deadline ? `open until ${stamp(r.deadline)}` : 'open' : r.closedAt ? `closed ${stamp(r.closedAt)}` : 'past its deadline'}`, r.open ? form(`/file-requests/${r.id}/close`, '', 'Close request', back, inline) : ''))
- return `<div class="page-head"><h1>Links</h1><p class="lede">Every link and file request you made or can manage. Revoking ends a link on its next request.</p></div><div class="lib-tools">${linkPolicyPanel(d.policy,d.policyScope)}</div>
- ${linkRepairsPanel(d.repairs,[...new Map([...d.public,...d.organisation].filter((l:any)=>l.manage).map((l:any)=>[l.item,{id:l.item,label:l.name}])).values()] as {id:string;label:string}[])}<h2 class="section-title">Shared too widely</h2><p class="quiet">Links anyone can open without signing in, links that stay open for a long time, and links past their expiry or download limit. Make private turns off every link on the item and keeps the people and groups it is shared with.</p>${list(wide, 'Nothing is shared too widely.')}
+ return `<div class="page-head"><h1>Links</h1></div><div class="lib-tools">${linkPolicyPanel(d.policy,d.policyScope)}</div>
+ <h2 class="section-title">Shared too widely</h2>${list(wide, 'Nothing is shared too widely.')}
  <h2 class="section-title">External links</h2>${list(pub, 'No external links yet. Create one from a file or folder page.')}
  <h2 class="section-title">Organization and restricted links</h2>${list(org, 'No organization links.')}
- <h2 class="section-title">File requests</h2>${list(req, 'No file requests yet. Create one from a folder page.')}`
+ <h2 class="section-title">File requests</h2>${list(req, 'No file requests yet. Create one from a folder page.')}
+ <div class="lib-tools">${details('Link repair agent', linkRepairsPanel(d.repairs,[...new Map([...d.public,...d.organisation].filter((l:any)=>l.manage).map((l:any)=>[l.item,{id:l.item,label:l.name}])).values()] as {id:string;label:string}[])).replace('<details class="disclosure">', d.repairs.scopes.length || d.repairs.history.length ? '<details class="disclosure" open>' : '<details class="disclosure">')}</div>`
 }
