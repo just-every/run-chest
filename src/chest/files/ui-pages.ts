@@ -2,7 +2,7 @@ import { selectionControls } from '../bulk/ui'
 import { searchFilters } from './ui-search'
 import { repairPanel } from '../sync-repair/ui'
 import type { Diagnosis } from '../sync-repair/model'
-import { esc, field, select, form, hidden, card, details, personPicker, stamp } from '../ui-shared'
+import { esc, field, select, form, hidden, card, details, personPicker, stamp, count } from '../ui-shared'
 import { noticeWords } from '../ui-words'
 import { addHere, listing, restores, rewindForm } from './ui-item'
 import { folderTable } from './ui-table'
@@ -61,7 +61,7 @@ export function spacePage(d: any, people: any[], groups: any[]) {
  return `<div class="browse"><div class="browse-main">${main}</div><div class="browse-side doc-side">${side}</div></div>`
 }
 // Words in scans and photos are searchable only once they are read; without a working AI key the page says why.
-export function searchPage(q: string, r: any, scansUnread: string | null = null, people: any[] = []) { return head('Search files', `${r.count} accessible result(s).`) + `<div class="lib-tools">${searchFilters(r, people)}</div>${scansUnread ? `<p class="quiet">Words in scanned images and photos are not searchable yet. ${esc(scansUnread)}</p>` : ''}${listing(r.results, 'No accessible file matches.',true)}` }
+export function searchPage(q: string, r: any, scansUnread: string | null = null, people: any[] = []) { return head('Search files', count(r.count, 'result')) + `<div class="lib-tools">${searchFilters(r, people)}</div>${scansUnread ? `<p class="quiet">Words in scanned images and photos are not searchable yet. ${esc(scansUnread)}</p>` : ''}${listing(r.results, 'No accessible file matches.',true)}` }
 export function sharedPage(rows: any[], q: URLSearchParams) {
  const filter = `<form class="form form-inline" method="get" action="/app/shared">${field('Shared by (email)', 'sharer', q.get('sharer') || '', 'text', false)}${field('From', 'from', q.get('from') || '', 'date', false)}${field('To', 'to', q.get('to') || '', 'date', false)}<button class="btn btn-outline">Filter</button></form>`
  return head('Shared with me', 'Files and folders colleagues shared with you, newest first.') + `<div class="lib-tools">${filter}</div>${listing(rows.map(r => ({ ...r, space: { name: `Shared by ${r.sharer}` }, sharedAt: r.at, until: r.expires })), 'Nothing has been shared with you.')}`
