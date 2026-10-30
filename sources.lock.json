@@ -5393,7 +5393,7 @@
       "executable": false
     },
     "tests/chest/administration.mjs": {
-      "sha256": "f20f77979d61d46f2f58dfb86ae1e8f576e89ac6bb55860e20cc58202b50aa82",
+      "sha256": "f984d562de947641a1e26a09a60c5645dc7d7d7cd835459b83b6d0be18bba4b9",
       "executable": false
     },
     "tests/chest/agent-filing.mjs": {
