@@ -61,8 +61,8 @@ try{
  const managing=await browser.newContext({viewport:{width:1440,height:1000},ignoreHTTPSErrors:true});await managing.addCookies(cookies(newOwner,h.origin));
  const management=await managing.newPage();await management.goto(h.origin+'/app/administration');
  const assignment=management.locator('form').filter({has:management.getByRole('button',{name:'Assign administrative role',exact:true})});
- await assignment.getByLabel('Staff email',{exact:true}).fill(promotion.email);await assignment.getByLabel('Administrative role',{exact:true}).selectOption(promotion.role);
- await assignment.getByLabel('Super administrator',{exact:true}).selectOption('true');await assignment.getByLabel('Scope',{exact:true}).selectOption(promotion.scope);
+ await assignment.getByLabel('Staff email',{exact:true}).fill(promotion.email);await assignment.getByLabel('Administrative role').selectOption(promotion.role);
+ await assignment.getByLabel('Super administrator').selectOption('true');await assignment.getByLabel('Scope').selectOption(promotion.scope);
  await assignment.getByRole('button',{name:'Assign administrative role',exact:true}).click();await management.waitForLoadState();
  let authority=(await api('/administration',newOwner)).roles;
  const promoted=authority.grants.find(g=>g.payload.email===people.outside&&g.payload.super);assert.ok(promoted);
