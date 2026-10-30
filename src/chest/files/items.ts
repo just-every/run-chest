@@ -36,7 +36,7 @@ export async function createItem(env: Bindings, s: Session, w: Who, input: any, 
  unique(await siblings(env, p.space.id, parent), value)
  const type = input.type === 'folder' ? 'folder' : 'file', versions: FileVersion[] = []
  // An upload must not silently trigger a second, differently scoped standing agent effect.
- // The company door cannot yet reserve paid work or admit the native arrival continuation.
+ // Paid work has no spend reservation, and the native arrival queue has no company-door adapter.
  if(type==='file'&&w.agent){
   const automatic=(await list<any>(env,'filing_scope')).some(r=>r.payload.enabled&&r.payload.source===parent&&r.payload.space===p.space.id)
   const rules=(await list<any>(env,'filing_rule')).some(r=>r.payload.enabled&&r.payload.source===parent&&r.payload.space===p.space.id)
