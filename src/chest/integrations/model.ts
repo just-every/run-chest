@@ -1,6 +1,6 @@
-export const actions = ['read','search','download','upload','folder','versions','share','request','picker','webhook'] as const
+export const actions = ['read','search','download','upload','folder','versions','share','request','picker','webhook','devices:self'] as const
 export type Action = typeof actions[number]
-export const readActions: readonly Action[] = ['read','search','download','picker','webhook']
+export const readActions: readonly Action[] = ['read','search','download','picker','webhook','devices:self']
 export type Budget = { requests: number; mutations: number; bytes: number }
 export type Client = { name: string; owner: string; redirects: string[]; pickerOrigins: string[]; actions: Action[]; confidential: boolean; at: string; revokedAt?: string }
 export type Grant = { client: string; user: string; operator: string; operatorVersion: number; resources: string[]; actions: Action[]; budget: Budget; used: Budget; at: string; expires: string; lastUse?: string; revokedAt?: string; reason?: string }
