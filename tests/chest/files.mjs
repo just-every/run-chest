@@ -129,6 +129,11 @@ try{
   // Ana shares a personal file with Ben as commenter: in-app notice, email, Shared with me; he comments but cannot edit.
   const plan=await upload(people.ana,{space:personalOf.ana,name:'plan.txt',base64:b64('launch plan')});
   await h.api(`/items/${plan.id}/shares`,people.ana,{principal:'ben@example.test',role:'commenter',message:'Please review section 2'});
+  const grants=(await audit('share.grant')).filter(e=>e.object_id===plan.id);
+  assert.equal(grants.length,1,'the personal file share has one audit event');
+  const shareGrant=grants[0],shareDetail=JSON.parse(shareGrant.detail);
+  assert.equal(shareGrant.actor,'ana@example.test');assert.equal(shareGrant.object_id,plan.id);
+  assert.equal(shareDetail.principal,'ben@example.test');assert.equal(shareDetail.role,'commenter');assert.equal(shareDetail.outcome,'succeeded');
   assert.ok((await h.api('/notices',people.ben)).some(n=>n.payload.type==='share'&&n.payload.item===plan.id&&n.payload.message.includes('Please review section 2')));
   assert.equal(mail('ben@example.test',new RegExp(`/app/items/${plan.id}`)).length,1);
   const shared=await h.api('/shared',people.ben);assert.equal(shared.find(s=>s.id===plan.id).sharer,'ana@example.test');assert.equal((await h.api('/shared?sharer=mo%40example.test',people.ben)).filter(s=>s.id===plan.id).length,0);assert.equal((await h.api(`/shared?from=2000-01-01&to=2000-01-02`,people.ben)).length,0);
