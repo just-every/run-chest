@@ -8,10 +8,10 @@ The primary journey: create a team space, move originals and rights in, install 
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 39 | 46 | 38 | 123 |
+| Core | 40 | 45 | 38 | 123 |
 | Agent surface | 0 | 3 | 23 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 40 | 53 | 77 | 170 |
+| Full target | 41 | 52 | 77 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -1078,7 +1078,7 @@ Core · target · **partial** · Cites BASE-ROLE-001
 
 #### ADMIN-006 — Admin rewind without content access
 
-Core · target · **partial** · From ADMIN-003
+Core · target · **done** · From ADMIN-003
 
 **Requirement.** An admin with content-recovery scope rewinds a departed user's account or any space to a recorded point without the owner, previewing changed originals, names, hierarchy, memberships and sharing effects, and restores selected content without opening it or gaining a content role. Recovery keeps later history and conflict copies and never re-enables revoked shares or identities.
 
@@ -1088,8 +1088,8 @@ Core · target · **partial** · From ADMIN-003
 3. The preview accounts for membership and sharing changes, revoked links and the departed identity stay denied, and the admin still cannot list names, preview, search or download the content.
 4. With the scope removed, the next preview and restore are refused.
 
-**Evidence.** `tests/chest/administration.mjs`
-**Gap.** Point 1 passes. Asserted (`tests/chest/administration.mjs`): the account restore's bytes and versions, the team-space restore's name and parent, the moved file among the preview's changes, revoked links and the departed identity denied, the admin refused names, preview and download, and an apply refused after the scope is removed. Not asserted: every restored team-space byte, kept conflict copies, a preview accounting for membership and sharing changes, the admin refused search, and a preview requested after the scope is removed.
+**Evidence.** `tests/chest/administration.mjs` — ADMIN-006 recovery journey: selected departed-account and team-space recovery through browser controls after restart; every restored path and current and retained-original hash, genuine conflict copies, metadata-only membership and sharing effects, revoked-link and departed-session denial, content and search denial, and immediate refusal of fresh and stored previews and apply after scope removal.
+**Gap.** None.
 
 #### ADMIN-004 — Enforced multi-factor sign-in
 

@@ -189,7 +189,7 @@
       "executable": false
     },
     "ACCEPTANCE.md": {
-      "sha256": "88808b946c2d03e50abebf86a9cde0b4200dd4d532efbc55e24239ed6f6210f7",
+      "sha256": "ba0da724333084848203e5440976e875ff7c116f4369fc1237dde397098088e6",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -217,7 +217,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "f28ac8c460e78d69fac0c15e1589dbdf2cee959ccd657cfaa343da33264ada30",
+      "sha256": "14a3925f0331aeb3e029a30b80f452f655506671678a3abe1f762b8c5f75f216",
       "executable": false
     },
     "DEMO.md": {
@@ -241,7 +241,7 @@
       "executable": false
     },
     "docs/administration.md": {
-      "sha256": "11863601ba6616ae334c0445a16d8801e315da9ca7fc454e132f5f88a36c2a54",
+      "sha256": "0cb4c9021a4e5e545f16b14aebc4ec4718da3a0973c29c4e1ab1709cd6231f24",
       "executable": false
     },
     "docs/ask.md": {
@@ -2457,7 +2457,7 @@
       "executable": false
     },
     "src/chest/files/rewind.ts": {
-      "sha256": "de0f2b57cef498b9fbe14aea78ee32a33e39b64f22408699a1dfcd1df4eaf697",
+      "sha256": "f4e96340014a232428493376bd3e4a522008838204cfc8a7b3c7f52963b2f3e7",
       "executable": false
     },
     "src/chest/files/search-filters.ts": {
@@ -5393,7 +5393,7 @@
       "executable": false
     },
     "tests/chest/administration.mjs": {
-      "sha256": "f20f77979d61d46f2f58dfb86ae1e8f576e89ac6bb55860e20cc58202b50aa82",
+      "sha256": "363b4660a68a87e8143bb3df5fd57203f27a9d3dbf531aec95c9a761aeafaae0",
       "executable": false
     },
     "tests/chest/agent-filing.mjs": {
