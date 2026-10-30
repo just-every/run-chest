@@ -244,6 +244,10 @@
       "sha256": "11863601ba6616ae334c0445a16d8801e315da9ca7fc454e132f5f88a36c2a54",
       "executable": false
     },
+    "docs/agents.md": {
+      "sha256": "8cb82445b677755d1e08eb9ebf8d10daa8c7d227bbf448ac7b9c127156ad2e8c",
+      "executable": false
+    },
     "docs/ask.md": {
       "sha256": "a2b6b782694d61f9f0697feec59fb934cd548da72ecb42481ff63682a0835fc0",
       "executable": false
@@ -2738,6 +2742,10 @@
     },
     "src/chest/integrations/auth.ts": {
       "sha256": "c19f2b55803b97372524d5ff3ab29f54a46abdbb30472b6b0886566db1275608",
+      "executable": false
+    },
+    "src/chest/integrations/capacity.ts": {
+      "sha256": "2576ee8d61edac294f90b45531a2702d3fb0d3fb9c9e8a060eeb82a14045efff",
       "executable": false
     },
     "src/chest/integrations/clients.ts": {
@@ -5509,7 +5517,7 @@
       "executable": false
     },
     "tests/chest/browser-integrations.mjs": {
-      "sha256": "8a1077b28f2bfc8748973314539c5161ef13ce2064d3e8b3583b01761cd71598",
+      "sha256": "3588898e36205c3f340c4a1a2b24244ad77b3abe1e4deb6021874cd706a27dac",
       "executable": false
     },
     "tests/chest/browser-link-discussions.mjs": {
