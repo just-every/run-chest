@@ -9,9 +9,9 @@ The primary journey: create a team space, move originals and rights in, install 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Core | 39 | 46 | 38 | 123 |
-| Agent surface | 0 | 2 | 24 | 26 |
+| Agent surface | 0 | 3 | 23 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 40 | 52 | 78 | 170 |
+| Full target | 40 | 53 | 77 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -2102,7 +2102,7 @@ Agent surface · target · **partial** · From new · Cites BASE-AGENT-003, BASE
 
 #### SURFACE-004 — Add and organize files
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-002, BASE-AGENT-006, BASE-AGENT-012 · Rules D-1
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-002, BASE-AGENT-006, BASE-AGENT-012 · Rules D-1
 
 **Requirement.** Within the grant's folders and the sponsor's role, the records clerk uploads originals and new versions (resumable over 10 MB through TRANSFER-001's session protocol), creates folders and new files, and moves, renames and sets typed fields on one item or a selection. These are standard, because version history, trash or Undo reverses each one, unless the exposure rule makes a call external: an upload, new file or move that lands where outside people can already see. Moves and renames keep stable ids, versions, grants and links (CHEST-04).
 
@@ -2115,8 +2115,8 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-002, BASE
 6. An over-limit upload returns `storage_limit_exceeded` naming the limit, and a malware fixture is quarantined as in the browser.
 7. Moving a file into a folder shared with an outside vendor declares external with counterparty known and one recipient; the same move into an internal folder declares standard.
 
-**Evidence.** None.
-**Gap.** No resumable agent upload, move, field or selection tools, job handles or exposure rule. Today `chest_upload` (base64 in one call) and `chest_create_folder` exist, and the integration API renames and adds versions.
+**Evidence.** `tests/chest/integrations.mjs` and `tests/chest/integration-upload-flow.mjs` — integrationUploadFlow: bounded OAuth version uploads keep the stable item, existing current-version link and exact retained hashes, with once-only publication and audit across retries and Worker restarts; new-file and version quota refusals name the actual limit and preserve visible content; scanner-edge malware admissions match browser quarantine, retain infected verdicts across restart and publish no item or version, while a clean control succeeds. `tests/chest/browser-integrations.mjs` — sponsor history, existing link and quarantine reconciliation at 1440 and 390.
+**Gap.** Shared Base Agent door, canonical mutation tools and risk classifications remain unproved. The bounded integration API proves points 2 and 6 only; the 200 MB resumable agent upload, remaining folder and new-file workflows, moves and renames with complete identity preservation, destination-grant and viewer refusals, 50-item selection jobs and status, typed-field validation and search, and external-exposure classification remain unproved. Existing transfer, native-client and scale holds remain unchanged.
 
 #### SURFACE-005 — Recovery stays standard; destruction is its own class
 

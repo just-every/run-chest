@@ -9,11 +9,10 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
+import {specimen,scannerReceipt} from './content-scanner-fixture.mjs';
 import {docx} from './office-fixtures.mjs';
 import {pdf} from './fixtures.mjs';
 const sha=b=>createHash('sha256').update(b).digest('hex'),b64=b=>Buffer.from(b).toString('base64');
-// The industry-standard harmless scanner specimen. Never executed, only submitted as original bytes.
-const specimen=Buffer.from('WDVPIVAlQEFQWzRcUFpYNTQoUF4pN0NDKTd9JEVJQ0FSLVNUQU5EQVJELUFOVElWSVJVUy1URVNULUZJTEUhJEgrSCo=','base64');
 const cookies=(cookie,url)=>cookie.split('; ').map(c=>{const i=c.indexOf('=');return{name:c.slice(0,i),value:c.slice(i+1),url}});
 async function bootstrap(h){await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const owner=await h.signIn(h.vars.OWNER_EMAIL);await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});return owner}
 // Optional real processor run: same public-door journey, real ClamAV and service, transport forwarded only at the network edge.
@@ -37,7 +36,7 @@ export async function contentSecurityFlow(){
   if(offline)return new Response('processor unavailable',{status:503});
   let result;
   if(real){result=await new Promise((resolve,reject)=>{const call=httpRequest(real.url,{method:'POST',headers:{authorization:'Bearer synthetic-chest-1','content-length':String(bytes.length),'x-content-sha256':sha(bytes)}},response=>{const chunks=[];response.on('data',b=>chunks.push(b));response.on('end',()=>{try{assert.equal(response.statusCode,200,Buffer.concat(chunks).toString());resolve(JSON.parse(Buffer.concat(chunks)))}catch(e){reject(e)}})});call.on('error',reject);call.end(bytes)})}
-  else result={checksum:sha(bytes),size:bytes.length,state:bytes.includes(specimen)?'infected':'clean',sensitive:/\bclassification\s*:\s*(?:sensitive|confidential|restricted)\b/i.test(bytes.toString()),reason:'Synthetic scanner-edge receipt',engine:'synthetic-chest-1'};
+  else result=scannerReceipt(bytes);
   if(wrongReceipt)result.checksum='0'.repeat(64);return Response.json(result);
  }});
  try{
