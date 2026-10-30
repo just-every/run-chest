@@ -1,3 +1,4 @@
+import { activityActor } from '../agent-attribution'
 import { esc, form, icon, when, day } from '../ui-shared'
 import { eventWords } from '../ui-words'
 import { fileKind, fileTile } from '../../ui/icons'
@@ -40,7 +41,7 @@ function sharing(d: any, name: Named, returnTo: string) {
 }
 function activity(d: any, name: Named) {
  const rows = (d.activity ?? []).filter((r: any) => !/^(get|post|put|delete|provider|automation|public)\./.test(r.action)).slice(0, 4)
- return `<section class="ps" id="panel-activity" aria-labelledby="pv-activity"><div class="ps-head"><h3 id="pv-activity">Activity</h3><a class="link-quiet" href="/app/audit?object=${esc(d.id)}">History</a></div>${rows.length ? `<ul class="pact">${rows.map((r: any) => `<li><span>${esc(name(r.actor))} ${esc(eventWords(r.action))}</span><span class="quiet">${when(r.at)}</span></li>`).join('')}</ul>` : '<p class="quiet">No activity yet.</p>'}</section>`
+ return `<section class="ps" id="panel-activity" aria-labelledby="pv-activity"><div class="ps-head"><h3 id="pv-activity">Activity</h3><a class="link-quiet" href="/app/audit?object=${esc(d.id)}">History</a></div>${rows.length ? `<ul class="pact">${rows.map((r: any) => `<li><span>${esc(activityActor(r,name))} ${esc(eventWords(r.action))}</span><span class="quiet">${when(r.at)}</span></li>`).join('')}</ul>` : '<p class="quiet">No activity yet.</p>'}</section>`
 }
 // Your uploads still going up into this folder (or as this file's next version), with Cancel.
 export function recentUploads(uploads: any[], returnTo: string) {

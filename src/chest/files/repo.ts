@@ -42,7 +42,7 @@ export async function commit(env: Bindings, actor: Session | null, ops: Op[], { 
  const agentActor=actor?sessionAgent(actor):undefined
  for(const op of ops)if(!op.remove&&!op.row.kind.startsWith('integration-')&&op.row.kind!=='agent-effect'){
   const preparedBy=agentActor?.door?agentAttribution(agentActor):undefined,payload={...op.row.payload};if(actor)delete payload.preparedBy
-  if(preparedBy){payload.preparedBy=preparedBy;const prior=new Set((op.previous?.payload.versions??[]).map((v:any)=>v.id));if(payload.versions)payload.versions=payload.versions.map((v:any)=>prior.has(v.id)?v:{...v,preparedBy})}
+  if(preparedBy){payload.preparedBy=preparedBy;const prior=new Set((op.previous?.payload.versions??[]).map((v:any)=>v.id));if(payload.versions)payload.versions=payload.versions.map((v:any)=>{if(!prior.has(v.id))return {...v,preparedBy};const before=op.previous?.payload.versions?.find((p:any)=>p.id===v.id);return v.review?.actor===actor?.operator.email&&JSON.stringify(v.review)!==JSON.stringify(before?.review)?{...v,review:{...v.review,actor:preparedBy.label,preparedBy,approvers:agentActor?.approvers??[]}}:v})}
   op.row.payload=payload
  }
  const events=integrationEventOps(ops,changes,audits)

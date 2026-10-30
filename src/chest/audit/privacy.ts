@@ -36,6 +36,8 @@ export async function viewFilter(env: Bindings, editor: boolean, manager: boolea
 export async function eraseAuditIdentity(env: Bindings, s: Session, input: any) {
  insist(s.operator.role === 'owner', 'owner_required', 403)
  const email = String(input.email ?? '').trim().toLowerCase(); insist(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && input.confirm === email, 'confirm_identity')
+ const native=await env.DB.prepare('SELECT id FROM oa_operators WHERE email=?').bind(email).first<{id:string}>()
+ if(native)insist(!await env.DB.prepare('SELECT 1 FROM agent_door_agents WHERE sponsor=?').bind(native.id).first(),'agent_decision_custody_held',409)
  const hash = await digest(new TextEncoder().encode(email)), alias = `Erased person ${hash.slice(0, 12)}`
  const key = `audit:erased:${hash}`
  if (!await maybe(env, 'audit-erased', key)) await commit(env, s, [{ row: fresh('audit-erased', { alias }, key) }], { audits: [{ action: 'audit.identity.erase', object: alias, detail: { outcome: 'anonymized' } }] })
