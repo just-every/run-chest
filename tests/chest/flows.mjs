@@ -143,6 +143,67 @@ try{
   await h.api('/archive/preview',owner,{...input,archive:JSON.stringify({format:'chest-archive-1',source:'bad',items:[{...item('bad.txt'),sha256:'wrong'}]})},400);
   const job=await h.api('/archive/apply',owner,{...input,fingerprint:p.fingerprint});assert.equal(job.state,'completed');assert.equal((await h.api('/library?q=archive%20secret',member)).count,0);
   await h.stop();await h.start();assert.equal((await h.api(`/archive/${job.id}`,owner)).state,'completed');assert.equal((await h.api(`/archive/${job.id}`,owner,{action:'undo'})).state,'undone');assert.equal((await h.api('/library',owner)).count,before);
+  // Exceed one request's batch so a real Worker restart interrupts an unfinished apply.
+  const source='synthetic-chest-restart',items=Array.from({length:23},(_,n)=>({...item(`Restart/record-${n}.txt`,`synthetic-chest-original-${n}`),sourceId:`synthetic-chest-${n+2}`}));
+  const restartInput={...input,archive:JSON.stringify({format:'chest-archive-1',source,items})};
+  const restartPreview=await h.api('/archive/preview',owner,restartInput);
+  assert.deepEqual(restartPreview.items.map(i=>[i.path,i.checksum,i.size,i.status]),items.map(i=>[i.path,i.sha256,i.size,'admitted']));
+  assert.equal((await h.api('/library',owner)).count,before,'preview does not publish records');
+  await h.api('/archive/preview',member,restartInput,403);
+  await h.api('/archive/apply',member,{...restartInput,fingerprint:restartPreview.fingerprint},403);
+  let unfinished=await h.api('/archive/apply',owner,{...restartInput,fingerprint:restartPreview.fingerprint});
+  assert.equal(unfinished.state,'applying');assert.equal(unfinished.total,items.length);
+  assert.ok(unfinished.checkpoint>0&&unfinished.checkpoint<unfinished.total,'apply leaves a durable, nonzero unfinished checkpoint');
+  const admitted=async()=>(await h.api('/library',owner)).documents.filter(r=>r.payload.source?.archive===source).sort((a,b)=>a.id.localeCompare(b.id));
+  const firstBatch=await admitted();assert.equal(firstBatch.length,unfinished.checkpoint);
+  const ownerSessions=await h.api('/people',owner,{action:'sessions',email:h.vars.OWNER_EMAIL});
+  const revokedOwner=await h.signIn(h.vars.OWNER_EMAIL),extraSessions=await h.api('/people',owner,{action:'sessions',email:h.vars.OWNER_EMAIL});
+  const extraSession=extraSessions.find(s=>s.active&&!ownerSessions.some(prior=>prior.id===s.id));assert.ok(extraSession);
+  await h.api('/people',owner,{action:'revoke',email:h.vars.OWNER_EMAIL,session:extraSession.id});
+  await h.stop();await h.start();
+  assert.deepEqual(await h.api(`/archive/${unfinished.id}`,owner),unfinished,'a new Worker reads the persisted unfinished job');
+  assert.deepEqual(await admitted(),firstBatch,'the first batch survives restart unchanged');
+  await h.api(`/archive/${unfinished.id}`,member,undefined,403);
+  await h.api(`/archive/${unfinished.id}`,member,{action:'resume'},403);
+  await h.api(`/archive/${unfinished.id}`,member,{action:'undo'},403);
+  await h.api(`/archive/${unfinished.id}`,revokedOwner,{action:'resume'},401);
+  assert.deepEqual(await h.api(`/archive/${unfinished.id}`,owner),unfinished,'refused continuations leave the checkpoint unchanged');
+  assert.deepEqual(await admitted(),firstBatch,'refused continuations leave admitted records unchanged');
+  for(let attempts=0;unfinished.state!=='completed'&&attempts<items.length;attempts++){
+   const previous=unfinished;unfinished=await h.api(`/archive/${unfinished.id}`,owner,{action:'resume'});
+   assert.equal(unfinished.id,previous.id);assert.equal(unfinished.fingerprint,restartPreview.fingerprint);
+   assert.ok(unfinished.checkpoint>previous.checkpoint&&unfinished.checkpoint<=unfinished.total,'each continuation advances the saved checkpoint');
+  }
+  assert.equal(unfinished.state,'completed');assert.equal(unfinished.checkpoint,items.length);
+  const completed=await admitted();assert.equal(completed.length,items.length);assert.equal((await h.api('/library',owner)).count,before+items.length);
+  assert.equal(new Set(completed.map(r=>r.payload.source.path)).size,items.length);
+  for(const original of items){
+   const record=completed.find(r=>r.payload.source.path===original.path);assert.ok(record,`admitted ${original.path}`);
+   const detail=await h.api(`/documents/${record.id}`,owner);assert.deepEqual(detail,record);
+   assert.equal(record.payload.versions.length,1);const version=record.payload.versions[0];
+   assert.equal(version.checksum,original.sha256);assert.equal(version.size,original.size);assert.equal(version.arrival,'migration');
+   assert.deepEqual(version.migration,{archive:source,path:original.path,sourceId:original.sourceId,timestamp:original.timestamp});
+   assert.deepEqual(record.payload.source,{archive:source,path:original.path,sourceId:original.sourceId,format:null,timestamp:original.timestamp,principals:original.principals,decisions:original.decisions,gaps:restartPreview.items.find(i=>i.path===original.path).gaps});
+   assert.equal(record.payload.approved,null);assert.equal(version.state,'submitted');assert.deepEqual(version.events,[]);
+   assert.equal(record.payload.private,true);assert.deepEqual(record.payload.grants,[]);
+   const downloaded=await h.raw(`/api/chest/documents/${record.id}/bytes/${version.id}?download=true`,owner);assert.equal(downloaded.status,200);
+   const retained=Buffer.from(await downloaded.arrayBuffer());assert.equal(retained.length,original.size);assert.equal(hash(retained),original.sha256);
+   for(const reader of [member,stranger]){
+    await h.api(`/documents/${record.id}`,reader,undefined,404);
+    assert.equal((await h.raw(`/api/chest/documents/${record.id}/bytes/${version.id}?download=true`,reader)).status,404);
+   }
+  }
+  for(const record of firstBatch)assert.deepEqual(completed.find(r=>r.id===record.id),record,'resume preserves existing bytes and migration provenance');
+  for(let retry=0;retry<2;retry++)assert.deepEqual(await h.api(`/archive/${unfinished.id}`,owner,{action:'resume'}),unfinished);
+  await h.stop();await h.start();
+  assert.deepEqual(await h.api(`/archive/${unfinished.id}`,owner,{action:'resume'}),unfinished);
+  assert.deepEqual(await admitted(),completed,'repeated resume, including after restart, publishes no duplicate or changed records');
+  assert.equal((await h.api('/library',owner)).count,before+items.length);
+  assert.equal((await h.api('/library?q=synthetic-chest-original',member)).count,0);
+  // Keep the original untouched undo and conflicting-native-edit journeys independent.
+  let reversed=await h.api(`/archive/${unfinished.id}`,owner,{action:'undo'});
+  for(let attempts=0;reversed.state!=='undone'&&attempts<items.length;attempts++)reversed=await h.api(`/archive/${unfinished.id}`,owner,{action:'resume'});
+  assert.equal(reversed.state,'undone');assert.deepEqual(await admitted(),[]);assert.equal((await h.api('/library',owner)).count,before);
   const second={...input,archive:archive.replace('owner-export','second-export')},preview=await h.api('/archive/preview',owner,second),job2=await h.api('/archive/apply',owner,{...second,fingerprint:preview.fingerprint});
   const imported=(await h.api('/library?q=certificate.txt',owner)).documents.find(r=>r.payload.source);const migrated=imported.payload.versions[0];assert.equal(migrated.arrival,'migration');assert.deepEqual(migrated.migration,{archive:'second-export',path:'Acme/certificate.txt',sourceId:'synthetic-chest-1',timestamp:'2026-10-01T12:00:00Z'});assert.equal(imported.payload.approved,null);assert.equal(migrated.state,'submitted');const restored=await h.api(`/documents/${imported.id}/history/${migrated.id}/restore`,owner,{});assert.equal(restored.payload.versions.at(-1).arrival,'restore');assert.equal(restored.payload.versions.at(-1).restoredFrom,migrated.id);assert.deepEqual(restored.payload.versions.at(-1).migration,migrated.migration);assert.equal(restored.payload.approved,null);assert.equal(restored.payload.versions.length,2);await h.api(`/documents/${imported.id}/filing`,owner,{...filing(),title:'Native edit'});assert.equal((await h.api(`/archive/${job2.id}`,owner,{action:'undo'},409)).error,'NATIVE_EDIT_CONFLICT');assert.equal((await h.api(`/documents/${imported.id}`,owner)).payload.title,'Native edit');
  });
