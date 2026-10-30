@@ -79,8 +79,9 @@ try{
  await api(`/items/${uploaded.id}/unshare`,owner,{principal:people.help});await api(`/public-links/${teamLink.link.id}/revoke`,owner,{});
  await api(`/items/${uploaded.id}/trash`,sessions.staff,{});await api(`/items/${teamConflict.kept}/trash`,sessions.staff,{});
 
+ const unselected=await api('/items',sessions.staff,{space:space.id,type:'file',name:'Unselected later record.txt',base64:Buffer.from('Keep this later record untouched').toString('base64')});
  const preview=await api('/administration/recovery',sessions.recover,{space:space.id,at:point});
- assert.ok(preview.scopes[0].changes.some(c=>c.id===uploaded.id));assert.ok(preview.scopes[0].changes.some(c=>c.id===teamConflict.kept));
+ assert.ok(preview.scopes[0].changes.some(c=>c.id===uploaded.id));assert.ok(preview.scopes[0].changes.some(c=>c.id===teamConflict.kept));assert.ok(preview.scopes[0].changes.some(c=>c.id===unselected.id&&c.kinds.includes('added since')));
  assert.ok(!JSON.stringify(preview).includes('forecast'));assert.ok(!JSON.stringify(preview).includes('acquisition'));
  assert.equal(preview.scopes[0].sharing.restored,false);
  for(const [action,object]of [['space.members',space.id],['share.remove',uploaded.id],['link.revoke',uploaded.id]])assert.ok(preview.scopes[0].sharing.changes.some(e=>e.action===action&&e.object===object),`preview accounts for ${action}`);
@@ -89,6 +90,7 @@ try{
  const after=await reconcile(sessions.staff,uploaded.id,'Harbor quarterly forecast.txt',null,teamCurrent,teamLater.versions);assert.equal(after.versions.length,teamLater.versions.length+1);
  assert.equal(after.versions.find(v=>v.id===after.item.current).actor,people.recover);assert.equal(after.versions.find(v=>v.id===after.item.current).restoredFrom,teamBefore.item.current);
  await reconcile(sessions.staff,teamConflict.kept,conflictBefore.item.name,null,'Offline quarterly correction',conflictBefore.versions);
+ await reconcile(sessions.staff,unselected.id,'Unselected later record.txt',null,'Keep this later record untouched',unselected.payload.versions);
  await deniedContent(sessions.recover,uploaded.id,after.item.current,space.id,'forecast');
  await api(`/items/${uploaded.id}`,sessions.help,undefined,403);await api(`/items/${uploaded.id}`,sessions.outside,undefined,403);
  assert.ok(!(await api(`/spaces/${space.id}`,sessions.successor)).members.some(m=>m.principal===people.outside));
@@ -129,6 +131,7 @@ try{
   await h.stop();await h.start();await p.reload();await p.locator(`input[name="recoverItem:${uploaded.id}"]`).check();await p.locator(`input[name="recoverItem:${teamConflict.kept}"]`).check();await p.getByRole('button',{name:'Restore selected records',exact:true}).click();await p.waitForLoadState();
   await p.screenshot({path:`test-results/${width}-administration-team-restored.png`,fullPage:true});
   await reconcile(sessions.successor,uploaded.id,'Harbor quarterly forecast.txt',null,teamCurrent,teamLater.versions);await reconcile(sessions.successor,teamConflict.kept,conflictBefore.item.name,null,'Offline quarterly correction',conflictBefore.versions);
+  await reconcile(sessions.successor,unselected.id,'Unselected later record.txt',null,'Keep this later record untouched',unselected.payload.versions);
   await deniedContent(sessions.recover,uploaded.id,after.item.current,space.id,'forecast');await deniedContent(sessions.recover,personalFile.id,recoveredAccount.item.current,personalId,'Acme');
   assert.equal((await h.fetch(new URL(publicLink.url).pathname)).status,410);assert.equal((await h.fetch(new URL(teamLink.url).pathname)).status,410);assert.equal((await h.raw('/api/chest/library',sessions.staff)).status,401);
   await p.goto(h.origin+'/app/administration/audit');await p.getByRole('heading',{name:'Administrative activity',exact:true}).waitFor();await p.screenshot({path:`test-results/${width}-administration-audit.png`,fullPage:true});await context.close();
