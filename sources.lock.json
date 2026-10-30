@@ -5693,7 +5693,7 @@
       "executable": false
     },
     "tests/chest/link-policy.mjs": {
-      "sha256": "bbba5164d2d936ccf9edec7f211569007b5e0afbd2b8fbe73248852b2cd56a12",
+      "sha256": "a99e4c97337df6b1175a70d76aa64697a74a4f9aee7ae12bae46aa96b1930bbd",
       "executable": false
     },
     "tests/chest/link-repairs.mjs": {
