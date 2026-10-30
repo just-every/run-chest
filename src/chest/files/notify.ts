@@ -1,4 +1,4 @@
-import { sessionAgent } from '../agent-policy'
+import { sessionAgent } from '../agent-attribution'
 import { attempt } from '../audit/journal'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'

@@ -2,7 +2,7 @@ import { ToolRefusal, type ToolContext } from '../../modules/agent-door/index.ts
 import type { Bindings } from '../../auth.server'
 import { ChestError, type Row } from '../model'
 import { context, demand, who, type Ctx, type Action } from '../files/access'
-import { resource } from '../integrations/auth'
+import { resource, spend } from '../integrations/auth'
 import type { Action as IntegrationAction } from '../integrations/model'
 import { commit, fresh, maybe, withCommitAttachment } from '../files/repo'
 import { agentSession } from './identity.ts'
@@ -25,7 +25,7 @@ export async function itemContext(env:Bindings,ctx:ToolContext,id:unknown,action
 export async function nativeCall(env:Bindings,ctx:ToolContext,method:string,path:string,input:Record<string,unknown>={},query:Record<string,unknown>={}) {
  const {session}=await agentSession(env,ctx),url=new URL(`/api/chest${path}`,env.AUTH_ORIGIN)
  for(const [k,v]of Object.entries(query))if(v!==undefined)url.searchParams.set(k,String(v))
- return execute(env,new Request(url,{method,headers:{origin:env.AUTH_ORIGIN}}),session,method,path,input)
+ return execute(env,new Request(url,{method,headers:{origin:env.AUTH_ORIGIN,...(typeof input.range==='string'?{range:input.range}:{})}}),session,method,path,input)
 }
 // Keep the native effect and its once-only receipt in the same existing D1 batch.
 // A lost door response can be recovered without replaying a native effect.
@@ -37,11 +37,11 @@ export async function mutation(env:Bindings,ctx:ToolContext,tool:string,path:str
   const rows=ops.filter(o=>kinds.includes(o.row.kind)).map(o=>publicRecord(o.row)),first=rows[0]
   const result={...first,records:rows}
   const receipt=fresh('agent-effect',{operation:ctx.operationId,agent:ctx.agent.id,sponsor:ctx.person.id,consent:ctx.consent??null,client:ctx.clientId??null,result},key)
-  return [{row:receipt}]
+  return [{row:receipt},...(local?[spend(local,{mutations:1,bytes:ops.filter(o=>o.row.kind==='item').reduce((n,o)=>n+(o.row.payload.versions??[]).filter((v:any)=>!o.previous?.payload.versions?.some((p:any)=>p.id===v.id)).reduce((s:number,v:any)=>s+v.size,0),0)})]:[])]
  }})
  const url=new URL(`/api/chest${path}`,env.AUTH_ORIGIN)
- await execute(env,new Request(url,{method:'POST',headers:{origin:env.AUTH_ORIGIN}}),scoped,'POST',path,input)
+ const executed=await execute(env,new Request(url,{method:'POST',headers:{origin:env.AUTH_ORIGIN}}),scoped,'POST',path,input)
  const saved=await maybe(env,'agent-effect',key)
  if(!saved)throw new ToolRefusal('native_effect_unconfirmed')
- return saved.payload.result
+ return JSON.parse(JSON.stringify({...saved.payload.result,preparedBy:ctx.actor,...(tool==='links.create'?{link:executed.link,url:executed.url}:{}),...(tool==='requests.create'?{request:executed.request,url:executed.url}:{})}))
 }

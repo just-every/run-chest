@@ -1,4 +1,4 @@
-import { agentAttribution, sessionAgent } from '../agent-policy'
+import { agentAttribution, sessionAgent } from '../agent-attribution'
 import { activityAudits } from '../content-security/activity'
 import { integrationEventOps, integrationEventStatements } from '../integrations/events'
 import { erasurePublication } from '../erasure/publication'
@@ -40,7 +40,11 @@ export async function commit(env: Bindings, actor: Session | null, ops: Op[], { 
   ops = [...ops, ...attachment.ops(ops)]; fences = [...fences, ...attachment.fences ?? []]; audits = [...audits, ...attachment.audits ?? []]
  }
  const agentActor=actor?sessionAgent(actor):undefined
- if(agentActor?.door)ops=ops.map(op=>op.remove?op:{...op,row:{...op.row,payload:{...op.row.payload,preparedBy:agentAttribution(agentActor)}}})
+ for(const op of ops)if(!op.remove&&!op.row.kind.startsWith('integration-')&&op.row.kind!=='agent-effect'){
+  const preparedBy=agentActor?.door?agentAttribution(agentActor):undefined,payload={...op.row.payload};if(actor)delete payload.preparedBy
+  if(preparedBy){payload.preparedBy=preparedBy;const prior=new Set((op.previous?.payload.versions??[]).map((v:any)=>v.id));if(payload.versions)payload.versions=payload.versions.map((v:any)=>prior.has(v.id)?v:{...v,preparedBy})}
+  op.row.payload=payload
+ }
  const events=integrationEventOps(ops,changes,audits)
  ops=[...ops,...events];statements=[...statements,...integrationEventStatements(events)]
  const statement = (sql: string, params: unknown[] = []) => env.DB.prepare(sql).bind(...params)
