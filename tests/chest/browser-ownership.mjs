@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
-const h=await harness(),cookies={};let browser;
+import {ownershipState,ownershipAudit} from './ownership-proof.mjs';
+const h=await harness(),cookies={},emails={};let browser;
 const b64=s=>Buffer.from(s).toString('base64');
 const go=(p,path)=>p.goto(h.origin+path);
 const press=async(p,name)=>Promise.all([p.waitForNavigation(),p.getByRole('button',{name,exact:true}).click()]);
@@ -13,8 +14,8 @@ try{
  await mkdir('test-results',{recursive:true});
  assert.equal((await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'})).status,303);cookies.owner=await h.signIn(h.vars.OWNER_EMAIL);
  await h.fetch('/setup',{method:'POST',headers:{cookie:cookies.owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
- for(const n of ['jordan','casey']){await h.api('/people',cookies.owner,{action:'invite',email:`${n}@example.test`,name:n==='jordan'?'Jordan Lee':'Casey Rivera'});cookies[n]=await h.signIn(`${n}@example.test`,true)}
- browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+ for(const n of ['jordan','casey']){emails[n]=`${n}@example.test`;await h.api('/people',cookies.owner,{action:'invite',email:emails[n],name:n==='jordan'?'Jordan Lee':'Casey Rivera'});cookies[n]=await h.signIn(emails[n],true)}
+ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{}),args:['--use-mock-keychain','--password-store=basic','--no-sandbox']});
  for(const width of [1440,390]){
   const pages={};for(const n of ['owner','jordan']){const c=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});await c.addCookies(cookies[n].split('; ').map(v=>{const at=v.indexOf('=');return {name:v.slice(0,at),value:v.slice(at+1),url:h.origin}}));pages[n]=await c.newPage()}
   const a=pages.owner,b=pages.jordan,space=(await h.api('/files',cookies.owner)).personal;
@@ -24,9 +25,40 @@ try{
   assert.equal((await h.api(`/items/${file.id}`,cookies.owner)).role,'owner');
   await go(b,'/app/notices');await fit(b,'notice',width);await follow(b,b.locator('li').filter({hasText:folder.payload.name}).getByRole('link',{name:'Open request'}));assert.ok(b.url().includes('/app/ownership/'));await go(b,'/app/ownership');await fit(b,'inbox',width);await follow(b,b.getByRole('link',{name:folder.payload.name,exact:true}));await fit(b,'decision',width);await press(b,'Accept ownership');await fit(b,'accepted',width);await follow(b,b.getByRole('link',{name:'Open transferred item',exact:true}));assert.equal((await h.api(`/items/${file.id}`,cookies.jordan)).role,'owner');await fit(b,'received-folder',width);
   await go(a,`/app/items/${file.id}`);assert.equal((await h.api(`/items/${file.id}`,cookies.owner)).role,'editor');await fit(a,'sender-editor',width);
-  const single=await h.api('/items',cookies.owner,{space,type:'file',name:`Declined transfer ${width}.txt`,base64:b64('Keep the original owner')});const offer=await h.api(`/items/${single.id}/ownership`,cookies.owner,{recipient:'jordan@example.test'});
-  await go(b,`/app/ownership/${offer.id}`);await press(b,'Decline ownership');await fit(b,'declined',width);assert.equal((await h.api(`/items/${single.id}`,cookies.owner)).role,'owner');
-  const pending=await h.api(`/items/${single.id}/ownership`,cookies.owner,{recipient:'jordan@example.test'});await go(a,`/app/ownership/${pending.id}`);await press(a,'Cancel request');await fit(a,'cancelled',width);
+  const accepted=(await h.api('/ownership',cookies.owner)).find(row=>row.item===folder.id);
+  const event=(action,offer,actor=h.vars.OWNER_EMAIL)=>({action:`ownership.${action}`,actor,offer:offer.id,recipient:emails.jordan});
+  await h.api(`/ownership/${accepted.id}`,cookies.jordan,{decision:'accept'},409);
+  const acceptedAudit=await ownershipAudit(h,cookies.owner,folder.id,[event('offer',accepted),event('accept',accepted,emails.jordan)]);
+  const retained=await h.api('/items',cookies.owner,{space,type:'folder',name:`Retained originals ${width}`}),originals=['synthetic-chest-1','synthetic-chest-2','synthetic-chest-3'].map(value=>Buffer.from(value));
+  const single=await h.api('/items',cookies.owner,{parent:retained.id,type:'file',name:`Declined transfer ${width}.txt`,base64:originals[0].toString('base64')});
+  for(const bytes of originals.slice(1))await h.api(`/items/${single.id}/versions`,cookies.owner,{filename:single.payload.name,base64:bytes.toString('base64')});
+  const colleague=emails.casey;
+  await h.api(`/items/${single.id}/shares`,cookies.owner,{principal:colleague,role:'viewer'});
+  const link=await h.api(`/items/${single.id}/links`,cookies.owner,{role:'viewer'}),token=link.url.split('/s/')[1];
+  assert.equal((await h.api('/links/open',cookies.casey,{token})).item,single.id);
+  const before=await ownershipState(h,cookies.owner,single.id,originals),reader=await ownershipState(h,cookies.casey,single.id,originals);
+  assert.equal(before.item.space,space);assert.equal(before.item.parent,retained.id);assert.equal(reader.role,'viewer');
+  assert.ok(before.grants.some(grant=>grant.principal===colleague&&grant.role==='viewer'));assert.ok(before.links.some(row=>row.id===link.link.id));
+  await h.api(`/items/${single.id}`,cookies.jordan,undefined,403);
+  const offer=await h.api(`/items/${single.id}/ownership`,cookies.owner,{recipient:emails.jordan});
+  await go(b,`/app/ownership/${offer.id}`);await fit(b,'decline-decision',width);await press(b,'Decline ownership');await fit(b,'declined',width);assert.equal((await h.api(`/items/${single.id}`,cookies.owner)).role,'owner');
+  const declined=[event('offer',offer),event('decline',offer,emails.jordan)],declinedAudit=await ownershipAudit(h,cookies.owner,single.id,declined);
+  await h.stop();await h.start();await b.reload();
+  assert.equal((await h.api(`/ownership/${offer.id}`,cookies.jordan)).status,'declined');
+  assert.equal(await b.getByRole('button',{name:'Accept ownership',exact:true}).count(),0);
+  await fit(b,'declined-restarted',width);
+  await h.api(`/ownership/${offer.id}`,cookies.jordan,{decision:'decline'},409);await h.api(`/ownership/${offer.id}`,cookies.jordan,{decision:'accept'},409);
+  assert.deepEqual(await ownershipState(h,cookies.owner,single.id,originals),before);
+  assert.deepEqual(await ownershipState(h,cookies.casey,single.id,originals),reader);
+  await h.api(`/items/${single.id}`,cookies.jordan,undefined,403);
+  await h.api(`/items/${single.id}/rename`,cookies.casey,{name:'Forbidden.txt'},403);
+  assert.equal((await h.api('/links/open',cookies.casey,{token})).item,single.id);
+  assert.deepEqual(await ownershipAudit(h,cookies.owner,single.id,declined),declinedAudit);
+  assert.deepEqual(await ownershipAudit(h,cookies.owner,folder.id,[event('offer',accepted),event('accept',accepted,emails.jordan)]),acceptedAudit);
+  const pending=await h.api(`/items/${single.id}/ownership`,cookies.owner,{recipient:emails.jordan});await go(a,`/app/ownership/${pending.id}`);await press(a,'Cancel request');await fit(a,'cancelled',width);
+  await h.api(`/ownership/${pending.id}/cancel`,cookies.owner,{},409);await h.api(`/ownership/${pending.id}`,cookies.jordan,{decision:'accept'},409);
+  await ownershipAudit(h,cookies.owner,single.id,[...declined,event('offer',pending),event('cancel',pending)]);
+  console.log(`PROBE SPACE-003 browser ${width}: recipient Decline ownership, retry and Worker restart -> unchanged location, three original hashes, grants and link; offer, accept, decline and cancel audited once with exact actors and recipients`);
   for(const p of Object.values(pages))await p.context().close();
  }
  console.log('SPACE-001 ownership browser at 1440 and 390 passed');
