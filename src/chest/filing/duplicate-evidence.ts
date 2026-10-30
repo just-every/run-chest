@@ -31,7 +31,7 @@ export function reconcile(a: Candidate, b: Candidate) {
  const comparison:Match|null=direct ?? (retained.length?{reason:'retained_version',similarity:1}:sharedSources.length?{reason:'source_identity',similarity:0}:null)
  if(!comparison)return null
  const aHasB=a.row.payload.versions.some(v=>v.checksum===bv.checksum), bHasA=b.row.payload.versions.some(v=>v.checksum===av.checksum)
- const supersession=av.checksum===bv.checksum?'Current originals match':aHasB&&!bHasA?'The other current original occurs in the canonical history':bHasA&&!aHasB?'The canonical current original occurs in the other history':'Different current originals; choose a canonical file after reviewing the changes'
+ const supersession=av.checksum===bv.checksum?'Current originals match':aHasB&&!bHasA?'The other current original occurs in the kept file’s history':bHasA&&!aHasB?'The kept file’s current original occurs in the other history':'Different current originals; choose a canonical file after reviewing the changes'
  const words=(value:string)=>value.split(' ').filter(Boolean), ax=words(ac.text.value), bx=words(bc.text.value)
  let prefix=0;while(prefix<Math.min(ax.length,bx.length)&&ax[prefix]===bx[prefix])prefix++
  return {...comparison,evidence:{currentVersionsOnly:false,differentBytes:av.checksum!==bv.checksum,originalLinksRetained:true,approvalsCombined:false,

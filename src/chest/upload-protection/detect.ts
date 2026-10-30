@@ -14,6 +14,6 @@ export function signals(name: string, bytes: Uint8Array, prior?: Uint8Array) {
   const old = prefix(prior)
   if ((extension === 'pdf' && old.startsWith('%PDF-')) || (['docx','xlsx','pptx','odt','ods','odp','zip'].includes(extension) && prior[0] === 80 && prior[1] === 75) || (extension === 'png' && prior[0] === 137) || (['jpg','jpeg'].includes(extension) && prior[0] === 255)) reasons.push('File signature no longer matches its extension')
  }
- if (prior && bytes.length >= 1024 && entropy(bytes) > 7.5 && entropy(bytes) - entropy(prior) > 2) reasons.push('Content entropy jumped toward random')
+ if (prior && bytes.length >= 1024 && entropy(bytes) > 7.5 && entropy(bytes) - entropy(prior) > 2) reasons.push('Content suddenly looks scrambled, as encrypted files do')
  return reasons
 }

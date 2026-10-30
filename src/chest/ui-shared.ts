@@ -26,6 +26,12 @@ export const tone=(email:string)=>1+[...email].reduce((n,c)=>n+c.charCodeAt(0),0
 export const avatar=(p:{email:string,name:string},label=false)=>`<span class="avatar tone-${tone(p.email)}"${label?` title="${esc(p.name)}"`:' aria-hidden="true"'}>${esc((p.name||p.email).trim()[0]?.toUpperCase()??'?')}</span>`
 // A person by name, from the people the page already has; an address nobody has a name for shows as it is.
 export const nameOf=(people:{id:string,payload:{name:string}}[])=>{const names=new Map(people.map(p=>[p.id,p.payload.name]));return (email:string)=>names.get(email)||email}
+// "1 version", "2 versions".
+export const count=(n:number,word:string,many=`${word}s`)=>`${n} ${n===1?word:many}`
+// A saved field value as a person reads it: numbers with separators, Yes or No for a switch.
+export const fieldValue=(v:unknown)=>typeof v==='number'?v.toLocaleString('en-US',{maximumFractionDigits:6}):typeof v==='boolean'?(v?'Yes':'No'):typeof v==='string'?v:JSON.stringify(v)
+// A storage limit is typed in gigabytes (blank for none) and kept in bytes; this is the number shown for a stored limit.
+export const gigabytes=(n:number|null|undefined)=>n===null||n===undefined?'':String(Number((n/1073741824).toFixed(9)))
 export const hidden=(name:string,value:string)=>`<input type="hidden" name="${name}" value="${esc(value)}">`
 // A disclosure: the summary looks like a button (ink by default) and opens its form in a card below it.
 export const details=(title:string,body:string,summaryClass='btn')=>`<details class="disclosure"><summary class="${summaryClass}">${esc(title)}</summary><div class="disclosure-panel">${body}</div></details>`
