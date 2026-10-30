@@ -45,6 +45,22 @@ try{
   assert.equal((await h.raw('/api/chest/items',people.ana,{parent:contracts.id,type:'file',name:'TERMS.txt',base64:b64('x')})).status,409,'case-insensitive names are unique in a folder');
   await h.api('/items',people.ben,{parent:contracts.id,type:'folder',name:'Mine'},403);
   const listing=await h.api(`/items/${client.id}`,people.ben);assert.deepEqual(listing.children.map(c=>c.name),['Contracts']);assert.equal(listing.can.download,true);assert.equal(listing.can.contribute,false);
+  // A real space viewer can read the populated tree but cannot rename its folder or file, or administer people.
+  const viewerState=async()=>({children:(await h.api(`/spaces/${space.id}`,people.mo)).children.map(c=>[c.id,c.name]),items:await Promise.all([client.id,contracts.id,terms.id].map(async key=>{const d=await h.api(`/items/${key}`,people.mo);return {item:d.item,versions:d.versions,children:d.children.map(c=>[c.id,c.name])}}))});
+  const unchanged=await viewerState();
+  assert.equal((await h.api(`/spaces/${space.id}`,people.ben)).role,'viewer');
+  for(const item of [client,terms]){
+   assert.equal((await h.api(`/items/${item.id}`,people.ben)).role,'viewer');
+   await h.api(`/items/${item.id}/rename`,people.ben,{name:`Renamed ${item.payload.name}`},403);
+   assert.deepEqual(await viewerState(),unchanged,'a refused rename keeps names, hierarchy and all retained versions');
+  }
+  assert.equal((await h.raw('/app/admin',people.ben)).status,403,'People & settings refuses a space viewer');
+  assert.equal((await h.raw('/app/admin',people.owner)).status,200,'People & settings remains available to the owner');
+  assert.deepEqual(await viewerState(),unchanged);
+  assert.deepEqual(await bytesOf('ben',terms.id,terms.payload.current),Buffer.from('Payment terms net 30'));
+  const privateFile=await upload(people.dee,{space:personalOf.dee,name:'Private counterpart.txt',base64:b64('Private counterpart original')});
+  const concealed=await h.raw(`/app/items/${privateFile.id}`,people.ben),concealedPage=await concealed.text();
+  assert.equal(concealed.status,200);assert.ok(concealedPage.includes('Request access'));assert.ok(!concealedPage.includes(privateFile.payload.name),'another space never reveals its private file name');
   // A restricted subfolder keeps out inherited members except managers.
   const hr=await h.api('/items',people.mo,{space:space.id,type:'folder',name:'HR'});await upload(people.mo,{parent:hr.id,name:'salaries.txt',base64:b64('confidential salaries')});
   await h.api(`/items/${hr.id}/settings`,people.ana,{restricted:true},403);await h.api(`/items/${hr.id}/settings`,people.mo,{restricted:true});

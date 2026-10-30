@@ -114,7 +114,7 @@ async function members(env: Bindings, w: Awaited<ReturnType<typeof who>>, key: s
  for (let at: typeof e | undefined = e; at; at = at.row.payload.parent ? all.get(at.row.payload.parent) : undefined) if (at.row.payload.restricted) return []
  return e.space.payload.members.map(m => m.principal).filter(p => p.includes('@'))
 }
-const bar = (crumbs: Bar['crumbs'], creation: any, target: { space?: string; parent?: string }, returnTo: string, share?: string): Bar => ({ crumbs, new: newFileMenu(target, returnTo, creation) || undefined, upload: '#upload', share })
+const bar = (crumbs: Bar['crumbs'], creation: any, target: { space?: string; parent?: string }, returnTo: string, contribute: boolean, share?: string): Bar => ({ crumbs, new: contribute ? newFileMenu(target, returnTo, creation) || undefined : null, upload: contribute ? '#upload' : null, share })
 export async function filesPage(env: Bindings, request: Request, s: Session, url: URL): Promise<{ body: string, bar?: Bar } | { redirect: string } | null> {
  const bulk=await bulkPage(env,s,url);if(bulk)return {body:bulk}
  const path = url.pathname, parts = path.split('/').filter(Boolean)
@@ -134,7 +134,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
  if (path === '/app/files') return { body: homePage(await home(env, s, w)) }
  if (path === '/app/files/search') { const reader = await readerState(env); return { body: searchPage(url.searchParams.get('q') || '', await search(env, w, url), 'config' in reader ? null : 'unavailable' in reader ? reader.unavailable : reader.missing) } }
  if (path === '/app/files/trash') return { body: trashPage(await trashView(env, s, w)) }
- if (parts[1] === 'spaces' && parts[2]) { const d = await spaceView(env, w, parts[2]), creation = d.can.contribute ? await listTemplates(env, s, w, { space: d.id }) : null, folder = await browser(env, s, w, d.id, null, d.children.map((c: any) => c.id), url); return { body: spacePage({ ...d, folder, creation, serviceAdmin: isAdmin(s), quotaOwner: s.operator.role === 'owner', manage: url.searchParams.has('manage') }, people, groups), bar: bar([{ label: d.name }], creation, { space: d.id }, `/app/spaces/${d.id}`) } }
+ if (parts[1] === 'spaces' && parts[2]) { const d = await spaceView(env, w, parts[2]), creation = d.can.contribute ? await listTemplates(env, s, w, { space: d.id }) : null, folder = await browser(env, s, w, d.id, null, d.children.map((c: any) => c.id), url); return { body: spacePage({ ...d, folder, creation, serviceAdmin: isAdmin(s), quotaOwner: s.operator.role === 'owner', manage: url.searchParams.has('manage') }, people, groups), bar: bar([{ label: d.name }], creation, { space: d.id }, `/app/spaces/${d.id}`, d.can.contribute) } }
  if (parts[1] === 'items' && parts[2]) {
   try {
    if (parts[3] === 'import-comments') { owner(s); return { body: commentImportForm(await itemView(env, s, w, parts[2])) } }
@@ -145,7 +145,7 @@ export async function filesPage(env: Bindings, request: Request, s: Session, url
     return { redirect: `${returnTo}?comment=${encodeURIComponent(selectedThread)}#comment-${encodeURIComponent(selectedThread)}` }
    }
    const creation = d.item.type === 'folder' && d.can.contribute ? await listTemplates(env, s, w, { parent: parts[2] }) : null, folder = d.item.type === 'folder' ? await browser(env, s, w, d.space.id, d.id, d.children.map((c: any) => c.id), url) : null
-   return { body: itemPage({ ...d, focusComment: url.searchParams.get('comment'), annotationNavigation: pdfNavigation(d.unresolvedPdf, url.searchParams.get('thread')), folder, members: await members(env, w, d.id), creation, officeEdit, me: s.operator.email, ownerRole: s.operator.role === 'owner', templateAdmin: await canAdmin(env, s, 'service-settings'), manage: url.searchParams.has('manage') }, { people, groups, destinations: await destinations(env, w) }), bar: d.item.type === 'folder' ? bar(itemCrumbs(d), creation, { parent: d.id }, returnTo, d.can.share ? '?manage#share' : undefined) : { crumbs: itemCrumbs(d), upload: d.can.contribute ? '#upload' : undefined, share: d.can.share ? '#share' : undefined } }
+   return { body: itemPage({ ...d, focusComment: url.searchParams.get('comment'), annotationNavigation: pdfNavigation(d.unresolvedPdf, url.searchParams.get('thread')), folder, members: await members(env, w, d.id), creation, officeEdit, me: s.operator.email, ownerRole: s.operator.role === 'owner', templateAdmin: await canAdmin(env, s, 'service-settings'), manage: url.searchParams.has('manage') }, { people, groups, destinations: await destinations(env, w) }), bar: d.item.type === 'folder' ? bar(itemCrumbs(d), creation, { parent: d.id }, returnTo, d.can.contribute, d.can.share ? '?manage#share' : undefined) : { crumbs: itemCrumbs(d), new: d.can.contribute ? undefined : null, upload: d.can.contribute ? '#upload' : null, share: d.can.share ? '#share' : undefined } }
   }
   catch (e) { if (e instanceof ChestError && e.code === 'access_required') return { body: requestAccessPage(parts[2]) }; throw e }
  }
