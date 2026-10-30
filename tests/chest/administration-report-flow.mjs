@@ -133,3 +133,33 @@ export async function reportingJourney(h,browser,owner){
  assert.equal((await api(`/items/${duplicate.id}`,staff)).versions.length,1);
  console.log('ADMIN-002 reporting slice passed: live scoped metadata, guest activity, 305-row reconciled CSV, privacy, retained versions/trash deduplication, USD quote confirmation and browser reports at 1440/390. Collabora and billed egress/AI remain unclaimed.');
 }
+
+// Shared public setup for the separately consented integration report journeys.
+export async function integrationReportSetup(h, owner, count = 305) {
+ const identities = ['synthetic-chest-41','synthetic-chest-42','synthetic-chest-43'].map(name=>[name,'example.test'].join('@'));
+ const [memberEmail, outsideEmail, adminEmail] = identities;
+ const sessions = [];
+ for (const [index,email] of identities.entries()) {
+  await h.api('/people',owner,{action:'invite',email,name:['Report member','Outside member','Report sponsor'][index]});
+  sessions.push(await h.signIn(email,true));
+ }
+ const [member,outside,admin] = sessions;
+ const group = await h.api('/groups',owner,{name:'Selected reporting group',members:[memberEmail]});
+ const otherGroup = await h.api('/groups',owner,{name:'Other reporting group',members:[outsideEmail]});
+ const delegation = await h.api('/administration/roles',owner,{email:adminEmail,role:'audit-reporting',scope:'groups',groups:[group.id,otherGroup.id]});
+ const space = await h.api('/spaces',member,{name:'Report custody'}), otherSpace = await h.api('/spaces',outside,{name:'Outside custody'});
+ const file = await h.api('/items',member,{space:space.id,name:'Private report source.txt',base64:b64('synthetic-chest-44 private original')});
+ const secret = await h.api('/items',outside,{space:otherSpace.id,name:'Hidden report source.txt',base64:b64('synthetic-chest-45 outside original')});
+ for (let n=0;n<count;n++) {
+  const response = await h.raw(`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`,member);
+  assert.equal(response.status,200);assert.equal(await response.text(),'synthetic-chest-44 private original');
+ }
+ const noise = await h.raw(`/api/chest/items/${secret.id}/bytes/${secret.payload.current}?download=true`,outside);
+ assert.equal(noise.status,200);await noise.text();
+ const scan=new URLSearchParams({category:'downloads',action:'version.download',limit:'300'}), rows=[];let events;
+ do{events=await h.api('/administration/audit?'+scan,admin);rows.push(...events.rows);scan.set('until',events.until);if(events.next)scan.set('cursor',events.next)}while(events.next);
+ assert.equal(rows.length,count+1);
+ const times=rows.map(row=>row.at).sort();
+ const filter = new URLSearchParams({category:'downloads',action:'version.download',from:times[0],to:times.at(-1),until:events.until});
+ return {member,outside,admin,memberEmail,outsideEmail,adminEmail,group,otherGroup,delegation,file,secret,filter};
+}
