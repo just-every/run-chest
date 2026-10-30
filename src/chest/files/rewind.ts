@@ -64,7 +64,7 @@ export async function plan(env: Bindings, s: Session, w: Who, input: any) {
   }
   if (change.kinds.length) changes.push(change)
  }
- const sharing = history.filter(e => e.at > at && (ids.has(e.object_id) || e.object_id === space.id) && ['share.remove', 'share.expired', 'link.remove', 'space.members'].includes(e.action)).map(e => ({ object: e.object_id, action: e.action, at: e.at, detail: JSON.parse(e.detail) }))
+ const sharing = history.filter(e => e.at > at && (ids.has(e.object_id) || e.object_id === space.id) && ['share.remove', 'share.expired', 'link.remove', 'link.revoke', 'space.members'].includes(e.action)).map(e => ({ object: e.object_id, action: e.action, at: e.at, detail: JSON.parse(e.detail) }))
  return { at, scope: label, role, changes, sharing: { restored: false, removedSince: sharing }, fingerprint: sha256(canonicalJson({ at, label, changes } as any)) }
 }
 type Before = { current: string | null; name: string; space: string; parent: string | null; trash: Trash | null }
