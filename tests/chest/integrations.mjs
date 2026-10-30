@@ -24,6 +24,47 @@ try{
  const uploadInput={parent:folder.id,name:'Idempotent.txt',base64:b64('One immutable upload')},first=await call(token,'/items',{method:'POST',body:uploadInput,key:'upload-once'});await h.stop();await h.start();const repeated=await call(token,'/items',{method:'POST',body:uploadInput,key:'upload-once'});assert.equal(repeated.id,first.id);assert.equal((await h.api(`/items/${folder.id}`,staff)).children.filter(i=>i.name==='Idempotent.txt').length,1);await call(token,'/items',{method:'POST',body:{...uploadInput,name:'Different.txt'},key:'upload-once',status:409});await call(token,'/items',{method:'POST',body:{parent:other.id,name:'Escape.txt',base64:b64('Escape')},key:'outside-folder',status:403});
  const uploadAudit=(await h.api('/audit',owner)).find(r=>r.action==='file.upload'&&r.object_id===first.id);assert.ok(uploadAudit,'upload audit exists');assert.equal(uploadAudit.actor,'staff@example.test','non-sharing audit keeps its existing person actor');
  const versions=await call(token,`/items/${first.id}/versions?limit=1`);assert.equal(versions.items.length,1);const downloaded=await h.fetch(`/api/chest/integrations/v1/items/${first.id}/bytes/${versions.items[0].id}`,{headers:{authorization:'Bearer '+token}});assert.equal(await downloaded.text(),'One immutable upload');
+ // SURFACE-005: OAuth version restore preserves originals, identity and a pre-existing current-version link.
+ const sponsor=uploadAudit.actor,recoverySpace=await h.api('/spaces',owner,{name:'Agent recovery'});
+ const recoveryMembers=role=>[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:sponsor,role}];
+ await h.api(`/spaces/${recoverySpace.id}/members`,owner,{members:recoveryMembers('content_manager')});
+ const recoveryRoot=await h.api('/items',staff,{space:recoverySpace.id,type:'folder',name:'Recoverable originals'});
+ const originalA=Buffer.from('synthetic-chest-1: approved original A\n'),originalB=Buffer.from('synthetic-chest-2: later original B with different bytes\n');
+ const sha=bytes=>createHash('sha256').update(bytes).digest('hex');assert.notEqual(sha(originalA),sha(originalB));
+ const recoverable=await h.api('/items',staff,{parent:recoveryRoot.id,name:'Recovery.txt',base64:b64(originalA),checksum:sha(originalA),size:originalA.length}),a=recoverable.payload.current;
+ const replacement=await h.api(`/items/${recoverable.id}/versions`,staff,{base64:b64(originalB),checksum:sha(originalB),size:originalB.length}),b=replacement.payload.current;
+ const existingLink=await h.api(`/items/${recoverable.id}/public-links`,staff,{versionMode:'current'}),linkPath=new URL(existingLink.url).pathname;
+ const downloadHash=async(path,headers={})=>{const response=await h.fetch(path,{headers});assert.equal(response.status,200);return sha(Buffer.from(await response.arrayBuffer()))};
+ assert.equal(await downloadHash(`${linkPath}/f/${recoverable.id}`),sha(originalB),'existing current-version link serves B before restore');
+ const recoveryGrant=await authorize(client,staff,['read','download','versions'],[recoveryRoot.id]),recoveryToken=recoveryGrant.access_token;
+ const restorePath=`/items/${recoverable.id}/versions/${a}/restore`,restore=()=>call(recoveryToken,restorePath,{method:'POST',body:{},key:'restore-original-once'});
+ const restored=await restore();assert.equal(restored.id,recoverable.id,'restore keeps the stable item ID');assert.notEqual(restored.current,a);assert.notEqual(restored.current,b);assert.equal(restored.sha256,sha(originalA));
+ const reconcileRestore=async()=>{
+  const detail=await h.api(`/items/${recoverable.id}`,staff),listed=await call(recoveryToken,`/items/${recoverable.id}/versions`),links=(await h.api(`/items/${recoverable.id}`,owner)).publicLinks;
+  assert.equal(detail.id,recoverable.id);assert.equal(detail.item.current,restored.current);assert.equal(detail.versions.length,3,'exactly one restore version is added');
+  assert.deepEqual(detail.versions.map(v=>v.id).sort(),[a,b,restored.current].sort());assert.deepEqual(listed.items.map(v=>v.id).sort(),[a,b,restored.current].sort());
+  const newVersion=detail.versions.find(v=>v.id===restored.current);assert.equal(newVersion.arrival,'restore');assert.equal(newVersion.restoredFrom,a);assert.equal(newVersion.actor,sponsor);
+  for(const [version,bytes] of [[a,originalA],[b,originalB],[restored.current,originalA]])assert.equal(await downloadHash(`/api/chest/integrations/v1/items/${recoverable.id}/bytes/${version}`,{authorization:'Bearer '+recoveryToken}),sha(bytes),'every retained original downloads with its exact hash');
+  assert.equal(links.find(l=>l.id===existingLink.link.id).versionMode,'current');assert.equal(await downloadHash(`${linkPath}/f/${recoverable.id}`),sha(originalA),'the original link follows restored A');
+  const audit=await h.api('/audit',owner),restores=audit.filter(r=>r.action==='version.restore'&&r.object_id===recoverable.id);
+  assert.equal(restores.length,1,'retry publishes one restore audit');assert.equal(restores[0].actor,sponsor);assert.deepEqual(JSON.parse(restores[0].detail),{source:a,version:restored.current,outcome:'succeeded',authority:'integration:member'});
+  assert.equal(audit.filter(r=>r.action==='integration.mutation'&&r.object_id===recoveryGrant.grant&&JSON.parse(r.detail).path===restorePath).length,1,'retry publishes one integration receipt audit');
+  return {current:detail.item.current,versions:detail.versions,links:links.map(({downloads,summary,...link})=>link),restores};
+ };
+ await reconcileRestore();assert.deepEqual(await restore(),restored);await h.stop();await h.start();assert.deepEqual(await restore(),restored,'same key returns the saved restore after Worker restart');
+ const preserved=await reconcileRestore();
+ await h.api(`/spaces/${recoverySpace.id}/members`,owner,{members:recoveryMembers('viewer')});
+ for(const key of ['restore-original-once','restore-reader-refused'])await call(recoveryToken,restorePath,{method:'POST',body:{},key,status:403});
+ await h.api(`/spaces/${recoverySpace.id}/members`,owner,{members:recoveryMembers('content_manager')});
+ assert.deepEqual(await reconcileRestore(),preserved,'a current viewer cannot restore or replay a previous mutation');
+ await h.api(`/integrations/grants/${recoveryGrant.grant}/revoke`,staff,{});
+ for(const key of ['restore-original-once','restore-revoked-refused'])await call(recoveryToken,restorePath,{method:'POST',body:{},key,status:401});
+ await h.stop();await h.start();await call(recoveryToken,restorePath,{method:'POST',body:{},key:'restore-original-once',status:401});
+ const afterRefusals=await h.api(`/items/${recoverable.id}`,staff);assert.equal(afterRefusals.item.current,preserved.current);assert.deepEqual(afterRefusals.versions,preserved.versions);
+ const finalAudit=await h.api('/audit',owner);assert.deepEqual(finalAudit.filter(r=>r.action==='version.restore'&&r.object_id===recoverable.id),preserved.restores);
+ assert.equal(finalAudit.filter(r=>r.action==='integration.mutation'&&r.object_id===recoveryGrant.grant).length,1,'refused attempts add no successful mutation receipt');
+ assert.equal(await downloadHash(`${linkPath}/f/${recoverable.id}`),sha(originalA),'grant revocation preserves the independent existing link');
+ console.log('PROBE SURFACE-005 point 1: OAuth version restore -> exact A hash, retained A and B, stable item and original link; restart retry -> one restore and audit; viewer and revoked grant -> refusal with unchanged history');
  // SECURITY-002: a paused OAuth source stops metadata and mutations too; browser authority remains independent.
  const securityGroup=await h.api('/groups',owner,{name:'Scoped download protection',members:['staff@example.test']});await h.api('/content-security/rule',owner,{scope:securityGroup.id,files:1,bytes:5*1024**3,deletions:200,pause:true});await h.sql('UPDATE chest_activity_events SET at=at-600001');
  const originalPath=`/api/chest/integrations/v1/items/${first.id}/bytes/${versions.items[0].id}`;assert.equal((await h.fetch(originalPath,{headers:{authorization:'Bearer '+token}})).status,200);assert.equal((await h.fetch(originalPath,{headers:{authorization:'Bearer '+token}})).status,423);await call(token,'/items',{status:423});assert.equal((await h.raw('/api/chest/files',staff)).status,200);
