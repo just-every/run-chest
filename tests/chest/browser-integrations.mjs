@@ -1,5 +1,6 @@
 // CONNECT-007 at 1440 and 390: real OAuth consent, connected-app policy and embeddable picker.
 import assert from 'node:assert/strict';
+import {createHash,randomBytes} from 'node:crypto';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
@@ -9,7 +10,7 @@ async function shot(page,width,state){assert.ok(await page.evaluate(()=>document
 const cookies=cookie=>cookie.split('; ').map(v=>{const at=v.indexOf('=');return {name:v.slice(0,at),value:v.slice(at+1),url:h.origin}});
 try{
  await mkdir('test-results',{recursive:true});await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const cookie=await h.signIn(h.vars.OWNER_EMAIL);await h.fetch('/setup',{method:'POST',headers:{cookie,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});const space=(await h.api('/files',cookie)).personal;
- consumer=await attachmentClient(h.origin);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic','--host-resolver-rules=MAP picker-client.example.test 127.0.0.1']});
+ consumer=await attachmentClient(h.origin);browser=await chromium.launch({headless:true,...(process.env.CHEST_CHROMIUM_PATH?{executablePath:process.env.CHEST_CHROMIUM_PATH}:{}),...(process.env.HTTPS_PROXY?{proxy:{server:process.env.HTTPS_PROXY,bypass:'picker-client.example.test,127.0.0.1,localhost'}}:{}),args:['--no-sandbox','--use-mock-keychain','--password-store=basic','--host-resolver-rules=MAP picker-client.example.test 127.0.0.1']});
  for(const width of [1440,390]){
   await h.api('/integrations/policy',cookie,{scope:'organization',mode:'any',apps:{}});
   const folder=await h.api('/items',cookie,{space,type:'folder',name:`Partner files ${width}`}),file=await h.api('/items',cookie,{parent:folder.id,name:`Signed terms ${width}.txt`,base64:Buffer.from('The original agreed terms.').toString('base64')}),outside=await h.api('/items',cookie,{space,name:`Private forecast ${width}.txt`,base64:Buffer.from('Outside the authorized folder.').toString('base64')});
@@ -24,6 +25,36 @@ try{
   receiverStatus=503;await h.api('/items',cookie,{parent:folder.id,name:`Webhook evidence ${width}.txt`,base64:Buffer.from('Recorded live file arrival.').toString('base64')});
   let failed;for(let n=0;n<30;n++){const response=await h.fetch(`/api/chest/integrations/v1/webhooks/${hook.id}/deliveries`,{headers:{authorization:'Bearer '+access}}),d=await response.json();failed=d.items?.find(v=>v.state==='failed');if(failed)break;await new Promise(r=>setTimeout(r,50))}assert.ok(failed);
   await admin.goto(h.origin+'/app/integrations');await shot(admin,width,'webhook-failed');receiverStatus=200;await Promise.all([admin.waitForNavigation(),admin.locator('li').filter({hasText:failed.event}).getByRole('button',{name:'Replay same event',exact:true}).click()]);await shot(admin,width,'webhook-replayed');assert.equal(await admin.locator('li').filter({hasText:failed.event}).getByText('delivered',{exact:true}).count(),1,JSON.stringify({path:new URL(admin.url()).pathname,states:await admin.locator('strong').allTextContents(),body:(await admin.locator('body').innerText()).slice(-1200)}));
+  if(width===1440){
+  // SURFACE-005: the sponsor reconciles an agent restore in visible history and through the original public link.
+  const originalA=Buffer.from(`synthetic-chest-${width}: original A\n`),originalB=Buffer.from(`synthetic-chest-${width}: later B with different bytes\n`),sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+  const recovery=await h.api('/items',cookie,{parent:folder.id,name:`Recovery ${width}.txt`,base64:originalA.toString('base64')}),a=recovery.payload.current;
+  const newer=await h.api(`/items/${recovery.id}/versions`,cookie,{base64:originalB.toString('base64')}),b=newer.payload.current;
+  const existingLink=await h.api(`/items/${recovery.id}/public-links`,cookie,{versionMode:'current'}),linkPage=await context.newPage();
+  await linkPage.goto(existingLink.url);const downloadLink=linkPage.getByRole('link',{name:'Download',exact:true});
+  const originalDestination=await downloadLink.getAttribute('href');assert.ok(originalDestination.includes(recovery.id));
+  const hashDownload=async(path)=>{const response=await context.request.get(h.origin+path);assert.equal(response.status(),200);return sha(await response.body())};
+  assert.equal(await hashDownload(originalDestination),sha(originalB),'existing link initially downloads B');
+  const restoreApp=await h.api('/integrations/clients',cookie,{name:`Recovery agent ${width}`,redirects:[`${consumer.origin}/callback/${width}`],actions:['read','versions']});
+  const verifier=randomBytes(32).toString('base64url'),params=new URLSearchParams({client_id:restoreApp.client.id,redirect_uri:`${consumer.origin}/callback/${width}`,response_type:'code',code_challenge_method:'S256',code_challenge:createHash('sha256').update(verifier).digest('base64url'),state:randomBytes(16).toString('hex'),scope:'read versions',resource:folder.id});
+  const consent=await context.request.get(h.origin+'/oauth/chest/authorize?'+params),intent=/name="intent" value="([^"]+)"/.exec(await consent.text())?.[1];assert.equal(consent.status(),200);assert.ok(intent);
+  const allowed=await context.request.post(h.origin+'/oauth/chest/authorize',{headers:{origin:h.origin},form:{intent,decision:'allow'},maxRedirects:0});assert.equal(allowed.status(),303);
+  const code=new URL(allowed.headers().location).searchParams.get('code'),exchange=await context.request.post(h.origin+'/oauth/chest/token',{headers:{origin:consumer.origin},form:{grant_type:'authorization_code',client_id:restoreApp.client.id,redirect_uri:`${consumer.origin}/callback/${width}`,code,code_verifier:verifier}});assert.equal(exchange.status(),200);
+  const restoreToken=(await exchange.json()).access_token,restoreResponse=await context.request.post(`${h.origin}/api/chest/integrations/v1/items/${recovery.id}/versions/${a}/restore`,{headers:{authorization:'Bearer '+restoreToken,'idempotency-key':`browser-restore-${width}`},data:{}});assert.equal(restoreResponse.status(),200);const restored=await restoreResponse.json();assert.equal(restored.id,recovery.id);
+  await admin.goto(`${h.origin}/app/items/${recovery.id}`);
+  const history=admin.locator('.versions article.ver');assert.equal(await history.count(),3);const currentVersion=history.filter({has:admin.getByText('Current version',{exact:true})});assert.equal(await currentVersion.count(),1);
+  await currentVersion.getByText('restore of version 1',{exact:false}).waitFor();
+  for(const [version,bytes] of [[a,originalA],[b,originalB],[restored.current,originalA]]){
+   const row=history.filter({has:admin.locator(`a[href="/api/chest/items/${recovery.id}/bytes/${version}?download=true"]`)});assert.equal(await row.count(),1,'sponsor sees each retained version');
+   const href=await row.getByRole('link',{name:'Download this version',exact:true}).getAttribute('href');assert.equal(await hashDownload(href),sha(bytes),'visible version download matches its original');
+  }
+  assert.equal(await currentVersion.getByRole('link',{name:'Download this version',exact:true}).getAttribute('href'),`/api/chest/items/${recovery.id}/bytes/${restored.current}?download=true`);
+  await shot(admin,width,'restored-history');await linkPage.reload();assert.equal(await downloadLink.getAttribute('href'),originalDestination,'the original share link keeps its destination');assert.equal(await hashDownload(originalDestination),sha(originalA),'original link now downloads restored A');
+  await shot(linkPage,width,'restored-link');
+  for(const page of [admin,linkPage])await page.setViewportSize({width:390,height:900});
+  await shot(admin,390,'restored-history');await shot(linkPage,390,'restored-link');await admin.setViewportSize({width,height:900});await linkPage.close();
+  console.log(`PROBE SURFACE-005 browser ${width}: sponsor file page -> three retained versions and current restore of A; original link -> restored A hash; screens at 1440 and 390`);
+  }
   const grant=await host.evaluate(()=>window.picker.grant);assert.ok(grant);await h.api(`/integrations/grants/${grant}/revoke`,cookie,{});await host.getByRole('button',{name:'Attach from Chest'}).click();await host.waitForFunction(()=>document.querySelector('#result').dataset.error==='oauth_grant_revoked');await shot(host,width,'revoked-pick');
   await admin.goto(h.origin+'/app/integrations');await admin.getByLabel(/^Authorization mode/).selectOption('allowlist');await admin.getByLabel(`Picker partner ${width} policy`).selectOption('read_only');await Promise.all([admin.waitForNavigation(),admin.getByRole('button',{name:'Save app policy',exact:true}).click()]);await shot(admin,width,'allowlist-read-only');
   await host.reload();const nextPopupPromise=host.waitForEvent('popup');await host.getByRole('button',{name:'Attach from Chest'}).click();const nextPopup=await nextPopupPromise;await nextPopup.setViewportSize({width,height:900});await nextPopup.getByRole('button',{name:'Authorize app',exact:true}).waitFor();await nextPopup.getByRole('button',{name:'Authorize app',exact:true}).click();await nextPopup.getByRole('button',{name:file.payload.name,exact:true}).waitFor();await nextPopup.getByRole('button',{name:file.payload.name,exact:true}).click();await host.waitForFunction(()=>document.querySelector('#result').textContent.startsWith('{'));

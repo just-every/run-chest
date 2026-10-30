@@ -9,9 +9,9 @@ The primary journey: create a team space, move originals and rights in, install 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Core | 39 | 46 | 38 | 123 |
-| Agent surface | 0 | 2 | 24 | 26 |
+| Agent surface | 0 | 3 | 23 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 40 | 52 | 78 | 170 |
+| Full target | 40 | 53 | 77 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -2120,7 +2120,7 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-002, BASE
 
 #### SURFACE-005 — Recovery stays standard; destruction is its own class
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-DATA-002
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-DATA-002
 
 **Requirement.** Version restore and naming, trash and untrash, and rewinding a folder, a space or a departed user's account (RECOVER-001, ADMIN-006) keep every byte and can be undone, so they are standard, subject to the exposure rule. Emptying trash, permanently deleting from it (`chest.trash.purge`) and running an erasure (`chest.erasure.run`, ERASE-001) cannot be undone, so they are destructive, with the item count. An erasure still runs ERASE-001's own checks, such as preservation instructions, whatever the policy says. `chest.erasure.prepare` drafts an erasure and changes nothing.
 
@@ -2134,8 +2134,8 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE
 7. An erasure that ERASE-001 refuses for held content is refused under every policy.
 8. `chest.erasure.prepare` saves a draft that changes nothing.
 
-**Evidence.** None.
-**Gap.** No trash, rewind, purge or erasure tools, class declarations or policy decisions; today the integration API restores and names versions.
+**Evidence.** `tests/chest/integrations.mjs` — SURFACE-005 OAuth version restore: distinct uploaded originals, retained-version download hashes, stable item and existing current-version link, one restore version and audit after retry and Worker restart, current viewer and revoked-grant refusals without history changes. `tests/chest/browser-integrations.mjs` — SURFACE-005 sponsor history and original link: visible retained versions and exact downloads; screens at 1440 and 390.
+**Gap.** Point 1's byte, history, stable-id and link outcomes pass through the existing OAuth integration API. The shared Base Agent door, canonical recovery tools, standard and exposure classifications and agent attribution remain missing. Nested trash and untrash with reader refusals, rewind preview, apply and Undo, destructive approval, blocked and autonomous execution, preservation refusals and erasure drafts remain unproved. Existing integration API version naming is not canonical recovery-tool proof.
 
 #### SURFACE-006 — Sharing is classified by its recipient, never by the agent
 

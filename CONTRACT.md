@@ -2302,8 +2302,8 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 11 | 2 | 0 | 13 |
-| Target and push further | 29 | 50 | 78 | 157 |
-| All | 40 | 52 | 78 | 170 |
+| Target and push further | 29 | 51 | 77 | 157 |
+| All | 40 | 53 | 77 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2446,7 +2446,7 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | `SURFACE-002` | Find and read what the sponsor can open | target | missing |  | A restricted or out-of-grant item returns 403 while a missing one returns 404; there is no activity, trash view, report, exposure or event-feed tool, no resources, no sensitive class and no untrusted marker. Today `chest_list`, `chest_get`, `chest_search` and `chest_versions` exist. |
 | `SURFACE-003` | Original bytes follow download rights | target | partial | `tests/chest/integrations.mjs` | Points 1 and 2 pass on the integration API's byte path with an agent's OAuth token; there is no MCP byte tool, blob resource or expiring byte link, and quarantine, byte-budget exhaustion and mid-stream revocation are not asserted for agent grants. |
 | `SURFACE-004` | Add and organize files | target | missing |  | No resumable agent upload, move, field or selection tools, job handles or exposure rule. Today `chest_upload` (base64 in one call) and `chest_create_folder` exist, and the integration API renames and adds versions. |
-| `SURFACE-005` | Recovery stays standard; destruction is its own class | target | missing |  | No trash, rewind, purge or erasure tools, class declarations or policy decisions; today the integration API restores and names versions. |
+| `SURFACE-005` | Recovery stays standard; destruction is its own class | target | partial | `tests/chest/integrations.mjs` — SURFACE-005 OAuth version restore: distinct uploaded originals, retained-version download hashes, stable item and existing current-version link, one restore version and audit after retry and Worker restart, current viewer and revoked-grant refusals without history changes. `tests/chest/browser-integrations.mjs` — SURFACE-005 sponsor history and original link: visible retained versions and exact downloads; screens at 1440 and 390. | Point 1's byte, history, stable-id and link outcomes pass through the existing OAuth integration API. The shared Base Agent door, canonical recovery tools, standard and exposure classifications and agent attribution remain missing. Nested trash and untrash with reader refusals, rewind preview, apply and Undo, destructive approval, blocked and autonomous execution, preservation refusals and erasure drafts remain unproved. Existing integration API version naming is not canonical recovery-tool proof. |
 | `SURFACE-006` | Sharing is classified by its recipient, never by the agent | target | missing |  | No recipient classification, policy decision, pending actions or receipts. Today `chest_share` forwards the agent's own `confirmExternal`, which the sharing policy (`src/chest/files/sharing-policy.ts`) accepts as the browser's confirmation, and the API's `/links` creates links under policy with no class or decision. |
 | `SURFACE-007` | Narrowing access and repairing links | target | missing |  | No narrowing tool, class declaration or policy decision; today the integration API removes grants (`/unshare`), and revoke and Make private are browser-only (SHARE-007, AGENT-005). |
 | `SURFACE-008` | Collect documents in, send files out | target | missing |  | No send or reminder tools, class declarations or policy decisions; today `chest_create_request` exists, and sending, transfers and signing are browser-only. |
