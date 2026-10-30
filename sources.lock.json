@@ -2557,7 +2557,7 @@
       "executable": false
     },
     "src/chest/files/ui-pages.ts": {
-      "sha256": "6c46d9343fd53b5b1ae60dcbab6b4ccfd3046ea007b272a4206c11364ed6f473",
+      "sha256": "1700c646fa9be63030838a93d94fcf03cb7da2d28ef1a5128cada433158cfa47",
       "executable": false
     },
     "src/chest/files/ui-panel.ts": {
@@ -2729,7 +2729,7 @@
       "executable": false
     },
     "src/chest/filing/ui-intake.ts": {
-      "sha256": "88d8853fc0573eaffe7656cbfa034484cd11609045f887df9179faae11967fa0",
+      "sha256": "8dedd6edbb28c138a9c0eb03cd2317c077f569cb7287eff5ee9509f1b7af472c",
       "executable": false
     },
     "src/chest/filing/ui-link-repairs.ts": {
@@ -3273,7 +3273,7 @@
       "executable": false
     },
     "src/chest/ui-admin.ts": {
-      "sha256": "ead2a9f75489b2e16ea5de0b8e226fe6cec214aa50e7a05fb10718eb94f8ec5d",
+      "sha256": "6924eaff728a8fb24d1bf226b81f7f5ae29db94d9a1f05c26013f5e0384cae56",
       "executable": false
     },
     "src/chest/ui-document.ts": {
