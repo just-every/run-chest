@@ -196,6 +196,12 @@
       "name": "0031_business_people.sql",
       "sha256": "51aa39622d866b987d71b6e37c9a8300e7f24c54a55611edaab669ed051b01cd",
       "sql": "ALTER TABLE bs_settings ADD COLUMN owner_id TEXT CHECK(owner_id IS NULL OR owner_id <> '');\nALTER TABLE bs_team ADD COLUMN business_id TEXT CHECK(business_id IS NULL OR business_id <> '');\nALTER TABLE bs_team ADD COLUMN business_role TEXT CHECK(business_role IS NULL OR business_role IN('admin','member'));\nCREATE UNIQUE INDEX bs_team_business_id ON bs_team(business_id) WHERE business_id IS NOT NULL;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0032_agent_custody_fence.sql",
+      "sha256": "660fda004019aaab22789a35c32a6c20113ce2d4af91617db1f373ca3341196e",
+      "sql": "-- Chest owns this conservative custody fence. Retained Base decisions cannot yet\n-- be redacted per client, so native erasure and first agent admission must not race.\n-- Existing agent registrations cause an explicit native preservation hold.\nCREATE TRIGGER chest_agent_custody_erasure_fence\nBEFORE INSERT ON agent_door_agents\nWHEN EXISTS (\n  SELECT 1 FROM chest_records\n  WHERE kind='erasure' AND json_extract(payload,'$.state')='pending'\n)\nBEGIN\n  SELECT RAISE(ABORT, 'agent_custody_erasure_pending');\nEND;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",
