@@ -53,8 +53,8 @@ export function rail(r: Rail, me: { name: string; email: string; role: string },
  const files: Link[] = [
   { key: 'mine', href: `/app/spaces/${r.personal}`, label: 'My files', icon: 'folder' },
   { key: 'shared', href: '/app/shared', label: 'Shared with me', icon: 'people' },
-  { key: 'recent', href: '/app/files#recent', label: 'Recent', icon: 'clock' },
-  { key: 'starred', href: '/app/files#starred', label: 'Starred', icon: 'star' },
+  { key: 'recent', href: '/app/recent', label: 'Recent', icon: 'clock' },
+  { key: 'starred', href: '/app/starred', label: 'Starred', icon: 'star' },
   { key: 'requests', href: '/app/requests', label: 'Requests', icon: 'inbox', count: r.requests },
   { key: 'links', href: '/app/links', label: 'Links', icon: 'link' },
   { key: 'trash', href: '/app/files/trash', label: 'Trash', icon: 'trash' },
@@ -71,6 +71,6 @@ export function rail(r: Rail, me: { name: string; email: string; role: string },
  ]
  const sync = r.devices.count ? `${r.devices.lastSeen ? `Synced ${ago(r.devices.lastSeen)}` : 'Not synced yet'}, ${r.devices.count} device${r.devices.count === 1 ? '' : 's'}` : 'No sync devices'
  const storage = r.storage.limit ? `<progress max="${r.storage.limit}" value="${Math.min(r.storage.used, r.storage.limit)}">${bytes(r.storage.used)}</progress><p>${bytes(r.storage.used)} of ${bytes(r.storage.limit)}</p>` : `<p>${bytes(r.storage.used)} used · no limit</p>`
- return `<nav class="app-nav" aria-label="Chest"><ul class="nav-list">${files.map(l => item(l, current, path)).join('')}</ul><p class="nav-head">Team spaces <a class="nav-add" href="/app/files#new-space" aria-label="New team space" data-tooltip="New team space">${icons.plus}</a></p>${r.spaces.length ? tree(r, path) : '<p class="nav-none">No team spaces yet.</p>'}<details class="nav-more"${more.some(l => l.key === current || l.href === path) ? ' open' : ''}><summary class="nav-head">Workspace <span class="tree-chev" aria-hidden="true">${icons.chevron}</span></summary><ul class="nav-list nav-small">${more.map(l => item(l, current, path)).join('')}</ul></details></nav>
+ return `<nav class="app-nav" aria-label="Chest"><ul class="nav-list">${files.map(l => item(l, current, path)).join('')}</ul><p class="nav-head">Team spaces <a class="nav-add" href="/app/spaces/new" aria-label="New team space" data-tooltip="New team space">${icons.plus}</a></p>${r.spaces.length ? tree(r, path) : '<p class="nav-none">No team spaces yet.</p>'}<details class="nav-more"${more.some(l => l.key === current || l.href === path) ? ' open' : ''}><summary class="nav-head">Workspace <span class="tree-chev" aria-hidden="true">${icons.chevron}</span></summary><ul class="nav-list nav-small">${more.map(l => item(l, current, path)).join('')}</ul></details></nav>
  <div class="rail-foot"><a class="rail-sync${r.devices.count ? '' : ' is-off'}" href="/app/devices"><span class="dot" aria-hidden="true"></span>${sync}</a><div class="rail-storage" aria-label="Storage in your spaces">${storage}</div><div class="app-who">${avatar({ email: me.email, name: me.name })}<p><strong>${esc(me.name)}</strong><span class="mono">${esc(me.email)}</span></p></div><form class="app-signout" method="post" action="/app/signout"><button data-tooltip="Sign out">${icons.signout}<span class="sr-only">Sign out</span></button></form></div>`
 }

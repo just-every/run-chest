@@ -17,12 +17,12 @@ import { operatorAuth,runtimeBindings,type Bindings } from '../auth.server'
 import { authenticated,overview,execute,headers,failure } from './api'
 import { syncPeople } from './identity'
 import { owner,roles } from './access'
-import { insist,type Person,type Schema } from './model'
+import { ChestError,insist,type Person,type Schema } from './model'
 import { personName } from './names'
 import { get,list } from './store'
 import { typedValues } from './ui-fields'
 import { checkPage } from './signatures/ui'
-import { page,refusedPage } from './ui-shell'
+import { notFoundPage,page,refusedPage } from './ui-shell'
 import { withRail } from './ui-rail'
 import { auditPage,mappingPage,receiptPage } from './ui-receipts'
 import { library } from './ui-library'
@@ -84,8 +84,11 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
   if(input.path==='/reading/settings/test')return page(testReceipt(result),me,'/app/admin')
   if(input.path==='/archive/preview')return page(mappingPage(input,result),me,'/app/archive')
   if(input.path.startsWith('/archive/')||input.action==='sessions')return page(receiptPage(input,result),me,returnTo)
-  const location=input.path==='/links/open'&&result?.item?`/app/items/${result.item}`:input.path==='/new-files'&&result?.kind==='item'?`/app/items/${result.id}${/\.(docx|xlsx)$/i.test(result.payload.name)?'?edit=1':''}`:result?.kind==='document'?`/app/documents/${result.id}`:result?.kind==='item'&&input.path==='/items'?`/app/items/${result.id}`:returnTo;return new Response(null,{status:303,headers:{...headers,location:location.startsWith('/app')?location:'/app'}})
+  const location=input.path==='/links/open'&&result?.item?`/app/items/${result.item}`:input.path==='/new-files'&&result?.kind==='item'?`/app/items/${result.id}${/\.(docx|xlsx)$/i.test(result.payload.name)?'?edit=1':''}`:input.path==='/spaces'&&result?.kind==='space'?`/app/spaces/${result.id}`:result?.kind==='document'?`/app/documents/${result.id}`:result?.kind==='item'&&input.path==='/items'?`/app/items/${result.id}`:returnTo;return new Response(null,{status:303,headers:{...headers,location:location.startsWith('/app')?location:'/app'}})
  }
+ const alias:Record<string,string>={'/app/search':'/app/files/search','/app/settings':me.role==='owner'?'/app/admin':'/app/files','/app/setup':me.role==='owner'?'/app/admin':'/app/files','/app/people':me.role==='owner'?'/app/admin':'/app/files','/app/items':'/app/files','/app/spaces':'/app/files','/app/documents':'/app/library'}
+ if(request.method==='GET'&&url.pathname==='/app/library'&&url.searchParams.get('trash')==='true'){const q=new URLSearchParams(url.search);q.delete('trash');return new Response(null,{status:303,headers:{...headers,location:'/app/library/trash'+(q.size?`?${q}`:'')}})}
+ if(request.method==='GET'&&alias[url.pathname])return new Response(null,{status:303,headers:{...headers,location:alias[url.pathname]+url.search}})
  if(url.pathname==='/app/erasure'){return page(erasurePage(await erasureView(env,s)),me,url.pathname)}
  const administrative=await administrationPage(env,s,url);if(administrative)return page(administrative,me,url.pathname)
  const collecting=await collectionPage(env,request,s,url);if(collecting)return page(collecting,me,url.pathname)
@@ -94,16 +97,16 @@ export async function uiResponse(request:Request,original:Bindings){const url=ne
  const data=await overview(env,s,url);let body=''
  if(url.pathname==='/app/sso-tested'){insist(s.kind==='oidc','company_signin_required',403);body=card('Company sign-in works',`<p>You are signed in as <strong>${esc(me.name)}</strong> (${esc(me.email)}). The identity provider connection has been tested.</p><p><a class="btn" href="/app/files">Open files</a></p>${me.role==='owner'?'<p><a class="link" href="/app/admin">Back to people &amp; settings</a></p>':'<p>The owner can now turn off email-link sign-in in People &amp; settings.</p>'}`)}
  else if(url.pathname==='/app')return new Response(null,{status:303,headers:{...headers,location:'/app/files'}})
- else if(url.pathname==='/app/library')body=library(data,url.searchParams.get('q')||'',url.searchParams.get('trash')==='true')
+ else if(url.pathname==='/app/library'||url.pathname==='/app/library/trash')body=library(data,url.searchParams.get('q')||'',url.pathname==='/app/library/trash')
  else if(url.pathname==='/app/admin'){owner(s);body=adminPage({...data,local:env.AUTH_LOCAL==='true'},readerCard(await readerView(env))+organisationCard(await ssoView(env),await scimView(env),env.AUTH_ORIGIN)+domainCard(await domainView(env))+groupReviewCard(await groupReviewView(env))+offboardingCard(await offboardingView(env))+await quotaAdminCard(env,s)+await mfaAdminCard(env))}
  else if(url.pathname==='/app/archive'){owner(s);body=archivePage(data)}
  else if(url.pathname==='/app/audit')body=auditScreen(await history(env,s,url.searchParams),await recordNames(env),url.searchParams,await privacy(env,s.operator.email),s.operator.role==='owner',s.operator.role==='owner'?await list(env,'group'):[])
  else if(url.pathname.startsWith('/app/documents/')){const key=url.pathname.split('/').at(-1)!;const row=await execute(env,request,s,'GET',`/documents/${key}`,{}),readers=me.role==='owner'?await execute(env,request,s,'GET',`/documents/${key}/readers`,{}):[],mine=(await roles(env,s,row.payload)).roles;body=documentPage(row,data,readers,mine.includes('reviewer'),{readings:await documentReadings(env,row.id,row.payload),editor:mine.includes('editor')})}
- else return new Response('Not found',{status:404})
+ else throw new ChestError('not_found',404)
  const response=page(body,me,url.pathname)
  if(url.pathname==='/app/admin'){const provider=await ssoView(env);if(provider.configured){const origin=providerOrigin(provider as any);response.headers.set('content-security-policy',response.headers.get('content-security-policy')!.replace("form-action 'self'",`form-action 'self' ${origin}`))}}
  return response
- }catch(e){const error=failure(e);if(error.status===401)return new Response(null,{status:303,headers:{location:'/signin?returnTo='+encodeURIComponent(url.pathname)}});return refusedPage(await error.json() as any,error.status,error.status===404&&request.method==='GET'?'/app/files':back)}
+ }catch(e){const error=failure(e);if(error.status===401)return new Response(null,{status:303,headers:{location:'/signin?returnTo='+encodeURIComponent(url.pathname)}});if(error.status===404&&request.method==='GET'){try{return notFoundPage(await withRail(env,await authenticated(env,request),url.pathname))}catch{}}return refusedPage(await error.json() as any,error.status,error.status===404&&request.method==='GET'?'/app/files':back)}
 }
 // Names for the audit trail: files, folders, spaces, records, collections, types, groups, people and devices.
 async function recordNames(env:Bindings){const names=new Map<string,string>()

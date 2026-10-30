@@ -2137,7 +2137,7 @@
       "executable": false
     },
     "src/chest/api.ts": {
-      "sha256": "7f46fd758c890ed1a5aa788d2194a82b481544a30f9da7d2860dcae4b8acb089",
+      "sha256": "69027f98052283e81c9214fe710230fdd35e266c7a070166a4c1ceb7839c6059",
       "executable": false
     },
     "src/chest/archive-target.ts": {
@@ -2505,7 +2505,7 @@
       "executable": false
     },
     "src/chest/files/ui-comment-import.ts": {
-      "sha256": "83cf4a561325fe7fdcf4ed6aa7f0c8f41f9d46b67ff1303f6ab5b9c4fc5fda57",
+      "sha256": "17efb4935d7b4adef80a92cfa1096d41c87e7f77f003ed447976e0f25ac14827",
       "executable": false
     },
     "src/chest/files/ui-comments.ts": {
@@ -2517,7 +2517,7 @@
       "executable": false
     },
     "src/chest/files/ui-folder.ts": {
-      "sha256": "f2a7f8c3196e74e73449dc8b7b4ef9bb6d5341260373fbfa2dfe0e404c4c5bb2",
+      "sha256": "881e4a85d081270e43930d5e6c0aa95563b6fe67ba26416c58a5a1763b882ed0",
       "executable": false
     },
     "src/chest/files/ui-governance.ts": {
@@ -2525,7 +2525,7 @@
       "executable": false
     },
     "src/chest/files/ui-item.ts": {
-      "sha256": "fad924a73d9fc7aa8fac66365effd6e11bcc2b2c511d56083e54670bab6fe617",
+      "sha256": "ad8bd70b1dea106e87b93ab57699f92cef8b82e6278afe6c681285d71ffa6377",
       "executable": false
     },
     "src/chest/files/ui-link-form.ts": {
@@ -2549,11 +2549,11 @@
       "executable": false
     },
     "src/chest/files/ui-pages.ts": {
-      "sha256": "bd03d3609b5bc9c799d17288b5cd9b94ce85e1ddade364032bdf73d9bdf78005",
+      "sha256": "bac16931eecf3c69305dfba074d63b92fc082bcf50c0db2c5bf43aa7acf73697",
       "executable": false
     },
     "src/chest/files/ui-panel.ts": {
-      "sha256": "ef5e9d9c74067ffbff11dc8ebe9e13f715ef183ba720385ce89d0fe6f977d259",
+      "sha256": "d27c464c748ddd7176e6daace9e0489812409335b28ed9f9f50a46f5ab06cc3e",
       "executable": false
     },
     "src/chest/files/ui-public.ts": {
@@ -2577,7 +2577,7 @@
       "executable": false
     },
     "src/chest/files/ui.ts": {
-      "sha256": "681c95adb1eea321a845cb5a4f03127f8718408283a81f809214dcce43c79ffd",
+      "sha256": "79795e27a6590e09fdf24f861d0c48c76bd35156aa31f486ef90ea82c37fcce8",
       "executable": false
     },
     "src/chest/files/uploads.ts": {
@@ -3281,7 +3281,7 @@
       "executable": false
     },
     "src/chest/ui-library.ts": {
-      "sha256": "579324d3cee3a544790cb0ea3610b2512815cd02dd54a1b19354bc65a987272e",
+      "sha256": "7f4847ced3d4705cec887e5e2a31710ac02e995ee9541c2ae7a75e2c39b77005",
       "executable": false
     },
     "src/chest/ui-problems.ts": {
@@ -3289,7 +3289,7 @@
       "executable": false
     },
     "src/chest/ui-rail.ts": {
-      "sha256": "5f50737323bd7b572ff03ac2b85c1154ecb1d7f37bea10bc409ad7c1893f9c90",
+      "sha256": "c81b7aabf32ae9460e8d053ab691875f4551c89564014c24a29cd4b3cdb839b6",
       "executable": false
     },
     "src/chest/ui-receipts.ts": {
@@ -3301,7 +3301,7 @@
       "executable": false
     },
     "src/chest/ui-shell.ts": {
-      "sha256": "f65c15100a76fdd23e9945ec463a7a9d1f4d5fd9a46148f5685f7780d6c576e6",
+      "sha256": "e7d78b4415cd2b8b45ebb15d4c64e37b1055ca4beaa362c5660c5a3004524e77",
       "executable": false
     },
     "src/chest/ui-words.ts": {
@@ -3309,7 +3309,7 @@
       "executable": false
     },
     "src/chest/ui.ts": {
-      "sha256": "054e9939f05ef26eb6319a219ac4f92e999e0eaeb1273821bc4d62d685f1f5d6",
+      "sha256": "7c5b8732e97aed526347956b95db0e2cbfedf2bd15c76b2b7375f070a9ac208c",
       "executable": false
     },
     "src/chest/upload-protection/detect.ts": {
@@ -5125,7 +5125,7 @@
       "executable": false
     },
     "src/routes/__root.tsx": {
-      "sha256": "9aa6818b896b5bc28ac5769137dc3f6ff6c7a785cfae295cd664d0006e840c0c",
+      "sha256": "c88b18f74f47cf9d2c00bef78e3e0d31bad7deab12e33f6e43e73dd63384e846",
       "executable": false
     },
     "src/routeTree.gen.ts": {
@@ -5137,7 +5137,7 @@
       "executable": false
     },
     "src/server.ts": {
-      "sha256": "e6ff772b77eedce783c7e89b94de0e3f434f3620e32f4c1936898b0a5fd1bf1c",
+      "sha256": "9bc6bc32722ce4c28f1c5667b7cc24f75a7bc2e293768d324eda47199063d908",
       "executable": false
     },
     "src/site/docs/build/manifest.ts": {
