@@ -5493,7 +5493,7 @@
       "executable": false
     },
     "tests/chest/browser-files.mjs": {
-      "sha256": "a352fc340f3a3aef9c126f42b1290fe0dc32e03b0fc324a302757d32d598e9e9",
+      "sha256": "dbac40e1e591f99c39f9dd12b66c3cd84b9f72a903256a2819a335a58b986616",
       "executable": false
     },
     "tests/chest/browser-flow.mjs": {
@@ -5617,7 +5617,7 @@
       "executable": false
     },
     "tests/chest/files.mjs": {
-      "sha256": "3036788fe6e739fc1826cc95efb4ecae663444ff96fea607b6709480f63a3271",
+      "sha256": "a0bcbc1a518351c651a7d345a3628e8a27395e34fb3b21d34279346296e75058",
       "executable": false
     },
     "tests/chest/filing.mjs": {

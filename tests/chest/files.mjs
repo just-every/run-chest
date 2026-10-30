@@ -158,6 +158,29 @@ try{
   const toAdmins=await h.api(`/items/${orphan.id}/access-requests`,people.dee,{role:'viewer'});assert.deepEqual((await h.api(`/requests/${toAdmins.request}`,people.owner)).approvers,[h.vars.OWNER_EMAIL]);
   await h.api('/people',people.owner,{action:'reactivate',email:'eve@example.test'});people.eve=await h.signIn('eve@example.test');
   const spaceRequest=await h.api(`/items/${space.terms}/access-requests`,people.dee,{role:'viewer'});assert.deepEqual((await h.api(`/requests/${spaceRequest.request}`,people.mo)).approvers,['ana@example.test','mo@example.test']);
+  // A departed team-space owner has no successor: the remaining manager receives and decides the request.
+  const managed=await h.api('/spaces',people.eve,{name:'Manager fallback'});
+  await h.api(`/spaces/${managed.id}/members`,people.eve,{members:[{principal:'eve@example.test',role:'manager'},{principal:'mo@example.test',role:'manager'}]});
+  const inherited=await upload(people.eve,{space:managed.id,name:'synthetic-chest-1.txt',base64:b64('synthetic-chest-1')});
+  await h.api('/people',people.owner,{action:'deactivate',email:'eve@example.test'});await h.api('/files',people.eve,undefined,401);
+  const hidden=await h.raw(`/api/chest/items/${inherited.id}`,people.dee);assert.equal(hidden.status,403);assert.ok(!(await hidden.text()).includes(inherited.payload.name));
+  const fallback=await h.api(`/items/${inherited.id}/access-requests`,people.dee,{role:'editor',message:'Please review my access'});
+  const routedView=await h.api(`/requests/${fallback.request}`,people.mo);assert.deepEqual(routedView.approvers,['mo@example.test']);
+  assert.equal((await h.api(`/requests/${fallback.request}`,people.dee)).itemName,null);
+  assert.ok((await h.api('/notices',people.mo)).some(n=>n.payload.type==='request'&&n.payload.item===inherited.id&&n.payload.request===fallback.request));
+  assert.equal(mail('mo@example.test',new RegExp(`/app/requests/${fallback.request}`)).length,1);
+  const beforeGrant=(await h.api(`/items/${inherited.id}`,people.mo)).grants;
+  await h.api(`/requests/${fallback.request}`,people.cy,{decision:'approve'},403);
+  assert.deepEqual((await h.api(`/items/${inherited.id}`,people.mo)).grants,beforeGrant);await h.api(`/items/${inherited.id}`,people.dee,undefined,403);
+  await h.api(`/requests/${fallback.request}`,people.mo,{decision:'approve',role:'viewer'});
+  assert.ok((await h.api('/notices',people.dee)).some(n=>n.payload.request===fallback.request&&n.payload.message.includes('approved as viewer')));
+  assert.equal(mail('dee@example.test',new RegExp(`/app/items/${inherited.id}`)).length,1);
+  assert.equal((await h.api(`/items/${inherited.id}`,people.dee)).role,'viewer');assert.equal(sha(await bytesOf('dee',inherited.id,inherited.payload.current)),sha('synthetic-chest-1'));
+  for(const [action,actor,expectedRole] of [['access.request','dee@example.test','editor'],['access.approve','mo@example.test','viewer']]){
+   const events=(await audit(action)).filter(e=>e.object_id===inherited.id);assert.equal(events.length,1);assert.equal(events[0].actor,actor);
+   const detail=JSON.parse(events[0].detail);assert.equal(detail.role,expectedRole);assert.equal(detail.outcome,'succeeded');
+  }
+  await h.api('/people',people.owner,{action:'reactivate',email:'eve@example.test'});people.eve=await h.signIn('eve@example.test');
   // Requests close after 30 days and the requester is told.
   await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.expiresAt',?) WHERE id=?",new Date(Date.now()-1000).toISOString(),spaceRequest.request);
   assert.equal((await h.api(`/requests/${spaceRequest.request}`,people.dee)).status,'expired');assert.ok((await h.api('/notices',people.dee)).some(n=>n.payload.type==='request.expired'));

@@ -129,6 +129,35 @@ async function journey(width){
  await p.mo.getByRole('heading',{name:'Restore preview'}).waitFor();await p.mo.getByText('added since',{exact:false}).first().waitFor();await fit(p.mo,'rewind',width);assert.equal((await json(p.mo,`/spaces/${space}`)).children.length,items);
  await press(p.mo,'Restore selected items');await p.mo.getByRole('heading',{name:/^Restored to /}).waitFor();assert.ok((await json(p.mo,`/spaces/${space}`)).children.length<items);
  await press(p.mo,'Undo this restore');await p.mo.getByRole('heading',{name:'Restore undone'}).waitFor();assert.equal((await json(p.mo,`/spaces/${space}`)).children.length,items);
+ // SHARE-008: after the team-space owner leaves without a successor, its sole active manager handles access.
+ const managed=await json(p.eve,'/spaces',{name:`Manager fallback ${width}`});
+ await json(p.eve,`/spaces/${managed.id}/members`,{members:[{principal:'eve@example.test',role:'manager'},{principal:'mo@example.test',role:'manager'}]});
+ await go(p.eve,`/app/spaces/${managed.id}`);await pick(p.eve,{name:`synthetic-chest-${width}.txt`,mimeType:'text/plain',buffer:Buffer.from('synthetic-chest-1')});const inherited=id(p.eve);
+ await h.api('/people',cookies.owner,{action:'deactivate',email:'eve@example.test'});
+ const hidden=await go(p.dee,`/app/items/${inherited}`);await p.dee.getByRole('heading',{name:'Request access'}).waitFor();
+ if(width===1440){assert.equal(hidden.status(),403);assert.ok(!(await hidden.text()).includes(`synthetic-chest-${width}.txt`));assert.equal((await call(p.eve,'/files')).status(),401)}
+ await fit(p.dee,'manager-access-request',width);await p.dee.getByLabel('Access you need').selectOption('editor');await press(p.dee,'Request access');const fallback=id(p.dee);
+ const request=await json(p.mo,`/requests/${fallback}`),beforeGrant=(await json(p.mo,`/items/${inherited}`)).grants;
+ if(width===1440){
+  assert.deepEqual(request.approvers,['mo@example.test']);assert.equal((await json(p.dee,`/requests/${fallback}`)).itemName,null);
+  assert.equal((await call(p.cy,`/requests/${fallback}`,{decision:'approve'})).status(),403);
+  assert.deepEqual((await json(p.mo,`/items/${inherited}`)).grants,beforeGrant);assert.equal((await call(p.dee,`/items/${inherited}`)).status(),403);
+ }
+ await go(p.mo,'/app/notices');await p.mo.getByText(`asked for editor access to "synthetic-chest-${width}.txt"`,{exact:false}).waitFor();await fit(p.mo,'manager-notice',width);
+ const managerMail=h.mails.filter(m=>[m.to].flat().includes('mo@example.test')&&m.text.includes(`/app/requests/${fallback}`));
+ if(width===1440)assert.equal(managerMail.length,1);
+ await go(p.mo,new URL(managerMail[0].text.match(/https:\/\/\S+\/app\/requests\/\S+/)[0]).pathname);await p.mo.getByLabel('Grant role').selectOption('viewer');await press(p.mo,'Approve');
+ await go(p.dee,'/app/notices');await p.dee.getByText(`"synthetic-chest-${width}.txt" was approved as viewer`,{exact:false}).waitFor();
+ await go(p.dee,`/app/items/${inherited}`);await p.dee.locator('.doc-side').getByText('viewer',{exact:false}).first().waitFor();await fit(p.dee,'manager-granted',width);
+ if(width===1440){
+  assert.equal(h.mails.filter(m=>[m.to].flat().includes('dee@example.test')&&m.text.includes(`/app/items/${inherited}`)&&m.text.includes('approved as viewer')).length,1);
+  assert.equal(sha(await download(p.dee,p.dee.locator('.doc-actions').getByRole('link',{name:'Download'}))),sha('synthetic-chest-1'));
+  for(const [action,actor,expectedRole] of [['access.request','dee@example.test','editor'],['access.approve','mo@example.test','viewer']]){
+   const events=await audit(action,inherited);assert.equal(events.length,1);assert.equal(events[0].actor,actor);
+   const detail=JSON.parse(events[0].detail);assert.equal(detail.role,expectedRole);assert.equal(detail.outcome,'succeeded');
+  }
+ }
+ await h.api('/people',cookies.owner,{action:'reactivate',email:'eve@example.test'});cookies.eve=await h.signIn('eve@example.test');
  await go(p.ana,'/app/files');await fit(p.ana,'home',width);
  for(const page of Object.values(p))await page.context().close();
  console.log(`Files browser journey passed at ${width}: trash/restore/erase, version history and restore, sharing, access requests, expiry, members, move-in and device keys`);
