@@ -82,11 +82,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.access.narrow
 
@@ -115,11 +111,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.activity.list
 
@@ -142,11 +134,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.comments.add
 
@@ -182,11 +170,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.decisions.record
 
@@ -231,11 +215,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.devices.list
 
@@ -259,11 +239,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.devices.revoke
 
@@ -286,11 +262,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.duplicates.apply
 
@@ -319,11 +291,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.duplicates.propose
 
@@ -349,25 +317,13 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.events.list
 
-Input:
+The built-in input schema is returned by MCP `tools/list`.
 
-```json
-
-```
-
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.exposure.list
 
@@ -398,11 +354,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.files.create
 
@@ -446,11 +398,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.files.read
 
@@ -483,11 +431,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.files.upload
 
@@ -540,11 +484,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.filing.apply
 
@@ -567,11 +507,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.filing.propose
 
@@ -621,11 +557,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.folders.create
 
@@ -657,11 +589,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.items.get
 
@@ -684,11 +612,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.items.list
 
@@ -718,11 +642,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.items.trash
 
@@ -745,11 +665,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.items.untrash
 
@@ -772,11 +688,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.items.update
 
@@ -833,11 +745,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.limits.set
 
@@ -868,11 +776,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.links.create
 
@@ -923,11 +827,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.members.update
 
@@ -973,11 +873,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.movein.status
 
@@ -998,11 +894,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.pick
 
@@ -1025,11 +917,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.quarantine.list
 
@@ -1044,11 +932,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.quarantine.release
 
@@ -1076,11 +960,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.reports.get
 
@@ -1108,11 +988,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.requests.create
 
@@ -1195,11 +1071,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.requests.list
 
@@ -1222,11 +1094,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.rewind
 
@@ -1279,11 +1147,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.search
 
@@ -1364,11 +1228,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.send
 
@@ -1494,11 +1354,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.settings.update
 
@@ -1560,11 +1416,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.share
 
@@ -1613,11 +1465,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.spaces.create
 
@@ -1639,11 +1487,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.versions.list
 
@@ -1666,11 +1510,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.versions.name
 
@@ -1704,11 +1544,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.versions.restore
 
@@ -1737,11 +1573,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ### chest.versions.upload
 
@@ -1781,11 +1613,7 @@ Input:
 }
 ```
 
-Output:
-
-```json
-
-```
+The output schema is returned by MCP `tools/list`; normal `rer verify` validates each real result against it.
 
 ## Decisions and errors
 
