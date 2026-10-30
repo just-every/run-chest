@@ -9,9 +9,9 @@ The primary journey: create a team space, move originals and rights in, install 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Core | 40 | 45 | 38 | 123 |
-| Agent surface | 0 | 2 | 24 | 26 |
+| Agent surface | 0 | 3 | 23 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 41 | 51 | 78 | 170 |
+| Full target | 41 | 52 | 77 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -254,8 +254,8 @@ The CHEST-10 reviewer duty combines with any role from commenter up and adds no 
 4. In the shipped editor, a commenter's DOCX typing is recorded as tracked changes attributed to them, a save with a direct edit is refused with `suggest_only`, a viewer's session is read-only, and a contributor accepts the suggestion as an attributed version.
 5. A space viewer sees no upload, new folder, share, rename or trash action, a rename request returns 403, a file in another space shows **Request access** without its name, and People & settings returns 403.
 
-**Evidence.** `tests/chest/role-review-flow.mjs`; `tests/chest/role-browser-matrix.mjs`; `tests/chest/restriction-flow.mjs`; `tests/chest/annotation-flow.mjs`; `tests/chest/wopi-flow.mjs`; `tests/chest/collabora-live.mjs`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`
-**Gap.** Points 1 to 4 pass. Point 5's **Request access** without the name, and the viewer's lack of upload and new-folder rights (no contribute right, folder creation 403), are asserted (`tests/chest/files.mjs`, `tests/chest/browser-files.mjs`); a viewer's rename returning 403, People & settings returning 403, and the absence of the share, rename and trash actions for a viewer are not.
+**Evidence.** `tests/chest/role-review-flow.mjs`; `tests/chest/role-browser-matrix.mjs`; `tests/chest/restriction-flow.mjs`; `tests/chest/annotation-flow.mjs`; `tests/chest/wopi-flow.mjs`; `tests/chest/collabora-live.mjs`; `tests/chest/files.mjs`; `tests/chest/browser-files.mjs` — viewer rename and People & settings refusals, concealed Request access, and absent mutation controls in normal and management views
+**Gap.** Points 1 to 4 pass. The candidate adds point 5 HTTP and browser assertions for viewer rename and People & settings refusals, concealed Request access and absent creation, share, rename and trash controls. Main's partial judgment is retained pending fresh acceptance of that proof.
 
 #### VERSION-001 — Version history and restore by editors
 
@@ -345,7 +345,7 @@ Core · target · **partial** · Rules D-1
 3. An upload against an outdated base files a named conflict instead of overwriting.
 4. A revoked device key is refused at once.
 
-**Evidence.** `tests/chest/files.mjs`; `tests/chest/scale-sync.mjs`
+**Evidence.** `tests/chest/files.mjs`; `tests/chest/scale-sync.mjs`; `tests/chest/sync-tree-flow.mjs`
 **Gap.** Fresh-judge candidate: the old gap says this protocol exists; only the native clients (SYNC-008) were missing.
 
 #### SYNC-008 — macOS and Windows clients
@@ -687,7 +687,7 @@ Core · target · **partial** · Rules D-1, D-2
 2. A public link and an outside guest made under a looser policy are refused on the next request after tightening and listed as suspended.
 3. A space override blocking non-members refuses a member's share to another colleague.
 
-**Evidence.** `tests/chest/link-policy.mjs`; `tests/chest/browser-links.mjs`; `tests/chest/browser-sharing-policy.mjs`
+**Evidence.** `tests/chest/link-policy.mjs`; `tests/chest/browser-links.mjs`; `tests/chest/browser-sharing-policy.mjs`; `tests/chest/integrations.mjs` — POLICY-001 consented member share: internal non-member refusal, permitted member control, retry and Worker restart with unchanged originals and no grant, successful audit or mail on refusal.
 **Gap.** Fresh-judge candidate: the old gap named only the connector doors, which now carry their own policy point (CONNECT-001, -002, -008, -009, -010).
 
 #### POLICY-002 — Default link audience and discovery
@@ -700,7 +700,7 @@ Core · target · **partial** · From POLICY-001
 1. With the organization default restricted and a group default of organization viewer, a group member's new link starts at organization viewer and a non-member's at restricted, and older links keep their audience.
 2. With discovery off, a request for a discoverable organization link is refused with the policy named.
 
-**Evidence.** `tests/chest/link-policy.mjs`; `tests/chest/browser-sharing-policy.mjs`
+**Evidence.** `tests/chest/link-policy.mjs`; `tests/chest/browser-sharing-policy.mjs`; named discovery refusal with no created link); `tests/chest/browser-links.mjs` (actual creator forms, saved audience and role, changed defaults without permission tightening, retained links and downloads after restart, discovery refusal; screens at 1440 and 390)
 **Gap.** Fresh-judge candidate: the old gap lists new-link defaults and discovery as delivered.
 
 ### Previews, search and editing
@@ -778,8 +778,8 @@ Core · target · **partial** · Cites BASE-DATA-004 · Rules D-4
 5. A viewer sees confirmed values with no confirm control, and their API confirm returns 403; an outsider's search for a read value returns nothing.
 6. A new version with a changed date proposes only that field again, and earlier confirmations stay on the earlier version.
 
-**Evidence.** `tests/chest/reading.mjs`; `tests/chest/scan-fields.mjs`; `tests/chest/browser-scan-fields.mjs`; `tests/chest/ask-live.mjs`; `tests/chest/governance.mjs`
-**Gap.** Readings that fill typed fields without an editor, where the company's policy allows it, are not built: today every reading waits for an editor, which is the held-policy journey. RL-103's rider on human confirmation goes back to ct under the contract standard's Agent surface rule. Uncommon TIFF encodings and age-based expiry stay unavailable, and the native scan panel is PREVIEW-003.
+**Evidence.** `tests/chest/reading.mjs`; `tests/chest/scan-fields.mjs` — assertScanProvenance: every NDA and W-9 value, page, normalized box, confidence, exact-version image and unchanged original hash across Worker restart; `tests/chest/browser-scan-fields.mjs` — scanProvenanceBrowser: browser file-picker two-page TIFF and W-9 upload, all seven numbered source boxes and proposal labels, masked TIN text and persisted rendering, with browser proof at 1440 and 390; `tests/chest/ask-live.mjs`; `tests/chest/governance.mjs`
+**Gap.** Readings that fill typed fields without an editor, where the company's policy allows it, are not built: today every reading waits for an editor, which is the held-policy journey. RL-103's rider on human confirmation goes back to ct under the contract standard's Agent surface rule. Uncommon TIFF encodings and age-based expiry stay unavailable, and the native scan panel is PREVIEW-003, with native iOS and Android device proof still held under MOBILE-001. The browser provenance slice of point 1 is proved under the existing editor-confirmed scan policy; points 2–6 and every existing account, provider, Base, device, reader-policy and automatic-write prerequisite retain their prior scope and judgment.
 
 #### EDIT-001 — The shipped independent editor
 
@@ -2153,7 +2153,7 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-005, BASE
 7. Approving with the agent's own token returns 403.
 8. The integration API's `/shares` and `/links` give an agent token the same class and decision as the tools.
 
-**Evidence.** None.
+**Evidence.** `tests/chest/integrations.mjs` — Compatibility assertions cover omitted, false and true confirmation flags through OAuth API and legacy MCP, authenticated attribution, idempotent replay, and ordinary public-link refusals preserving populated grants, links and stored mutation receipts across retry and Worker restart. These assertions do not establish canonical company-policy classification or decisions.
 **Gap.** No recipient classification, policy decision, pending actions or receipts. Today `chest_share` forwards the agent's own `confirmExternal`, which the sharing policy (`src/chest/files/sharing-policy.ts`) accepts as the browser's confirmation, and the API's `/links` creates links under policy with no class or decision.
 
 #### SURFACE-007 — Narrowing access and repairing links
@@ -2228,7 +2228,7 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-005, BASE
 
 #### SURFACE-011 — Decisions and signatures are commitments
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008
 
 **Requirement.** For a sponsor who is the assigned reviewer, `chest.decisions.record` assigns, requests changes (standard) or approves an exact version under CHEST-08 (commitment). For a sponsor who is a signer, `chest.sign` applies the sponsor's signature under SIGN-001 (commitment), and only after the sponsor has accepted SIGN-001's consent disclosure. An agent's decision or signature always reads "<agent> for <person>" in the version history, the signature certificate and the audit.
 
@@ -2241,8 +2241,8 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE
 6. With commitment set to autonomous, a completed envelope signed by an agent shows "<agent> for <person>" on its certificate and in its audit trail.
 7. An approval or signature on a document that states a value and a counterparty records both with its commitment class.
 
-**Evidence.** None.
-**Gap.** No decision or signature tools, class declarations or agent attribution; decisions and signing are browser-only.
+**Evidence.** `tests/agent-door/native.mjs` beforeStep and afterStep: request-changes; changesThroughMcp: exact-version request changes, authenticated attribution, retry, restart and authority refusals; `tests/chest/browser-governance.mjs`: retained history, Activity and public audit at 1440 and 390
+**Gap.** Point 1 seed-side request-changes effect and attribution are proved. Shared Base integration and policy and runtime conformance holds remain; acceptance points 2–7, commitment approval and blocking, agent signatures, signer consent and completion, certificates, value and counterparty facts and full-clause judgment remain unproved. SIGN-001 native acceptance and all existing account, device and distribution prerequisites remain held.
 
 #### SURFACE-012 — Limits and Pause agents
 
@@ -2295,8 +2295,8 @@ Later · target · **partial** · From SPACE-001
 2. After acceptance the file sits in the recipient's area with the same ID, versions and share link, and the sender is editor.
 3. A declined offer changes nothing, and each step is audited.
 
-**Evidence.** `tests/chest/ownership.mjs`; `tests/chest/browser-ownership.mjs`
-**Gap.** Fresh-judge candidate: the old gap lists ownership offers with acceptance, decline, cancel and notices as delivered.
+**Evidence.** `tests/chest/ownership.mjs` — SPACE-001 declined, cancelled and stale ownership; ownership consent and preserved tree; collision, concurrent acceptance and relinquishment. `tests/chest/browser-ownership.mjs` — SPACE-001 ownership browser at 1440 and 390.
+**Gap.** Fresh-judge candidate: the old gap lists ownership offers with acceptance, decline, cancel and notices as delivered. The point 3 journeys now reconcile a declined three-version file's unchanged ID, location, originals, grants, authority and existing link after Worker restart, with exact once-only offer, accept, decline and cancel audits. Full-clause judgment remains outside this bounded proof. The complete EDIT-004 provider and native creation experience, signed MOBILE-001 clients and the SCALE-001 reference installation remain held; no status promotion is claimed.
 
 #### SYNC-010 — Windows 10 22H2
 

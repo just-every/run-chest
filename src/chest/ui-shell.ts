@@ -16,14 +16,15 @@ export const head=(title:string)=>`<meta charset="utf-8"><meta name="viewport" c
 const titles={apps:'Connected apps',files:'Files',library:'Library',admin:'People & settings',archive:'Move in',audit:'Audit',notices:'Notices',shared:'Shared with me',requests:'Requests',links:'Links',trash:'Trash',mine:'My files',administration:'Administration'}
 const section=(path:string):keyof typeof titles=>path.startsWith('/app/integrations')?'apps':path.startsWith('/app/administration')?'administration':path.startsWith('/app/admin')||path.startsWith('/app/erasure')?'admin':path.startsWith('/app/archive')||path.startsWith('/app/move-in')?'archive':path.startsWith('/app/audit')?'audit':path==='/app/notices'?'notices':path==='/app/shared'?'shared':path.startsWith('/app/requests')?'requests':path==='/app/links'?'links':path==='/app/files/trash'?'trash':path.startsWith('/app/spaces/personal')?'mine':/^\/app\/(bulk|upload-protection|collection|transfers|templates|files|spaces|items|ownership|devices|filing|storage)(\/|$)/.test(path)?'files':'library'
 export type Crumb={label:string,href?:string}
-export type Bar={crumbs?:Crumb[],new?:string,upload?:string,share?:string}
+export type Bar={crumbs?:Crumb[],new?:string|null,upload?:string|null,share?:string}
 export type Me={name:string,email:string,role:string,rail?:Rail}
 const crumbs=(list:Crumb[])=>`<nav class="crumbs" aria-label="Breadcrumb"><ol>${list.map((c,i)=>`<li>${i?`<span class="crumb-sep" aria-hidden="true">${icons.chevron}</span>`:''}${c.href&&i<list.length-1?`<a href="${esc(c.href)}">${esc(c.label)}</a>`:`<span aria-current="page">${esc(c.label)}</span>`}</li>`).join('')}</ol></nav>`
 // New, Upload and Share act on the open folder or file; elsewhere New and Upload go to My files.
 function actions(bar:Bar,me:Me){
  const mine=me.rail?`/app/spaces/${me.rail.personal}`:'/app/files'
- const create=bar.new??`<a class="btn btn-sm" href="${mine}#new">${icons.plus}<span>New</span></a>`
- return `<div class="bar-actions">${create.replace('<summary class="btn">','<summary class="btn btn-sm">'+icons.plus)}<a class="btn btn-outline btn-sm" href="${esc(bar.upload??`${mine}#upload`)}">${icons.upload}<span>Upload</span></a>${bar.share?`<a class="btn btn-outline btn-sm" href="${esc(bar.share)}">${icons.share}<span>Share</span></a>`:''}</div>`
+ const create=bar.new===null?'':bar.new??`<a class="btn btn-sm" href="${mine}#new">${icons.plus}<span>New</span></a>`
+ const upload=bar.upload===null?'':`<a class="btn btn-outline btn-sm" href="${esc(bar.upload??`${mine}#upload`)}">${icons.upload}<span>Upload</span></a>`
+ return `<div class="bar-actions">${create.replace('<summary class="btn">','<summary class="btn btn-sm">'+icons.plus)}${upload}${bar.share?`<a class="btn btn-outline btn-sm" href="${esc(bar.share)}">${icons.share}<span>Share</span></a>`:''}</div>`
 }
 export function page(body:string,me:Me,path='/app',bar:Bar={}){
  const current=section(path)

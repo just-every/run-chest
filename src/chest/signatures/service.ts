@@ -1,3 +1,4 @@
+import { sessionAgent } from '../agent-attribution'
 import { assertContent } from '../content-security/scan'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
@@ -73,7 +74,7 @@ export async function send(env: Bindings, s: Session, w: Who, key: string, input
  for (const signer of signers) if (signer.order === first) signer.state = 'invited'
  const payload: SignRequest = { ...row.payload, mode, signers: signers.map(x => x.order === first ? { ...x, invitedAt: at } : x), fields, expires, reminderDays, status: 'pending', sentAt: at, events: [event('sent', from, { email: s.operator.email, detail: `${signers.length} signer${signers.length === 1 ? '' : 's'}, ${mode}` })] }
  await commit(env, s, [{ row: next(row, payload), previous: row }], { fences: ctx.fences, audits: [{ action: 'signature.send', object: item.id, detail: { request: row.id, version: row.payload.version, signers: emails, mode, expires, reminderDays } }] })
- const requester = personName((await maybe<Person>(env, 'person', s.operator.email))?.payload.name, s.operator.email)
+ const requester = sessionAgent(s)?.label??personName((await maybe<Person>(env, 'person', s.operator.email))?.payload.name, s.operator.email)
  const sent = await Promise.all(payload.signers.filter(x => x.state === 'invited').map(async x => ({ x, mail: await invite(env, payload, row.id, x, requester) })))
  await mutate(env, row.id, async r => ({ payload: { ...r.payload, signers: r.payload.signers.map(x => ({ ...x, ...(sent.find(m => m.x.id === x.id) ? { mail: sent.find(m => m.x.id === x.id)!.mail } : {}) })), events: [...r.payload.events, ...sent.map(m => event('invited', from, { signer: m.x.id, email: m.x.email, detail: `mail ${m.mail}` }))] } }))
  return { id: row.id, status: 'pending' }
@@ -108,7 +109,7 @@ export async function resend(env: Bindings, s: Session, w: Who, key: string, inp
  const { row } = await visible(env, s, w, key); insist(row.payload.createdBy === s.operator.email, 'access_required', 403); insist(row.payload.status === 'pending', 'signature_not_pending', 409)
  const target = row.payload.signers.find(x => x.id === input.signer && (x.state === 'invited' || x.state === 'viewed')); insist(target, 'signer_not_waiting', 409)
  const rotated = { ...target, generation: (target.generation ?? 0) + 1, credential: undefined }, hash = await tokenHash(await signerToken(env, key, rotated)), from = origin(request)
- const requester = personName((await maybe<Person>(env, 'person', s.operator.email))?.payload.name, s.operator.email)
+ const requester = sessionAgent(s)?.label??personName((await maybe<Person>(env, 'person', s.operator.email))?.payload.name, s.operator.email)
  await mutate(env, key, async r => ({ payload: { ...r.payload, signers: r.payload.signers.map(x => x.id === target.id ? { ...x, tokenHash: hash, generation: rotated.generation, credential: undefined } : x) }, audits: [{ action: 'signature.resend', object: r.payload.item, detail: { request: key, signer: target.email } }], by: s.operator.email }))
  const mail = await invite(env, row.payload, key, rotated as Signer, requester)
  await mutate(env, key, async r => ({ payload: { ...r.payload, signers: r.payload.signers.map(x => x.id === target.id ? { ...x, mail } : x), events: [...r.payload.events, event('invited', from, { signer: target.id, email: target.email, detail: `resent, mail ${mail}` })] } }))

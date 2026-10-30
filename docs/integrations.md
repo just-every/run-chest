@@ -1,6 +1,6 @@
 # Scoped apps, MCP and the file picker
 
-Chest serves OAuth authorization-code grants with S256 PKCE, a scoped HTTP API, a JSON-RPC MCP server and an embeddable JavaScript file picker. Open **Connected apps** at `/app/integrations` to register an app, inspect its users, resources, actions, budgets and last use, revoke it or inspect webhook delivery outcomes. The same controls are available to admins with the relevant ADMIN-003 sharing and security scope; a group-scoped admin manages only their groups.
+Chest serves OAuth authorization-code grants with S256 PKCE, a scoped HTTP API, the shared Base agent door and an embeddable JavaScript file picker. Open **Connected apps** at `/app/integrations` to register an app, inspect its users, resources, actions, budgets and last use, revoke it or inspect webhook delivery outcomes. The same controls are available to admins with the relevant ADMIN-003 sharing and security scope; a group-scoped admin manages only their groups.
 
 Every call uses the authorizing person's current identity, groups, file permissions and sharing policy. A grant never adds file access. Its explicit roots include only descendants the person can currently open. A moved-out, restricted, trashed or otherwise inaccessible item is refused. Download restrictions also apply to originals, including range requests, and each original stream chunk rechecks live authority. Revoking a grant or blocking its app stops its next request. Imported people have no authentication authority.
 
@@ -35,9 +35,11 @@ Content-Type: application/x-www-form-urlencoded
 grant_type=authorization_code&client_id=CLIENT&redirect_uri=EXACT_REGISTERED_URL&code=CODE&code_verifier=VERIFIER
 ```
 
-The response contains a bearer `access_token`, grant ID, scopes and expiry. Grants last 24 hours and do not silently refresh. Codes, client secrets, bearer credentials, signing keys and cached capability-bearing responses are encrypted with the installation's own secret and stored outside portable product records. A restored installation requires fresh authorization. Identity erasure physically deletes the person’s codes, tokens, app secrets, webhook signing keys and cached capability responses, and removes integration MFA proofs. There is no client-credentials impersonation flow. OAuth metadata is at `/.well-known/oauth-authorization-server`; MCP protected-resource metadata is at `/.well-known/oauth-protected-resource/mcp/chest`.
+The response contains a bearer `access_token`, grant ID, scopes and expiry. Grants last 24 hours and do not silently refresh. Codes, client secrets, bearer credentials, signing keys and cached capability-bearing responses are encrypted with the installation's own secret and stored outside portable product records. A restored installation requires fresh authorization. When erasure is permitted, native identity erasure removes installation credentials. Once shared agent records exist, erasure is held visibly because retained arguments, results and named decision evidence require client-scoped redaction and a concurrent-capture fence. It never claims those stores were erased. There is no client-credentials impersonation flow. OAuth metadata is at `/.well-known/oauth-authorization-server`; MCP protected-resource metadata is at `/.well-known/oauth-protected-resource/mcp/chest`.
 
-Budgets cap calls, mutations and original bytes. API calls spend one request, including idempotent replays; original reads charge the selected original's full size even when requesting a range. Mutations charge newly admitted or restored version sizes. A successful webhook attempt spends a request before sending. A limit refusal is HTTP 429. A concurrent change can refuse a request rather than exceed its budget; reusing the same mutation key is safe.
+Grant budgets optionally cap calls, mutations and original bytes over the grant’s 24-hour lifetime. Omitted or blank budget parameters mean no grant limit for that dimension; an explicit 0 refuses that work. The granter can change each choice on the consent form before authorizing. Existing saved grants retain their numeric limits and usage. See [Agent limits and budgets](./agents.md) for installation capacity and pacing, which remain independent of grant budgets. API calls spend one request, including idempotent replays; original reads charge the selected original's full size even when requesting a range. Mutations charge newly admitted or restored version sizes. A successful webhook attempt spends a request before sending. A limit refusal is HTTP 429. A concurrent change can refuse a request rather than exceed its budget; reusing the same mutation key is safe.
+
+Quarantined originals return the same refusal as the browser, including retained versions and range reads. A byte allowance refusal returns HTTP 429, emits only the error document and leaves the byte allowance unchanged. Revoked access remains refused after a restart. Clients should check the retained size and SHA-256 before accepting an original.
 
 ## HTTP API
 
@@ -59,6 +61,7 @@ Use `Authorization: Bearer TOKEN`. The base is `/api/chest/integrations/v1`. Rea
 | `GET /items/:id/shares` | `share` | Paginated current grants, when the user can currently share. |
 | `POST /items/:id/shares` | `share` | Share using `principal`, `role` and normal expiry/message fields. |
 | `POST /items/:id/unshare` | `share` | Remove one `principal`. |
+| `POST /items/:id/make-private` | `share` | Revoke every public or guest link and remove organization and restricted links on this item, preserving named people and group grants, children and retained originals. Requires the sponsor's current sharing authority and an idempotency key; send `{}`. |
 | `POST /items/:id/links` | `share` | Create a link with the normal policy-controlled audience, version and download controls. |
 | `GET /items/:id/requests` | `request` | Paginated upload-only requests for a folder the user may share. |
 | `GET /requests/:id` | `request` | One request's settings, scoped by its destination folder. |
@@ -67,11 +70,51 @@ Use `Authorization: Bearer TOKEN`. The base is `/api/chest/integrations/v1`. Rea
 
 Every product mutation needs `Idempotency-Key` (8–240 characters). Its receipt and mutation publish in the same database transaction. Reusing the key with the same input returns the recorded outcome; different input is HTTP 409. A lost response cannot duplicate an upload or grant. If a process stops after commit but before recording a capability-bearing response, the replay explicitly reports `state:"committed"` and the stable result IDs instead of manufacturing another link/request or claiming the response was delivered. Revoke that link/request and create another only with a new key if its one-time URL was lost.
 
-ROLE-001 and POLICY-001 remain authoritative: an app's `share` action does not make a viewer a sharer, and public links or external sharing are refused where current policy forbids them. Authenticated app and MCP shares are agent-initiated. External actions carry risk class `external-share` through one agent policy hook; its compatibility policy currently returns `allow`, preserving autonomous sharing while Base policy integration is pending. The company policy can later choose allow, review, approve or block. Audit names the authenticated agent, its sponsor and grant, the risk class and policy decision. An app's `confirmExternal` flag is never human confirmation: these actions record `humanConfirmed:false` and need no confirmation flag. The browser still warns a person about external recipients where configured; internal shares are unchanged. Tokens cannot expand their own resources, scopes, budgets or expiry.
+ROLE-001 and POLICY-001 remain authoritative: an app's `share` action does not make a viewer a sharer, and public links or external sharing are refused where current policy forbids them. Authenticated app and MCP shares are agent-initiated. External actions carry the server-computed `external` class through `createAgentDoor`, along with every other declared class. The company chooses autonomous, review, approval or blocked; an unset policy refuses effects. SDK reads and mutations enter this same native registry while retaining their original OAuth scope, resource fences, byte budgets and source-pause checks. Audit names the authenticated agent, native sponsor ID and consent/grant. `confirmExternal` is ignored as evidence of a human decision; native receipts say `humanConfirmed:false`. The browser still warns a person about external recipients where configured; internal shares are unchanged. Tokens cannot expand their own resources, scopes, budgets or expiry. Budget changes require fresh human consent and a new grant.
+
+## Read-only administrative activity
+
+Register `admin-report` as an allowed action and request it explicitly in OAuth
+consent. Add one `report_group` parameter for each selected group. The sponsor
+must currently hold the `audit-reporting` administrative privilege for every
+requested group. The consent page names those groups and requires a separate
+**Allow read-only administrative activity reports for these groups** checkbox.
+The selected IDs are persisted with the intent and grant; form fields cannot
+expand them. A report-only grant can omit file resources and conveys no file
+access. Existing file grants convey no administrative capability.
+
+`GET /api/chest/integrations/v1/administration/audit` returns `rows`, `next`,
+`until`, `limited` and the currently available selected `groups`.
+`GET /api/chest/integrations/v1/administration/audit/export` streams CSV with the
+browser report's columns and escaping. Use the same `group`, `category`, `actor`,
+`action`, `object`, `outcome`, `from`, `to` and `until` filters as the browser.
+Dates are inclusive UTC instants. JSON pages accept `limit` (1–300) and `cursor`;
+retain `until` when following `next`. CSV ignores an incoming cursor and emits
+all matching pages; `limit` controls its output page size, defaulting to 300.
+
+Every request and every CSV output page intersects the saved group selection
+with the sponsor's current delegated authority and current group membership.
+Later promotion never expands the saved selection. Selecting a group outside
+that intersection, or losing all selected groups, returns
+`admin_group_scope_required`. A staff sponsor receives `admin_required`, the
+browser's refusal code. An administrator without the separate capability gets
+`oauth_action_outside_grant`. Revocation, app policy and sponsor deactivation
+still govern the token. An export already in progress errors before its next
+authorized output page after revocation; previously emitted bytes cannot be
+recalled. Restart preserves both selection and revocation.
+
+Reports contain only event timestamps, actor identities, actions, object IDs and
+outcomes. They reuse the browser's custody scope and view-history privacy
+filter; they grant no original-byte, file-name or audit-payload access. No
+administrative mutation or canonical Agent tool is introduced by this slice.
 
 ## MCP
 
-Send JSON-RPC 2.0 POST requests to `/mcp/chest` with the same bearer token. The server supports `initialize`, `notifications/initialized`, `ping`, `tools/list` and `tools/call` using MCP protocol `2025-03-26`. Tools are `chest_list`, `chest_search`, `chest_get`, `chest_versions`, `chest_upload`, `chest_create_folder`, `chest_share`, `chest_create_request` and `chest_pick`. Their input schemas are returned by `tools/list`; mutation tools require a caller `key`. Tool outcomes include text and structured content, and refusals are `isError:true`. Tools reach exactly the same scoped, budgeted product operations as HTTP calls.
+Send JSON-RPC 2.0 POST requests to `/mcp`; `/mcp/chest` is an alias of that same door. The supported eras are `2026-07-28` and `2025-11-25`. The older era initializes; the current era also supports handshake-free discovery. Canonical protected-resource metadata, `/api/rer/agent-policy`, `/agents`, named approval and review pages, resources and the records-clerk prompt come from the shared door. Chest generates `/docs/agents` from the manifest that normal verification requires to equal its native registry.
+
+Use the registry's dot names, such as `chest.items.list`, `chest.files.upload`, `chest.share` and `chest.requests.create`. `tools/list` declares input/output schemas, current scopes, classes and clause IDs. Mutations use `idempotency_key`; `expected_revision` is available where the native target has a revision. Refusals expose stable codes under `_meta['com.runeditrun/error']`; pending approvals carry the person's handoff URL. A person, never the agent, approves the exact saved summary. Successful replay still rechecks current authority and policy.
+
+See [Agent adoption and limits](agent-adoption.md) for the declared subset and remaining gaps. The old underscore tools and separate policy dispatcher have been removed.
 
 ## Embed the picker
 
@@ -111,5 +154,7 @@ The queue sends pending events only while the original grant, current resources/
 The Worker calls `sweepIntegrations` from its scheduled handler and request continuation. It scans bounded queue pages and sends a bounded pending batch each time; no dev server or independent process is required.
 
 ## Evidence
+
+`tests/chest/integrations.mjs` also reconciles the separately consented activity report across pagination and restart, excludes other group custody and original contents, matches staff refusals, and revokes open exports over an independent HTTP connection. The browser journey reconciles its actual CSV download with the same fixed filters and records the consent and reporting screens at 1440 and 390.
 
 `tests/chest/integrations.mjs` exercises OAuth/PKCE and exact redirects, scoped pagination/search, idempotent upload across restart, original downloads, MCP mutations/refusals, signed failed/uncertain webhook replay with receiver deduplication, imported-event suppression, budgets, revocation and allowlist/read-only/block policy. `tests/chest/browser-integrations.mjs` exercises consent, the real picker in an embedded consumer, scoped search, stable IDs/links, next-pick revocation the policy console and failed-webhook manual replay at 1440 and 390. `tests/chest/integration-client.mjs` serves the real HTTPS test consumer. The OAuth test client and webhook receiver are the network edges; product authorization, storage and mutation paths are real.

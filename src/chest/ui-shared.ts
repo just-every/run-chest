@@ -6,7 +6,8 @@ export const icon=(name:IconName)=>`<span class="icon" aria-hidden="true">${icon
 // Form controls: the label text sits above its control, both inside the label so it names the control.
 export const field=(label:string,name:string,value='',type='text',required=true)=>`<label class="field"><span class="field-label">${esc(label)}</span><input name="${esc(name)}" type="${type}" value="${esc(value)}" ${required?'required':''}${type==='date'||type==='email'?' class="mono"':''}></label>`
 export const area=(label:string,name:string,value:unknown,required=true)=>`<label class="field"><span class="field-label">${esc(label)}</span><textarea name="${esc(name)}" ${required?'required':''}>${typeof value==='string'?esc(value):json(value)}</textarea></label>`
-export const select=(label:string,name:string,rows:{id:string,label:string}[],selected='',required=true)=>`<label class="field"><span class="field-label">${esc(label)}</span><select name="${name}" ${required?'required':''}>${rows.map(r=>`<option value="${esc(r.id)}" ${r.id===selected?'selected':''}>${esc(r.label)}</option>`).join('')}</select></label>`
+// A row may carry `at`: its label then ends in that moment, which the browser rewrites on its own clock (/chest-time.js).
+export const select=(label:string,name:string,rows:{id:string,label:string,at?:string}[],selected='',required=true)=>`<label class="field"><span class="field-label">${esc(label)}</span><select name="${name}" ${required?'required':''}>${rows.map(r=>`<option value="${esc(r.id)}" ${r.id===selected?'selected':''}${r.at?` data-at="${esc(r.at)}" data-prefix="${esc(r.label.slice(0,r.label.length-utcText(r.at).length))}"`:''}>${esc(r.label)}</option>`).join('')}</select></label>`
 export const form=(path:string,body:string,button:string,returnTo='/app/library',{className='form',buttonClass='btn'}:{className?:string,buttonClass?:string}={})=>`<form class="${className}" method="post" action="/app/action" enctype="multipart/form-data"><input type="hidden" name="path" value="${esc(path)}"><input type="hidden" name="returnTo" value="${esc(returnTo)}">${body}<button class="${buttonClass}">${esc(button)}</button></form>`
 // An email box that suggests the people already in this Chest; any other address can be typed.
 export const personPicker=(label:string,name:string,people:{id:string,payload:{name:string}}[],list:string)=>`<label class="field"><span class="field-label">${esc(label)}</span><input name="${esc(name)}" type="email" required class="mono" list="${esc(list)}" autocomplete="off"><datalist id="${esc(list)}">${people.map(p=>`<option value="${esc(p.id)}">${esc(p.payload.name)}</option>`).join('')}</datalist></label>`
@@ -23,6 +24,14 @@ export const isoDay=(date:string)=>/^\d{4}-\d{2}-\d{2}$/.test(date)?esc(us(date+
 // A person as a round initial in one of five soft tones, picked from their email so it stays the same everywhere.
 export const tone=(email:string)=>1+[...email].reduce((n,c)=>n+c.charCodeAt(0),0)%5
 export const avatar=(p:{email:string,name:string},label=false)=>`<span class="avatar tone-${tone(p.email)}"${label?` title="${esc(p.name)}"`:' aria-hidden="true"'}>${esc((p.name||p.email).trim()[0]?.toUpperCase()??'?')}</span>`
+// A person by name, from the people the page already has; an address nobody has a name for shows as it is.
+export const nameOf=(people:{id:string,payload:{name:string}}[])=>{const names=new Map(people.map(p=>[p.id,p.payload.name]));return (email:string)=>names.get(email)||email}
+// "1 version", "2 versions".
+export const count=(n:number,word:string,many=`${word}s`)=>`${n} ${n===1?word:many}`
+// A saved field value as a person reads it: numbers with separators, Yes or No for a switch.
+export const fieldValue=(v:unknown)=>typeof v==='number'?v.toLocaleString('en-US',{maximumFractionDigits:6}):typeof v==='boolean'?(v?'Yes':'No'):typeof v==='string'?v:JSON.stringify(v)
+// A storage limit is typed in gigabytes (blank for none) and kept in bytes; this is the number shown for a stored limit.
+export const gigabytes=(n:number|null|undefined)=>n===null||n===undefined?'':String(Number((n/1073741824).toFixed(9)))
 export const hidden=(name:string,value:string)=>`<input type="hidden" name="${name}" value="${esc(value)}">`
 // A disclosure: the summary looks like a button (ink by default) and opens its form in a card below it.
 export const details=(title:string,body:string,summaryClass='btn')=>`<details class="disclosure"><summary class="${summaryClass}">${esc(title)}</summary><div class="disclosure-panel">${body}</div></details>`

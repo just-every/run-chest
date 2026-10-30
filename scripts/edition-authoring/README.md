@@ -236,8 +236,20 @@ distinguish omitted older files from new upstream additions without inventing a
 historical tree. Older records remain readable; to move one to a different pin
 from an archive, first refresh using `--base <checkout>` containing the recorded
 and target commits. A same-pin archive refresh can retain membership directly.
-Operations needing Git history, including migration ancestry and historical
-workflow adoption, refuse before writing and require a checkout. Use
+Archive workflow matching uses only the supplied revision: exact current
+template bytes can be recorded; unmatched workflow bytes remain seed-owned.
+Plain directory archives cannot prove migration ancestry or older source reads;
+those requests still refuse before writing. For an online GitHub source, use
+`rer refresh-base --ref FULL_40_HEX_COMMIT --from-api` instead. This shares
+`record-base --from-api`'s authenticated `gh api` reader: commit/tree/blob reads
+use immutable IDs, incomplete recursive trees are completed by child tree ID,
+and blobs are checked against their Git object IDs. GitHub compare
+`INTRODUCED...REVISION` proves ancestry only with `ahead` or `identical`;
+`behind` and `diverged` do not prove it. Provider errors, unknown comparisons
+and invalid objects refuse before writes. There are no retries or offline API
+mode; choose one of `--from-api`, `--base` or `--base-archive`. API workflow
+matching remains snapshot-only. Named edition-migration consent is still required
+for each owed edit; refresh leaves that edition edit owed. Use
 `verify-base --offline` to check local recorded bytes after an archive refresh,
 or `verify-base --base <checkout>` to also check Git provenance.
 
@@ -288,8 +300,11 @@ Every recorded code module is closed over relative imports and re-exports,
 including delivered workflow helpers and adapted modules (read from local bytes).
 A delivered `.mjs` also brings its Base declaration sibling. A dependency keeps
 its relative destination only when an existing copy mapping witnesses that
-namespace. Tracked unrecorded dependencies stay seed-owned and stop traversal;
-new imports from refreshed files must find their named, type and default exports.
+namespace. Tracked unrecorded dependencies stay seed-owned, and their local
+bytes are traversed as closure roots alongside acknowledged adaptations.
+Their Base dependencies must resolve at witnessed destinations or refresh
+refuses before writes; imports without a Base counterpart stay seed-owned.
+New imports from refreshed files must find their named, type and default exports.
 A JavaScript/TypeScript AST discovers imports, re-exports and literal runtime
 calls, including optional calls, templates and JSX. Runtime imports of every
 form resolve independently of declaration-only files;
@@ -299,7 +314,14 @@ runtime imports require an explicit filename, as in Node. Relative `require` dir
 lookups use `package.json`'s runtime `main`, never its type metadata. Local package
 self-references and `imports` maps use Node's actual resolver and active runtime
 conditions; `types` is enabled only for erased edges. Export targets are exact
-files for both loaders. Unknown external packages remain package-manager inputs.
+files for both loaders. External package imports, including subpaths and erased
+type imports, must be declared in the seed's package manifest. Refresh reports
+the seed and Base versions in `packageDependencies`, preserving existing version
+conflicts without editing manifests or lockfiles. Optional new source graphs
+with undeclared packages are withheld together; required missing packages refuse
+before writes. Adopt a selected dependency with the seed's package manager and
+repeat refresh. The maintained Drizzle reference is optional, not a requirement
+for native D1 editions.
 Imports already unresolved in that same file before refresh remain untouched,
 except for missing authoring-toolkit bootstrap siblings and recorded removals.
 Files required elsewhere in the refresh plan may also satisfy these imports,
@@ -442,13 +464,18 @@ and `VERIFY-WORKFLOW.md` can be adopted when their exact bytes match a template
 in the requested Base commit's history (there are no seed substitutions).
 Acknowledged adaptations and divergent workflows stay untouched and receive a
 notice with the template changes and explicit merge/record instructions.
-An absent workflow is not automatically installed by this adoption step.
+An absent workflow is not automatically installed by this adoption step. With
+`--base-archive`, unrecorded workflows are preserved without requesting Git
+history; explicitly recorded workflows still update. See [adoption and historical
+0.2.82 recovery](../ADOPTING.md).
 
 Authoring refresh closes relative imports from every recorded authoring module,
 including singleton copies and modules whose Base origin is another maintained
 authoring mirror. It follows the bytes that will remain in the seed, including
 acknowledged local adaptations, and gives newly delivered siblings source records
-and digests. Tracked unrecorded siblings remain seed-owned: refresh preserves
+and digests. The lock identity also delivers the complete authoring tool file
+set, including vendored parser LICENSE and README files, so package and
+unadapted delivered tools accept the same source lock. Tracked unrecorded siblings remain seed-owned: refresh preserves
 them without traversing their imports. Untracked helper collisions, including
 ignored files and files matching Base bytes, refuse before writes, as do removed
 recorded dependencies still imported, conflicting mappings and symlinks. This

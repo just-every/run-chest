@@ -2,7 +2,7 @@ import { selectionControls } from '../bulk/ui'
 import { searchFilters } from './ui-search'
 import { repairPanel } from '../sync-repair/ui'
 import type { Diagnosis } from '../sync-repair/model'
-import { esc, field, select, form, hidden, card, details, personPicker, stamp } from '../ui-shared'
+import { esc, field, select, form, hidden, card, details, personPicker, stamp, count } from '../ui-shared'
 import { noticeWords } from '../ui-words'
 import { addHere, listing, restores, rewindForm } from './ui-item'
 import { folderTable } from './ui-table'
@@ -57,7 +57,7 @@ export function spacePage(d: any, people: any[], groups: any[]) {
  return `<div class="browse"><div class="browse-main">${main}</div><div class="browse-side doc-side">${side}</div></div>`
 }
 // Words in scans and photos are searchable only once they are read; without a working AI key the page says why.
-export function searchPage(q: string, r: any, scansUnread: string | null = null) { return head('Search files', `${r.count} accessible result(s).`) + `<div class="lib-tools">${searchFilters(r)}</div>${scansUnread ? `<p class="quiet">Words in scanned images and photos are not searchable yet. ${esc(scansUnread)}</p>` : ''}${listing(r.results, 'No accessible file matches.',true)}` }
+export function searchPage(q: string, r: any, scansUnread: string | null = null, people: any[] = []) { return head('Search files', count(r.count, 'result')) + `<div class="lib-tools">${searchFilters(r, people)}</div>${scansUnread ? `<p class="quiet">Words in scanned images and photos are not searchable yet. ${esc(scansUnread)}</p>` : ''}${listing(r.results, 'No accessible file matches.',true)}` }
 export function sharedPage(rows: any[], q: URLSearchParams) {
  const filter = `<form class="form form-inline" method="get" action="/app/shared">${field('Shared by (email)', 'sharer', q.get('sharer') || '', 'text', false)}${field('From', 'from', q.get('from') || '', 'date', false)}${field('To', 'to', q.get('to') || '', 'date', false)}<button class="btn btn-outline">Filter</button></form>`
  return head('Shared with me', 'Files and folders colleagues shared with you, newest first.') + `<div class="lib-tools">${filter}</div>${listing(rows.map(r => ({ ...r, space: { name: `Shared by ${r.sharer}` }, sharedAt: r.at, until: r.expires })), 'Nothing has been shared with you.')}`
@@ -85,6 +85,7 @@ export function requestPage(r: any) {
 export function devicesPage(rows: any[], reports: Diagnosis[] = []) {
  const device = (d: any) => `<li class="row-tabbed"><div class="row-card person"><div class="person-facts"><strong>${esc(d.name)}</strong><span class="mono">${esc(d.platform)} · ${esc(d.owner)} · last contact ${d.lastSeen ? stamp(d.lastSeen) : 'never'}${d.revokedAt ? ` · revoked ${stamp(d.revokedAt)}` : ''}</span></div>${d.revokedAt ? '' : `<div class="row-actions">${form(`/devices/${d.id}/revoke`, '', 'Revoke device', '/app/devices', inline)}</div>`}</div></li>`
  const meanwhile = `<ul class="plain-list"><li><strong>On a computer:</strong> open a folder in <a class="link" href="/app/files">Files</a> and drag files onto the page, or use Choose files. Big files show their progress and carry on after a dropped connection.</li><li><strong>On a phone:</strong> open this Chest in the phone's browser. Upload offers the camera and your photo library.</li><li><strong>A whole folder or another service:</strong> <a class="link" href="/app/move-in">Move in</a> brings a folder from your computer, or a Google Drive, Dropbox or Box download, with its folders.</li><li><strong>Taking files with you:</strong> download any file from its page. Every earlier version stays in Chest.</li></ul>`
- return head('Sync devices', 'Signed desktop and phone sync apps are not available yet. The command-line companion can check and repair a selected folder.') + `${card('Use these meanwhile', meanwhile)}${repairPanel(reports)}${rows.length ? `<h2 class="section-title">Device keys</h2><p class="quiet">Revoking a key stops it on its next request.</p><ul class="rows rows-wide">${rows.map(device).join('')}</ul>` : ''}`
+ const repair = repairPanel(reports)
+ return head('Sync devices') + `${card('Use these meanwhile', meanwhile)}${reports.length || rows.length ? repair : details('Command-line companion', repair, 'btn btn-outline')}${rows.length ? `<h2 class="section-title">Device keys</h2><p class="quiet">Revoking a key stops it on its next request.</p><ul class="rows rows-wide">${rows.map(device).join('')}</ul>` : ''}`
 }
 export function secretPage(title: string, value: string, note: string, back: string) { return head(title, note) + `<section class="card"><pre class="receipt">${esc(value)}</pre><p class="card-foot"><a class="link" href="${esc(back)}">Return</a></p></section>` }

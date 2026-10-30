@@ -24,7 +24,7 @@ export async function sweepSignatures(env: Bindings) {
   if (p.status !== 'pending' || !p.reminderDays) continue
   const due = p.signers.filter(s => (s.state === 'invited' || s.state === 'viewed') && Date.parse(s.remindedAt ?? s.invitedAt ?? p.sentAt ?? p.createdAt) + p.reminderDays! * day <= Date.now())
   if (!due.length) continue
-  const requester = personName((await maybe<Person>(env, 'person', p.createdBy))?.payload.name, p.createdBy)
+  const requester = p.preparedBy?.label ?? personName((await maybe<Person>(env, 'person', p.createdBy))?.payload.name, p.createdBy)
   for (const signer of due) {
    // Claim the reminder in the record first; a second sweep sees remindedAt and sends nothing.
    const claimed = await mutate(env, key, async r => { const s = r.payload.signers.find(x => x.id === signer.id); return r.payload.status !== 'pending' || !s || !(s.state === 'invited' || s.state === 'viewed') || Date.parse(s.remindedAt ?? s.invitedAt ?? r.payload.sentAt ?? r.payload.createdAt) + p.reminderDays! * day > Date.now() ? null : { payload: { ...r.payload, signers: r.payload.signers.map(x => x.id === signer.id ? { ...x, remindedAt: now() } : x), events: [...r.payload.events, event('reminder', SYSTEM, { signer: signer.id, email: signer.email })] }, by: 'chest:signing' } })

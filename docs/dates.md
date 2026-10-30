@@ -16,9 +16,9 @@ With no dates set it shows **No scheduled work.**
 
 ## Record the work
 
-On the record, under **Complete investigated work**, choose the **Work item**
+On the record, under **Mark a check done**, choose the **Check**
 (**Review date** or **Expiry date**), describe what you checked in
-**Evidence of investigation**, and press **Record completion**. Chest keeps the
+**What you checked**, and press **Mark done**. Chest keeps the
 evidence with who recorded it and when. Completing work never deletes or
 changes the record itself.
 

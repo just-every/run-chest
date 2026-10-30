@@ -11,7 +11,7 @@ export function governancePanel(d: any, people: any[], returnTo: string) {
 export function versionReview(v: any, d: any, returnTo: string) {
  if (!v.review) return ''
  const r = v.review, approved = d.item.approved === v.id
- const status = `<p class="mono">${approved ? 'Approved current version' : r.state === 'submitted' ? 'Awaiting review' : r.state === 'approved' ? 'Previously approved' : 'Changes requested'} · reviewer ${esc(r.reviewer)}${r.at ? ` · ${stamp(r.at)}` : ''}</p>${r.message ? `<p>${esc(r.message)}</p>` : ''}`
+ const status = `<p class="mono">${approved ? 'Approved current version' : r.state === 'submitted' ? 'Awaiting review' : r.state === 'approved' ? 'Previously approved' : 'Changes requested'} · reviewer ${esc(r.reviewer)}${r.actor ? ` · decision by ${esc(r.actor)}` : ''}${r.at ? ` · ${stamp(r.at)}` : ''}</p>${r.message ? `<p>${esc(r.message)}</p>` : ''}`
  if (r.state !== 'submitted' || r.reviewer !== d.me || (v.sourceItem && v.sourceItem !== d.id)) return status
  return status + form(`/items/${d.id}/versions/${v.id}/review`, hidden('action', 'approve'), 'Approve this version', returnTo, { buttonClass: 'btn btn-outline' }) + form(`/items/${d.id}/versions/${v.id}/review`, hidden('action', 'changes') + area('Changes needed', 'message', ''), 'Request changes', returnTo, { buttonClass: 'btn btn-outline' })
 }

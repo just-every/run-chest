@@ -14,8 +14,7 @@
   "originVar": "AUTH_ORIGIN",
   "vars": {
     "AUTH_LOCAL": "false",
-    "MAIL_PROVIDER": "resend",
-    "MAIL_FROM": ""
+    "MAIL_PROVIDER": "resend"
   },
   "secrets": [
     {
@@ -37,7 +36,8 @@
     {
       "binding": "CONTENT_SCANNER_URL",
       "environment": "CONTENT_SCANNER_URL",
-      "optional": true
+      "optional": true,
+      "verifyStandIn": "https://scanner.example.invalid/scan"
     },
     {
       "binding": "CONTENT_SCANNER_TOKEN",

@@ -22,10 +22,10 @@ export async function libraryWorkJourney({page,origin,docId,width,assertions=wid
   for(const item of [review(),expiry()])assert.match(await item.locator('.chip').innerText(),/^(Due|Upcoming)$/);
  }
  await page.screenshot({path:`test-results/${width}-library-work-before.png`,fullPage:true});
- await page.goto(origin+path);await page.getByLabel('Work item').selectOption('review');
+ await page.goto(origin+path);await page.getByRole('combobox',{name:'Check',exact:true}).selectOption('review');
  const evidence='Called supplier and verified coverage against original.';
- await page.getByLabel('Evidence of investigation').fill(evidence);
- await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Record completion'}).click()]);
+ await page.getByLabel('What you checked').fill(evidence);
+ await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Mark done'}).click()]);
  await page.reload();
  const after=(await json(page,origin,`/documents/${docId}`)).payload;
  if(assertions){
@@ -34,12 +34,12 @@ export async function libraryWorkJourney({page,origin,docId,width,assertions=wid
   assert.equal(after.completions[0].evidence,evidence);
   assert.deepEqual(after.versions,before.versions,'completion preserves every retained original and version');
   assert.equal(after.expiryDate,'2027-01-01');assert.equal(after.trash,false);
-  const record=page.locator('section').filter({has:page.getByRole('heading',{name:'Complete investigated work',exact:true})}).locator('.events li');
+  const record=page.locator('section').filter({has:page.getByRole('heading',{name:'Mark a check done',exact:true})}).locator('.events li');
   assert.equal(await record.count(),1,'the completion record is visible after reload');
   const recorded=await record.innerText();
-  assert.ok(recorded.includes('review 2026-12-01'),'the record identifies the completed work date');
-  assert.ok(recorded.includes(after.completions[0].actor),'the record identifies the completing person');
-  assert.ok(recorded.includes(after.completions[0].at),'the record shows when the work was completed');
+  assert.ok(recorded.includes('review Dec 1, 2026'),'the record identifies the completed work date');
+  assert.ok(recorded.includes((await json(page,origin,'/library')).me.name),'the record names the completing person');
+  assert.equal(await record.locator('time').getAttribute('datetime'),after.completions[0].at,'the record shows when the work was completed');
   assert.equal(await record.locator('p').innerText(),evidence,'the investigation evidence remains visible');
  }
  await page.screenshot({path:`test-results/${width}-library-work-completion.png`,fullPage:true});
@@ -68,8 +68,8 @@ export async function browserFlow({browser,origin,devKey,width}){
  await access([{principal:group.id,role:'reviewer'}]);await nav(owner,'Library');await owner.getByText('Upload a document',{exact:true}).click();await owner.getByLabel('Title',{exact:true}).fill(`Acme certificate ${width}`);await owner.getByLabel(/^Collection/).selectOption(collection.id);await chooseType(owner,schemaName,{reference:'CERT-1'});await owner.getByLabel(/^Reviewer/).selectOption(email);await owner.getByLabel('Business relationship').selectOption('supplier');await owner.getByLabel('Relationship name').fill('Acme');await owner.getByLabel('Next review').fill('2026-12-01');await owner.getByLabel('Expiry',{exact:true}).fill('2027-01-01');await owner.getByLabel('Original file').setInputFiles({name:'certificate-A.txt',mimeType:'text/plain',buffer:Buffer.from('Approved supplier evidence A')});await owner.getByRole('button',{name:'Upload and submit'}).click();await owner.waitForURL('**/app/documents/*');const docId=owner.url().split('/').at(-1),docPath=`/app/documents/${docId}`;
  assert.deepEqual((await json(owner,origin,`/documents/${docId}`)).payload.fields,{reference:'CERT-1'});
  // One click approves the exact version for its assigned reviewer; nobody else is offered the button.
- await owner.goto(origin+docPath);assert.equal(await owner.getByRole('button',{name:'Approve this exact version'}).count(),0);
- await reviewer.goto(origin+docPath);await reviewer.getByRole('button',{name:'Approve this exact version'}).click();await reviewer.waitForURL('**'+docPath);assert.equal(await reviewer.getByRole('button',{name:'Approve this exact version'}).count(),0);
+ await owner.goto(origin+docPath);assert.equal(await owner.getByRole('button',{name:'Approve',exact:true}).count(),0);
+ await reviewer.goto(origin+docPath);await reviewer.getByRole('button',{name:'Approve',exact:true}).click();await reviewer.waitForURL('**'+docPath);assert.equal(await reviewer.getByRole('button',{name:'Approve',exact:true}).count(),0);
  const approved=(await json(owner,origin,`/documents/${docId}`)).payload;assert.equal(approved.approved,approved.versions[0].id);assert.deepEqual(approved.versions[0].events.map(e=>[e.action,e.actor]),[['approve',email]]);
  await owner.goto(origin+docPath);await owner.getByText('Submit replacement',{exact:true}).click();await owner.getByLabel('Replacement file').setInputFiles({name:'certificate-B.txt',mimeType:'text/plain',buffer:Buffer.from('Replacement evidence B')});await owner.getByRole('button',{name:'Submit new immutable version'}).click();let doc=await json(owner,origin,`/documents/${docId}`);assert.equal(doc.payload.approved,doc.payload.versions[0].id);
  await reviewer.reload();const replacement=reviewer.locator('article').filter({has:reviewer.getByRole('heading',{name:/certificate-B/})});await replacement.getByLabel('Decision').selectOption('approve');await replacement.getByRole('button',{name:'Record action'}).click();doc=await json(owner,origin,`/documents/${docId}`);assert.equal(doc.payload.approved,doc.payload.versions[1].id);
@@ -78,13 +78,13 @@ export async function browserFlow({browser,origin,devKey,width}){
  await access([]);assert.equal((await reviewer.goto(origin+docPath)).status(),404);await access([{principal:group.id,role:'reviewer'}]);assert.equal((await reviewer.goto(origin+docPath)).status(),200);
  const content='Archive original retained with source gaps',archive={format:'chest-archive-1',source:`browser-archive-${width}`,items:[{path:'Acme/archive.txt',base64:Buffer.from(content).toString('base64'),size:Buffer.byteLength(content),sha256:createHash('sha256').update(content).digest('hex'),fields:{reference:'ARCH-1'},principals:['unresolved@example.test'],decisions:[{actor:'original owner',decision:'approved'}]}]};
  await owner.goto(origin+'/app/archive');await owner.getByLabel('Archive JSON file').setInputFiles({name:'archive.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(archive))});await owner.getByLabel('Destination collection').selectOption(collection.id);await owner.getByLabel(/^Document type/).selectOption(schema.id);await owner.getByLabel(/^Reviewer/).selectOption(email);const before=(await json(owner,origin,'/library')).count;await owner.getByRole('button',{name:'Preview archive'}).click();assert.equal((await json(owner,origin,'/library')).count,before);await owner.getByRole('button',{name:'Apply this reviewed fingerprint'}).click();const job=JSON.parse(await owner.locator('pre').innerText());assert.equal(job.state,'completed');assert.equal((await json(owner,origin,'/library')).count,before+1);
- await owner.goto(origin+'/app/archive');await owner.getByLabel('Job ID').fill(job.id);await owner.getByLabel(/^Action/).selectOption('undo');await owner.getByRole('button',{name:'Run batch action'}).click();assert.equal(JSON.parse(await owner.locator('pre').innerText()).state,'undone');assert.equal((await json(owner,origin,'/library')).count,before);
- await owner.goto(origin+docPath);await owner.getByRole('button',{name:'Move to reversible trash'}).click();assert.ok(!(await json(owner,origin,'/library')).documents.some(r=>r.id===docId));await owner.getByRole('button',{name:'Restore from trash'}).click();assert.ok((await json(owner,origin,'/library')).documents.some(r=>r.id===docId));
+ await owner.goto(origin+'/app/archive');await owner.getByLabel('Batch reference').fill(job.id);await owner.getByLabel(/^Action/).selectOption('undo');await owner.getByRole('button',{name:'Run batch action'}).click();assert.equal(JSON.parse(await owner.locator('pre').innerText()).state,'undone');assert.equal((await json(owner,origin,'/library')).count,before);
+ await owner.goto(origin+docPath);await owner.getByRole('button',{name:'Move to trash',exact:true}).click();assert.ok(!(await json(owner,origin,'/library')).documents.some(r=>r.id===docId));await owner.getByRole('button',{name:'Restore from trash'}).click();assert.ok((await json(owner,origin,'/library')).documents.some(r=>r.id===docId));
  for(const path of ['/app/library',docPath,'/app/admin','/app/archive']){await owner.goto(origin+path);assert.equal(await owner.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`no horizontal overflow at ${width}: ${path}`);await owner.screenshot({path:`test-results/${width}-${path.split('/').filter(Boolean).join('-')}.png`,fullPage:true})}
- await owner.goto(origin+docPath);const preview=owner.context().waitForEvent('page');await owner.getByRole('link',{name:'Open safe text preview'}).first().click();const page=await preview;await page.waitForLoadState();assert.ok((await page.locator('body').innerText()).includes('Replacement evidence B'));await page.screenshot({path:`test-results/${width}-text-preview.png`});await page.close();
+ await owner.goto(origin+docPath);const preview=owner.context().waitForEvent('page');await owner.getByRole('link',{name:'Preview',exact:true}).first().click();const page=await preview;await page.waitForLoadState();assert.ok((await page.locator('body').innerText()).includes('Replacement evidence B'));await page.screenshot({path:`test-results/${width}-text-preview.png`});await page.close();
  for(const [name,bytes,mime] of [['pixel.png',png,'image/png'],['certificate.pdf',pdf(),'application/pdf']]){await owner.goto(origin+docPath);await owner.getByText('Submit replacement',{exact:true}).click();await owner.getByLabel('Replacement file').setInputFiles({name,mimeType:mime,buffer:bytes});await owner.getByRole('button',{name:'Submit new immutable version'}).click();}
- const imageOpened=owner.context().waitForEvent('page');await owner.getByRole('link',{name:'Open safe image preview'}).click();const imagePage=await imageOpened;await imagePage.waitForLoadState();await imagePage.waitForFunction(()=>document.images.length===1&&document.images[0].naturalWidth>0);await imagePage.screenshot({path:`test-results/${width}-raster-preview.png`});await imagePage.close();
- const pdfOpened=owner.context().waitForEvent('page');await owner.getByRole('link',{name:'Open safe pdf preview'}).click();const pdfPage=await pdfOpened;await pdfPage.waitForLoadState();assert.equal(await pdfReady(pdfPage),'Chest supplier evidence','native viewer renders the PDF text');await pdfPage.screenshot({path:`test-results/${width}-pdf-preview.png`});await pdfPage.close();
+ const imageOpened=owner.context().waitForEvent('page');await owner.getByRole('link',{name:'Preview',exact:true}).click();const imagePage=await imageOpened;await imagePage.waitForLoadState();await imagePage.waitForFunction(()=>document.images.length===1&&document.images[0].naturalWidth>0);await imagePage.screenshot({path:`test-results/${width}-raster-preview.png`});await imagePage.close();
+ const pdfOpened=owner.context().waitForEvent('page');await owner.getByRole('link',{name:'Preview',exact:true}).click();const pdfPage=await pdfOpened;await pdfPage.waitForLoadState();assert.equal(await pdfReady(pdfPage),'Chest supplier evidence','native viewer renders the PDF text');await pdfPage.screenshot({path:`test-results/${width}-pdf-preview.png`});await pdfPage.close();
  // The same signed-in reviewer must lose every preview/download immediately
  // when the collection grant is removed, then regain the exact original bytes.
  const originals=new Map([['certificate-B.txt',Buffer.from('Replacement evidence B')],['pixel.png',png],['certificate.pdf',pdf()]]);

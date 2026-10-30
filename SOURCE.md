@@ -1,13 +1,13 @@
 # Chest source ownership
 
-Chest adopts Base revision `f96363bf919ea3e7ed1837daba6894810a50e4a6` (tag `rer-v0.2.86`) for its
+Chest adopts Base revision `8b925fa5ffaa577df9f2e4ebab6ede8af5155baa` (tag `rer-v0.2.96`) for its
 runtime, operator-auth, mail, dependencies, owner-claim, import-kit and
 edition-authoring source. `base-copies.json` records verbatim copies;
 `edition.json`, `.edition/sources` and `sources.lock.json` retain comparison
 provenance, including their historical comparison origins. The hydration README is adapted for package-mode commands, with its
 original path mapped in `edition.json`; it makes no claim of byte equality.
 
-The published `@runeditrun/rer` 0.2.86 is pinned exactly in `package.json` and
+The published `@runeditrun/rer` 0.2.96 is pinned exactly in `package.json` and
 `pnpm-lock.yaml`. It owns command execution and archive format v2, whose integrity
 digest binds the manifest, including source identity, erasure epoch and journal.
 Version 1 archives require the acknowledged, backup-only recovery procedure in
@@ -44,14 +44,14 @@ remain `documents/chest`, `@documents/chest`, `documents-chest`, `foundation` an
 `chest-originals`. The public repository is
 [just-every/run-chest](https://github.com/just-every/run-chest).
 
-The demo, operator-auth, owner-claim, mail, dependencies and import-kit modules
-are refreshed together from `rer-v0.2.86` (f96363bf919ea3e7ed1837daba6894810a50e4a6) with the edition-authoring tool's `refresh-base`,
-including import-kit’s shared d1-transport dependency. Their exact copies are
-recorded in `base-copies.json`; applied migrations remain unchanged.
+The installed-package refresh updates recorded modules and their dependency closure
+to the adopted Base revision, including import-kit’s shared d1-transport dependency.
+Applied migrations remain unchanged; their original Base origins and intentional
+workflow and clause-judgment adaptations remain recorded in `base-copies.json`.
 
 Chest owns the reversible arrival-rule planner and executor in `src/chest/filing/batch-*.ts`,
 its bounded Office-to-text and ZIP transforms, and the exercising HTTP and browser journeys.
-The command package is pinned to `@runeditrun/rer` 0.2.86; copied Base modules retain
+The command package is pinned to `@runeditrun/rer` 0.2.96; copied Base modules retain
 their separately recorded revisions.
 
 The arrival agent uses explicit inbox/destination grants and the installation reader provider.
@@ -62,4 +62,6 @@ Chest owns two-step sign-in under `src/chest/security`; it uses SimpleWebAuthn S
 
 Chest owns delegated administrative authority, ownership offers and content-free recovery in `src/chest/administration`. Migration `0022_admin_roles.sql` preserves earlier native admins as explicit super-admin grants while removing their native content role; operator-auth remains an unmodified Base copy.
 
-Chest owns the scoped integration protocol, OAuth/PKCE consent, MCP transport, picker component and durable signed webhook queue in `src/chest/integrations/` and `public/chest-picker.js`. Migration `0023_integrations.sql` stores sealed installation-only credentials and event publication proofs; portable archives exclude this table and hosted restore clears it. Product records retain grants and outcomes without transferring their authentication authority.
+Chest owns the scoped integration protocol, OAuth/PKCE consent, native agent adapters, picker component and durable signed webhook queue in `src/chest/integrations/` and `public/chest-picker.js`. Migration `0023_integrations.sql` stores sealed installation-only credentials and event publication proofs; portable archives exclude this table and hosted restore clears it. Product records retain grants and outcomes without transferring their authentication authority.
+
+The agent door, Business settings/people, operator-auth and theme/icon dependencies are recorded from Base `8b925fa5ffaa577df9f2e4ebab6ede8af5155baa` (release `rer-v0.2.96`). The installed-package `refresh-base` refreshed the recorded runtime and dependency mappings without changing applied migrations; core migrations 0029–0031 install the door and signed Business people mapping. `base-copies.json` records each independent revision. Migrations 0032–0033 are Chest’s native erasure/admission and audit-identity custody fences. Additive migration 0034 installs the decision relay and its consent/current-Business backfill; 0035 supplies the shared runtime’s replay window and private alias custody. The Worker routes signed decision pulls through the agent door before native app authentication. Chest currently uses a native custody hold rather than an AgentArtifactMap; the relay stores only decision IDs and the installation Business ID. The runtime remains an unmodified Base copy; Chest owns `src/chest/agent-door` and the public-door fixtures in `tests/agent-door`. Installation-only door/Business tables are excluded from portable and independent backups and cleared by hosted restore; product activity keeps attribution and a restored installation must pair again.

@@ -239,7 +239,7 @@ blockquote { margin: 0; }
 .ver-facts h3 .mono { font-family: var(--chest-font-ui); font-weight: 600; }
 .ver-facts p { color: var(--chest-body); font-size: 13px; overflow-wrap: anywhere; }
 .ver-facts p.mono { font-size: 12px; }
-.ver-facts .hash { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ver-facts .hash { overflow-wrap: anywhere; }
 .ver-links { margin-top: 6px !important; font-family: var(--chest-font-ui); }
 .ver-decide { display: grid; gap: 12px; align-content: start; min-width: 0; padding: 18px 20px; border-left: 1px solid var(--chest-line); }
 .ver-decide textarea { min-height: 60px; }
@@ -386,7 +386,7 @@ blockquote { margin: 0; }
   .app-menu:not([open]) > .app-menu-panel { display: none; }
   .app-nav a { min-height: 42px; font-size: 15px; }
   .rail-foot { position: static; padding: 16px 4px 4px; background: none; }
-  .topbar { position: static; padding: 12px 16px; gap: 10px; }
+  .topbar { position: relative; padding: 12px 16px; gap: 10px; }
   .crumbs { flex-basis: 100%; }
   .bar-actions { flex: 1 1 100%; flex-wrap: wrap; }
   .bar-actions > * { flex: 1 1 0; }
@@ -433,3 +433,10 @@ blockquote { margin: 0; }
   .audit td::before { content: attr(data-label); display: block; color: var(--chest-muted); font: 400 12px/1.4 var(--chest-font-ui); }
   .audit td:empty { display: none; }
 }
+
+/* A one-time secret shown once at the top of the page the person returns to (src/chest/ui-flash.ts). */
+.flash { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin: 0 0 20px; padding: 14px 18px; background: var(--chest-selected); border: 1px solid var(--chest-line); border-radius: var(--chest-card-radius); }
+.flash p { margin: 2px 0 0; }
+.flash-copy { display: flex; flex: 1 1 360px; gap: 10px; min-width: 0; }
+.flash-copy input { flex: 1; min-width: 0; min-height: 44px; padding: 0 12px; border: 1px solid var(--chest-line-strong); border-radius: var(--chest-radius); background: var(--chest-surface); font-size: 13px; }
+.flash-copy .btn { flex: none; min-height: 44px; }

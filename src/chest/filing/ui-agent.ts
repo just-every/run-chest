@@ -37,7 +37,7 @@ function standingGrants(scopes: any[], folders: Choice[]) {
   return `<li><strong>${folder(p.source)}</strong><p class="quiet">${p.enabled ? 'Enabled' : 'Paused'} · Granted by ${esc(p.by)} · ${stamp(p.at)}</p>
    ${p.problem?`<p role="status">Waiting: ${esc(p.problem)}</p>`:''}<p>Allowed destinations:</p><ul class="events">${destinations}</ul>
    <p>Minimum confidence ${esc(p.minimumConfidence)} · Rename ${p.allowRename ? 'allowed' : 'off'} · Tag ${p.allowTag ? 'allowed' : 'off'}</p>
-   ${form(endpoint, hidden('action', 'scope-toggle') + hidden('scope', row.id) + hidden('enabled', p.enabled ? 'false' : 'true'), p.enabled ? 'Pause standing grant' : 'Enable standing grant', back, inline)}
+   ${form(endpoint, hidden('action', 'scope-toggle') + hidden('scope', row.id) + hidden('enabled', p.enabled ? 'false' : 'true'), p.enabled ? 'Pause' : 'Turn on', back, inline)}
    ${p.enabled ? form(endpoint, hidden('action', 'sweep') + hidden('scope', row.id), 'Classify current inbox files', back, inline) : ''}</li>`
  }).join('')
  const destinations = folders.map(folder => checkbox(`destination:${folder.id}`, folder.label)).join('')
@@ -45,10 +45,10 @@ function standingGrants(scopes: any[], folders: Choice[]) {
  const grant = folders.length ? form(endpoint, hidden('action', 'grant') + select('Source inbox folder', 'source', folders)
   + `<fieldset><legend>Allowed destination folders</legend><p class="quiet">Select every folder this grant may file into.</p>${destinations}</fieldset>`
   + confidence + checkbox('allowRename', 'Allow proposed renames') + checkbox('allowTag', 'Allow proposed tags'), 'Grant automatic filing', back)
-  : '<p class="quiet">Create an inbox and destination folders you can manage to add a standing grant.</p>'
- return card('Standing agent grants', `<p>Give the agent an explicit source inbox and allowed destinations. High-confidence results may move files only within that grant. Renaming and tagging require the options below. Uncertainty waits for approval.</p>
-  <p class="quiet">A standing grant allows no new sharing or deletion. Original bytes are retained. Classification and responsible-person proposals do not change access or authority.</p>
-  ${grant}<h3>Current grants</h3>${rows ? `<ul class="events">${rows}</ul>` : '<p class="quiet">No standing agent grants yet.</p>'}`)
+  : '<p class="quiet">Create an inbox and destination folders you can manage to add a permission.</p>'
+ return card('Agent permissions', `<p>Give the agent an explicit source inbox and allowed destinations. High-confidence results may move files only within that grant. Renaming and tagging require the options below. Uncertainty waits for approval.</p>
+  <p class="quiet">A permission allows no new sharing or deletion. Original bytes are retained. Classification and responsible-person proposals do not change access or authority.</p>
+  ${grant}<h3>Current permissions</h3>${rows ? `<ul class="events">${rows}</ul>` : '<p class="quiet">No agent permissions yet.</p>'}`)
 }
 
 export function agentPanel(data: any, files: Choice[], folders: Choice[]): string {

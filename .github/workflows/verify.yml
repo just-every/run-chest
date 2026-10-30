@@ -30,6 +30,7 @@ jobs:
       coverage: ${{ steps.plan.outputs.coverage }}
       tier: ${{ steps.plan.outputs.tier }}
       readers: ${{ steps.plan.outputs.readers }}
+      push_matrix: ${{ steps.push-shards.outputs.matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -51,10 +52,14 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           NIGHTLY_CACHE_HIT: ${{ steps.nightly.outputs.cache-hit }}
         run: node scripts/verify-ci.mjs --plan
-  # Seven push shards retain Chest's public flows; browser shards share the verified Worker build.
+      - name: Read push shards from the verification manifest
+        id: push-shards
+        run: echo "matrix=$(node scripts/verify-ci.mjs --matrix push)" >> "$GITHUB_OUTPUT"
+  # Build once, then run six balanced manifest shards in parallel.
+  # Native flows run exactly once alongside the existing browser suites.
   # Fresh-clone and upgrade journeys run on release tags and the separate twice-weekly nightly.
-  rer-verify:
-    name: shards (rer-verify)
+  build:
+    name: Build the shared Worker
     needs: plan
     if: needs.plan.outputs.coverage == 'full' && (needs.plan.outputs.tier == 'push' || needs.plan.outputs.tier == 'all')
     runs-on: ubuntu-24.04
@@ -93,28 +98,32 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec rer check --profile first-party
       - run: node src/base/contract-docs.mjs check
-      - run: pnpm exec rer verify
-      - name: Share the verified Worker build
+      - run: pnpm run build
+      # Browser integration journeys serve dist/site as well as the Worker.
+      # A site built later in rer-verify is private to that shard's runner.
+      - name: Build the shared run site
+        run: pnpm exec rer build --site
+      - name: Share the Worker build
         uses: actions/upload-artifact@v4
         with:
           name: chest-built-worker
           path: dist/
           include-hidden-files: true
           if-no-files-found: error
-  browser:
-    name: shards (browser-${{ matrix.suite }})
-    needs: [plan, rer-verify]
+  shards:
+    name: shards (${{ matrix.name }})
+    needs: [plan, build]
     if: needs.plan.outputs.coverage == 'full' && (needs.plan.outputs.tier == 'push' || needs.plan.outputs.tier == 'all')
     strategy:
       fail-fast: false
-      matrix:
-        suite: [files, other, office, security]
+      matrix: ${{ fromJSON(needs.plan.outputs.push_matrix) }}
     runs-on: ubuntu-24.04
     timeout-minutes: ${{ inputs.timeout || 15 }}
     env:
       CI: 'true'
       WRANGLER_SEND_METRICS: 'false'
       PLAYWRIGHT_SKIP_BROWSER_GC: '1'
+      CHEST_AUTH_CHECKOUT: .test-auth
     steps:
       - name: Prepare runner-owned caches
         run: |
@@ -123,6 +132,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        if: matrix.name == 'organisation'
+        with:
+          persist-credentials: false
+          repository: just-every/run-auth
+          ref: ba5db7d3747fc6a8ecbfb82e0e5c55f81b45b0f3
+          path: .test-auth
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '22.20.0'
@@ -137,22 +153,26 @@ jobs:
             ${{ runner.temp }}/pnpm-store
             ${{ runner.temp }}/ms-playwright
             ${{ runner.temp }}/rer-apt/archives/*.deb
-          key: chest-ubuntu24-temp-store-${{ runner.arch }}-${{ github.job }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', '.test-auth/pnpm-lock.yaml') }}
+          key: chest-ubuntu24-temp-store-${{ runner.arch }}-${{ matrix.name }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', '.test-auth/pnpm-lock.yaml') }}
       - run: pnpm install --frozen-lockfile
-      - run: node scripts/install-browser.mjs scripts/install-chromium-deps.py
-      - name: Restore the verified Worker build
+      - if: matrix.browser
+        run: node scripts/install-browser.mjs scripts/install-chromium-deps.py
+      - name: Restore the Worker build
         uses: actions/download-artifact@v4
         with:
           name: chest-built-worker
           path: dist/
-      - if: matrix.suite == 'office'
-        run: pnpm run test:chest:office
-      - run: pnpm run test:browser:${{ matrix.suite }}
+      - if: matrix.name == 'organisation'
+        run: pnpm install --frozen-lockfile && pnpm exec vite build
+        working-directory: .test-auth
+      - name: Run the manifest shard
+        run: node scripts/verify-ci.mjs ${{ matrix.name }}
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && matrix.browser
         with:
-          name: chest-files-pages-${{ matrix.suite }}
+          name: chest-pages-${{ matrix.name }}
           path: test-results/*.png
+
   journey:
     name: shards (journey)
     needs: plan
@@ -222,111 +242,6 @@ jobs:
         with:
           name: chest-browser-pages
           path: test-results/*.png
-
-  extra:
-    name: shards (extra)
-    needs: [plan, rer-verify]
-    if: needs.plan.outputs.coverage == 'full' && (needs.plan.outputs.tier == 'push' || needs.plan.outputs.tier == 'all')
-    # Signatures: HTTP journeys against the built Worker, then their browser journeys at 1440 and 390.
-    runs-on: ubuntu-24.04
-    timeout-minutes: ${{ inputs.timeout || 15 }}
-    env:
-      CI: 'true'
-      WRANGLER_SEND_METRICS: 'false'
-      PLAYWRIGHT_SKIP_BROWSER_GC: '1'
-    steps:
-      - name: Prepare runner-owned caches
-        run: |
-          printf 'PLAYWRIGHT_BROWSERS_PATH=%s/ms-playwright\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
-          mkdir -p "$RUNNER_TEMP/pnpm-store" "$RUNNER_TEMP/ms-playwright" "$RUNNER_TEMP/rer-apt/archives"
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version: '22.20.0'
-          package-manager-cache: false
-      - run: npm install --global pnpm@10.12.4
-      - name: Set runner-owned pnpm store
-        run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
-      - name: Cache frozen dependencies and Chromium
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
-        with:
-          path: |
-            ${{ runner.temp }}/pnpm-store
-            ${{ runner.temp }}/ms-playwright
-            ${{ runner.temp }}/rer-apt/archives/*.deb
-          key: chest-ubuntu24-temp-store-${{ runner.arch }}-${{ github.job }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', '.test-auth/pnpm-lock.yaml') }}
-      - run: pnpm install --frozen-lockfile
-      - run: node scripts/install-browser.mjs scripts/install-chromium-deps.py
-      - name: Restore the verified Worker build
-        uses: actions/download-artifact@v4
-        with:
-          name: chest-built-worker
-          path: dist/
-      - run: pnpm run test:chest:extra
-      - run: pnpm run test:browser:extra
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: chest-pages-extra
-          path: test-results/*.png
-  organisation:
-    name: shards (organisation)
-    needs: [plan, rer-verify]
-    if: needs.plan.outputs.coverage == 'full' && (needs.plan.outputs.tier == 'push' || needs.plan.outputs.tier == 'all')
-    runs-on: ubuntu-24.04
-    timeout-minutes: ${{ inputs.timeout || 15 }}
-    env:
-      CI: 'true'
-      WRANGLER_SEND_METRICS: 'false'
-      PLAYWRIGHT_SKIP_BROWSER_GC: '1'
-    steps:
-      - name: Prepare runner-owned caches
-        run: |
-          printf 'PLAYWRIGHT_BROWSERS_PATH=%s/ms-playwright\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
-          mkdir -p "$RUNNER_TEMP/pnpm-store" "$RUNNER_TEMP/ms-playwright" "$RUNNER_TEMP/rer-apt/archives"
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-          repository: just-every/run-auth
-          ref: ba5db7d3747fc6a8ecbfb82e0e5c55f81b45b0f3
-          path: .test-auth
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version: '22.20.0'
-          package-manager-cache: false
-      - run: npm install --global pnpm@10.12.4
-      - name: Set runner-owned pnpm store
-        run: pnpm config set store-dir "$RUNNER_TEMP/pnpm-store"
-      - name: Cache frozen dependencies and Chromium
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
-        with:
-          path: |
-            ${{ runner.temp }}/pnpm-store
-            ${{ runner.temp }}/ms-playwright
-            ${{ runner.temp }}/rer-apt/archives/*.deb
-          key: chest-ubuntu24-temp-store-${{ runner.arch }}-${{ github.job }}-${{ hashFiles('pnpm-lock.yaml', 'package.json', '.test-auth/pnpm-lock.yaml') }}
-      - run: pnpm install --frozen-lockfile
-      - run: node scripts/install-browser.mjs scripts/install-chromium-deps.py
-      - name: Restore the verified Worker build
-        uses: actions/download-artifact@v4
-        with:
-          name: chest-built-worker
-          path: dist/
-      - run: pnpm install --frozen-lockfile && pnpm exec vite build
-        working-directory: .test-auth
-      - run: pnpm run test:organisation
-        env:
-          CHEST_AUTH_CHECKOUT: .test-auth
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: chest-lifecycle-pages
-          path: test-results/*-lifecycle-*.png
 
   upgrade:
     name: shards (upgrade)
@@ -403,19 +318,19 @@ jobs:
         run: node scripts/verify-ci.mjs --light
 
   full-push-proof:
-    needs: [plan, rer-verify, browser, extra, organisation]
+    needs: [plan, build, shards]
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && needs.plan.outputs.tier == 'push' && needs.plan.outputs.coverage == 'full' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
       - name: Require every full push shard
         env:
-          RESULTS: ${{ needs.rer-verify.result }} ${{ needs.browser.result }} ${{ needs.extra.result }} ${{ needs.organisation.result }}
+          RESULTS: ${{ needs.build.result }} ${{ needs.shards.result }}
         run: for result in $RESULTS; do test "$result" = success; done
 
   nightly-proof:
-    needs: [plan, rer-verify, browser, extra, organisation, journey, upgrade]
-    if: ${{ always() && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && needs.plan.result == 'success' && needs.plan.outputs.coverage == 'full' && needs.journey.result == 'success' && needs.upgrade.result == 'success' && (needs.plan.outputs.tier == 'nightly' || (needs.plan.outputs.tier == 'all' && needs.rer-verify.result == 'success' && needs.browser.result == 'success' && needs.extra.result == 'success' && needs.organisation.result == 'success')) }}
+    needs: [plan, build, shards, journey, upgrade]
+    if: ${{ always() && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && needs.plan.result == 'success' && needs.plan.outputs.coverage == 'full' && needs.journey.result == 'success' && needs.upgrade.result == 'success' && (needs.plan.outputs.tier == 'nightly' || (needs.plan.outputs.tier == 'all' && needs.build.result == 'success' && needs.shards.result == 'success')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 1
     steps:
@@ -427,7 +342,7 @@ jobs:
           key: nightly-green-${{ github.sha }}
 
   verify:
-    needs: [plan, rer-verify, browser, extra, organisation, journey, upgrade, light, full-push-proof, nightly-proof]
+    needs: [plan, build, shards, journey, upgrade, light, full-push-proof, nightly-proof]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 1
@@ -438,7 +353,7 @@ jobs:
           SKIP: ${{ needs.plan.outputs.skip }}
           COVERAGE: ${{ needs.plan.outputs.coverage }}
           TIER: ${{ needs.plan.outputs.tier }}
-          PUSH_RESULTS: ${{ needs.rer-verify.result }} ${{ needs.browser.result }} ${{ needs.extra.result }} ${{ needs.organisation.result }}
+          PUSH_RESULTS: ${{ needs.build.result }} ${{ needs.shards.result }}
           NIGHTLY_RESULTS: ${{ needs.journey.result }} ${{ needs.upgrade.result }}
           LIGHT: ${{ needs.light.result }}
           PUSH_PROOF: ${{ needs.full-push-proof.result }}

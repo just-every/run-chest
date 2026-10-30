@@ -3,12 +3,12 @@ import type { Session } from '../../modules/operator-auth/index.mjs'
 import { ChestError, insist, now, type Row } from '../model'
 import { get, snapshot } from '../store'
 import { commit, next } from '../files/repo'
-import { context, demand, who } from '../files/access'
+import { allowed, context, demand, who } from '../files/access'
 import { requireMfa } from '../security/session'
 import { guardDownload } from '../upload-protection/guard'
 import { attach, demandPolicy, policyPredicate, policyReason, policyState } from './policy'
 import { hash, secret } from './secrets'
-import type { Action, Budget, Client, Grant } from './model'
+import type { Action, Usage, Client, Grant } from './model'
 export type Token = { grant: string; expires: string; operatorVersion: number }
 export type Authorized = { session: Session; grant: Row<Grant>; client: Row<Client>; credential: string; tokenId: string; request: Request }
 export async function authorize(env: Bindings,request: Request): Promise<Authorized> {
@@ -31,11 +31,18 @@ export async function credentialSession(env: Bindings,request: Request,tokenId: 
 }
 export function action(auth: Authorized,scope: Action) {insist(auth.grant.payload.actions.includes(scope),'oauth_action_outside_grant',403)}
 export async function resource(env: Bindings,auth: Authorized,key: string,scope: Action) {
- action(auth,scope);const ctx=await context(env,await who(env,auth.session),key);demand(scope==='webhook'?{...ctx,state:{...ctx.state,trash:null}}:ctx,'view');insist(ctx.chain.some(row=>auth.grant.payload.resources.includes(row.id)),'oauth_resource_outside_grant',403);if(scope==='download'){demand(ctx,'download');await guardDownload(env,auth.session,ctx.chain.at(-1)!)}return ctx
+ action(auth,scope)
+ const ctx=await context(env,await who(env,auth.session),key),inside=ctx.chain.some(row=>auth.grant.payload.resources.includes(row.id))
+ // Metadata and version reads disclose neither existence nor the reason an item is hidden.
+ if(scope==='read'){
+  insist(!ctx.state.trash&&allowed(ctx,'view')&&inside,'not_found',404)
+  return ctx
+ }
+ demand(scope==='webhook'?{...ctx,state:{...ctx.state,trash:null}}:ctx,'view');insist(inside,'oauth_resource_outside_grant',403);if(scope==='download'){demand(ctx,'download');await guardDownload(env,auth.session,ctx.chain.at(-1)!)}return ctx
 }
 export async function live(env: Bindings,auth: Authorized,key?: string,scope?: Action) {const current=await credentialSession(env,auth.request,auth.tokenId);if(key&&scope)return resource(env,current,key,scope);if(scope)action(current,scope);return current}
-export function spend(auth: Authorized,delta: Partial<Budget>) {
- const g=auth.grant,used={...g.payload.used};for(const key of ['requests','mutations','bytes'] as const){used[key]+=(delta[key]??0);insist(Number.isSafeInteger(used[key])&&used[key]<=g.payload.budget[key],`oauth_${key}_budget_exhausted`,429)}
+export function spend(auth: Authorized,delta: Partial<Usage>) {
+ const g=auth.grant,used={...g.payload.used};for(const key of ['requests','mutations','bytes'] as const){used[key]+=(delta[key]??0);const limit=g.payload.budget[key];insist(Number.isSafeInteger(used[key])&&(limit===null||used[key]<=limit),`oauth_${key}_budget_exhausted`,429)}
  return {row:next(g,{...g.payload,used,lastUse:now()}),previous:g}
 }
 export async function requestBudget(env: Bindings,auth: Authorized) {await commit(env,auth.session,[spend(auth,{requests:1})],{audits:[{action:'integration.call',object:auth.grant.id,detail:{client:auth.client.id}}]});return credentialSession(env,auth.request,auth.tokenId)}

@@ -1,3 +1,4 @@
+import { sessionAgent,agentAttribution } from './agent-attribution'
 import { consumeMemberLink } from './files/member-link-controls'
 import { activity } from './content-security/activity'
 import { erasurePublication } from './erasure/publication'
@@ -21,7 +22,7 @@ export async function write(env: Bindings, session: Session, row: Row, action: s
  const guards=predicates.map(p=>statement(`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${p.sql}) THEN 1 ELSE 0 END`,p.params))
  const sql=previous?'UPDATE chest_records SET payload=?,revision=? WHERE id=?':'INSERT INTO chest_records(payload,revision,id,kind) VALUES(?,?,?,?)'
  const params=previous?[JSON.stringify(row.payload),row.revision,row.id]:[JSON.stringify(row.payload),row.revision,row.id,row.kind]
- await env.DB.batch([...guards,...erasurePublication(row,previous).map(p=>statement(p.sql,p.params)),statement(sql,params),statement('INSERT INTO chest_audit VALUES(?,?,?,?,?,?)',[id(),await redact(session.operator.email),action,row.id,await redact(JSON.stringify(facts({revision:row.revision,version:(row.payload as any).current ?? (row.payload as any).versions?.at(-1)?.id ?? null},`${session.kind}:${session.operator.role}`))),now()]),...(warnings?.statements??[]).map(p=>statement(p.sql,p.params)),statement('DELETE FROM chest_assert')])
+ await env.DB.batch([...guards,...erasurePublication(row,previous).map(p=>statement(p.sql,p.params)),statement(sql,params),statement('INSERT INTO chest_audit VALUES(?,?,?,?,?,?)',[id(),await redact(sessionAgent(session)?'agent:'+sessionAgent(session)!.id:session.operator.email),action,row.id,await redact(JSON.stringify(facts({...((sessionAgent(session))?agentAttribution(sessionAgent(session)!):{}),revision:row.revision,version:(row.payload as any).current ?? (row.payload as any).versions?.at(-1)?.id ?? null},`${session.kind}:${session.operator.role}`))),now()]),...(warnings?.statements??[]).map(p=>statement(p.sql,p.params)),statement('DELETE FROM chest_assert')])
  await warnings?.deliver()
  return row
 }
@@ -32,7 +33,7 @@ export async function recordAccess(env:Bindings,session:Session,row:Row,action:s
  const p=sessionPredicate(session),redact=await (await import('./audit/privacy')).identityRedactor(env)
  await env.DB.batch([
   env.DB.prepare(`INSERT INTO chest_assert(ok) SELECT CASE WHEN (${p.sql}) THEN 1 ELSE 0 END`).bind(...p.params),
-  env.DB.prepare('INSERT INTO chest_audit VALUES(?,?,?,?,?,?)').bind(id(),await redact(session.operator.email),action,row.id,await redact(JSON.stringify(facts({revision:row.revision,version:version ?? (row.payload as any).current ?? (row.payload as any).versions?.at(-1)?.id ?? null},`${session.kind}:${session.operator.role}`))),now()),
+  env.DB.prepare('INSERT INTO chest_audit VALUES(?,?,?,?,?,?)').bind(id(),await redact(sessionAgent(session)?'agent:'+sessionAgent(session)!.id:session.operator.email),action,row.id,await redact(JSON.stringify(facts({...((sessionAgent(session))?agentAttribution(sessionAgent(session)!):{}),revision:row.revision,version:version ?? (row.payload as any).current ?? (row.payload as any).versions?.at(-1)?.id ?? null},`${session.kind}:${session.operator.role}`))),now()),
   env.DB.prepare('DELETE FROM chest_assert')
  ])
 }

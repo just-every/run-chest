@@ -9,6 +9,8 @@ import { runtimeBindings, type Bindings } from '../../auth.server'
 import { publicVersion } from './link-snapshots'
 import { externalComments, externalComment } from './link-comments'
 import { esc } from '../ui-shared'
+import { list } from '../store'
+import type { Person } from '../model'
 import { isOffice } from '../office/service'
 import { serve, digest } from '../blobs'
 import { officePreview } from '../office/codec'
@@ -66,7 +68,7 @@ async function open(env: Bindings, request: Request, secret: string) {
  if (await locked(env, request, r)) return passwordPage(base)
  const files = (await reachable(env, r)).flatMap(({ row, path }) => { const v = publicVersion(row,r.link.payload); return v ? [{ id: row.id, path, name: row.payload.name, size: v.size, mediaType: v.mediaType, canPreview: v.size <= 8_000_000 && (isOffice(v.filename) || v.preview === 'text' || !!env.COLLABORA_URL && ['pdf','image'].includes(v.preview)) }] : [] })
  await commit(env, null, [], { by: actor, audits: [{ action: 'link.view', object: r.root.id, detail: { link: r.link.id } }] })
- return linkPage(base, r.link.payload, r.root.payload, files, !r.state.noDownload,await externalComments(env,r,base)+await guestTools(env,request,r,base)+`<form method="post" action="${esc(base)}/sign-out"><button class="action">Sign out of link</button></form>`)
+ return linkPage(base, r.link.payload, r.root.payload, files, !r.state.noDownload,await externalComments(env,r,base)+await guestTools(env,request,r,base)+`<form method="post" action="${esc(base)}/sign-out"><button class="secondary">Sign out of link</button></form>`,(await list<Person>(env,'person')).find(p=>p.id===r.link.payload.createdBy)?.payload.name)
 }
 async function preview(env: Bindings, request: Request, secret: string, key: string) {
  const r = await resolveLink(env, secret); if ('refused' in r) return refusedLink(r.refused)

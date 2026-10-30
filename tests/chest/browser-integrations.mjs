@@ -1,35 +1,169 @@
 // CONNECT-007 at 1440 and 390: real OAuth consent, connected-app policy and embeddable picker.
 import assert from 'node:assert/strict';
-import {mkdir} from 'node:fs/promises';
+import {createHash,randomBytes} from 'node:crypto';
+import {mkdir,readFile} from 'node:fs/promises';
+import {createServer} from 'node:http';
+import {resolve,extname} from 'node:path';
+import {integrationReportSetup} from './administration-report-flow.mjs';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
 import {attachmentClient} from './integration-client.mjs';
-let receiverStatus=503;const h=await harness({edge:async request=>new URL(request.url).hostname==='hooks.example.test'?new Response('Receiver outcome',{status:receiverStatus}):undefined});let browser,consumer;
+import {tooltips} from './tooltip-proof.mjs';
+let receiverStatus=503;const h=await harness({edge:async request=>new URL(request.url).hostname==='hooks.example.test'?new Response('Receiver outcome',{status:receiverStatus}):undefined});let browser,consumer,siteServer;
 async function shot(page,width,state){assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${state} fits ${width}`);await page.screenshot({path:`test-results/${width}-integrations-${state}.png`,fullPage:true})}
+const csvRowsForReport=text=>text.trimEnd().split('\r\n').slice(1);
 const cookies=cookie=>cookie.split('; ').map(v=>{const at=v.indexOf('=');return {name:v.slice(0,at),value:v.slice(at+1),url:h.origin}});
+async function narrowingGrant(app,cookie,folder){
+ const verifier=randomBytes(32).toString('base64url'),params=new URLSearchParams({client_id:app.client.id,redirect_uri:app.client.redirects[0],response_type:'code',code_challenge_method:'S256',code_challenge:createHash('sha256').update(verifier).digest('base64url'),state:randomBytes(24).toString('base64url'),scope:'share',resource:folder});
+ const consent=await h.fetch('/oauth/chest/authorize?'+params,{headers:{cookie}});assert.equal(consent.status,200);const intent=/name="intent" value="([^"]+)"/.exec(await consent.text())?.[1];assert.ok(intent);
+ const allowed=await h.fetch('/oauth/chest/authorize',{method:'POST',headers:{cookie,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({intent,decision:'allow'})});assert.equal(allowed.status,303);
+ const response=await h.fetch('/oauth/chest/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',client_id:app.client.id,redirect_uri:app.client.redirects[0],code:new URL(allowed.headers.get('location')).searchParams.get('code'),code_verifier:verifier})});assert.equal(response.status,200);return (await response.json()).access_token
+}
 try{
  await mkdir('test-results',{recursive:true});await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const cookie=await h.signIn(h.vars.OWNER_EMAIL);await h.fetch('/setup',{method:'POST',headers:{cookie,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});const space=(await h.api('/files',cookie)).personal;
- consumer=await attachmentClient(h.origin);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic','--host-resolver-rules=MAP picker-client.example.test 127.0.0.1']});
+ // Serve the real built run site; documentation is separate from the installed app.
+ const siteRoot=resolve('./dist/site');siteServer=createServer(async(request,response)=>{try{const path=new URL(request.url,'http://localhost').pathname,file=resolve(siteRoot,'.'+(path==='/'?'/index.html':extname(path)?path:path+'.html'));if(!file.startsWith(siteRoot+'/'))throw Error('not_found');const data=await readFile(file),types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.svg':'image/svg+xml','.woff2':'font/woff2'};response.setHeader('content-type',types[extname(file)]??'application/octet-stream');response.end(data)}catch{response.writeHead(404);response.end()}});await new Promise(resolve=>siteServer.listen(0,'127.0.0.1',resolve));const siteOrigin=`http://127.0.0.1:${siteServer.address().port}`;
+ const policy=await h.fetch('/agents/api/policy',{method:'PUT',headers:{cookie,origin:h.origin,'content-type':'application/json'},body:JSON.stringify({document:{schema:'rer-agent-policy/1',catalogue:'rer-agent-classes/1',rules:[{id:'all',class:'*',do:'autonomous'}],spend:{none:true}}})});assert.equal(policy.status,200);
+ consumer=await attachmentClient(h.origin);browser=await chromium.launch({headless:true,...(process.env.CHEST_CHROMIUM_PATH?{executablePath:process.env.CHEST_CHROMIUM_PATH}:{}),...(process.env.HTTPS_PROXY?{proxy:{server:process.env.HTTPS_PROXY,bypass:'picker-client.example.test,127.0.0.1,localhost'}}:{}),args:['--no-sandbox','--use-mock-keychain','--password-store=basic','--host-resolver-rules=MAP picker-client.example.test 127.0.0.1']});
+ const report=await integrationReportSetup(h,cookie);
+ const reports=await h.api('/integrations/clients',report.admin,{name:'Administrative activity reader',redirects:[consumer.origin+'/callback/report'],actions:['admin-report']});
+ consumer.add('report',reports.client.id,[]);
+ for(const width of [1440,390]){
+  const context=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});
+  try{
+   await context.addCookies(cookies(report.admin));const page=await context.newPage();
+   const verifier=randomBytes(32).toString('base64url'),challenge=createHash('sha256').update(verifier).digest('base64url');
+   const consent=new URLSearchParams({client_id:reports.client.id,redirect_uri:consumer.origin+'/callback/report',response_type:'code',code_challenge_method:'S256',code_challenge:challenge,state:randomBytes(32).toString('base64url'),scope:'admin-report',report_group:report.group.id});
+   await page.goto(h.origin+'/oauth/chest/authorize?'+consent);
+   if(width===1440){
+    assert.ok((await page.locator('body').innerText()).includes(report.group.payload.name));
+    assert.ok(!(await page.locator('body').innerText()).includes(report.otherGroup.payload.name));
+    assert.equal(await page.getByRole('checkbox',{name:'Allow read-only administrative activity reports for these groups'}).isChecked(),false);
+   }
+   await tooltips(page,width,'integration-report-consent');await shot(page,width,'report-consent');
+   await page.getByRole('checkbox',{name:'Allow read-only administrative activity reports for these groups'}).check();
+   await Promise.all([page.waitForURL(/callback\/report/),page.getByRole('button',{name:'Authorize app',exact:true}).click()]);
+   const code=new URL(page.url()).searchParams.get('code');
+   const response=await h.fetch('/oauth/chest/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',client_id:reports.client.id,redirect_uri:consumer.origin+'/callback/report',code,code_verifier:verifier})});
+   assert.equal(response.status,200);const grant=await response.json();
+   await page.goto(h.origin+'/app/integrations');await shot(page,width,'report-grant');
+   await page.goto(h.origin+'/app/administration/audit?'+report.filter+'&group='+report.group.id+'&limit=2');
+   await page.getByRole('heading',{name:'Administrative activity',exact:true}).waitFor();
+   await tooltips(page,width,'integration-scoped-report');await shot(page,width,'report-activity');
+   if(width===1440){
+    const download=page.waitForEvent('download');await page.getByRole('link',{name:'Export CSV',exact:true}).click();
+    const browserCsv=await readFile(await(await download).path(),'utf8');
+    const integration=await h.fetch('/api/chest/integrations/v1/administration/audit/export?'+report.filter+'&limit=2',{headers:{authorization:'Bearer '+grant.access_token}});
+    assert.equal(integration.status,200);assert.equal(await integration.text(),browserCsv,'the OAuth CSV reconciles with the actual browser Export CSV control');
+    assert.equal(csvRowsForReport(browserCsv).length,305);
+    for(const hidden of [report.secret.id,report.file.payload.name,report.secret.payload.name,'synthetic-chest-44 private original'])assert.ok(!browserCsv.includes(hidden));
+    await Promise.all([page.waitForNavigation(),page.getByRole('link',{name:'Next page',exact:true}).click()]);await shot(page,width,'report-next-page');
+    await page.goto(h.origin+'/app/integrations');const row=page.locator('li').filter({has:page.getByRole('button',{name:'Revoke grant',exact:true})}).filter({hasText:'Administrative activity reader'});
+    await Promise.all([page.waitForNavigation(),row.getByRole('button',{name:'Revoke grant',exact:true}).click()]);
+    const revoked=await h.fetch('/api/chest/integrations/v1/administration/audit?'+report.filter,{headers:{authorization:'Bearer '+grant.access_token}});assert.equal(revoked.status,401);assert.equal((await revoked.json()).error,'oauth_grant_revoked');
+    await shot(page,width,'report-revoked');
+   }
+  }finally{await context.close()}
+ }
  for(const width of [1440,390]){
   await h.api('/integrations/policy',cookie,{scope:'organization',mode:'any',apps:{}});
   const folder=await h.api('/items',cookie,{space,type:'folder',name:`Partner files ${width}`}),file=await h.api('/items',cookie,{parent:folder.id,name:`Signed terms ${width}.txt`,base64:Buffer.from('The original agreed terms.').toString('base64')}),outside=await h.api('/items',cookie,{space,name:`Private forecast ${width}.txt`,base64:Buffer.from('Outside the authorized folder.').toString('base64')});
-  const app=await h.api('/integrations/clients',cookie,{name:`Picker partner ${width}`,redirects:[`${consumer.origin}/callback/${width}`],pickerOrigins:[consumer.origin],actions:['read','search','picker','upload','webhook']});
-  consumer.add(width,app.client.id,[folder.id]);
+  const app=await h.api('/integrations/clients',cookie,{name:`Picker partner ${width}`,redirects:[`${consumer.origin}/callback/${width}`],pickerOrigins:[consumer.origin],actions:['read','search','picker','upload','webhook','request']});
+  consumer.add(width,app.client.id,[folder.id],['read','search','picker','webhook','request']);
   const context=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});await context.addCookies(cookies(cookie));await context.grantPermissions(['local-network-access'],{origin:consumer.origin});
   const host=await context.newPage(),admin=await context.newPage();host.setDefaultTimeout(15000);host.on('pageerror',e=>console.log('Partner client error:',e.message));await admin.goto(h.origin+'/app/integrations');await shot(admin,width,'console');
-  await host.goto(`${consumer.origin}/host/${width}`);assert.equal(await host.evaluate(()=>typeof window.ChestPicker),'function','The third-party app loaded the real Chest component');const popupPromise=host.waitForEvent('popup');await host.getByRole('button',{name:'Attach from Chest'}).click();const popup=await popupPromise;popup.on('response',async r=>{if(r.url().includes('/integrations/v1/')&&r.status()>=400)console.log('Picker API refusal:',r.status(),(await r.json()).error)});await popup.setViewportSize({width,height:900});await popup.waitForURL(/\/oauth\/chest\/authorize/);await popup.getByRole('button',{name:'Authorize app',exact:true}).waitFor();await shot(popup,width,'consent');await popup.getByRole('button',{name:'Authorize app',exact:true}).click();try{await popup.waitForURL(/\/app\/integrations\/picker/)}catch(error){console.log('Picker transition:',new URL(popup.url()).pathname,await host.locator('#result').innerText());await popup.screenshot({path:'test-results/picker-transition.png',fullPage:true});throw error};await popup.getByRole('button',{name:file.payload.name,exact:true}).waitFor();assert.equal(await popup.getByRole('button',{name:outside.payload.name,exact:true}).count(),0);await shot(popup,width,'picker');
+  await host.goto(`${consumer.origin}/host/${width}`);assert.equal(await host.evaluate(()=>typeof window.ChestPicker),'function','The third-party app loaded the real Chest component');const popupPromise=host.waitForEvent('popup');await host.getByRole('button',{name:'Attach from Chest'}).click();const popup=await popupPromise;popup.on('response',async r=>{if(r.url().includes('/integrations/v1/')&&r.status()>=400)console.log('Picker API refusal:',r.status(),(await r.json()).error)});await popup.setViewportSize({width,height:900});await popup.waitForURL(/\/oauth\/chest\/authorize/);await popup.getByRole('button',{name:'Authorize app',exact:true}).waitFor();
+  if(width===1440){
+   for(const label of ['Request budget','Mutation budget','Original byte budget'])assert.equal(await popup.getByLabel(label,{exact:true}).inputValue(),'','omitted limits are blank with no grant limit');
+   assert.match(await popup.locator('body').innerText(),/No grant limit requests, no grant limit mutations and no grant limit bytes/);
+   assert.match(await popup.locator('body').innerText(),/600 calls per minute for each app\/person pair/);
+
+  }
+  const docs=await context.newPage();await docs.goto(siteOrigin+'/docs');await docs.getByRole('link',{name:/Agent limits and budgets/}).filter({visible:true}).first().click();await docs.getByRole('heading',{level:1}).waitFor();await shot(docs,width,'agent-docs');await docs.close();
+  if(width===1440)await tooltips(popup,width,'integrations-consent');await shot(popup,width,'consent');await popup.getByRole('button',{name:'Authorize app',exact:true}).click();try{await popup.waitForURL(/\/app\/integrations\/picker/)}catch(error){console.log('Picker transition:',new URL(popup.url()).pathname,await host.locator('#result').innerText());await popup.screenshot({path:'test-results/picker-transition.png',fullPage:true});throw error};await popup.getByRole('button',{name:file.payload.name,exact:true}).waitFor();assert.equal(await popup.getByRole('button',{name:outside.payload.name,exact:true}).count(),0);await shot(popup,width,'picker');
   // Search uses the same scoped API and never exposes an item outside the grant.
   await popup.getByLabel('Search files').fill('Private forecast');await popup.getByRole('button',{name:'Search',exact:true}).click();await popup.getByText('No accessible files in this grant.',{exact:true}).waitFor();await shot(popup,width,'picker-search-empty');await popup.getByLabel('Search files').fill('Signed terms');await popup.getByRole('button',{name:'Search',exact:true}).click();await popup.getByRole('button',{name:file.payload.name,exact:true}).click();try{await host.waitForFunction(()=>document.querySelector('#result').textContent.startsWith('{'))}catch(error){console.log('Attachment result:',await host.locator('#result').innerText(),popup.isClosed()?'picker closed':await popup.locator('[data-picker-status]').innerText());throw error};const picked=JSON.parse(await host.locator('#result').innerText());assert.equal(picked.id,file.id);assert.equal(picked.url,`${h.origin}/app/items/${file.id}`);await shot(host,width,'attached');
-  const access=await host.evaluate(()=>window.picker.token),hookResponse=await h.fetch('/api/chest/integrations/v1/webhooks',{method:'POST',headers:{authorization:'Bearer '+access,'content-type':'application/json','idempotency-key':`browser-webhook-${width}`},body:JSON.stringify({endpoint:'https://hooks.example.test/browser',events:['file.upload']})});assert.equal(hookResponse.status,200);const hook=(await hookResponse.json()).subscription;
+  // SURFACE-008: returned links are usable anonymously but confer no library authority.
+  const access=await host.evaluate(()=>window.picker.token),mailBefore=h.mails.length;
+  const saved=await h.fetch(`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`,{headers:{cookie}});assert.equal(saved.status,200);assert.equal(await saved.text(),'The original agreed terms.','the hidden original really exists');
+  const before=(await h.api(`/items/${folder.id}`,cookie)).children;
+  for(const door of ['api','mcp']){
+   const title=`synthetic-chest-${width}-${door} request`,key=`browser-request-${width}-${door}`,input={title,message:'Upload documents for review.'};
+   const response=await h.fetch(door==='api'?`/api/chest/integrations/v1/items/${folder.id}/requests`:'/mcp/chest',{method:'POST',headers:{authorization:'Bearer '+access,'content-type':'application/json','idempotency-key':key,...(door==='mcp'?{'MCP-Protocol-Version':'2025-11-25',accept:'application/json, text/event-stream'}:{})},body:JSON.stringify(door==='api'?input:{jsonrpc:'2.0',id:1,method:['tools','call'].join('/'),params:{name:'chest.requests.create',arguments:{id:folder.id,...input,idempotency_key:key}}})});assert.equal(response.status,200);
+   const payload=await response.json();if(door==='mcp')assert.equal(payload.result.isError,false);const made=door==='api'?payload:payload.result.structuredContent;
+   const anonymous=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});
+   try{
+    const visitor=await anonymous.newPage();await visitor.goto(made.url);await visitor.getByRole('heading',{name:title,exact:true}).waitFor();await visitor.getByLabel('Files',{exact:true}).waitFor();assert.equal(await visitor.getByRole('button',{name:'Upload',exact:true}).count(),1,'anonymous upload door is available');
+    const page=await visitor.content();for(const hidden of [folder.payload.name,file.payload.name,outside.payload.name,'The original agreed terms.','Outside the authorized folder.'])assert.ok(!page.includes(hidden),'request reveals neither stored names nor original bytes');assert.equal(await visitor.locator('a[download],a[href*="/app/items/"],a[href*="/bytes/"]').count(),0,'request offers no browsing or download controls');await shot(visitor,width,`request-${door}-anonymous`);
+    for(const path of [`/api/chest/items/${folder.id}`,`/api/chest/items/${file.id}`,`/api/chest/items/${file.id}/bytes/${file.payload.current}`,`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`]){
+     const refused=await anonymous.request.get(h.origin+path,{maxRedirects:0});assert.equal(refused.status(),401,'request visitor cannot browse, preview or download stored originals');assert.equal((await refused.json()).error,'authentication_required');
+    }
+    for(const path of [`/app/items/${folder.id}`,`/app/items/${file.id}`]){const refused=await anonymous.request.get(h.origin+path,{maxRedirects:0});assert.equal(refused.status(),303,'request visitor still needs sign-in to browse');assert.ok(refused.headers().location.startsWith('/signin'));}
+    // A request capability is not a public download capability.
+    for(const suffix of [`/f/${file.id}`,`/p/${file.id}`]){const refused=await anonymous.request.get(made.url+suffix);assert.equal(refused.status(),404);assert.ok(!(await refused.text()).includes('The original agreed terms.'));}
+   }finally{await anonymous.close()}
+   assert.equal(h.mails.length,mailBefore,`${door} request creation and anonymous reads send no mail`);
+  }
+  assert.deepEqual((await h.api(`/items/${folder.id}`,cookie)).children,before,'anonymous visits and refused reads leave the populated folder unchanged');
+  const retained=await h.fetch(`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`,{headers:{cookie}});assert.equal(retained.status,200);assert.equal(await retained.text(),'The original agreed terms.','refusals preserve the retained original');
+  // SURFACE-007: the existing OAuth door reconciles Links, file history and named-reader downloads.
+  const narrowFolder=await h.api('/items',cookie,{parent:folder.id,type:'folder',name:`Private folder ${width}`}),kept=await h.api('/items',cookie,{parent:narrowFolder.id,name:`Retained agreement ${width}.txt`,base64:Buffer.from('synthetic-chest-3').toString('base64')});
+  await h.api(`/items/${kept.id}/versions`,cookie,{base64:Buffer.from('synthetic-chest-4').toString('base64')});
+  const readerEmail=[`named-reader-${width}`,'example.test'].join('@');await h.api('/people',cookie,{action:'invite',email:readerEmail,name:'Named folder reader'});const reader=await h.signIn(readerEmail,true);await h.api(`/items/${narrowFolder.id}/shares`,cookie,{principal:readerEmail,role:'viewer'});
+  const broad=await h.api(`/items/${narrowFolder.id}/public-links`,cookie,{}),narrowBefore=await h.api(`/items/${kept.id}`,cookie),narrowApp=await h.api('/integrations/clients',cookie,{name:`Narrowing partner ${width}`,redirects:[`${consumer.origin}/callback/${width}`],actions:['share']}),narrowToken=await narrowingGrant(narrowApp,cookie,narrowFolder.id);
+  await admin.goto(h.origin+'/app/links');const wideRow=admin.locator('li.row-tabbed').filter({has:admin.getByRole('link',{name:narrowFolder.payload.name,exact:true})});
+  if(width===1440){assert.equal(await wideRow.getByRole('button',{name:'Make private',exact:true}).count(),1);assert.match(await wideRow.first().innerText(),/No expiry/)}
+  const narrowing=await h.fetch(`/api/chest/integrations/v1/items/${narrowFolder.id}/make-private`,{method:'POST',headers:{authorization:'Bearer '+narrowToken,'content-type':'application/json','idempotency-key':`browser-make-private-${width}`},body:'{}'});assert.equal(narrowing.status,200);
+  await admin.reload();if(width===1440){assert.equal(await wideRow.getByRole('button',{name:'Make private',exact:true}).count(),0);assert.match(await wideRow.innerText(),/Revoked/)}await shot(admin,width,'made-private-links');
+  await admin.goto(h.origin+`/app/items/${narrowFolder.id}?manage`);if(width===1440){assert.equal(await admin.getByRole('button',{name:'Make private',exact:true}).count(),0);assert.ok((await admin.locator('body').innerText()).includes('Named folder reader'))}await shot(admin,width,'made-private-folder');
+  const readerContext=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});await readerContext.addCookies(cookies(reader));const readerPage=await readerContext.newPage();await readerPage.goto(h.origin+`/app/items/${kept.id}`);
+  if(width===1440){assert.equal(await readerPage.getByRole('link',{name:'Download this version',exact:true}).count(),2);for(const v of narrowBefore.versions){const response=await readerContext.request.get(h.origin+`/api/chest/items/${kept.id}/bytes/${v.id}?download=true`);assert.equal(response.status(),200);assert.equal(createHash('sha256').update(await response.body()).digest('hex'),v.checksum)}}await shot(readerPage,width,'made-private-kept');
+  const visitor=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true}),visitorPage=await visitor.newPage();const refusal=await visitorPage.goto(broad.url);if(width===1440)assert.equal(refusal.status(),410);await shot(visitorPage,width,'made-private-anonymous-refusal');await visitor.close();await readerContext.close();
+  consumer.add(width,app.client.id,[folder.id]);
+  const hookResponse=await h.fetch('/api/chest/integrations/v1/webhooks',{method:'POST',headers:{authorization:'Bearer '+access,'content-type':'application/json','idempotency-key':`browser-webhook-${width}`},body:JSON.stringify({endpoint:'https://hooks.example.test/browser',events:['file.upload']})});assert.equal(hookResponse.status,200);const hook=(await hookResponse.json()).subscription;
   receiverStatus=503;await h.api('/items',cookie,{parent:folder.id,name:`Webhook evidence ${width}.txt`,base64:Buffer.from('Recorded live file arrival.').toString('base64')});
   let failed;for(let n=0;n<30;n++){const response=await h.fetch(`/api/chest/integrations/v1/webhooks/${hook.id}/deliveries`,{headers:{authorization:'Bearer '+access}}),d=await response.json();failed=d.items?.find(v=>v.state==='failed');if(failed)break;await new Promise(r=>setTimeout(r,50))}assert.ok(failed);
   await admin.goto(h.origin+'/app/integrations');await shot(admin,width,'webhook-failed');receiverStatus=200;await Promise.all([admin.waitForNavigation(),admin.locator('li').filter({hasText:failed.event}).getByRole('button',{name:'Replay same event',exact:true}).click()]);await shot(admin,width,'webhook-replayed');assert.equal(await admin.locator('li').filter({hasText:failed.event}).getByText('delivered',{exact:true}).count(),1,JSON.stringify({path:new URL(admin.url()).pathname,states:await admin.locator('strong').allTextContents(),body:(await admin.locator('body').innerText()).slice(-1200)}));
-  const grant=await host.evaluate(()=>window.picker.grant);assert.ok(grant);await h.api(`/integrations/grants/${grant}/revoke`,cookie,{});await host.getByRole('button',{name:'Attach from Chest'}).click();await host.waitForFunction(()=>document.querySelector('#result').dataset.error==='oauth_grant_revoked');await shot(host,width,'revoked-pick');
+  if(width===1440){
+  // SURFACE-005: the sponsor reconciles an agent restore in visible history and through the original public link.
+  const originalA=Buffer.from(`synthetic-chest-${width}: original A\n`),originalB=Buffer.from(`synthetic-chest-${width}: later B with different bytes\n`),sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+  const recovery=await h.api('/items',cookie,{parent:folder.id,name:`Recovery ${width}.txt`,base64:originalA.toString('base64')}),a=recovery.payload.current;
+  const newer=await h.api(`/items/${recovery.id}/versions`,cookie,{base64:originalB.toString('base64')}),b=newer.payload.current;
+  const existingLink=await h.api(`/items/${recovery.id}/public-links`,cookie,{versionMode:'current'}),linkPage=await context.newPage();
+  await linkPage.goto(existingLink.url);const downloadLink=linkPage.getByRole('link',{name:'Download',exact:true});
+  const originalDestination=await downloadLink.getAttribute('href');assert.ok(originalDestination.includes(recovery.id));
+  const hashDownload=async(path)=>{const response=await context.request.get(h.origin+path);assert.equal(response.status(),200);return sha(await response.body())};
+  assert.equal(await hashDownload(originalDestination),sha(originalB),'existing link initially downloads B');
+  const restoreApp=await h.api('/integrations/clients',cookie,{name:`Recovery agent ${width}`,redirects:[`${consumer.origin}/callback/${width}`],actions:['read','versions']});
+  const verifier=randomBytes(32).toString('base64url'),params=new URLSearchParams({client_id:restoreApp.client.id,redirect_uri:`${consumer.origin}/callback/${width}`,response_type:'code',code_challenge_method:'S256',code_challenge:createHash('sha256').update(verifier).digest('base64url'),state:randomBytes(16).toString('hex'),scope:'read versions',resource:folder.id});
+  const consent=await context.request.get(h.origin+'/oauth/chest/authorize?'+params),intent=/name="intent" value="([^"]+)"/.exec(await consent.text())?.[1];assert.equal(consent.status(),200);assert.ok(intent);
+  const allowed=await context.request.post(h.origin+'/oauth/chest/authorize',{headers:{origin:h.origin},form:{intent,decision:'allow'},maxRedirects:0});assert.equal(allowed.status(),303);
+  const code=new URL(allowed.headers().location).searchParams.get('code'),exchange=await context.request.post(h.origin+'/oauth/chest/token',{headers:{origin:consumer.origin},form:{grant_type:'authorization_code',client_id:restoreApp.client.id,redirect_uri:`${consumer.origin}/callback/${width}`,code,code_verifier:verifier}});assert.equal(exchange.status(),200);
+  const restoreToken=(await exchange.json()).access_token,restoreResponse=await context.request.post(`${h.origin}/api/chest/integrations/v1/items/${recovery.id}/versions/${a}/restore`,{headers:{authorization:'Bearer '+restoreToken,'idempotency-key':`browser-restore-${width}`},data:{}});assert.equal(restoreResponse.status(),200);const restored=await restoreResponse.json();assert.equal(restored.id,recovery.id);
+  await admin.goto(`${h.origin}/app/items/${recovery.id}`);
+  const history=admin.locator('.versions article.ver');assert.equal(await history.count(),3);const currentVersion=history.filter({has:admin.getByText('Current version',{exact:true})});assert.equal(await currentVersion.count(),1);
+  await currentVersion.getByText('Details',{exact:true}).click();
+  await currentVersion.getByText('restore of version 1',{exact:false}).waitFor();
+  for(const [version,bytes] of [[a,originalA],[b,originalB],[restored.current,originalA]]){
+   const row=history.filter({has:admin.locator(`a[href="/api/chest/items/${recovery.id}/bytes/${version}?download=true"]`)});assert.equal(await row.count(),1,'sponsor sees each retained version');
+   const href=await row.getByRole('link',{name:'Download this version',exact:true}).getAttribute('href');assert.equal(await hashDownload(href),sha(bytes),'visible version download matches its original');
+  }
+  assert.equal(await currentVersion.getByRole('link',{name:'Download this version',exact:true}).getAttribute('href'),`/api/chest/items/${recovery.id}/bytes/${restored.current}?download=true`);
+  await shot(admin,width,'restored-history');await linkPage.reload();assert.equal(await downloadLink.getAttribute('href'),originalDestination,'the original share link keeps its destination');assert.equal(await hashDownload(originalDestination),sha(originalA),'original link now downloads restored A');
+  await shot(linkPage,width,'restored-link');
+  for(const page of [admin,linkPage])await page.setViewportSize({width:390,height:900});
+  await shot(admin,390,'restored-history');await shot(linkPage,390,'restored-link');await admin.setViewportSize({width,height:900});await linkPage.close();
+  console.log(`PROBE SURFACE-005 browser ${width}: sponsor file page -> three retained versions and current restore of A; original link -> restored A hash; screens at 1440 and 390`);
+  }
+  const grant=await host.evaluate(()=>window.picker.grant);assert.ok(grant);
+  if(width===1440){const saved=(await h.api('/integrations',cookie)).grants.find(g=>g.id===grant);assert.deepEqual(saved.payload.budget,{requests:null,mutations:null,bytes:null},'browser consent keeps omitted budgets unlimited')};await h.api(`/integrations/grants/${grant}/revoke`,cookie,{});await host.getByRole('button',{name:'Attach from Chest'}).click();await host.waitForFunction(()=>document.querySelector('#result').dataset.error==='oauth_grant_revoked');await shot(host,width,'revoked-pick');
   await admin.goto(h.origin+'/app/integrations');await admin.getByLabel(/^Authorization mode/).selectOption('allowlist');await admin.getByLabel(`Picker partner ${width} policy`).selectOption('read_only');await Promise.all([admin.waitForNavigation(),admin.getByRole('button',{name:'Save app policy',exact:true}).click()]);await shot(admin,width,'allowlist-read-only');
-  await host.reload();const nextPopupPromise=host.waitForEvent('popup');await host.getByRole('button',{name:'Attach from Chest'}).click();const nextPopup=await nextPopupPromise;await nextPopup.setViewportSize({width,height:900});await nextPopup.getByRole('button',{name:'Authorize app',exact:true}).waitFor();await nextPopup.getByRole('button',{name:'Authorize app',exact:true}).click();await nextPopup.getByRole('button',{name:file.payload.name,exact:true}).waitFor();await nextPopup.getByRole('button',{name:file.payload.name,exact:true}).click();await host.waitForFunction(()=>document.querySelector('#result').textContent.startsWith('{'));
+  await host.reload();const nextPopupPromise=host.waitForEvent('popup');await host.getByRole('button',{name:'Attach from Chest'}).click();const nextPopup=await nextPopupPromise;await nextPopup.setViewportSize({width,height:900});await nextPopup.getByRole('button',{name:'Authorize app',exact:true}).waitFor();
+  await nextPopup.getByLabel('Request budget',{exact:true}).fill('40');await nextPopup.getByLabel('Mutation budget',{exact:true}).fill('0');await nextPopup.getByLabel('Original byte budget',{exact:true}).fill('1024');await shot(nextPopup,width,'finite-consent');await nextPopup.getByRole('button',{name:'Authorize app',exact:true}).click();await nextPopup.getByRole('button',{name:file.payload.name,exact:true}).waitFor();await nextPopup.getByRole('button',{name:file.payload.name,exact:true}).click();await host.waitForFunction(()=>document.querySelector('#result').textContent.startsWith('{'));
+  if(width===1440){const selected=await host.evaluate(()=>window.picker.grant),saved=(await h.api('/integrations',cookie)).grants.find(g=>g.id===selected);assert.deepEqual(saved.payload.budget,{requests:40,mutations:0,bytes:1024},'browser granter selected finite and zero budgets')};
   await admin.goto(h.origin+'/app/integrations');await admin.getByLabel(/^Authorization mode/).selectOption('allowlist');await admin.getByLabel(`Picker partner ${width} policy`).selectOption('blocked');await Promise.all([admin.waitForNavigation(),admin.getByRole('button',{name:'Save app policy',exact:true}).click()]);await shot(admin,width,'blocked-app');await host.getByRole('button',{name:'Attach from Chest'}).click();await host.waitForFunction(()=>document.querySelector('#result').dataset.error==='oauth_grant_revoked');await shot(host,width,'blocked-next-pick');
   // An off-list app's consent names the organization rule and offers no Authorize action.
   await host.reload();const refusedPromise=host.waitForEvent('popup');await host.getByRole('button',{name:'Attach from Chest'}).click();const refused=await refusedPromise;await refused.setViewportSize({width,height:900});await refused.getByText('Code: app_policy_app_blocked',{exact:true}).waitFor();assert.equal(await refused.getByRole('button',{name:'Authorize app',exact:true}).count(),0);await shot(refused,width,'policy-refusal');await refused.close();await context.close();
  }
  console.log('CONNECT-007 browser OAuth, picker stable IDs/links/search/revoke and allowlist/read-only/block console at 1440 and 390 passed');
-}finally{await browser?.close();await consumer?.close();await h.close()}
+}finally{await browser?.close();await consumer?.close();if(siteServer){siteServer.closeAllConnections();await new Promise(resolve=>siteServer.close(resolve))};await h.close()}

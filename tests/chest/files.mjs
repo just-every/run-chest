@@ -3,6 +3,8 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {harness} from './harness.mjs';
+import {syncTreeFlow} from './sync-tree-flow.mjs';
+await syncTreeFlow();
 const h=await harness(),b64=v=>Buffer.from(v).toString('base64'),sha=v=>createHash('sha256').update(v).digest('hex'),day=86_400_000;
 const check=async(id,fn)=>{await fn();console.log(`${id} passed`)};
 const people={};let space,personalOf={};
@@ -45,10 +47,57 @@ try{
   assert.equal((await h.raw('/api/chest/items',people.ana,{parent:contracts.id,type:'file',name:'TERMS.txt',base64:b64('x')})).status,409,'case-insensitive names are unique in a folder');
   await h.api('/items',people.ben,{parent:contracts.id,type:'folder',name:'Mine'},403);
   const listing=await h.api(`/items/${client.id}`,people.ben);assert.deepEqual(listing.children.map(c=>c.name),['Contracts']);assert.equal(listing.can.download,true);assert.equal(listing.can.contribute,false);
+  // A real space viewer can read the populated tree but cannot rename its folder or file, or administer people.
+  const viewerState=async()=>({children:(await h.api(`/spaces/${space.id}`,people.mo)).children.map(c=>[c.id,c.name]),items:await Promise.all([client.id,contracts.id,terms.id].map(async key=>{const d=await h.api(`/items/${key}`,people.mo);return {item:d.item,versions:d.versions,children:d.children.map(c=>[c.id,c.name])}}))});
+  const unchanged=await viewerState();
+  assert.equal((await h.api(`/spaces/${space.id}`,people.ben)).role,'viewer');
+  for(const item of [client,terms]){
+   assert.equal((await h.api(`/items/${item.id}`,people.ben)).role,'viewer');
+   await h.api(`/items/${item.id}/rename`,people.ben,{name:`Renamed ${item.payload.name}`},403);
+   assert.deepEqual(await viewerState(),unchanged,'a refused rename keeps names, hierarchy and all retained versions');
+  }
+  assert.equal((await h.raw('/app/admin',people.ben)).status,403,'People & settings refuses a space viewer');
+  assert.equal((await h.raw('/app/admin',people.owner)).status,200,'People & settings remains available to the owner');
+  assert.deepEqual(await viewerState(),unchanged);
+  assert.deepEqual(await bytesOf('ben',terms.id,terms.payload.current),Buffer.from('Payment terms net 30'));
+  const privateFile=await upload(people.dee,{space:personalOf.dee,name:'Private counterpart.txt',base64:b64('Private counterpart original')});
+  const concealed=await h.raw(`/app/items/${privateFile.id}`,people.ben),concealedPage=await concealed.text();
+  assert.equal(concealed.status,200);assert.ok(concealedPage.includes('Request access'));assert.ok(!concealedPage.includes(privateFile.payload.name),'another space never reveals its private file name');
   // A restricted subfolder keeps out inherited members except managers.
-  const hr=await h.api('/items',people.mo,{space:space.id,type:'folder',name:'HR'});await upload(people.mo,{parent:hr.id,name:'salaries.txt',base64:b64('confidential salaries')});
+  const hr=await h.api('/items',people.mo,{parent:client.id,type:'folder',name:'HR'}),salaries=await upload(people.mo,{parent:hr.id,name:'salaries.txt',base64:b64('confidential salaries')});
+  const emails=Object.fromEntries(await Promise.all(['ana','ben','cy'].map(async name=>[name,(await h.api('/files',people[name])).me.email])));
+  const inherited=await h.api(`/items/${salaries.id}`,people.ana);
+  assert.equal(inherited.role,'content_manager');assert.ok(inherited.accessExplanation.some(reason=>reason.includes('content manager')&&reason.includes('Projects')));
+  assert.equal(sha(await bytesOf('ana',salaries.id,salaries.payload.current)),sha('confidential salaries'));
   await h.api(`/items/${hr.id}/settings`,people.ana,{restricted:true},403);await h.api(`/items/${hr.id}/settings`,people.mo,{restricted:true});
   await h.api(`/items/${hr.id}`,people.ana,undefined,403);assert.equal((await h.api('/search?q=salaries',people.ana)).count,0);assert.equal((await h.api('/search?q=salaries',people.mo)).count,1);
+  // The explanation follows the enforced path: a file grant cannot reveal its restricted parent.
+  const group=await h.api('/groups',people.owner,{name:'Restricted reviewers',members:[emails.cy]});
+  await h.api(`/items/${salaries.id}/shares`,people.mo,{principal:emails.ben,role:'commenter'});
+  await h.api(`/items/${hr.id}/shares`,people.mo,{principal:group.id,role:'viewer'});
+  const direct=await h.api(`/items/${salaries.id}`,people.ben),grouped=await h.api(`/items/${salaries.id}`,people.cy),manager=await h.api(`/items/${salaries.id}`,people.mo);
+  assert.equal(direct.role,'commenter');assert.ok(direct.accessExplanation.some(reason=>reason.includes('commenter')&&reason.includes('your named access')&&reason.includes('salaries.txt')));
+  assert.ok(direct.accessExplanation.some(reason=>reason.includes('Inherited access stops')&&reason.includes('on an ancestor')));
+  assert.ok(!JSON.stringify(direct.accessExplanation).includes('HR'));assert.ok(!direct.path.some(node=>node.id===hr.id));
+  assert.equal(grouped.role,'viewer');assert.ok(grouped.accessExplanation.some(reason=>reason.includes('viewer')&&reason.includes('Restricted reviewers')&&reason.includes('HR')));
+  assert.ok(grouped.accessExplanation.some(reason=>reason.includes('Inherited access stops')));
+  assert.ok(!grouped.accessExplanation.some(reason=>reason.includes('contributor')),'stopped space membership is not presented as current access');
+  assert.equal(manager.role,'manager');assert.ok(manager.accessExplanation.some(reason=>reason.includes('manager')&&reason.includes('Projects')));assert.ok(manager.accessExplanation.some(reason=>reason.includes('space managers keep their access')));
+  for(const name of ['ben','cy','mo'])assert.equal(sha(await bytesOf(name,salaries.id,salaries.payload.current)),sha('confidential salaries'));
+  const restrictedConcealed=async name=>{
+   for(const path of [`/api/chest/items/${hr.id}`,`/api/chest/items/${salaries.id}`,`/app/items/${salaries.id}`,`/api/chest/items/${salaries.id}/bytes/${salaries.payload.current}?download=true`]){
+    const response=await h.raw(path,people[name]);assert.equal(response.status,path.startsWith('/app/')?200:403,`${name}: ${path}`);
+    const body=await response.text();for(const hidden of ['HR','salaries.txt','confidential salaries','Restricted reviewers'])assert.ok(!body.includes(hidden),`${name}: no concealed name or original in ${path}`);
+   }
+  };
+  await restrictedConcealed('ana');
+  await h.api(`/groups/${group.id}/members`,people.owner,{action:'remove',email:emails.cy});await restrictedConcealed('cy');
+  assert.equal((await h.api(`/items/${salaries.id}`,people.ben)).role,'commenter','group removal keeps an independent direct grant');
+  await h.api(`/items/${salaries.id}/unshare`,people.mo,{principal:emails.ben});await restrictedConcealed('ben');
+  await h.stop();await h.start();
+  for(const name of ['ana','ben','cy'])await restrictedConcealed(name);
+  assert.equal(sha(await bytesOf('mo',salaries.id,salaries.payload.current)),sha('confidential salaries'),'manager access and original survive revocation and restart');
+  console.log('PROBE SPACE-001 point4: restricted nested file; inherited, direct, group and manager reads match explanations; direct and group revocation deny pages and bytes without concealed names before and after Worker restart');
   assert.equal((await h.api('/search?q=net%2030',people.ben)).results[0].id,terms.id);assert.equal((await h.api('/search?q=net%2030',people.dee)).count,0);
   // Moves need manage rights at the source; the stable ID and versions survive and access follows the destination.
   await h.api(`/items/${terms.id}/move`,people.cy,{parent:client.id},403);
@@ -129,6 +178,11 @@ try{
   // Ana shares a personal file with Ben as commenter: in-app notice, email, Shared with me; he comments but cannot edit.
   const plan=await upload(people.ana,{space:personalOf.ana,name:'plan.txt',base64:b64('launch plan')});
   await h.api(`/items/${plan.id}/shares`,people.ana,{principal:'ben@example.test',role:'commenter',message:'Please review section 2'});
+  const grants=(await audit('share.grant')).filter(e=>e.object_id===plan.id);
+  assert.equal(grants.length,1,'the personal file share has one audit event');
+  const shareGrant=grants[0],shareDetail=JSON.parse(shareGrant.detail);
+  assert.equal(shareGrant.actor,'ana@example.test');assert.equal(shareGrant.object_id,plan.id);
+  assert.equal(shareDetail.principal,'ben@example.test');assert.equal(shareDetail.role,'commenter');assert.equal(shareDetail.outcome,'succeeded');
   assert.ok((await h.api('/notices',people.ben)).some(n=>n.payload.type==='share'&&n.payload.item===plan.id&&n.payload.message.includes('Please review section 2')));
   assert.equal(mail('ben@example.test',new RegExp(`/app/items/${plan.id}`)).length,1);
   const shared=await h.api('/shared',people.ben);assert.equal(shared.find(s=>s.id===plan.id).sharer,'ana@example.test');assert.equal((await h.api('/shared?sharer=mo%40example.test',people.ben)).filter(s=>s.id===plan.id).length,0);assert.equal((await h.api(`/shared?from=2000-01-01&to=2000-01-02`,people.ben)).length,0);
@@ -153,6 +207,29 @@ try{
   const toAdmins=await h.api(`/items/${orphan.id}/access-requests`,people.dee,{role:'viewer'});assert.deepEqual((await h.api(`/requests/${toAdmins.request}`,people.owner)).approvers,[h.vars.OWNER_EMAIL]);
   await h.api('/people',people.owner,{action:'reactivate',email:'eve@example.test'});people.eve=await h.signIn('eve@example.test');
   const spaceRequest=await h.api(`/items/${space.terms}/access-requests`,people.dee,{role:'viewer'});assert.deepEqual((await h.api(`/requests/${spaceRequest.request}`,people.mo)).approvers,['ana@example.test','mo@example.test']);
+  // A departed team-space owner has no successor: the remaining manager receives and decides the request.
+  const managed=await h.api('/spaces',people.eve,{name:'Manager fallback'});
+  await h.api(`/spaces/${managed.id}/members`,people.eve,{members:[{principal:'eve@example.test',role:'manager'},{principal:'mo@example.test',role:'manager'}]});
+  const inherited=await upload(people.eve,{space:managed.id,name:'synthetic-chest-1.txt',base64:b64('synthetic-chest-1')});
+  await h.api('/people',people.owner,{action:'deactivate',email:'eve@example.test'});await h.api('/files',people.eve,undefined,401);
+  const hidden=await h.raw(`/api/chest/items/${inherited.id}`,people.dee);assert.equal(hidden.status,403);assert.ok(!(await hidden.text()).includes(inherited.payload.name));
+  const fallback=await h.api(`/items/${inherited.id}/access-requests`,people.dee,{role:'editor',message:'Please review my access'});
+  const routedView=await h.api(`/requests/${fallback.request}`,people.mo);assert.deepEqual(routedView.approvers,['mo@example.test']);
+  assert.equal((await h.api(`/requests/${fallback.request}`,people.dee)).itemName,null);
+  assert.ok((await h.api('/notices',people.mo)).some(n=>n.payload.type==='request'&&n.payload.item===inherited.id&&n.payload.request===fallback.request));
+  assert.equal(mail('mo@example.test',new RegExp(`/app/requests/${fallback.request}`)).length,1);
+  const beforeGrant=(await h.api(`/items/${inherited.id}`,people.mo)).grants;
+  await h.api(`/requests/${fallback.request}`,people.cy,{decision:'approve'},403);
+  assert.deepEqual((await h.api(`/items/${inherited.id}`,people.mo)).grants,beforeGrant);await h.api(`/items/${inherited.id}`,people.dee,undefined,403);
+  await h.api(`/requests/${fallback.request}`,people.mo,{decision:'approve',role:'viewer'});
+  assert.ok((await h.api('/notices',people.dee)).some(n=>n.payload.request===fallback.request&&n.payload.message.includes('approved as viewer')));
+  assert.equal(mail('dee@example.test',new RegExp(`/app/items/${inherited.id}`)).length,1);
+  assert.equal((await h.api(`/items/${inherited.id}`,people.dee)).role,'viewer');assert.equal(sha(await bytesOf('dee',inherited.id,inherited.payload.current)),sha('synthetic-chest-1'));
+  for(const [action,actor,expectedRole] of [['access.request','dee@example.test','editor'],['access.approve','mo@example.test','viewer']]){
+   const events=(await audit(action)).filter(e=>e.object_id===inherited.id);assert.equal(events.length,1);assert.equal(events[0].actor,actor);
+   const detail=JSON.parse(events[0].detail);assert.equal(detail.role,expectedRole);assert.equal(detail.outcome,'succeeded');
+  }
+  await h.api('/people',people.owner,{action:'reactivate',email:'eve@example.test'});people.eve=await h.signIn('eve@example.test');
   // Requests close after 30 days and the requester is told.
   await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.expiresAt',?) WHERE id=?",new Date(Date.now()-1000).toISOString(),spaceRequest.request);
   assert.equal((await h.api(`/requests/${spaceRequest.request}`,people.dee)).status,'expired');assert.ok((await h.api('/notices',people.dee)).some(n=>n.payload.type==='request.expired'));

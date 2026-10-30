@@ -1,36 +1,255 @@
 // CONNECT-007 via the built Worker; the OAuth client and webhook receiver are network edges.
 import assert from 'node:assert/strict';
 import {createHash,createHmac,randomBytes} from 'node:crypto';
+import {request as httpsRequest} from 'node:https';
 import {harness} from './harness.mjs';
+import {integrationReportSetup} from './administration-report-flow.mjs';
 let signingSecret='',receiverMode='fail',received=new Map(),attempts=0;
-const h=await harness({bindings:{CHEST_OUTBOUND_HOSTS:'hooks.example.test,api.resend.com'},edge:async request=>{if(new URL(request.url).hostname!=='hooks.example.test')return;const body=await request.text(),signature=request.headers.get('x-chest-signature'),[,timestamp,mac]=/^t=(\d+),v1=([a-f0-9]+)$/.exec(signature)||[];assert.ok(timestamp&&Math.abs(Date.now()/1000-Number(timestamp))<60);assert.equal(mac,createHmac('sha256',signingSecret).update(timestamp+'.'+body).digest('hex'));const event=JSON.parse(body);assert.equal(request.headers.get('x-chest-event'),event.id);attempts++;if(receiverMode==='fail')return new Response('temporarily unavailable',{status:503});if(!received.has(event.id))received.set(event.id,event);if(receiverMode==='uncertain')await new Promise(resolve=>setTimeout(resolve,12000));return Response.json({accepted:event.id,duplicate:received.has(event.id)})}});
+const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+const h=await harness({bindings:{CHEST_OUTBOUND_HOSTS:'hooks.example.test,api.resend.com,synthetic-chest-scanner.test',CONTENT_SCANNER_URL:'https://synthetic-chest-scanner.test/scan',CONTENT_SCANNER_TOKEN:'synthetic-chest-1'},edge:async request=>{
+ if(request.url==='https://synthetic-chest-scanner.test/scan'){
+  const bytes=Buffer.from(await request.arrayBuffer());assert.equal(request.headers.get('authorization'),'Bearer synthetic-chest-1');assert.equal(request.headers.get('x-content-sha256'),sha(bytes));
+  return Response.json({checksum:sha(bytes),size:bytes.length,state:'infected',sensitive:false,reason:'Synthetic scanner-edge receipt',engine:'synthetic-chest-1'});
+ }
+ if(new URL(request.url).hostname!=='hooks.example.test')return;const body=await request.text(),signature=request.headers.get('x-chest-signature'),[,timestamp,mac]=/^t=(\d+),v1=([a-f0-9]+)$/.exec(signature)||[];assert.ok(timestamp&&Math.abs(Date.now()/1000-Number(timestamp))<60);assert.equal(mac,createHmac('sha256',signingSecret).update(timestamp+'.'+body).digest('hex'));const event=JSON.parse(body);assert.equal(request.headers.get('x-chest-event'),event.id);attempts++;if(receiverMode==='fail')return new Response('temporarily unavailable',{status:503});if(!received.has(event.id))received.set(event.id,event);if(receiverMode==='uncertain')await new Promise(resolve=>setTimeout(resolve,12000));return Response.json({accepted:event.id,duplicate:received.has(event.id)})}});
 const b64=s=>Buffer.from(s).toString('base64'),random=()=>randomBytes(32).toString('base64url');
 const call=async(token,path,{method='GET',body,key,status=200}={})=>{const response=await h.fetch('/api/chest/integrations/v1'+path,{method,headers:{authorization:'Bearer '+token,...(body?{'content-type':'application/json'}:{}),...(key?{'idempotency-key':key}:{})},...(body?{body:JSON.stringify(body)}:{})});assert.equal(response.status,status,`integration ${path}: ${response.status===status?'':await response.text()}`);return response.status===200?response.json():null};
 const form=(path,cookie,body)=>h.fetch(path,{method:'POST',headers:{cookie,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams(body)});
 let owner,staff,folder,other,client;
 async function consentFor(app,cookie,scopes,roots=[folder.id],budget={}){const verifier=random(),challenge=createHash('sha256').update(verifier).digest('base64url'),params=new URLSearchParams({client_id:app.client.id,redirect_uri:'https://client.example.test/callback',response_type:'code',code_challenge_method:'S256',code_challenge:challenge,state:random(),scope:scopes.join(' '),...budget});for(const root of roots)params.append('resource',root);const response=await h.fetch('/oauth/chest/authorize?'+params,{headers:{cookie}});return {response,verifier,params}}
-async function authorize(app,cookie,scopes,roots,budget){const {response,verifier}=await consentFor(app,cookie,scopes,roots,budget);assert.equal(response.status,200,await response.clone().text());const html=await response.text(),intent=/name="intent" value="([^"]+)"/.exec(html)?.[1];assert.ok(intent);const allowed=await form('/oauth/chest/authorize',cookie,{intent,decision:'allow'});assert.equal(allowed.status,303);const callback=new URL(allowed.headers.get('location'));assert.equal(callback.origin,'https://client.example.test');const exchangeBody={grant_type:'authorization_code',client_id:app.client.id,redirect_uri:'https://client.example.test/callback',code:callback.searchParams.get('code'),code_verifier:verifier,...(app.clientSecret?{client_secret:app.clientSecret}:{})},exchange=body=>h.fetch('/oauth/chest/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded',origin:'https://client.example.test'},body:new URLSearchParams(body)});assert.equal((await exchange({...exchangeBody,code_verifier:random()})).status,400,'PKCE refuses a different verifier');const token=await exchange(exchangeBody);assert.equal(token.status,200,token.status===200?'':await token.clone().text());assert.equal((await exchange(exchangeBody)).status,400,'authorization code is single use');return token.json()}
+async function authorize(app,cookie,scopes,roots,budget,choices={}){const {response,verifier}=await consentFor(app,cookie,scopes,roots,budget);assert.equal(response.status,200,await response.clone().text());const html=await response.text(),intent=/name="intent" value="([^"]+)"/.exec(html)?.[1];assert.ok(intent);const allowed=await form('/oauth/chest/authorize',cookie,{intent,decision:'allow',...choices});assert.equal(allowed.status,303);const callback=new URL(allowed.headers.get('location'));assert.equal(callback.origin,'https://client.example.test');const exchangeBody={grant_type:'authorization_code',client_id:app.client.id,redirect_uri:'https://client.example.test/callback',code:callback.searchParams.get('code'),code_verifier:verifier,...(app.clientSecret?{client_secret:app.clientSecret}:{})},exchange=body=>h.fetch('/oauth/chest/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded',origin:'https://client.example.test'},body:new URLSearchParams(body)});assert.equal((await exchange({...exchangeBody,code_verifier:random()})).status,400,'PKCE refuses a different verifier');const token=await exchange(exchangeBody);assert.equal(token.status,200,token.status===200?'':await token.clone().text());assert.equal((await exchange(exchangeBody)).status,400,'authorization code is single use');return token.json()}
 async function waitDelivery(token,subscription,predicate){for(let n=0;n<30;n++){const result=await call(token,`/webhooks/${subscription}/deliveries`),found=result.items.find(predicate);if(found)return found;await new Promise(r=>setTimeout(r,50))}assert.fail('webhook delivery did not settle')}
 try{
  await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});owner=await h.signIn(h.vars.OWNER_EMAIL);await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
+ const policy=await h.fetch('/agents/api/policy',{method:'PUT',headers:{cookie:owner,origin:h.origin,'content-type':'application/json'},body:JSON.stringify({document:{schema:'rer-agent-policy/1',catalogue:'rer-agent-classes/1',rules:[{id:'all',class:'*',do:'autonomous'}],spend:{none:true}}})});assert.equal(policy.status,200,'the owner explicitly chooses autonomous company policy');
  await h.api('/people',owner,{action:'invite',email:'staff@example.test',name:'Sam'});staff=await h.signIn('staff@example.test',true);const space=(await h.api('/files',staff)).personal;folder=await h.api('/items',staff,{space,type:'folder',name:'Authorized folder'});other=await h.api('/items',staff,{space,type:'folder',name:'Outside grant'});
  const initial=[];for(let n=0;n<5;n++)initial.push(await h.api('/items',staff,{parent:folder.id,name:`Original ${n}.txt`,base64:b64(`Searchable original ${n}`)}));const restricted=await h.api('/items',staff,{parent:folder.id,name:'Private.txt',base64:b64('Private')});
  client=await h.api('/integrations/clients',staff,{name:'Scoped client and MCP agent',redirects:['https://client.example.test/callback'],pickerOrigins:['https://client.example.test'],actions:['read','search','download','upload','folder','versions','share','request','picker','webhook'],confidential:true});
  const expanded=await consentFor(client,staff,['read'],[folder.id]);expanded.params.set('redirect_uri','https://attacker.example.test/callback');assert.equal((await h.fetch('/oauth/chest/authorize?'+expanded.params,{headers:{cookie:staff}})).status,400,'redirect exact match');
  const grant=await authorize(client,staff,['read','search','download','upload','folder','versions','share','request','picker','webhook']);let token=grant.access_token;
+ // SURFACE-012: genuine consent without budgets admits 500 sequential internal arrivals.
+ const capacityRoot=await h.api('/items',owner,{space:(await h.api('/files',owner)).personal,type:'folder',name:'Internal arrivals'});
+ const unbounded=await authorize(client,owner,['read','upload','download'],[capacityRoot.id]);
+ const savedGrant=async(id,cookie=owner)=>(await h.api('/integrations',cookie)).grants.find(g=>g.id===id).payload;
+ assert.deepEqual((await savedGrant(unbounded.grant)).budget,{requests:null,mutations:null,bytes:null},'omitted budgets have no implicit cap');
+ const arrivals=new Map();
+ for(let n=0;n<500;n++){
+  const source=Buffer.from(`synthetic-chest-${n}: original arrival`),input={parent:capacityRoot.id,name:`Arrival ${n}.txt`,base64:source.toString('base64')};
+  const item=await call(unbounded.access_token,'/items',{method:'POST',body:input,key:`arrival-once-${n}`});
+  assert.ok(!arrivals.has(item.id),'each arrival has a unique stable ID');
+  const checksum=createHash('sha256').update(source).digest('hex');assert.equal(item.sha256,checksum);arrivals.set(item.id,{item,source,checksum,input});
+ }
+ assert.equal(arrivals.size,500);const beforeRestart=await savedGrant(unbounded.grant);
+ assert.equal(beforeRestart.used.mutations,500);assert.equal(beforeRestart.used.bytes,[...arrivals.values()].reduce((sum,a)=>sum+a.source.length,0));
+ const finiteRoot=await h.api('/items',owner,{space:(await h.api('/files',owner)).personal,type:'folder',name:'Finite budget checks'});
+ const finite=await authorize(client,owner,['read','upload','download'],[finiteRoot.id],{budget_requests:'10',budget_mutations:'1',budget_bytes:'6'});
+ const finiteInput={parent:finiteRoot.id,name:'Finite control.txt',base64:b64('finite')},finiteItem=await call(finite.access_token,'/items',{method:'POST',body:finiteInput,key:'finite-control-once'});
+ const finiteBefore=await savedGrant(finite.grant);
+ await h.stop();await h.start();
+ assert.deepEqual(await savedGrant(finite.grant),finiteBefore,'saved finite budgets and usage survive restart unchanged');
+ assert.deepEqual(await savedGrant(unbounded.grant),beforeRestart,'saved unlimited budgets and usage survive restart unchanged');
+ const listed=[];let after=null;do{const page=await call(unbounded.access_token,`/items?parent=${capacityRoot.id}&limit=100`+(after?'&cursor='+after:''));listed.push(...page.items);after=page.nextCursor}while(after);
+ assert.equal(listed.length,500);assert.equal(new Set(listed.map(i=>i.id)).size,500);assert.deepEqual(new Set(listed.map(i=>i.id)),new Set(arrivals.keys()));
+ for(const item of listed){
+  const expected=arrivals.get(item.id);assert.equal(item.current,expected.item.current);assert.equal(item.sha256,expected.checksum);
+  const response=await h.fetch(`/api/chest/integrations/v1/items/${item.id}/bytes/${item.current}`,{headers:{authorization:'Bearer '+unbounded.access_token}});assert.equal(response.status,200);
+  const original=Buffer.from(await response.arrayBuffer());assert.deepEqual(original,expected.source);assert.equal(createHash('sha256').update(original).digest('hex'),expected.checksum);
+ }
+ const replayArrival=[...arrivals.values()][0],arrivalReplay=await call(unbounded.access_token,'/items',{method:'POST',body:replayArrival.input,key:'arrival-once-0'});assert.equal(arrivalReplay.id,replayArrival.item.id);assert.equal((await savedGrant(unbounded.grant)).used.mutations,500,'restart replay creates no arrival');
+ assert.ok((await savedGrant(unbounded.grant)).used.requests>1000,'no implicit request cap after uploads and original reconciliation');
+ await call(finite.access_token,'/items',{method:'POST',body:{...finiteInput,name:'Finite refused.txt'},key:'finite-refusal-once',status:429});
+ const finiteRead=await h.fetch(`/api/chest/integrations/v1/items/${finiteItem.id}/bytes/${finiteItem.current}`,{headers:{authorization:'Bearer '+finite.access_token}});assert.equal(finiteRead.status,429);assert.equal((await finiteRead.json()).error,'oauth_bytes_budget_exhausted');
+ assert.ok(!(await h.api(`/items/${finiteRoot.id}`,owner)).children.some(i=>i.name==='Finite refused.txt'));assert.equal((await savedGrant(finite.grant)).used.mutations,1);
+ const edited=await authorize(client,staff,['read'],undefined,{budget_requests:'4',budget_mutations:'2',budget_bytes:'9'},{budget_requests:'0',budget_mutations:'',budget_bytes:''});
+ assert.deepEqual((await savedGrant(edited.grant,staff)).budget,{requests:0,mutations:null,bytes:null},'granter choices override requested budgets, preserving explicit zero');await call(edited.access_token,'/items',{status:429});
+ console.log('SURFACE-012: 500 sequential arrivals, unique IDs, original hashes and consent budgets reconcile across restart');
+ // SURFACE-010: the report door requires separate consent and current delegated authority.
+ const report = await integrationReportSetup(h,owner);
+ const reportApp = await h.api('/integrations/clients',report.admin,{name:'Read-only report client',redirects:['https://client.example.test/callback'],actions:['read','admin-report']});
+ const reportConsent = async (groups=[report.group.id],cookie=report.admin) => {
+  const budget={report_group:groups[0]};
+  const pending=await consentFor(reportApp,cookie,['admin-report'],[],budget);
+  for(const group of groups.slice(1))pending.params.append('report_group',group);
+  if(groups.length>1)pending.response=await h.fetch('/oauth/chest/authorize?'+pending.params,{headers:{cookie}});
+  return pending;
+ };
+ const issueReport = async (groups=[report.group.id]) => {
+  const pending=await reportConsent(groups);assert.equal(pending.response.status,200,await pending.response.clone().text());
+  const intent=/name="intent" value="([^"]+)"/.exec(await pending.response.text())[1];
+  const absent=await form('/oauth/chest/authorize',report.admin,{intent,decision:'allow'});assert.equal(absent.status,403);assert.match(await absent.text(),/oauth_report_consent_required/);
+  const allowed=await form('/oauth/chest/authorize',report.admin,{intent,decision:'allow',adminReportConsent:'yes',report_group:report.otherGroup.id});assert.equal(allowed.status,303);
+  const response=await h.fetch('/oauth/chest/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',client_id:reportApp.client.id,redirect_uri:'https://client.example.test/callback',code:new URL(allowed.headers.get('location')).searchParams.get('code'),code_verifier:pending.verifier})});
+  assert.equal(response.status,200);return response.json();
+ };
+ const reportGrant=await issueReport(),reportToken=reportGrant.access_token;
+ const reportRaw=(path,access=reportToken)=>h.fetch('/api/chest/integrations/v1/administration/audit'+path,{headers:{authorization:'Bearer '+access}});
+ const pages = async (access=reportToken) => {
+  const rows=[],params=new URLSearchParams(report.filter);params.set('limit','100');let page;
+  do {const response=await reportRaw('?'+params,access);assert.equal(response.status,200);page=await response.json();rows.push(...page.rows);if(page.next)params.set('cursor',page.next)}while(page.next);
+  return rows;
+ };
+ const expected={rows:[]},browserParams=new URLSearchParams(report.filter);browserParams.set('group',report.group.id);browserParams.set('limit','300');let browserPage;
+ do{browserPage=await h.api('/administration/audit?'+browserParams,report.admin);expected.rows.push(...browserPage.rows);if(browserPage.next)browserParams.set('cursor',browserPage.next)}while(browserPage.next);
+ assert.equal(expected.rows.length,305);
+ assert.deepEqual(await pages(),expected.rows,'all bounded pages match the browser metadata report');
+ const exportPath='/export?'+report.filter+'&limit=2';
+ const csv=await reportRaw(exportPath);assert.equal(csv.status,200);const csvText=await csv.text();
+ const browserCsv=await h.raw('/api/chest/administration/audit/export?'+report.filter+'&group='+report.group.id,report.admin);
+ assert.equal(csvText,await browserCsv.text(),'paginated integration CSV equals the scoped browser CSV row for row');
+ const bounded=JSON.stringify(await pages());for(const hidden of [report.secret.id,report.outsideEmail,report.file.payload.name,report.secret.payload.name,'synthetic-chest-44 private original'])assert.ok(!bounded.includes(hidden),'report is content blind and excludes other selected authority');
+ const deniedGroup=await reportRaw('?'+report.filter+'&group='+report.otherGroup.id);assert.equal(deniedGroup.status,403);assert.equal((await deniedGroup.json()).error,'admin_group_scope_required');
+ assert.equal((await h.fetch('/api/chest/integrations/v1/items',{headers:{authorization:'Bearer '+reportToken}})).status,403,'report consent conveys no file action');
+ await h.api(`/items/${report.file.id}`,report.admin,undefined,403);
+ const reportFolder=await h.api('/items',report.admin,{space:(await h.api('/files',report.admin)).personal,type:'folder',name:'Report sponsor files'});
+ const ordinary=await authorize(reportApp,report.admin,['read'],[reportFolder.id]);
+ const noCapability=await reportRaw('',ordinary.access_token);assert.equal(noCapability.status,403);assert.equal((await noCapability.json()).error,'oauth_action_outside_grant');
+ const staffBrowser=await h.api('/administration/audit',staff,undefined,403),staffAgent=await reportRaw('',token);assert.equal(staffAgent.status,403);assert.equal((await staffAgent.json()).error,staffBrowser.error);
+ const staffConsent=await reportConsent([report.group.id],staff);assert.equal(staffConsent.response.status,403);assert.match(await staffConsent.response.text(),/admin_required/);
+ await h.stop();await h.start();assert.deepEqual(await pages(),expected.rows,'group selection persists across restart');
+ const firstPage=await (await reportRaw('?'+report.filter+'&limit=2')).json();assert.ok(firstPage.next);
+ const assertStopped = async (access,status,code) => {
+  for(const path of ['?'+report.filter,'?'+report.filter+'&cursor='+encodeURIComponent(firstPage.next),exportPath]){
+   const response=await reportRaw(path,access);assert.equal(response.status,status);assert.equal((await response.json()).error,code);
+  }
+ };
+ // A second HTTP connection lets revocation arrive while the first response remains open.
+ // Miniflare's dispatch connection otherwise queues a mutation behind that same response body.
+ const revokeOnAnotherConnection=(path,cookie,body)=>new Promise((resolve,reject)=>{
+  const request=httpsRequest(new URL('/api/chest'+path,h.origin),{method:'POST',rejectUnauthorized:false,headers:{cookie,origin:h.origin,'content-type':'application/json'}},response=>{
+   const chunks=[];response.on('data',chunk=>chunks.push(chunk));response.on('error',reject);response.on('end',()=>{try{assert.equal(response.statusCode,200,Buffer.concat(chunks).toString());resolve()}catch(error){reject(error)}});
+  });request.on('error',reject);request.end(JSON.stringify(body));
+ });
+ const interruptedCsv=async (access,revoke) => {
+  const response=await reportRaw(exportPath,access);assert.equal(response.status,200);const reader=response.body.getReader();
+  const first=await reader.read();assert.ok(!first.done&&new TextDecoder().decode(first.value).startsWith('At,Actor'));
+  await revoke();
+  const chunks=[first.value];
+  try {let next;while(!(next=await reader.read()).done)chunks.push(next.value)}catch { /* A transport may surface the server's abort as a read error. */ }
+  const emitted=Buffer.concat(chunks).toString(),rows=emitted.trimEnd().split('\r\n').slice(1);
+  assert.ok(rows.length>0&&rows.length<expected.rows.length,'revocation interrupts the open export before its remaining rows are emitted');
+  assert.ok(rows.every(row=>row.includes(report.file.id)),'an interrupted export contains only authorized custody');
+  reader.releaseLock();
+ };
+ // The live authority is intersected with both saved groups after one is removed.
+ const both=await issueReport([report.group.id,report.otherGroup.id]);assert.equal((await pages(both.access_token)).length,306);
+ await h.api('/administration/roles',owner,{id:report.delegation.id,groups:[report.group.id]});assert.deepEqual(await pages(both.access_token),expected.rows);
+ await interruptedCsv(reportToken,()=>revokeOnAnotherConnection('/administration/roles',owner,{id:report.delegation.id,groups:[report.otherGroup.id]}));
+ await assertStopped(reportToken,403,'admin_group_scope_required');await h.stop();await h.start();await assertStopped(reportToken,403,'admin_group_scope_required');
+ await h.api('/administration/roles',owner,{id:report.delegation.id,groups:[report.group.id]});
+ const revokedReport=await issueReport();await interruptedCsv(revokedReport.access_token,()=>revokeOnAnotherConnection(`/integrations/grants/${revokedReport.grant}/revoke`,report.admin,{}));
+ await assertStopped(revokedReport.access_token,401,'oauth_grant_revoked');await h.stop();await h.start();await assertStopped(revokedReport.access_token,401,'oauth_grant_revoked');
+ await h.api('/audit/privacy',report.member,{hidden:true});
+ assert.deepEqual(await pages(),[],'the integration report honors the browser view-history suppression');
+ await h.api('/audit/privacy',report.member,{hidden:false});
+ assert.deepEqual(await pages(),expected.rows);
+ await h.api('/administration/roles',owner,{action:'revoke',id:report.delegation.id});
+ await assertStopped(reportToken,403,'admin_required');
+ await h.api('/administration/roles',owner,{email:report.adminEmail,role:'audit-reporting',scope:'groups',groups:[report.group.id]});
+ const erasedReport=await issueReport();
+ // Current main holds identity erasure while retained agent decision custody exists, so nothing is erased and the grant stays unchanged.
+ const heldReport=await h.api('/erasure',owner,{email:report.adminEmail,confirm:report.adminEmail});assert.equal(heldReport.payload.state,'held');assert.ok(heldReport.payload.targets.some(t=>t.store==='agent decision custody'&&t.status==='held'));
+ assert.deepEqual(await pages(erasedReport.access_token),expected.rows,'a held erasure leaves the sponsor and scoped report authority unchanged');
+ // An offboarded sponsor's grant is revoked and refused with a stable error before and after restart.
+ await h.api('/people',owner,{action:'offboard',email:report.adminEmail,to:h.vars.OWNER_EMAIL});
+ await assertStopped(erasedReport.access_token,401,'oauth_grant_revoked');
+ await h.stop();await h.start();await assertStopped(erasedReport.access_token,401,'oauth_grant_revoked');
+ console.log('PROBE SURFACE-010 1: real OAuth activity pages and CSV -> 305 scoped browser rows, content blind, separate consent, live intersection, scope and OAuth revocation stop streams and persisted reads');
+ console.log('PROBE SURFACE-010 2: staff OAuth report request -> 403 '+staffBrowser.error+', matching the browser');
  // Pagination returns only stable IDs under the folder; current role/no-download still govern every door.
- const seen=[];let cursor=null;do{const result=await call(token,'/items?limit=2'+(cursor?'&cursor='+cursor:''));seen.push(...result.items.map(r=>r.id));cursor=result.nextCursor}while(cursor);assert.equal(new Set(seen).size,7);assert.ok(seen.includes(folder.id)&&!seen.includes(other.id));await call(token,`/items/${other.id}`,{status:403});
+ const seen=[];let cursor=null;do{const result=await call(token,'/items?limit=2'+(cursor?'&cursor='+cursor:''));seen.push(...result.items.map(r=>r.id));cursor=result.nextCursor}while(cursor);assert.equal(new Set(seen).size,7);assert.ok(seen.includes(folder.id)&&!seen.includes(other.id));await call(token,`/items/${other.id}`,{status:404});
  const search=await call(token,'/search?q=Searchable&type=documents&creator=me&limit=2');assert.equal(search.items.length,2);assert.ok(search.nextCursor);assert.ok(search.items.every(r=>initial.some(i=>i.id===r.id)));
  const uploadInput={parent:folder.id,name:'Idempotent.txt',base64:b64('One immutable upload')},first=await call(token,'/items',{method:'POST',body:uploadInput,key:'upload-once'});await h.stop();await h.start();const repeated=await call(token,'/items',{method:'POST',body:uploadInput,key:'upload-once'});assert.equal(repeated.id,first.id);assert.equal((await h.api(`/items/${folder.id}`,staff)).children.filter(i=>i.name==='Idempotent.txt').length,1);await call(token,'/items',{method:'POST',body:{...uploadInput,name:'Different.txt'},key:'upload-once',status:409});await call(token,'/items',{method:'POST',body:{parent:other.id,name:'Escape.txt',base64:b64('Escape')},key:'outside-folder',status:403});
- const uploadAudit=(await h.api('/audit',owner)).find(r=>r.action==='file.upload'&&r.object_id===first.id);assert.ok(uploadAudit,'upload audit exists');assert.equal(uploadAudit.actor,'staff@example.test','non-sharing audit keeps its existing person actor');
+ const uploadAudit=(await h.api('/audit',owner)).find(r=>r.action==='file.upload'&&r.object_id===first.id);assert.ok(uploadAudit,'upload audit exists');assert.equal(uploadAudit.actor,'agent:'+client.client.id,'native upload audit names its authenticated preparer');
  const versions=await call(token,`/items/${first.id}/versions?limit=1`);assert.equal(versions.items.length,1);const downloaded=await h.fetch(`/api/chest/integrations/v1/items/${first.id}/bytes/${versions.items[0].id}`,{headers:{authorization:'Bearer '+token}});assert.equal(await downloaded.text(),'One immutable upload');
+ // SURFACE-005: OAuth version restore preserves originals, identity and a pre-existing current-version link.
+ const staffId=(await h.sql('SELECT id FROM oa_operators WHERE email=?','staff@example.test')).results[0].id;assert.equal(JSON.parse(uploadAudit.detail).sponsor,staffId,'native agent audit binds the authenticated sponsor');const sponsor='staff@example.test',recoverySpace=await h.api('/spaces',owner,{name:'Agent recovery'});
+ const recoveryMembers=role=>[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:sponsor,role}];
+ await h.api(`/spaces/${recoverySpace.id}/members`,owner,{members:recoveryMembers('content_manager')});
+ const recoveryRoot=await h.api('/items',staff,{space:recoverySpace.id,type:'folder',name:'Recoverable originals'});
+ const originalA=Buffer.from('synthetic-chest-1: approved original A\n'),originalB=Buffer.from('synthetic-chest-2: later original B with different bytes\n');
+ const sha=bytes=>createHash('sha256').update(bytes).digest('hex');assert.notEqual(sha(originalA),sha(originalB));
+ const recoverable=await h.api('/items',staff,{parent:recoveryRoot.id,name:'Recovery.txt',base64:b64(originalA),checksum:sha(originalA),size:originalA.length}),a=recoverable.payload.current;
+ const replacement=await h.api(`/items/${recoverable.id}/versions`,staff,{base64:b64(originalB),checksum:sha(originalB),size:originalB.length}),b=replacement.payload.current;
+ const existingLink=await h.api(`/items/${recoverable.id}/public-links`,staff,{versionMode:'current'}),linkPath=new URL(existingLink.url).pathname;
+ const downloadHash=async(path,headers={})=>{const response=await h.fetch(path,{headers});assert.equal(response.status,200);return sha(Buffer.from(await response.arrayBuffer()))};
+ assert.equal(await downloadHash(`${linkPath}/f/${recoverable.id}`),sha(originalB),'existing current-version link serves B before restore');
+ const recoveryGrant=await authorize(client,staff,['read','download','versions'],[recoveryRoot.id]),recoveryToken=recoveryGrant.access_token;
+ const restorePath=`/items/${recoverable.id}/versions/${a}/restore`,restore=()=>call(recoveryToken,restorePath,{method:'POST',body:{},key:'restore-original-once'});
+ const restored=await restore();assert.equal(restored.id,recoverable.id,'restore keeps the stable item ID');assert.notEqual(restored.current,a);assert.notEqual(restored.current,b);assert.equal(restored.sha256,sha(originalA));
+ const reconcileRestore=async()=>{
+  const detail=await h.api(`/items/${recoverable.id}`,staff),listed=await call(recoveryToken,`/items/${recoverable.id}/versions`),links=(await h.api(`/items/${recoverable.id}`,owner)).publicLinks;
+  assert.equal(detail.id,recoverable.id);assert.equal(detail.item.current,restored.current);assert.equal(detail.versions.length,3,'exactly one restore version is added');
+  assert.deepEqual(detail.versions.map(v=>v.id).sort(),[a,b,restored.current].sort());assert.deepEqual(listed.items.map(v=>v.id).sort(),[a,b,restored.current].sort());
+  const newVersion=detail.versions.find(v=>v.id===restored.current);assert.equal(newVersion.arrival,'restore');assert.equal(newVersion.restoredFrom,a);assert.equal(newVersion.actor,sponsor);
+  for(const [version,bytes] of [[a,originalA],[b,originalB],[restored.current,originalA]])assert.equal(await downloadHash(`/api/chest/integrations/v1/items/${recoverable.id}/bytes/${version}`,{authorization:'Bearer '+recoveryToken}),sha(bytes),'every retained original downloads with its exact hash');
+  assert.equal(links.find(l=>l.id===existingLink.link.id).versionMode,'current');assert.equal(await downloadHash(`${linkPath}/f/${recoverable.id}`),sha(originalA),'the original link follows restored A');
+  const audit=await h.api('/audit',owner),restores=audit.filter(r=>r.action==='version.restore'&&r.object_id===recoverable.id);
+  assert.equal(restores.length,1,'retry publishes one restore audit');assert.equal(restores[0].actor,'agent:'+client.client.id);assert.deepEqual(JSON.parse(restores[0].detail),{source:a,version:restored.current,outcome:'succeeded',authority:'integration:member',initiation:'agent-initiated',agent:client.client.id,sponsor:staffId,grant:recoveryGrant.grant,label:'Scoped client and MCP agent for Sam',approvers:[]});
+  assert.equal(audit.filter(r=>r.action==='integration.mutation'&&r.object_id===recoveryGrant.grant&&JSON.parse(r.detail).path===restorePath).length,1,'retry publishes one integration receipt audit');
+  return {current:detail.item.current,versions:detail.versions,links:links.map(({downloads,summary,...link})=>link),restores};
+ };
+ await reconcileRestore();assert.deepEqual(await restore(),restored);await h.stop();await h.start();assert.deepEqual(await restore(),restored,'same key returns the saved restore after Worker restart');
+ const preserved=await reconcileRestore();
+ await h.api(`/spaces/${recoverySpace.id}/members`,owner,{members:recoveryMembers('viewer')});
+ for(const key of ['restore-original-once','restore-reader-refused'])await call(recoveryToken,restorePath,{method:'POST',body:{},key,status:403});
+ await h.api(`/spaces/${recoverySpace.id}/members`,owner,{members:recoveryMembers('content_manager')});
+ assert.deepEqual(await reconcileRestore(),preserved,'a current viewer cannot restore or replay a previous mutation');
+ await h.api(`/integrations/grants/${recoveryGrant.grant}/revoke`,staff,{});
+ for(const key of ['restore-original-once','restore-revoked-refused'])await call(recoveryToken,restorePath,{method:'POST',body:{},key,status:401});
+ await h.stop();await h.start();await call(recoveryToken,restorePath,{method:'POST',body:{},key:'restore-original-once',status:401});
+ const afterRefusals=await h.api(`/items/${recoverable.id}`,staff);assert.equal(afterRefusals.item.current,preserved.current);assert.deepEqual(afterRefusals.versions,preserved.versions);
+ const finalAudit=await h.api('/audit',owner);assert.deepEqual(finalAudit.filter(r=>r.action==='version.restore'&&r.object_id===recoverable.id),preserved.restores);
+ assert.equal(finalAudit.filter(r=>r.action==='integration.mutation'&&r.object_id===recoveryGrant.grant).length,1,'refused attempts add no successful mutation receipt');
+ assert.equal(await downloadHash(`${linkPath}/f/${recoverable.id}`),sha(originalA),'grant revocation preserves the independent existing link');
+ console.log('PROBE SURFACE-005 point 1: OAuth version restore -> exact A hash, retained A and B, stable item and original link; restart retry -> one restore and audit; viewer and revoked grant -> refusal with unchanged history');
+ // SURFACE-003: retained originals, finite byte budgets and scanner quarantine use the ordinary byte door.
+ const originalBytes=Buffer.from(Array.from({length:64},(_,i)=>i)),replacementBytes=Buffer.from(Array.from({length:128},(_,i)=>255-i));
+ const byteFile=await h.api('/items',staff,{parent:folder.id,name:'Budget original.bin',base64:b64(originalBytes)}),retainedVersion=byteFile.payload.current;
+ const byteReplacement=await h.api(`/items/${byteFile.id}/versions`,staff,{base64:b64(replacementBytes)});
+ const bytePath=(item,version)=>`/api/chest/integrations/v1/items/${item}/bytes/${version}`;
+ const byteRead=(credential,item,version,range)=>h.fetch(bytePath(item,version),{headers:{authorization:'Bearer '+credential,...(range?{range}:{})}});
+ for(const [version,expected] of [[retainedVersion,originalBytes],[byteReplacement.payload.current,replacementBytes]]){
+  const full=await byteRead(token,byteFile.id,version);assert.equal(full.status,200);assert.equal(sha(Buffer.from(await full.arrayBuffer())),sha(expected),'full read preserves the exact retained original');
+  const range=await byteRead(token,byteFile.id,version,'bytes=8-23');assert.equal(range.status,206);assert.equal(range.headers.get('content-range'),`bytes 8-23/${expected.length}`);assert.equal(sha(Buffer.from(await range.arrayBuffer())),sha(expected.subarray(8,24)),'range read preserves the exact retained interval');
+ }
+ // Main charges the selected original's full size for a full or range read; refusal is HTTP 429 with the error document only.
+ const finiteBytes=await authorize(client,staff,['download'],[folder.id],{budget_bytes:'100'});
+ assert.equal(sha(Buffer.from(await(await byteRead(finiteBytes.access_token,byteFile.id,retainedVersion)).arrayBuffer())),sha(originalBytes));
+ const smallFile=await h.api('/items',staff,{parent:folder.id,name:'Budget small.bin',base64:b64(originalBytes.subarray(0,30))});
+ for(const [credential,range] of [[finiteBytes.access_token,'bytes=0-0'],[(await authorize(client,staff,['download'],[folder.id],{budget_bytes:'0'})).access_token,undefined]]){
+  const refused=await byteRead(credential,byteFile.id,retainedVersion,range);assert.equal(refused.status,429);assert.match(refused.headers.get('content-type'),/application\/json/);assert.equal((await refused.json()).error,'oauth_bytes_budget_exhausted','budget refusal emits only the error document, never original bytes');
+ }
+ const afterRefusal=await byteRead(finiteBytes.access_token,smallFile.id,smallFile.payload.current);assert.equal(afterRefusal.status,200);assert.equal(sha(Buffer.from(await afterRefusal.arrayBuffer())),sha(originalBytes.subarray(0,30)),'refusals leave the byte allowance unchanged');
+ await h.api(`/items/${byteFile.id}/shares`,staff,{principal:h.vars.OWNER_EMAIL,role:'viewer'});
+ await h.api('/content-security/policy',owner,{enabled:true,sensitiveGroups:[],confirm:true});await h.api('/content-security/scan',owner,{item:byteFile.id},423);
+ for(const version of [retainedVersion,byteReplacement.payload.current])for(const range of [undefined,'bytes=8-23']){
+  const browser=await h.fetch(`/api/chest/items/${byteFile.id}/bytes/${version}?download=true`,{headers:{cookie:staff,...(range?{range}:{})}}),agent=await byteRead(token,byteFile.id,version,range);
+  assert.equal(agent.status,browser.status);assert.equal(agent.status,403);assert.match(agent.headers.get('content-type'),/application\/json/);assert.equal((await agent.json()).error,'resource_unavailable','quarantined originals refuse with the browser status, the agent door code and no original bytes');assert.equal((await browser.json()).error,'access_required');
+ }
+ await h.stop();await h.start();const stillHeld=await byteRead(token,byteFile.id,retainedVersion);assert.equal(stillHeld.status,403);assert.equal((await stillHeld.json()).error,'resource_unavailable','quarantine survives Worker restart');
+ await h.api('/content-security/release',owner,{checksum:sha(originalBytes),confirm:true,reason:'Reviewed the synthetic scanner false positive'});await h.api('/content-security/policy',owner,{enabled:false,sensitiveGroups:[],confirm:true});
+ assert.equal(sha(Buffer.from(await(await byteRead(token,byteFile.id,retainedVersion)).arrayBuffer())),sha(originalBytes),'explicit release retains the exact original');
+ // Revocation commits through the real membership API; fresh byte reads are refused, including after restart.
+ const streamSpace=await h.api('/spaces',owner,{name:'Live original access'}),members=[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:'staff@example.test',role:'viewer'}];
+ await h.api(`/spaces/${streamSpace.id}/members`,owner,{members});const streamRoot=await h.api('/items',owner,{space:streamSpace.id,type:'folder',name:'Streaming originals'});
+ // Main returns an original through the agent door only up to its 512 KiB capacity, after a final access check, so an
+ // open response cannot outlive revocation; the tail-withholding journey is not reachable and revocation is proven by fresh refusals.
+ const streamBytes=Buffer.alloc(384*1024);for(let i=0;i<streamBytes.length;i+=64*1024)streamBytes.fill(i/(64*1024),i,i+64*1024);
+ const streamItem=await h.api('/items',owner,{parent:streamRoot.id,name:'Streaming original.bin',base64:b64(streamBytes)}),streamFile=streamItem.id,streamVersion=streamItem.payload.current;
+ const streamGrant=await authorize(client,staff,['read','download'],[streamRoot.id]);
+ const allowedStream=await byteRead(streamGrant.access_token,streamFile,streamVersion);assert.equal(allowedStream.status,200);assert.equal(sha(Buffer.from(await allowedStream.arrayBuffer())),sha(streamBytes),'an authorized original completes with its retained hash');
+ const revokedMembers=await h.api(`/spaces/${streamSpace.id}/members`,owner,{members:members.slice(0,1)});assert.equal(revokedMembers.payload.members.length,1);
+ const refusedFresh=await byteRead(streamGrant.access_token,streamFile,streamVersion);assert.equal(refusedFresh.status,403);assert.equal((await refusedFresh.json()).error,'resource_unavailable');
+ await h.stop();await h.start();const refusedRestart=await byteRead(streamGrant.access_token,streamFile,streamVersion,'bytes=0-31');assert.equal(refusedRestart.status,403);assert.equal((await refusedRestart.json()).error,'resource_unavailable','restart cannot revive revoked byte access');
+ const retained=await h.api(`/items/${streamFile}`,owner);assert.equal(retained.versions.find(v=>v.id===streamVersion).checksum,sha(streamBytes),'revocation preserves the retained original');
+ console.log('SURFACE-003 original byte journey passed: retained full and range hashes, quarantine parity and restart, finite and zero byte budgets, fresh denial after membership revocation and restart');
  // SECURITY-002: a paused OAuth source stops metadata and mutations too; browser authority remains independent.
  const securityGroup=await h.api('/groups',owner,{name:'Scoped download protection',members:['staff@example.test']});await h.api('/content-security/rule',owner,{scope:securityGroup.id,files:1,bytes:5*1024**3,deletions:200,pause:true});await h.sql('UPDATE chest_activity_events SET at=at-600001');
  const originalPath=`/api/chest/integrations/v1/items/${first.id}/bytes/${versions.items[0].id}`;assert.equal((await h.fetch(originalPath,{headers:{authorization:'Bearer '+token}})).status,200);assert.equal((await h.fetch(originalPath,{headers:{authorization:'Bearer '+token}})).status,423);await call(token,'/items',{status:423});assert.equal((await h.raw('/api/chest/files',staff)).status,200);
  await h.sql('UPDATE chest_activity_events SET at=at-600001');await h.api('/content-security/resume',owner,{subject:'account:staff@example.test',reason:'Reviewed test download burst'});await h.api('/content-security/resume',owner,{subject:'token:'+createHash('sha256').update(token).digest('hex'),reason:'Reviewed the exact scoped client credential'});await h.api('/content-security/rule',owner,{scope:securityGroup.id,files:500,bytes:5*1024**3,deletions:200,pause:false});await call(token,'/items');
  const pick=await call(token,`/items/${first.id}/pick`,{method:'POST',body:{}});assert.equal(pick.id,first.id);assert.equal(pick.url,`${h.origin}/app/items/${first.id}`);assert.ok(!pick.url.includes('chest_oauth_'));
- const rpc=async body=>{const r=await h.fetch('/mcp/chest',{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json'},body:JSON.stringify(body)});assert.equal(r.status,200);return r.json()};assert.equal((await rpc({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-03-26',capabilities:{},clientInfo:{name:'Contract agent',version:'1'}}})).result.serverInfo.name,'Chest');assert.ok((await rpc({jsonrpc:'2.0',id:2,method:'tools/list'})).result.tools.some(t=>t.name==='chest_upload'));
- const agent=await rpc({jsonrpc:'2.0',id:3,method:'tools/call',params:{name:'chest_create_folder',arguments:{parent:folder.id,name:'From MCP',key:'agent-folder-once'}}});assert.equal(agent.result.isError,false);const agentAgain=await rpc({jsonrpc:'2.0',id:4,method:'tools/call',params:{name:'chest_create_folder',arguments:{parent:folder.id,name:'From MCP',key:'agent-folder-once'}}});assert.equal(agent.result.structuredContent.id,agentAgain.result.structuredContent.id);assert.equal((await rpc({jsonrpc:'2.0',id:5,method:'tools/call',params:{name:'chest_get',arguments:{id:other.id}}})).result.isError,true);
+ const rpc=async body=>{const r=await h.fetch('/mcp/chest',{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','MCP-Protocol-Version':'2025-11-25',accept:'application/json, text/event-stream'},body:JSON.stringify(body)});assert.equal(r.status,200);return r.json()};assert.equal((await rpc({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-11-25',capabilities:{},clientInfo:{name:'Contract agent',version:'1'}}})).result.serverInfo.name,'Chest');assert.ok((await rpc({jsonrpc:'2.0',id:2,method:'tools/list'})).result.tools.some(t=>t.name==='chest.files.upload'));
+ const agent=await rpc({jsonrpc:'2.0',id:3,method:'tools/call',params:{name:'chest.folders.create',arguments:{parent:folder.id,name:'From MCP',idempotency_key:'agent-folder-once'}}});assert.equal(agent.result.isError,false);const agentAgain=await rpc({jsonrpc:'2.0',id:4,method:'tools/call',params:{name:'chest.folders.create',arguments:{parent:folder.id,name:'From MCP',idempotency_key:'agent-folder-once'}}});assert.equal(agent.result.structuredContent.id,agentAgain.result.structuredContent.id);assert.equal((await rpc({jsonrpc:'2.0',id:5,method:'tools/call',params:{name:'chest.items.get',arguments:{id:other.id}}})).result.isError,true);
  // External agent actions preserve autonomy and record the authenticated initiator, never human consent.
  const sharingRules={scope:'organisation',allowExternal:true,allowPublic:true,allowOrganisation:true,allowDiscovery:true,defaultAudience:'restricted',defaultRole:'viewer',warnExternal:true,organizationDomains:['example.test']};
  await h.api('/link-policy',owner,sharingRules);
@@ -42,15 +261,15 @@ try{
   assert.equal(row.actor,'agent:'+client.client.id,'audit actor is the agent');
   assert.equal(detail.initiation,'agent-initiated','audit records agent initiation');
   assert.equal(detail.agent,client.client.id,'audit names authenticated agent');
-  assert.equal(detail.sponsor,'staff@example.test','audit names authenticated sponsor');
+  assert.equal(detail.sponsor,staffId,'audit names the stable authenticated sponsor ID');
   assert.equal(detail.grant,grant.grant,'audit names authenticated grant');
-  if(outside){assert.equal(detail.riskClass,'external-share','audit records external risk class');assert.equal(detail.policyDecision,'allow','audit records policy decision');assert.equal(detail.policy,'current-behavior','audit identifies compatibility policy');assert.equal(detail.humanConfirmed,false,'agent flag is never human confirmation')}
+  if(outside){assert.equal(detail.riskClass,'external-share','audit records external risk class');assert.equal(detail.policyDecision,'allow','audit records policy decision');assert.equal(detail.policy,'shared-agent-door','audit identifies the shared policy admission');assert.equal(detail.humanConfirmed,false,'agent flag is never human confirmation')}
   else {assert.equal(detail.riskClass,undefined,'internal share has no external risk class');assert.equal(detail.humanConfirmed,undefined,'internal share needs no human confirmation')}
   assert.equal(detail.confirmExternal,undefined,'raw agent flag is not stored as confirmation');
  };
  await call(token,`/items/${first.id}/shares`,{method:'POST',body:{principal:'partner@outside.test',role:'viewer',confirmExternal:true,agent:'forged',sponsor:'forged@example.test'},key:'external-agent-confirmed'});
  assertAgentAudit((await agentShares()).find(r=>JSON.parse(r.detail).principal==='partner@outside.test'));
- const mcpShare=await rpc({jsonrpc:'2.0',id:6,method:['tools','call'].join('/'),params:{name:'chest_share',arguments:{id:first.id,principal:'second@outside.test',role:'commenter',confirmExternal:true,key:'external-mcp-confirmed'}}});assert.equal(mcpShare.result.isError,false,'MCP external share proceeds');
+ const mcpShare=await rpc({jsonrpc:'2.0',id:6,method:['tools','call'].join('/'),params:{name:'chest.share',arguments:{id:first.id,principal:'second@outside.test',role:'commenter',confirmExternal:true,idempotency_key:'external-mcp-confirmed'}}});assert.equal(mcpShare.result.isError,false,'MCP external share proceeds');
  assertAgentAudit((await agentShares()).find(r=>JSON.parse(r.detail).principal==='second@outside.test'));
  await call(token,`/items/${first.id}/shares`,{method:'POST',body:{principal:'partner@outside.test',role:'commenter'},key:'external-agent-no-flag'});
  const rows=await agentShares();assert.equal(rows.filter(r=>JSON.parse(r.detail).principal==='partner@outside.test').length,2,'agent sharing needs no confirmation flag');for(const row of rows)assertAgentAudit(row);
@@ -61,16 +280,136 @@ try{
  const human=(await agentShares()).find(r=>r.actor==='staff@example.test');assert.ok(human,'human share keeps person actor');assert.equal(JSON.parse(human.detail).humanConfirmed,true,'person may confirm external sharing');assert.equal(JSON.parse(human.detail).initiation,undefined,'human share is not agent initiated');
  await h.api('/link-policy',owner,{...sharingRules,allowExternal:false});
  await call(token,`/items/${first.id}/shares`,{method:'POST',body:{principal:'partner@outside.test',role:'viewer',confirmExternal:true},key:'external-agent-policy-refused',status:403});
- const deniedMcp=await rpc({jsonrpc:'2.0',id:7,method:['tools','call'].join('/'),params:{name:'chest_share',arguments:{id:first.id,principal:'partner@outside.test',role:'viewer',confirmExternal:true,key:'external-mcp-policy-refused'}}});assert.equal(deniedMcp.result.isError,true,'MCP keeps existing organization refusal');
+ const deniedMcp=await rpc({jsonrpc:'2.0',id:7,method:['tools','call'].join('/'),params:{name:'chest.share',arguments:{id:first.id,principal:'partner@outside.test',role:'viewer',confirmExternal:true,idempotency_key:'external-mcp-policy-refused'}}});assert.equal(deniedMcp.result.isError,true,'MCP keeps existing organization refusal');
  assert.equal((await agentShares()).length,4,'policy refusal creates no grant audit');
  // Internal shares remain available even when external sharing is disabled and warnings are on.
  await call(token,`/items/${first.id}/shares`,{method:'POST',body:{principal:h.vars.OWNER_EMAIL,role:'viewer'},key:'share-person-once'});assertAgentAudit((await agentShares()).find(r=>JSON.parse(r.detail).principal===h.vars.OWNER_EMAIL),false);
  const internalLink=await call(token,`/items/${first.id}/links`,{method:'POST',body:{audience:'restricted'},key:'internal-agent-link'});assertAgentAudit((await h.api('/audit',owner)).find(r=>r.action==='link.create'&&JSON.parse(r.detail).link===internalLink.link.id),false);
+ // SURFACE-006: equivalent legacy share calls ignore every confirmation flag value.
+ await h.api('/link-policy',owner,sharingRules);
+ const receiptAudits=async()=>await h.api('/audit?'+new URLSearchParams({action:'integration.mutation',object:grant.grant}),owner);
+ const shareReplays=[];let compatibility;
+ for(const door of ['api','mcp'])for(const [flag,value] of [['omitted',undefined],['false',false],['true',true]]){
+  const input={principal:Object.keys(partners)[0],role:'commenter',...(value===undefined?{}:{confirmExternal:value})},key=`synthetic-chest-share-${door}-${flag}`;
+  const beforeShares=new Set((await agentShares()).map(row=>row.id)),beforeReceipts=new Set((await receiptAudits()).map(row=>row.id));
+  const invoke=async()=>{
+   if(door==='api')return call(token,`/items/${first.id}/shares`,{method:'POST',body:{...input,agent:'synthetic-chest-forged-agent',sponsor:'synthetic-chest-forged-sponsor',grant:'synthetic-chest-forged-grant'},key});
+   const reply=await rpc({jsonrpc:'2.0',id:key,method:['tools','call'].join('/'),params:{name:'chest.share',arguments:{id:first.id,...input,idempotency_key:key}}});
+   assert.equal(reply.result.isError,false,`${door} ${flag} sharing succeeds without human confirmation`);return reply.result.structuredContent;
+  };
+  const result=await invoke();assert.equal(result.id,first.id,'sharing preserves the target item');
+  const added=(await agentShares()).filter(row=>!beforeShares.has(row.id));assert.equal(added.length,1,`${door} ${flag} publishes one share`);assertAgentAudit(added[0]);
+  const shareDetail=JSON.parse(added[0].detail);assert.equal(shareDetail.principal,input.principal,'audit names the actual recipient');assert.equal(shareDetail.role,input.role,'audit names the granted role');assert.equal(shareDetail.outcome,'succeeded','audit records the completed share');
+  const detail=JSON.parse(added[0].detail),decision=Object.fromEntries(['riskClass','policyDecision','policy','humanConfirmed'].map(field=>[field,detail[field]]));
+  if(compatibility)assert.deepEqual(decision,compatibility,'both doors and all flags keep the same compatibility class and decision');else compatibility=decision;
+  const actualGrant=(await h.api(`/items/${first.id}`,staff)).grants.find(row=>row.principal===input.principal);assert.equal(actualGrant.role,input.role);assert.equal(actualGrant.by,sponsor,'the authenticated sponsor email grants access');assert.equal(detail.sponsor,staffId,'the audit binds that sponsor’s stable native ID');
+  assert.equal((await h.api(`/items/${first.id}`,partners[input.principal])).role,input.role,'the recipient can use the granted role');
+  const addedReceipts=(await receiptAudits()).filter(row=>!beforeReceipts.has(row.id));assert.equal(addedReceipts.length,1,'one successful mutation receipt is published');assert.equal(JSON.parse(addedReceipts[0].detail).path,`/items/${first.id}/shares`);
+  assert.deepEqual(await invoke(),result,'same-key retry returns the saved result');assert.equal((await agentShares()).filter(row=>!beforeShares.has(row.id)).length,1,'retry adds no share');assert.equal((await receiptAudits()).filter(row=>!beforeReceipts.has(row.id)).length,1,'retry adds no receipt');
+  shareReplays.push({invoke,result});
+ }
+ console.log('PROBE SURFACE-006 2: OAuth integration API and legacy MCP share with omitted, false and true confirmation -> identical compatibility class and decision, authenticated attribution, no human confirmation and once-only grants');
  await h.api('/link-policy',owner,{...sharingRules,warnExternal:false});
+ // POLICY-001: a genuinely consented share grant cannot bypass a space's non-member policy.
+ const sponsorEmail=['staff','example.test'].join('@'),memberEmail=['synthetic-chest-member','example.test'].join('@'),nonMemberEmail=['synthetic-chest-nonmember','example.test'].join('@');
+ const recipients={};for(const [email,name] of [[memberEmail,'Member'],[nonMemberEmail,'Non-member']]){await h.api('/people',owner,{action:'invite',email,name});recipients[email]=await h.signIn(email,true)}
+ const memberSpace=await h.api('/spaces',owner,{name:'Member-only OAuth sharing'});
+ await h.api(`/spaces/${memberSpace.id}/members`,owner,{members:[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:sponsorEmail,role:'content_manager'},{principal:memberEmail,role:'viewer'}]});
+ const memberFolder=await h.api('/items',staff,{space:memberSpace.id,type:'folder',name:'Share root'}),memberFile=await h.api('/items',staff,{parent:memberFolder.id,name:'synthetic-chest-policy.txt',base64:b64('synthetic-chest-policy-first')});
+ await h.api(`/items/${memberFile.id}/versions`,staff,{filename:'synthetic-chest-policy.txt',base64:b64('synthetic-chest-policy-second')});
+ await h.api('/link-policy',owner,{...sharingRules,scope:`space:${memberSpace.id}`,organizationDomains:undefined,allowNonMembers:false,allowEditors:true});
+ const memberGrant=await authorize(client,staff,['read','download','share'],[memberFolder.id]),memberToken=memberGrant.access_token;
+ const memberBefore=await h.api(`/items/${memberFile.id}`,staff);assert.equal(memberBefore.can.share,true,'the sponsor is a member authorized to share');
+ const memberAudits=async()=>(await h.api('/audit',owner)).filter(row=>row.action==='share.grant'&&row.object_id===memberFile.id);
+ const mutationAudits=async()=>(await h.api('/audit',owner)).filter(row=>row.action==='integration.mutation'&&row.object_id===memberGrant.grant);
+ const mailCount=email=>h.mails.filter(mail=>[mail.to].flat().includes(email)).length,nonMemberMailBefore=mailCount(nonMemberEmail);
+ for(const attempt of ['first','retry','restart']){
+  if(attempt==='restart'){await h.stop();await h.start()}
+  const denied=await h.fetch(`/api/chest/integrations/v1/items/${memberFile.id}/shares`,{method:'POST',headers:{authorization:'Bearer '+memberToken,'content-type':'application/json','idempotency-key':'synthetic-chest-nonmember-share'},body:JSON.stringify({principal:nonMemberEmail,role:'viewer'})});
+  assert.equal(denied.status,403);assert.equal((await denied.json()).error,'sharing_policy_non_members_disabled','the policy itself refuses the consented action');
+  const after=await h.api(`/items/${memberFile.id}`,staff);assert.deepEqual({item:after.item,versions:after.versions,grants:after.grants},{item:memberBefore.item,versions:memberBefore.versions,grants:memberBefore.grants});
+  assert.deepEqual((await call(memberToken,`/items/${memberFile.id}/shares`)).items,[],'no recipient grant is created');assert.deepEqual(await memberAudits(),[],'no successful share audit');assert.deepEqual(await mutationAudits(),[],'no successful integration receipt audit');assert.equal(mailCount(nonMemberEmail),nonMemberMailBefore,'no recipient mail');
+  await h.api(`/items/${memberFile.id}`,recipients[nonMemberEmail],undefined,403);
+  for(const version of memberBefore.versions){const path=`/items/${memberFile.id}/bytes/${version.id}`,download=await h.fetch('/api/chest/integrations/v1'+path,{headers:{authorization:'Bearer '+memberToken}});assert.equal(download.status,200);assert.equal(createHash('sha256').update(Buffer.from(await download.arrayBuffer())).digest('hex'),version.checksum);assert.equal((await h.fetch('/api/chest'+path,{headers:{cookie:recipients[nonMemberEmail]}})).status,403,'the non-member still cannot download any original')}
+ }
+ const memberMailBefore=mailCount(memberEmail),memberShare={method:'POST',body:{principal:memberEmail,role:'viewer'},key:'synthetic-chest-member-share'};
+ await call(memberToken,`/items/${memberFile.id}/shares`,memberShare);await h.stop();await h.start();await call(memberToken,`/items/${memberFile.id}/shares`,memberShare);
+ const permitted=await memberAudits();assert.equal(permitted.length,1,'the member control commits once across restart');assert.equal(permitted[0].actor,'agent:'+client.client.id);const memberDetail=JSON.parse(permitted[0].detail);assert.equal(memberDetail.sponsor,staffId);assert.equal(memberDetail.grant,memberGrant.grant);assert.equal(memberDetail.principal,memberEmail);assert.equal(memberDetail.role,'viewer');assert.equal((await mutationAudits()).length,1);assert.equal(mailCount(memberEmail),memberMailBefore+1);
+ const allowedMember=await h.api(`/items/${memberFile.id}`,recipients[memberEmail]);assert.equal(allowedMember.role,'viewer');assert.deepEqual(allowedMember.item,{...memberBefore.item,preparedBy:{initiation:'agent-initiated',agent:client.client.id,sponsor:staffId,grant:memberGrant.grant,label:'Scoped client and MCP agent for Sam',approvers:[]}});assert.deepEqual(allowedMember.versions,memberBefore.versions);for(const version of allowedMember.versions){const response=await h.fetch(`/api/chest/items/${memberFile.id}/bytes/${version.id}`,{headers:{cookie:recipients[memberEmail]}});assert.equal(response.status,200);assert.equal(createHash('sha256').update(Buffer.from(await response.arrayBuffer())).digest('hex'),version.checksum)}
+ console.log('PROBE POLICY-001 3 CONNECT-007: consented member POST shares to internal non-member -> 403 sharing_policy_non_members_disabled; same-key retry and Worker restart create no grant, successful audit, mutation receipt or mail and preserve all originals; member-recipient control succeeds once');
  // Public sharing and request doors preserve ordinary policy and idempotency.
  await call(token,`/items/${first.id}/shares`,{method:'POST',body:{principal:h.vars.OWNER_EMAIL,role:'viewer'},key:'share-person-once'});assert.equal((await call(token,`/items/${first.id}/shares?limit=1`)).items.length,1);
+ // SURFACE-008: both existing agent doors create one upload-only link without sending mail.
+ for(const door of ['api','mcp']){
+  const before=(await call(token,`/items/${folder.id}/requests`)).items,mailBefore=h.mails.length;
+  const input={title:`synthetic-chest-${door==='api'?1:2} request`,message:'Send the requested originals here.'},key=`request-${door}-once`;
+  const create=async()=>{
+   if(door==='api')return call(token,`/items/${folder.id}/requests`,{method:'POST',body:input,key});
+   const result=(await rpc({jsonrpc:'2.0',id:8,method:['tools','call'].join('/'),params:{name:'chest.requests.create',arguments:{id:folder.id,...input,idempotency_key:key}}})).result;
+   assert.equal(result.isError,false,'native request tool completes');return result.structuredContent;
+  };
+  const request=await create();assert.equal(request.request.folder,folder.id);assert.equal(request.request.createdBy,sponsor,'request retains its authenticated sponsor as creator');assert.equal(request.preparedBy.agent.id,client.client.id,'request separately records its authenticated agent preparer');assert.equal(request.preparedBy.for.id,staffId,'agent preparer is bound to the authenticated sponsor');assert.equal(request.request.open,true);assert.equal(new URL(request.url).origin,h.origin);assert.ok(new URL(request.url).pathname.startsWith('/r/'));
+  assert.equal(h.mails.length,mailBefore,`${door} creation sends no provider-edge mail`);
+  assert.deepEqual(await create(),request,'same key retains the complete request and link');
+  await h.stop();await h.start();assert.deepEqual(await create(),request,'restart retry retains the complete request and link');
+  const listed=(await call(token,`/items/${folder.id}/requests`)).items;assert.equal(listed.length,before.length+1,'retries publish only one request');assert.equal(listed.filter(r=>r.id===request.request.id).length,1);assert.equal((await call(token,`/requests/${request.request.id}`)).folder,folder.id);
+  const audits=(await h.api('/audit',owner)).filter(r=>r.action==='file-request.create'&&r.object_id===folder.id&&JSON.parse(r.detail).request===request.request.id);assert.equal(audits.length,1,'creation audit is once-only across restart');assertAgentAudit(audits[0]);
+  assert.equal((await h.api(`/items/${folder.id}`,staff)).fileRequests.length,before.length+1,'sponsor sees only one new request');
+  assert.equal(h.mails.length,mailBefore,`${door} retries and reads send no provider-edge mail`);
+ }
  const request=await call(token,`/items/${folder.id}/requests`,{method:'POST',body:{title:'Vendor documents',maxMegabytes:10},key:'request-once'}),sameRequest=await call(token,`/items/${folder.id}/requests`,{method:'POST',body:{title:'Vendor documents',maxMegabytes:10},key:'request-once'});assert.equal(request.request.id,sameRequest.request.id);assert.equal((await call(token,`/requests/${request.request.id}`)).folder,folder.id);assertAgentAudit((await h.api('/audit',owner)).find(r=>r.action==='file-request.create'&&JSON.parse(r.detail).request===request.request.id));
- await h.api('/link-policy',owner,{scope:'organisation',allowExternal:true,allowPublic:false,allowOrganisation:true,allowDiscovery:true,defaultAudience:'restricted',defaultRole:'viewer'});await call(token,`/items/${first.id}/links`,{method:'POST',body:{audience:'public'},key:'policy-denied-link',status:403});await h.api('/link-policy',owner,{scope:'organisation',allowExternal:true,allowPublic:true,allowOrganisation:true,allowDiscovery:true,defaultAudience:'restricted',defaultRole:'viewer'});
+ // Organization public-link refusals match the sponsor's API and browser form, and publish nothing.
+ await h.api('/link-policy',owner,{scope:'organisation',allowExternal:true,allowPublic:false,allowOrganisation:true,allowDiscovery:true,defaultAudience:'restricted',defaultRole:'viewer'});
+ const sharingSnapshot=async()=>{
+  const item=await h.api(`/items/${first.id}`,staff),audit=await h.api('/audit?'+new URLSearchParams({object:first.id}),owner),sort=rows=>rows.sort((a,b)=>a.id.localeCompare(b.id));
+  const storedReceipts=(await h.sql("SELECT id,payload FROM chest_records WHERE kind='agent-effect' AND json_extract(payload,'$.client')=? ORDER BY id",'token:'+createHash('sha256').update(token).digest('hex'))).results;
+  return {grants:item.grants,links:sort(item.links),publicLinks:sort(item.publicLinks),mutations:sort(audit.filter(row=>['share.grant','link.create','link.change','link.remove','link.revoke'].includes(row.action))),receipts:sort(await receiptAudits()),storedReceipts};
+ };
+ const beforeRefusal=await sharingSnapshot();assert.ok(beforeRefusal.grants.length&&beforeRefusal.links.length&&beforeRefusal.publicLinks.length&&beforeRefusal.receipts.length,'refusal checks preserve populated grants, both link kinds and successful receipts');assert.equal(beforeRefusal.storedReceipts.length,beforeRefusal.receipts.length,'stored successful receipts reconcile with public mutation audits');
+ for(const phase of ['initial','retry','restart']){
+  if(phase==='restart'){await h.stop();await h.start()}
+  await call(token,`/items/${first.id}/links`,{method:'POST',body:{audience:'public'},key:'policy-denied-link',status:403});
+  const input={audience:'public',confirmExternal:true},response=await h.fetch(`/api/chest/integrations/v1/items/${first.id}/links`,{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','idempotency-key':'policy-denied-link'},body:JSON.stringify(input)});
+  assert.equal(response.status,403,`${phase}: integration keeps the organization refusal`);const refusal=await response.json();assert.equal(refusal.error,'sharing_policy_public_disabled');assert.equal(refusal.riskClass,undefined,'a refused link returns no policy classification');assert.equal(refusal.policyDecision,undefined,'a refused link returns no agent decision');
+  const sponsor=await h.raw(`/api/chest/items/${first.id}/links`,staff,input);assert.equal(sponsor.status,response.status);assert.deepEqual(await sponsor.json(),refusal,`${phase}: sponsor and integration API have identical refusal bodies`);
+  const browser=await form('/app/action',staff,{path:`/items/${first.id}/links`,returnTo:`/app/items/${first.id}`,audience:'public',confirmExternal:'true'});assert.equal(browser.status,response.status);assert.match(await browser.text(),/sharing_policy_public_disabled/,`${phase}: sponsor browser form shows the same refusal code`);
+  assert.deepEqual(await sharingSnapshot(),beforeRefusal,`${phase}: refusal changes no grants, links, successful sharing audits or mutation receipts`);
+ }
+ for(const {invoke,result} of shareReplays)assert.deepEqual(await invoke(),result,'a successful share replays the same saved result after restart');
+ assert.deepEqual(await sharingSnapshot(),beforeRefusal,'successful retries after restart publish no duplicate grants, links or receipts');
+ console.log('PROBE SURFACE-006 6: disabled public links through integration API, sponsor API and browser form -> identical 403 sharing_policy_public_disabled; populated grants, links and successful receipts unchanged across retry and Worker restart');
+ await h.api('/link-policy',owner,{scope:'organisation',allowExternal:true,allowPublic:true,allowOrganisation:true,allowDiscovery:true,defaultAudience:'restricted',defaultRole:'viewer'});
+ // SURFACE-007 point 1: narrow the granted folder, retaining both kinds of named reader and every original.
+ const directEmail=['narrow-person','example.test'].join('@'),groupEmail=['narrow-group','example.test'].join('@');
+ for(const email of [directEmail,groupEmail])await h.api('/people',owner,{action:'invite',email,name:email===directEmail?'Named reader':'Group reader'});
+ const directReader=await h.signIn(directEmail,true),groupReader=await h.signIn(groupEmail,true),namedGroup=await h.api('/groups',owner,{name:'Named folder readers',members:[groupEmail]});
+ const narrowFolder=await h.api('/items',staff,{parent:folder.id,type:'folder',name:'Make private target'}),narrowFile=await h.api('/items',staff,{parent:narrowFolder.id,name:'Retained originals.txt',base64:b64('synthetic-chest-1')});
+ await h.api(`/items/${narrowFile.id}/versions`,staff,{base64:b64('synthetic-chest-2')});
+ await h.api(`/items/${narrowFolder.id}/shares`,staff,{principal:directEmail,role:'viewer'});await h.api(`/items/${narrowFolder.id}/shares`,staff,{principal:namedGroup.id,role:'viewer'});
+ const publicFolder=await h.api(`/items/${narrowFolder.id}/public-links`,staff,{}),organisationFolder=await h.api(`/items/${narrowFolder.id}/links`,staff,{audience:'organisation'});
+ assert.equal(publicFolder.link.expires,null,'the public folder link never expires');const publicPath=new URL(publicFolder.url).pathname;assert.equal((await h.raw(publicPath)).status,200);
+ const folderBefore=await h.api(`/items/${narrowFolder.id}`,staff),fileBefore=await h.api(`/items/${narrowFile.id}`,staff);
+ assert.equal(fileBefore.versions.length,2);assert.deepEqual(new Set(fileBefore.versions.map(v=>v.checksum)),new Set(['synthetic-chest-1','synthetic-chest-2'].map(bytes=>createHash('sha256').update(bytes).digest('hex'))));
+ const originalHashes=new Map();for(const v of fileBefore.versions){const r=await h.fetch(`/api/chest/items/${narrowFile.id}/bytes/${v.id}?download=true`,{headers:{cookie:staff}});assert.equal(r.status,200);const checksum=createHash('sha256').update(Buffer.from(await r.arrayBuffer())).digest('hex');assert.equal(checksum,v.checksum);originalHashes.set(v.id,checksum)}
+ const narrowPath=`/items/${narrowFolder.id}/make-private`,narrowKey='make-private-once',narrowAudits=async()=> (await h.api('/audit',owner)).filter(r=>r.action==='integration.mutation'&&JSON.parse(r.detail).path===narrowPath);
+ // A sharing capability alone never overrides the grant root or the sponsor's current viewer role.
+ const outsideLink=await h.api(`/items/${other.id}/public-links`,staff,{});await call(token,`/items/${other.id}/make-private`,{method:'POST',body:{},key:'outside-make-private',status:403});assert.equal((await h.raw(new URL(outsideLink.url).pathname)).status,200);
+ const viewerGrant=await authorize(client,directReader,['share'],[narrowFolder.id]);await call(viewerGrant.access_token,narrowPath,{method:'POST',body:{},key:'viewer-make-private',status:403});
+ const readGrant=await authorize(client,staff,['read'],[narrowFolder.id]);await call(readGrant.access_token,narrowPath,{method:'POST',body:{},key:'read-make-private',status:403});
+ assert.deepEqual((await h.api(`/items/${narrowFolder.id}`,staff)).publicLinks,folderBefore.publicLinks,'refusals leave the link unchanged');assert.equal((await narrowAudits()).length,0);
+ const mutationsBefore=(await h.api('/integrations',staff)).grants.find(g=>g.id===grant.grant).payload.used.mutations;
+ const madePrivate=await call(token,narrowPath,{method:'POST',body:{},key:narrowKey});assert.deepEqual(madePrivate,{revoked:1,removed:1,grantsKept:2});
+ assert.equal((await h.raw(publicPath)).status,410,'the next anonymous folder request is refused');
+ assert.deepEqual(await call(token,narrowPath,{method:'POST',body:{},key:narrowKey}),madePrivate);
+ await h.stop();await h.start();assert.deepEqual(await call(token,narrowPath,{method:'POST',body:{},key:narrowKey}),madePrivate,'replay across Worker restart returns the original receipt');assert.equal((await h.raw(publicPath)).status,410);
+ assert.equal((await h.api('/integrations',staff)).grants.find(g=>g.id===grant.grant).payload.used.mutations,mutationsBefore+1,'retry consumes one mutation budget unit');
+ const folderAfter=await h.api(`/items/${narrowFolder.id}`,staff),fileAfter=await h.api(`/items/${narrowFile.id}`,staff);
+ assert.deepEqual(folderAfter.grants,folderBefore.grants);assert.deepEqual(folderAfter.children,folderBefore.children);assert.equal(folderAfter.links.length,0);assert.equal(folderAfter.publicLinks.find(l=>l.id===publicFolder.link.id).state,'revoked');
+ assert.deepEqual(fileAfter.item,fileBefore.item);assert.deepEqual(fileAfter.versions,fileBefore.versions);
+ for(const reader of [directReader,groupReader]){assert.equal((await h.api(`/items/${narrowFolder.id}`,reader)).id,narrowFolder.id);for(const v of fileAfter.versions){const r=await h.fetch(`/api/chest/items/${narrowFile.id}/bytes/${v.id}?download=true`,{headers:{cookie:reader}});assert.equal(r.status,200,'named readers retain downloads');assert.equal(createHash('sha256').update(Buffer.from(await r.arrayBuffer())).digest('hex'),originalHashes.get(v.id))}}
+ const narrowAudit=(await h.api('/audit',owner)).filter(r=>r.action==='item.make-private'&&r.object_id===narrowFolder.id);assert.equal(narrowAudit.length,1);assert.equal(narrowAudit[0].actor,'agent:'+client.client.id);assert.equal(JSON.parse(narrowAudit[0].detail).sponsor,staffId);assert.deepEqual(JSON.parse(narrowAudit[0].detail).revoked,[publicFolder.link.id]);assert.deepEqual(JSON.parse(narrowAudit[0].detail).removed,[organisationFolder.link.id]);assert.equal((await narrowAudits()).length,1,'one atomic integration mutation across retries');
+ const currentSharer=await h.api('/items',staff,{parent:folder.id,type:'folder',name:'Current sponsor authority'});await h.api(`/items/${currentSharer.id}/shares`,staff,{principal:directEmail,role:'editor'});const sponsorGrant=await authorize(client,directReader,['share'],[currentSharer.id]),currentLink=await h.api(`/items/${currentSharer.id}/public-links`,staff,{});await h.api(`/items/${currentSharer.id}/shares`,staff,{principal:directEmail,role:'viewer'});await call(sponsorGrant.access_token,`/items/${currentSharer.id}/make-private`,{method:'POST',body:{},key:'demoted-make-private',status:403});assert.equal((await h.raw(new URL(currentLink.url).pathname)).status,200,'demotion refuses narrowing without changing the existing link');
+ console.log('PROBE SURFACE-007 point 1: OAuth Make private -> anonymous 410; named people and group retain both original hashes; out-of-grant, missing-action and current-viewer 403; one mutation and audit after retry and Worker restart');
  // Signed delivery failure and uncertain acceptance are durable. Replay preserves event identity and deduplication.
  const hook=await call(token,'/webhooks',{method:'POST',body:{endpoint:'https://hooks.example.test/chest',events:['file.upload']},key:'subscribe-once'});signingSecret=hook.signingSecret;const subscribedAgain=await call(token,'/webhooks',{method:'POST',body:{endpoint:'https://hooks.example.test/chest',events:['file.upload']},key:'subscribe-once'});assert.equal(subscribedAgain.subscription.id,hook.subscription.id);
  await call(token,'/items',{method:'POST',body:{parent:folder.id,name:'Webhook source.txt',base64:b64('A live event')},key:'webhook-file-once'});const failed=await waitDelivery(token,hook.subscription.id,d=>d.state==='failed');assert.equal(failed.status,503);await h.stop();await h.start();assert.ok((await call(token,`/webhooks/${hook.subscription.id}/deliveries`)).items.some(d=>d.id===failed.id&&d.state==='failed'));
@@ -81,15 +420,103 @@ try{
  const independent=await call(token,'/items',{method:'POST',body:{parent:folder.id,name:'Independent staff.txt',base64:b64('Still in owner storage')},key:'independent-staff-file'});
  const denied=await waitDelivery(token,blockedHook.subscription.id,d=>d.reason==='outbound_host_denied');assert.equal(denied.state,'failed');
  const independentBytes=await h.fetch(`/api/chest/integrations/v1/items/${independent.id}/bytes/${independent.current}`,{headers:{authorization:'Bearer '+token}});assert.equal(independentBytes.status,200);assert.equal(await independentBytes.text(),'Still in owner storage');
- // A current role/restriction or no-download change still wins over an existing OAuth grant.
- const controlled=await h.api('/spaces',owner,{name:'Current OAuth ACL'});await h.api(`/spaces/${controlled.id}/members`,owner,{members:[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:'staff@example.test',role:'viewer'}]});const sharedFolder=await h.api('/items',owner,{space:controlled.id,type:'folder',name:'Shared root'}),visibleFile=await h.api('/items',owner,{parent:sharedFolder.id,name:'Visible terms.txt',base64:b64('Shared original')}),hiddenFile=await h.api('/items',owner,{parent:sharedFolder.id,name:'Restricted terms.txt',base64:b64('Restricted original')});await h.api(`/items/${hiddenFile.id}/settings`,owner,{restricted:true});const reader=await authorize(client,staff,['read','download','picker'],[sharedFolder.id]);assert.ok(!(await call(reader.access_token,'/items')).items.some(i=>i.id===hiddenFile.id));await call(reader.access_token,`/items/${hiddenFile.id}`,{status:403});await h.api(`/items/${visibleFile.id}/settings`,owner,{noDownload:true});const noDownload=await h.fetch(`/api/chest/integrations/v1/items/${visibleFile.id}/bytes/${visibleFile.payload.current}`,{headers:{authorization:'Bearer '+reader.access_token}});assert.equal(noDownload.status,403);await h.api(`/spaces/${controlled.id}/members`,owner,{members:[{principal:h.vars.OWNER_EMAIL,role:'manager'}]});await call(reader.access_token,`/items/${visibleFile.id}/pick`,{method:'POST',body:{},status:403});
+ // SURFACE-002: metadata and retained versions conceal inaccessible items through both transports.
+ const controlled=await h.api('/spaces',owner,{name:'Current OAuth ACL'});
+ const aclMembers=[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:'staff@example.test',role:'viewer'}];
+ await h.api(`/spaces/${controlled.id}/members`,owner,{members:aclMembers});
+ const sharedFolder=await h.api('/items',owner,{space:controlled.id,type:'folder',name:'Shared root'});
+ const visibleFile=await h.api('/items',owner,{parent:sharedFolder.id,name:'Visible terms.txt',base64:b64('synthetic-chest-1')});
+ const hiddenFile=await h.api('/items',owner,{parent:sharedFolder.id,name:'Restricted terms.txt',base64:b64('synthetic-chest-2')});
+ const outsideFile=await h.api('/items',owner,{space:controlled.id,name:'Outside terms.txt',base64:b64('synthetic-chest-3')});
+ const visibleUpdate=await h.api(`/items/${visibleFile.id}/versions`,owner,{base64:b64('synthetic-chest-4')});
+ await h.api(`/items/${hiddenFile.id}/versions`,owner,{base64:b64('synthetic-chest-5')});
+ await h.api(`/items/${hiddenFile.id}/settings`,owner,{restricted:true});
+ assert.equal((await h.api(`/items/${outsideFile.id}`,staff)).id,outsideFile.id,'the sponsor can open the existing item outside the grant');
+ assert.equal((await h.api(`/items/${hiddenFile.id}`,owner)).versions.length,2,'the restricted file has retained metadata to conceal');
+ await h.api(`/items/${hiddenFile.id}`,staff,undefined,403);
+ const aclReader=await authorize(client,staff,['read','download','picker'],[sharedFolder.id]);
+ const noRead=await authorize(client,staff,['download'],[sharedFolder.id]);
+ const missingId='synthetic-chest-404',concealed=[hiddenFile.id,outsideFile.id,missingId];
+ const httpRead=async(credential,id,versions=false)=>{
+  const response=await h.fetch(`/api/chest/integrations/v1/items/${id}${versions?'/versions?limit=1':''}`,{headers:credential?{authorization:'Bearer '+credential}:{}});
+  return {status:response.status,body:await response.text()};
+ };
+ const mcpRead=async(credential,name,id)=>{
+  const response=await h.fetch('/mcp/chest',{method:'POST',headers:{...(credential?{authorization:'Bearer '+credential}:{}),'content-type':'application/json','MCP-Protocol-Version':'2025-11-25',accept:'application/json, text/event-stream'},body:JSON.stringify({jsonrpc:'2.0',id:20,method:['tools','call'].join('/'),params:{name,arguments:{id}}})});
+  return {status:response.status,body:await response.json()};
+ };
+ // The native door answers a hidden, trashed, out-of-grant or missing item with one code and no distinct existence signal.
+ const mcpError=code=>response=>{assert.equal(response.status,200);assert.equal(response.body.result.isError,true);assert.deepEqual(JSON.parse(response.body.result.content[0].text),{code});assert.equal(response.body.result._meta['com.runeditrun/error'].code,code)};
+ const assertConcealed=async(ids,label)=>{
+  const absent=await httpRead(aclReader.access_token,missingId),absentVersions=await httpRead(aclReader.access_token,missingId,true);
+  assert.deepEqual(absent,{status:404,body:JSON.stringify({error:'not_found'})},label+' missing metadata');
+  assert.deepEqual(absentVersions,absent,label+' missing versions');
+  for(const id of ids){
+   assert.deepEqual(await httpRead(aclReader.access_token,id),absent,label+' metadata is existence blind');
+   assert.deepEqual(await httpRead(aclReader.access_token,id,true),absentVersions,label+' versions are existence blind');
+   for(const name of ['chest.items.get','chest.versions.list'])mcpError('resource_unavailable')(await mcpRead(aclReader.access_token,name,id));
+  }
+ };
+ const assertReadable=async()=>{
+  const metadata=await call(aclReader.access_token,`/items/${visibleFile.id}`);
+  assert.equal(metadata.id,visibleFile.id);assert.equal(metadata.name,'Visible terms.txt');
+  assert.equal(metadata.current,visibleUpdate.payload.current);assert.equal(metadata.sha256,createHash('sha256').update('synthetic-chest-4').digest('hex'));
+  const firstPage=await call(aclReader.access_token,`/items/${visibleFile.id}/versions?limit=1`);
+  assert.equal(firstPage.items.length,1);assert.ok(firstPage.nextCursor);
+  const secondPage=await call(aclReader.access_token,`/items/${visibleFile.id}/versions?limit=1&cursor=${firstPage.nextCursor}`);
+  const retained=[...firstPage.items,...secondPage.items];assert.equal(retained.length,2);assert.equal(secondPage.nextCursor,null);
+  assert.deepEqual(retained.map(v=>v.id).sort(),[visibleFile.payload.current,visibleUpdate.payload.current].sort());
+  assert.deepEqual(retained.map(v=>v.checksum).sort(),['synthetic-chest-1','synthetic-chest-4'].map(value=>createHash('sha256').update(value).digest('hex')).sort());
+  const metadataRpc=await mcpRead(aclReader.access_token,'chest.items.get',visibleFile.id);
+  assert.equal(metadataRpc.status,200);assert.equal(metadataRpc.body.result.isError,false);assert.equal(metadataRpc.body.result.structuredContent.id,visibleFile.id);assert.equal(metadataRpc.body.result.structuredContent.current,metadata.current);
+  const versionsRpc=await mcpRead(aclReader.access_token,'chest.versions.list',visibleFile.id);
+  assert.equal(versionsRpc.status,200);assert.equal(versionsRpc.body.result.isError,false);
+  assert.deepEqual(versionsRpc.body.result.structuredContent.versions.map(v=>v.id).sort(),retained.map(v=>v.id).sort());
+ };
+ await assertReadable();
+ assert.ok(!(await call(aclReader.access_token,'/items')).items.some(i=>concealed.includes(i.id)));
+ await assertConcealed(concealed,'current ACL');
+ // Scope and authentication errors are independent of whether the requested item exists.
+ for(const id of [visibleFile.id,...concealed]){
+  for(const versions of [false,true]){
+   assert.deepEqual(await httpRead(noRead.access_token,id,versions),{status:403,body:JSON.stringify({error:'oauth_action_outside_grant'})});
+   assert.deepEqual(await httpRead(null,id,versions),{status:401,body:JSON.stringify({error:'oauth_authentication_required'})});
+  }
+  for(const name of ['chest.items.get','chest.versions.list']){
+   const refused=await mcpRead(noRead.access_token,name,id);assert.equal(refused.status,403);assert.equal(refused.body.error.data.code,'insufficient_scope');
+   const anonymous=await mcpRead(null,name,id);assert.equal(anonymous.status,401);assert.equal(anonymous.body.error.message,'Unauthorized');
+  }
+ }
+ await h.stop();await h.start();
+ await assertReadable();await assertConcealed(concealed,'restarted ACL');
+ // Download refusal remains explicit for a visible file; metadata and versions remain readable.
+ await h.api(`/items/${visibleFile.id}/settings`,owner,{noDownload:true});
+ const noDownload=await h.fetch(`/api/chest/integrations/v1/items/${visibleFile.id}/bytes/${visibleUpdate.payload.current}`,{headers:{authorization:'Bearer '+aclReader.access_token}});
+ assert.equal(noDownload.status,403);
+ assert.equal((await call(aclReader.access_token,`/items/${visibleFile.id}`)).canDownload,false);await assertReadable();
+ await h.api(`/spaces/${controlled.id}/members`,owner,{members:[aclMembers[0]]});
+ await assertConcealed([visibleFile.id,...concealed],'revoked space access');
+ await call(aclReader.access_token,`/items/${visibleFile.id}/pick`,{method:'POST',body:{},status:403});
+ await h.stop();await h.start();
+ await assertConcealed([visibleFile.id,...concealed],'revoked space access after restart');
+ // Restoring access restores reads, but revoking the credential refuses every item before lookup.
+ await h.api(`/spaces/${controlled.id}/members`,owner,{members:aclMembers});await assertReadable();
+ await h.api(`/integrations/grants/${aclReader.grant}/revoke`,staff,{});
+ const assertRevokedGrant=async()=>{
+  for(const id of [visibleFile.id,...concealed]){
+   for(const versions of [false,true])assert.deepEqual(await httpRead(aclReader.access_token,id,versions),{status:401,body:JSON.stringify({error:'oauth_grant_revoked'})});
+   for(const name of ['chest.items.get','chest.versions.list'])assert.equal((await mcpRead(aclReader.access_token,name,id)).status,401);
+  }
+ };
+ await assertRevokedGrant();await h.stop();await h.start();await assertRevokedGrant();
+ console.log('SURFACE-002 existence-blind metadata and versions: scoped HTTP and native MCP door, live ACL, credential revocation and Worker restart passed');
  const noMutations=await authorize(client,staff,['upload'],undefined,{budget_mutations:'0'});await call(noMutations.access_token,'/items',{method:'POST',body:{parent:folder.id,name:'Budget refused.txt',base64:b64('Never published')},key:'budget-refused',status:429});assert.ok(!(await h.api(`/items/${folder.id}`,staff)).children.some(i=>i.name==='Budget refused.txt'));
  // Budgets, own-grant revoke, read-only/allowlist/block and live organization/group policy.
- const small=await authorize(client,staff,['read'],undefined,{budget_requests:'1'});await call(small.access_token,'/items');await call(small.access_token,'/items',{status:429});await h.api(`/integrations/grants/${grant.grant}/revoke`,staff,{});await call(token,'/items',{status:401});
+ const small=await authorize(client,staff,['read'],undefined,{budget_requests:'1'});await call(small.access_token,'/items');await call(small.access_token,'/items',{status:429});await h.api(`/integrations/grants/${grant.grant}/revoke`,staff,{});await call(token,'/items',{status:401});await call(token,narrowPath,{method:'POST',body:{},key:narrowKey,status:401});assert.equal((await h.raw(publicPath)).status,410,'a revoked-grant replay cannot revive the public link');
  await h.api('/integrations/policy',owner,{scope:'organization',mode:'allowlist',apps:{}});const refused=await consentFor(client,staff,['read']);assert.equal(refused.response.status,403);assert.match(await refused.response.text(),/app_policy_allowlist_only/);
  await h.api('/integrations/policy',owner,{scope:'organization',mode:'allowlist',apps:{[client.client.id]:'read_only'}});const readonly=await authorize(client,staff,['read','search','picker']);await call(readonly.access_token,'/items',{method:'POST',body:uploadInput,key:'read-only-refused',status:403});const writeRefused=await consentFor(client,staff,['read','upload']);assert.equal(writeRefused.response.status,403);assert.match(await writeRefused.response.text(),/app_policy_read_only/);
  const group=await h.api('/groups',owner,{name:'Controlled apps',members:['staff@example.test']}),outsideGroup=await h.api('/groups',owner,{name:'Another group',members:[]});await h.api('/people',owner,{action:'invite',email:'group-admin@example.test',name:'Group admin'});const groupAdmin=await h.signIn('group-admin@example.test',true);await h.api('/administration/roles',owner,{email:'group-admin@example.test',role:'sharing-security',scope:'groups',groups:[group.id]});await h.api('/integrations/policy',groupAdmin,{scope:'group',group:outsideGroup.id,mode:'none',apps:{}},403);await h.api('/integrations/policy',groupAdmin,{scope:'group',group:group.id,mode:'none',apps:{}});await call(readonly.access_token,'/items',{status:401});const groupRefusal=await consentFor(client,staff,['read']);assert.equal(groupRefusal.response.status,403);assert.match(await groupRefusal.response.text(),/app_policy_authorization_disabled/);await h.api('/integrations/policy',groupAdmin,{scope:'group',group:group.id,mode:'any',apps:{}});const allowedAgain=await authorize(client,staff,['read']);await call(allowedAgain.access_token,'/items');
  await h.api('/integrations/policy',owner,{scope:'organization',mode:'allowlist',apps:{[client.client.id]:'blocked'}});await call(allowedAgain.access_token,'/items',{status:401});const consolePage=await(await h.fetch('/app/integrations',{headers:{cookie:owner}})).text();assert.match(consolePage,/Scoped client and MCP agent/);assert.match(consolePage,/staff@example.test/);assert.match(consolePage,/Last use/);
- const beforeErasure=await h.sql('SELECT id FROM chest_integration_secrets WHERE email=?','staff@example.test');assert.ok(beforeErasure.results.length>0,'real OAuth authority exists before erasure');await h.api('/erasure',owner,{email:'staff@example.test',confirm:'staff@example.test'});assert.equal((await h.sql('SELECT id FROM chest_integration_secrets WHERE email=?','staff@example.test')).results.length,0,'identity erasure physically removes OAuth codes, tokens, response and webhook secrets');await call(token,'/items',{status:401});
+ const beforeErasure=await h.sql('SELECT id FROM chest_integration_secrets WHERE email=?','staff@example.test');assert.ok(beforeErasure.results.length>0,'real OAuth authority exists before erasure');const heldErasure=await h.api('/erasure',owner,{email:'staff@example.test',confirm:'staff@example.test'});assert.equal(heldErasure.payload.state,'held','retained agent decision custody prevents a false erasure claim');assert.ok(heldErasure.payload.targets.some(t=>t.store==='agent decision custody'&&t.status==='held'));assert.equal((await h.sql('SELECT id FROM chest_integration_secrets WHERE email=?','staff@example.test')).results.length,beforeErasure.results.length,'a held erasure does not claim to delete retained identity or credentials');await call(token,'/items',{status:401});
  console.log('CONNECT-007 OAuth/PKCE, paginated scoped APIs, MCP, idempotency/restart, signed failure/uncertainty/replay, import suppression, budgets and app policy passed');
 }finally{await h.close()}

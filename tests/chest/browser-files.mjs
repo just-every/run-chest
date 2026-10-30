@@ -35,6 +35,49 @@ const audit=async(action,object)=>(await h.api('/audit',cookies.owner)).filter(e
 const row=(page,text)=>page.locator('li').filter({hasText:text});
 // Uploads go through the drop area's picker: a new file opens its page, a new version reloads the file's page.
 const pick=async(page,file)=>{const from=page.url(),input=page.locator('[data-upload] input[data-pick]').first();if(page.url().includes('/items/')&&await page.locator('[data-upload][data-item]').count())await Promise.all([page.waitForNavigation(),input.setInputFiles(file)]);else{await input.setInputFiles(file);await page.waitForURL(u=>u.href!==from&&u.pathname.startsWith('/app/items/'))}};
+// Reconcile the rendered access panel with current authority, including a concealed ancestor.
+async function accessJourney(p,width,space){
+ const assertions=width===1440;
+ const emails=Object.fromEntries(await Promise.all(['ben','cy'].map(async name=>[name,(await json(p[name],'/files')).me.email])));
+ const group=await h.api('/groups',cookies.owner,{name:`Restricted reviewers ${width}`,members:[emails.cy]});
+ const folder=await json(p.mo,'/items',{space,type:'folder',name:`Private team ${width}`}),restricted=await json(p.mo,'/items',{parent:folder.id,type:'folder',name:`Restricted records ${width}`});
+ const original=`Restricted original ${width}`,file=await json(p.mo,'/items',{parent:restricted.id,type:'file',name:`Private record ${width}.txt`,base64:b64(original)});
+ const access=page=>page.locator('section.card').filter({has:page.getByRole('heading',{name:'Your access',exact:true})});
+ const allowed=async(name,role,source)=>{
+  const response=await go(p[name],`/app/items/${file.id}`);await access(p[name]).waitFor();
+  if(assertions){
+   assert.equal(response.status(),200);const panel=await access(p[name]).innerText();assert.ok(panel.includes(role));assert.ok(panel.includes(source));
+   assert.equal((await json(p[name],`/items/${file.id}`)).role,role.replace(' ','_'));
+   const bytes=await call(p[name],`/items/${file.id}/bytes/${file.payload.current}?download=true`);assert.equal(bytes.status(),200);assert.equal(sha(await bytes.body()),sha(original));
+  }
+ };
+ await allowed('ana','content manager',`Projects ${width}`);
+ // Restriction and direct sharing are saved through the actual management forms.
+ await go(p.mo,`/app/items/${restricted.id}?manage`);await p.mo.getByLabel('Restricted (stop inherited access)').selectOption('true');await press(p.mo,'Save access settings');
+ await p.mo.getByLabel('Person or group').selectOption(group.id);await p.mo.getByLabel(/^Role/).selectOption('viewer');await press(p.mo,'Share');
+ await go(p.mo,`/app/items/${file.id}`);await p.mo.getByLabel('Person or group').selectOption(emails.ben);await p.mo.getByLabel(/^Role/).selectOption('commenter');await press(p.mo,'Share');
+ const denied=async name=>{
+  const response=await go(p[name],`/app/items/${file.id}`);await p[name].getByRole('heading',{name:'Request access',exact:true}).waitFor();
+  if(!assertions)return;
+  assert.equal(response.status(),200);assert.equal(await access(p[name]).count(),0);
+  const api=await call(p[name],`/items/${file.id}`),bytes=await call(p[name],`/items/${file.id}/bytes/${file.payload.current}?download=true`);
+  assert.equal(api.status(),403);assert.equal(bytes.status(),403);
+  for(const body of [await response.text(),await api.text(),await bytes.text()])for(const hidden of [file.payload.name,restricted.payload.name,group.payload.name,original])assert.ok(!body.includes(hidden),`${name}: no stale authority or concealed names`);
+ };
+ await denied('ana');
+ await allowed('ben','commenter','your named access');
+ if(assertions){assert.ok((await access(p.ben).innerText()).includes('Inherited access stops on an ancestor'));assert.ok(!(await access(p.ben).innerText()).includes(restricted.payload.name))}
+ await fit(p.ben,'access-direct',width);
+ await allowed('cy','viewer',group.payload.name);if(assertions){assert.ok((await access(p.cy).innerText()).includes(restricted.payload.name));assert.ok(!(await access(p.cy).innerText()).includes('contributor'))}
+ await fit(p.cy,'access-group',width);
+ await allowed('mo','manager',`Projects ${width}`);if(assertions)assert.ok((await access(p.mo).innerText()).includes('space managers keep their access'));
+ await h.api(`/groups/${group.id}/members`,cookies.owner,{action:'remove',email:emails.cy});await denied('cy');await allowed('ben','commenter','your named access');
+ await go(p.mo,`/app/items/${file.id}`);await press(row(p.mo,emails.ben),'Remove access');await denied('ben');
+ await h.stop();await h.start();
+ for(const name of ['ana','ben','cy'])await denied(name);
+ await fit(p.cy,'access-revoked',width);await allowed('mo','manager',`Projects ${width}`);
+ console.log(`PROBE SPACE-001 point4 browser ${width}: rendered inherited, direct and group access matches original reads; revocation and Worker restart conceal names and refuse fresh reads`);
+}
 async function journey(width){
  const p=Object.fromEntries(await Promise.all(people.map(async n=>[n,await as(n,width)]))),xlsx=n=>Buffer.concat([Buffer.from([0x50,0x4b,3,4]),Buffer.from(`budget ${width} revision ${n}`)]);
  // Mo creates a team space and its members in the browser; Ana builds a nested tree with an ordinary file.
@@ -46,6 +89,7 @@ async function journey(width){
  await open(p.mo,'Add a person');{const add=p.mo.locator('form').filter({has:p.mo.getByRole('button',{name:'Add to space'})});await add.getByLabel('Email').fill('ben@example.test');await add.getByLabel('Role').selectOption('viewer');await press(add,'Add to space')}
  assert.deepEqual((await json(p.mo,`/spaces/${space}`)).members.map(m=>[m.principal,m.role]),[['mo@example.test','manager'],['ana@example.test','content_manager'],['cy@example.test','contributor'],['eve@example.test','commenter'],['ben@example.test','viewer']]);
  await fit(p.mo,'space',width);
+ await accessJourney(p,width,space);
  await uploadResumeJourney(h,p.mo,width,space);
  // Move in (MIGRATE-002 partial): a Takeout zip arrives with its folder tree under "Google Drive"; running it again adds nothing.
  const takeout={name:`takeout-${width}.zip`,mimeType:'application/zip',buffer:zip([['Takeout/archive_browser.html','<p>index</p>'],[`Takeout/Drive/Clients ${width}/Harbor/MSA.txt`,'Master services '+width],[`Takeout/Drive/Budget ${width}.txt`,'Budget '.repeat(3000)]])};
@@ -61,6 +105,45 @@ async function journey(width){
  await uploadResumeJourney(h,p.ana,width,space,contracts);await go(p.ana,`/app/items/${contracts}`);
  await pick(p.ana,{name:'terms.txt',mimeType:'text/plain',buffer:Buffer.from(`Payment terms ${width}`)});const terms=id(p.ana);
  await go(p.ana,`/app/items/${client}`);await fit(p.ana,'folder',width);
+ // ROLE-001: the viewer's space, folder and file, including their management views, offer only permitted actions.
+ const viewerState=async()=>({children:(await json(p.mo,`/spaces/${space}`)).children.map(c=>[c.id,c.name]),items:await Promise.all([client,contracts,terms].map(async key=>{const d=await json(p.mo,`/items/${key}`);return {item:d.item,versions:d.versions,children:d.children.map(c=>[c.id,c.name])}}))});
+ const viewerBefore=width===1440?await viewerState():null;
+ for(const [kind,path,title] of [['space',`/app/spaces/${space}`,`Projects ${width}`],['folder',`/app/items/${contracts}`,'Contracts'],['file',`/app/items/${terms}`,'terms.txt']]){
+  for(const manage of [false,true]){
+   const response=await go(p.ben,path+(manage?'?manage':''));
+   if(width===1440){
+    assert.equal(response.status(),200);await p.ben.getByRole('heading',{name:title,exact:true,level:1}).waitFor();
+    const actions=(await p.ben.locator('a,button,summary').allTextContents()).map(t=>t.trim());
+    assert.deepEqual(actions.filter(t=>/^(New|Upload|New folder|Upload file|Upload a new version|Upload new version|Share|Rename|Save name|Move to trash)$/.test(t)),[],`${kind} has no viewer mutation controls, including management views`);
+    assert.equal(await p.ben.locator('[data-upload],input[type=file]').count(),0,'no hidden upload picker');
+    for(const control of await p.ben.locator('button,a,summary').filter({has:p.ben.locator('svg')}).all()){
+     if((await control.innerText()).trim()||!await control.isVisible())continue;
+     assert.ok(await control.getAttribute('data-tooltip'));await control.focus();await p.ben.getByRole('tooltip').waitFor({state:'visible'});
+     await p.ben.locator('h1').click();await control.hover();await p.ben.waitForTimeout(350);assert.equal(await p.ben.getByRole('tooltip').isVisible(),true);
+    }
+   }
+   await fit(p.ben,`viewer-${kind}${manage?'-manage':''}`,width);
+  }
+ }
+ if(width===1440){
+  for(const [key,name] of [[contracts,'Renamed contracts'],[terms,'renamed-terms.txt']]){
+   const response=await p.ben.request.post(h.origin+'/app/action',{headers:{origin:h.origin},form:{path:`/items/${key}/rename`,returnTo:`/app/items/${key}`,name}});
+   assert.equal(response.status(),403,'a valid rename through the browser form door is refused');
+   assert.deepEqual(await viewerState(),viewerBefore,'refused renames keep names, hierarchy and retained versions');
+  }
+ }
+ const admin=await go(p.ben,'/app/admin');
+ if(width===1440){
+  assert.equal(admin.status(),403,'People & settings refuses the viewer');
+  assert.deepEqual(await viewerState(),viewerBefore);
+  await go(p.ben,`/app/items/${terms}`);
+  assert.deepEqual(await download(p.ben,p.ben.locator('.doc-actions').getByRole('link',{name:'Download',exact:true})),Buffer.from(`Payment terms ${width}`));
+ }
+ await go(p.ben,'/app/admin');await fit(p.ben,'viewer-admin-refused',width);
+ const privateSpace=(await json(p.mo,'/files')).personal,privateFile=await json(p.mo,'/items',{space:privateSpace,name:`private-counterpart-${width}.txt`,base64:b64('Private counterpart original')});
+ const concealed=await go(p.ben,`/app/items/${privateFile.id}`);
+ if(width===1440){assert.equal(concealed.status(),200);await p.ben.getByRole('heading',{name:'Request access',exact:true}).waitFor();assert.ok(!(await concealed.text()).includes(privateFile.payload.name),'another space conceals its private file name')}
+ await fit(p.ben,'viewer-request-access',width);
  // CHEST-13: a contributor has no trash action and is refused; the content manager trashes and restores her own folder.
  const tree=async()=>{const a=await json(p.ana,`/items/${client}`),b=await json(p.ana,`/items/${contracts}`),c=await json(p.ana,`/items/${terms}`);return [a.children.map(x=>x.id),b.children.map(x=>x.id),c.versions.map(v=>[v.id,v.checksum])]},before=await tree();
  await go(p.cy,`/app/items/${client}`);assert.equal(await p.cy.getByRole('button',{name:'Move to trash'}).count(),0);assert.equal((await call(p.cy,`/items/${client}/trash`,{})).status(),403);
@@ -78,9 +161,9 @@ async function journey(width){
  await go(p.ana,`/app/spaces/${space}`);await pick(p.ana,{name:'budget.xlsx',mimeType:'application/octet-stream',buffer:xlsx(1)});const budget=id(p.ana);
  await pick(p.ana,{name:'budget-v2.xlsx',mimeType:'application/octet-stream',buffer:xlsx(2)});
  await go(p.mo,`/app/items/${budget}`);await pick(p.mo,{name:'budget-v3.xlsx',mimeType:'application/octet-stream',buffer:xlsx(3)});
- await go(p.ana,`/app/items/${budget}`);await p.ana.getByLabel('Link role').selectOption('viewer');await press(p.ana,'Create link');const link=new URL((await p.ana.locator('pre').innerText()).trim());
+ await go(p.ana,`/app/items/${budget}`);await p.ana.getByLabel('Link role').selectOption('viewer');await press(p.ana,'Create link');const link=new URL((await p.ana.locator('.flash input').inputValue()).trim());
  await go(p.cy,`/app/items/${budget}`);const versions=p.cy.locator('article.ver');assert.equal(await versions.count(),3);
- for(const [file,who] of [['budget-v3.xlsx','mo'],['budget-v2.xlsx','ana'],['budget.xlsx','ana']])await versions.filter({has:p.cy.getByRole('heading',{name:file})}).getByText(`By ${who}@example.test`).waitFor();
+ for(const [file,who] of [['budget-v3.xlsx','mo'],['budget-v2.xlsx','ana'],['budget.xlsx','ana']])await versions.filter({has:p.cy.getByRole('heading',{name:file})}).getByText(`By ${who}`).waitFor();
  const v2=versions.filter({has:p.cy.getByRole('heading',{name:'budget-v2.xlsx'})});assert.equal(sha(await download(p.cy,v2.getByRole('link',{name:'Download this version'}))),sha(xlsx(2)));
  await v2.getByLabel('Version name').fill('Before Q3 edits');await press(v2,'Save version name');
  await press(versions.filter({has:p.cy.getByRole('heading',{name:'Before Q3 edits'})}),'Restore as current version');
@@ -91,6 +174,14 @@ async function journey(width){
  // SHARE-004: Ana shares a personal file with Ben as commenter; Dee asks for access and Ana approves from the email.
  const mine=(await json(p.ana,'/files')).personal;await go(p.ana,`/app/spaces/${mine}`);await pick(p.ana,{name:`plan-${width}.txt`,mimeType:'text/plain',buffer:Buffer.from('launch plan')});const plan=id(p.ana);
  await p.ana.getByLabel('Person or group').selectOption('ben@example.test');await p.ana.getByLabel(/^Role/).selectOption('commenter');await p.ana.getByLabel('Message (optional)').fill('Please check section 2');await press(p.ana,'Share');
+ if(width===1440){
+  const grants=await audit('share.grant',plan);assert.equal(grants.length,1,'the Share button records one grant');
+  const shareGrant=grants[0],shareDetail=JSON.parse(shareGrant.detail);
+  assert.equal(shareGrant.actor,'ana@example.test');assert.equal(shareGrant.object_id,plan);
+  assert.equal(shareDetail.principal,'ben@example.test');assert.equal(shareDetail.role,'commenter');assert.equal(shareDetail.outcome,'succeeded');
+  const shareMail=h.mails.filter(m=>[m.to].flat().includes('ben@example.test')&&m.text.includes(`/app/items/${plan}`));
+  assert.equal(shareMail.length,1,'the colleague receives the shared file by email');
+ }
  await go(p.ben,'/app/notices');await p.ben.getByText(`shared "plan-${width}.txt" with you as commenter`,{exact:false}).waitFor();await fit(p.ben,'notices',width);
  await go(p.ben,'/app/shared');await fit(p.ben,'shared',width);await p.ben.getByRole('link',{name:`plan-${width}.txt`}).click();
  assert.equal(await p.ben.locator('[data-upload]').count(),0);await p.ben.getByLabel('Comment',{exact:true}).fill('Section 2 is right');await press(p.ben,'Post comment');await p.ben.getByText('Section 2 is right').waitFor();
@@ -122,6 +213,35 @@ async function journey(width){
  await p.mo.getByRole('heading',{name:'Restore preview'}).waitFor();await p.mo.getByText('added since',{exact:false}).first().waitFor();await fit(p.mo,'rewind',width);assert.equal((await json(p.mo,`/spaces/${space}`)).children.length,items);
  await press(p.mo,'Restore selected items');await p.mo.getByRole('heading',{name:/^Restored to /}).waitFor();assert.ok((await json(p.mo,`/spaces/${space}`)).children.length<items);
  await press(p.mo,'Undo this restore');await p.mo.getByRole('heading',{name:'Restore undone'}).waitFor();assert.equal((await json(p.mo,`/spaces/${space}`)).children.length,items);
+ // SHARE-008: after the team-space owner leaves without a successor, its sole active manager handles access.
+ const managed=await json(p.eve,'/spaces',{name:`Manager fallback ${width}`});
+ await json(p.eve,`/spaces/${managed.id}/members`,{members:[{principal:'eve@example.test',role:'manager'},{principal:'mo@example.test',role:'manager'}]});
+ await go(p.eve,`/app/spaces/${managed.id}`);await pick(p.eve,{name:`synthetic-chest-${width}.txt`,mimeType:'text/plain',buffer:Buffer.from('synthetic-chest-1')});const inherited=id(p.eve);
+ await h.api('/people',cookies.owner,{action:'deactivate',email:'eve@example.test'});
+ const hidden=await go(p.dee,`/app/items/${inherited}`);await p.dee.getByRole('heading',{name:'Request access'}).waitFor();
+ if(width===1440){assert.equal((await call(p.dee,`/items/${inherited}`)).status(),403);assert.ok(!(await hidden.text()).includes(`synthetic-chest-${width}.txt`));assert.equal((await call(p.eve,'/files')).status(),401)}
+ await fit(p.dee,'manager-access-request',width);await p.dee.getByLabel('Access you need').selectOption('editor');await press(p.dee,'Request access');const fallback=(await json(p.dee,'/requests')).mine.find(r=>r.item===inherited&&r.status==='pending').id;
+ const request=await json(p.mo,`/requests/${fallback}`),beforeGrant=(await json(p.mo,`/items/${inherited}`)).grants;
+ if(width===1440){
+  assert.deepEqual(request.approvers,['mo@example.test']);assert.equal((await json(p.dee,`/requests/${fallback}`)).itemName,null);
+  assert.equal((await call(p.cy,`/requests/${fallback}`,{decision:'approve'})).status(),403);
+  assert.deepEqual((await json(p.mo,`/items/${inherited}`)).grants,beforeGrant);assert.equal((await call(p.dee,`/items/${inherited}`)).status(),403);
+ }
+ await go(p.mo,'/app/notices');await p.mo.getByText(`asked for editor access to "synthetic-chest-${width}.txt"`,{exact:false}).waitFor();await fit(p.mo,'manager-notice',width);
+ const managerMail=h.mails.filter(m=>[m.to].flat().includes('mo@example.test')&&m.text.includes(`/app/requests/${fallback}`));
+ if(width===1440)assert.equal(managerMail.length,1);
+ await go(p.mo,new URL(managerMail[0].text.match(/https:\/\/\S+\/app\/requests\/\S+/)[0]).pathname);await p.mo.getByLabel('Grant role').selectOption('viewer');await press(p.mo,'Approve');
+ await go(p.dee,'/app/notices');await p.dee.getByText(`"synthetic-chest-${width}.txt" was approved as viewer`,{exact:false}).waitFor();
+ await go(p.dee,`/app/items/${inherited}`);await p.dee.locator('.doc-side').getByText('viewer',{exact:false}).first().waitFor();await fit(p.dee,'manager-granted',width);
+ if(width===1440){
+  assert.equal(h.mails.filter(m=>[m.to].flat().includes('dee@example.test')&&m.text.includes(`/app/items/${inherited}`)&&m.text.includes('approved as viewer')).length,1);
+  assert.equal(sha(await download(p.dee,p.dee.locator('.doc-actions').getByRole('link',{name:'Download'}))),sha('synthetic-chest-1'));
+  for(const [action,actor,expectedRole] of [['access.request','dee@example.test','editor'],['access.approve','mo@example.test','viewer']]){
+   const events=await audit(action,inherited);assert.equal(events.length,1);assert.equal(events[0].actor,actor);
+   const detail=JSON.parse(events[0].detail);assert.equal(detail.role,expectedRole);assert.equal(detail.outcome,'succeeded');
+  }
+ }
+ await h.api('/people',cookies.owner,{action:'reactivate',email:'eve@example.test'});cookies.eve=await h.signIn('eve@example.test');
  await go(p.ana,'/app/files');await fit(p.ana,'home',width);
  for(const page of Object.values(p))await page.context().close();
  console.log(`Files browser journey passed at ${width}: trash/restore/erase, version history and restore, sharing, access requests, expiry, members, move-in and device keys`);

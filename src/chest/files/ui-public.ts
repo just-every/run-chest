@@ -2,6 +2,8 @@ import { headers } from '../api'
 import { head, policy } from '../ui-shell'
 import { esc, stamp } from '../ui-shared'
 import { size } from './ui-item'
+import { kindOf } from './ui-table'
+import { identity } from '../../identity'
 // Pages for people without a Chest account: a link for anyone and a file request. They read like sign-in (the
 // wordmark above one card), and never show more than the link itself reveals.
 // Request limits are set in decimal megabytes, so they read back that way.
@@ -21,11 +23,12 @@ const gone: Record<string, [string, string]> = {
 export const refusedLink = (reason: string) => { const [title, text] = gone[reason] ?? gone.not_found; return publicPage(title, `<p>${esc(text)}</p>`, reason === 'not_found' || reason === 'unavailable' ? 404 : 410) }
 export const passwordPage = (action: string, wrong = false, status = 200) => publicPage('Enter the password', `<p>The person who shared this link protected it with a password.</p>${wrong ? '<p class="notice" role="alert">That password is not right. Try again.</p>' : ''}<form method="post" action="${esc(action)}"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required autofocus><button class="action">Open</button></form>`, status)
 const until = (link: { expires: string | null; limit: number | null; downloads: number }) => [link.expires ? `Open until ${stamp(link.expires)}` : '', link.limit !== null ? `${link.limit - link.downloads} of ${link.limit} downloads left` : ''].filter(Boolean).join(' · ')
-export function linkPage(base: string, link: { expires: string | null; limit: number | null; downloads: number }, root: { name: string; type: string }, files: { id: string; path: string; name: string; size: number; mediaType: string; canPreview: boolean }[], downloads: boolean, discussion = '') {
+export function linkPage(base: string, link: { expires: string | null; limit: number | null; downloads: number }, root: { name: string; type: string }, files: { id: string; path: string; name: string; size: number; mediaType: string; canPreview: boolean }[], downloads: boolean, discussion = '', sharer = '') {
  const terms = until(link)
- const facts = (f: { size: number; mediaType: string }) => `${esc(size(f.size))} · ${esc(f.mediaType)}`
+ const facts = (f: { size: number; name: string }) => `${esc(size(f.size))} · ${esc(kindOf(f.name))}`
  const rows = root.type === 'folder' ? files.map(f => `<p><strong>${esc(f.path)}${esc(f.name)}</strong><br><span class="mono">${facts(f)}</span>${f.canPreview ? ` · <a href="${esc(`${base}/p/${f.id}`)}">Preview</a>` : ''}${downloads ? ` · <a href="${esc(`${base}/f/${f.id}`)}" download>Download</a>` : ''}</p>`).join('') : files[0] ? `<p class="mono">${facts(files[0])}</p>` : ''
- const lede = root.type === 'folder' ? `<p>A folder shared with you. ${files.length ? `${files.length} file${files.length === 1 ? '' : 's'} shared with you.` : 'It has no files yet.'}</p>` : '<p>A file shared with you. You do not need an account to open it.</p>'
+ const from = `${esc(sharer || 'Someone')}${identity.deployment !== identity.product ? ` at ${esc(identity.deployment)}` : ''}`
+ const lede = root.type === 'folder' ? `<p>${from} shared this folder with you. ${files.length ? `${files.length} file${files.length === 1 ? '' : 's'}.` : 'It has no files yet.'}</p>` : `<p>${from} shared this file with you. You do not need an account to open it.</p>`
  return publicPage(root.name, `${lede}${terms ? `<p class="mono">${terms}</p>` : ''}${rows}${root.type === 'file' && files[0]?.canPreview ? `<p><a class="action" href="${esc(`${base}/p/${files[0].id}`)}">Preview</a></p>` : ''}${downloads ? root.type === 'file' && files[0] ? `<p><a class="action" href="${esc(`${base}/f/${files[0].id}`)}" download>Download</a></p>` : '' : `<p class="notice">${esc(gone.download_off[1])}</p>`}${discussion}`)
 }
 export const closedRequest = () => publicPage('File request closed', '<p>This file request is no longer accepting files. Ask the person who sent it whether they still need them.</p>', 410)

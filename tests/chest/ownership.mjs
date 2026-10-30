@@ -1,7 +1,8 @@
 // Ownership consent through the built Worker's HTTP doors; only the external mail provider is faked.
 import assert from 'node:assert/strict';
 import {harness} from './harness.mjs';
-const h=await harness(),people={},areas={},b64=value=>Buffer.from(value).toString('base64');
+import {ownershipState,ownershipAudit} from './ownership-proof.mjs';
+const h=await harness(),people={},areas={},emails={},b64=value=>Buffer.from(value).toString('base64');
 const check=async(name,fn)=>{await fn();console.log(`${name} passed`)};
 const make=(name,input={})=>h.api('/items',people.ana,{space:areas.ana,name,type:'file',base64:b64(name),...input});
 const offer=(item,extra={})=>h.api(`/items/${item}/ownership`,people.ana,{recipient:'ben@example.test',...extra});
@@ -10,11 +11,11 @@ const get=(id,who='ana',status=200)=>h.api(`/items/${id}`,people[who],undefined,
 try{
  assert.equal((await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Owner'})).status,303);people.owner=await h.signIn(h.vars.OWNER_EMAIL);
  assert.equal((await h.fetch('/setup',{method:'POST',headers:{cookie:people.owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'})).status,303);
- for(const person of ['ana','ben','cy']){await h.api('/people',people.owner,{action:'invite',email:`${person}@example.test`,name:person});people[person]=await h.signIn(`${person}@example.test`,true);areas[person]=(await h.api('/files',people[person])).personal}
+ for(const person of ['ana','ben','cy']){emails[person]=`${person}@example.test`;await h.api('/people',people.owner,{action:'invite',email:emails[person],name:person});people[person]=await h.signIn(emails[person],true);areas[person]=(await h.api('/files',people[person])).personal}
  await check('SPACE-001 ownership consent and preserved tree',async()=>{
   const folder=await make('Handover',{type:'folder'}),nested=await make('Private',{parent:folder.id,type:'folder'}),file=await make('contract.txt',{parent:nested.id});
   await h.api(`/items/${nested.id}/settings`,people.ana,{restricted:true});
-  await h.api(`/items/${file.id}/shares`,people.ana,{principal:'cy@example.test',role:'viewer'});
+  await h.api(`/items/${file.id}/shares`,people.ana,{principal:emails.cy,role:'viewer'});
   await h.api(`/items/${file.id}/versions`,people.ana,{base64:b64('second contract'),filename:'contract.txt'});
   const before=await get(file.id),link=await h.api(`/items/${file.id}/links`,people.ana,{role:'viewer'}),request=await offer(folder.id);
   assert.equal((await get(folder.id)).role,'owner');await get(folder.id,'ben',403);
@@ -30,17 +31,39 @@ try{
   assert.equal((await get(folder.id)).role,'editor');assert.equal((await get(nested.id)).role,'editor');assert.equal((await get(file.id)).role,'editor');assert.equal((await get(file.id,'cy')).role,'viewer');
   const opened=await h.api('/links/open',people.cy,{token:link.url.split('/s/')[1]});assert.equal(opened.item,file.id);
   const bytes=await h.raw(`/api/chest/items/${file.id}/bytes/${after.item.current}?download=true`,people.ben);assert.equal(bytes.status,200);assert.equal(await bytes.text(),'second contract');
-  const audit=(await h.api('/audit',people.owner)).filter(r=>r.object_id===folder.id);assert.equal(audit.filter(r=>r.action==='ownership.offer').length,1);assert.equal(audit.filter(r=>r.action==='ownership.accept').length,1);
+  await ownershipAudit(h,people.owner,folder.id,[{action:'ownership.offer',actor:emails.ana,offer:request.id,recipient:emails.ben},{action:'ownership.accept',actor:emails.ben,offer:request.id,recipient:emails.ben}]);
  });
  await check('SPACE-001 declined, cancelled and stale ownership',async()=>{
-  const file=await make('Keep mine.txt'),request=await offer(file.id);await decide(request.id,'ben','decline');assert.equal((await get(file.id)).role,'owner');await get(file.id,'ben',403);
-  const cancelled=await offer(file.id);await h.api(`/ownership/${cancelled.id}/cancel`,people.ana,{});await decide(cancelled.id,'ben','accept',{},409);
+  const folder=await make('Declined originals',{type:'folder'}),originals=['synthetic-chest-1','synthetic-chest-2','synthetic-chest-3'].map(value=>Buffer.from(value));
+  const file=await make('Keep mine.txt',{parent:folder.id,base64:originals[0].toString('base64')});
+  for(const bytes of originals.slice(1))await h.api(`/items/${file.id}/versions`,people.ana,{base64:bytes.toString('base64'),filename:'Keep mine.txt'});
+  await h.api(`/items/${file.id}/shares`,people.ana,{principal:emails.cy,role:'viewer'});
+  const link=await h.api(`/items/${file.id}/links`,people.ana,{role:'viewer'}),token=link.url.split('/s/')[1];
+  assert.equal((await h.api('/links/open',people.cy,{token})).item,file.id);
+  const before=await ownershipState(h,people.ana,file.id,originals),reader=await ownershipState(h,people.cy,file.id,originals),request=await offer(file.id);
+  assert.equal(before.item.space,areas.ana);assert.equal(before.item.parent,folder.id);assert.equal(reader.role,'viewer');
+  assert.ok(before.grants.some(grant=>grant.principal===emails.cy&&grant.role==='viewer'));assert.ok(before.links.some(row=>row.id===link.link.id));
+  const event=(action,offer,actor=emails.ana)=>({action:`ownership.${action}`,actor,offer:offer.id,recipient:emails.ben});
+  const declined=[event('offer',request),event('decline',request,emails.ben)];
+  await decide(request.id,'ben','decline');assert.equal((await get(file.id)).role,'owner');await get(file.id,'ben',403);
+  const audit=await ownershipAudit(h,people.owner,file.id,declined);
+  await h.stop();await h.start();
+  assert.equal((await h.api(`/ownership/${request.id}`,people.ben)).status,'declined');
+  await decide(request.id,'ben','decline',{},409);await decide(request.id,'ben','accept',{},409);
+  assert.deepEqual(await ownershipState(h,people.ana,file.id,originals),before);
+  assert.deepEqual(await ownershipState(h,people.cy,file.id,originals),reader);await get(file.id,'ben',403);
+  assert.equal((await h.api('/links/open',people.cy,{token})).item,file.id);
+  await h.api(`/items/${file.id}/rename`,people.cy,{name:'Forbidden.txt'},403);
+  assert.deepEqual(await ownershipAudit(h,people.owner,file.id,declined),audit);
+  console.log('PROBE SPACE-003 declined preservation: ownership API decline, retry and Worker restart -> unchanged item, location, three originals, grants, authority and original link');
+  const cancelled=await offer(file.id);await h.api(`/ownership/${cancelled.id}/cancel`,people.ana,{});await h.api(`/ownership/${cancelled.id}/cancel`,people.ana,{},409);await decide(cancelled.id,'ben','accept',{},409);
   const edited=await offer(file.id);await h.api(`/items/${file.id}/rename`,people.ana,{name:'Updated.txt'});await decide(edited.id,'ben','accept',{},409);assert.equal((await get(file.id)).item.space,areas.ana);await h.api(`/ownership/${edited.id}/cancel`,people.ana,{});
   const team=await h.api('/spaces',people.ana,{name:'Team'}),teamFile=await make('Team file.txt',{space:team.id});await h.api(`/items/${teamFile.id}/ownership`,people.ana,{recipient:'ben@example.test'},403);
   const inactive=await offer(file.id);await h.api('/people',people.owner,{action:'deactivate',email:'ben@example.test'});await h.api('/people',people.owner,{action:'reactivate',email:'ben@example.test'});people.ben=await h.signIn('ben@example.test');await decide(inactive.id,'ben','accept',{},409);
   assert.equal((await get(file.id)).role,'owner');await h.api(`/ownership/${inactive.id}/cancel`,people.ana,{});
   await h.api('/people',people.owner,{action:'deactivate',email:'cy@example.test'});await h.api(`/items/${file.id}/ownership`,people.ana,{recipient:'cy@example.test'},409);
-  const audit=await h.api('/audit',people.owner);assert.ok(audit.some(r=>r.action==='ownership.decline'&&r.object_id===file.id));assert.ok(audit.some(r=>r.action==='ownership.cancel'&&r.object_id===file.id));
+  await ownershipAudit(h,people.owner,file.id,[...declined,...[cancelled,edited,inactive].flatMap(offer=>[event('offer',offer),event('cancel',offer)])]);
+  console.log('PROBE SPACE-003 event audit: public audit API -> exact actor, item, offer, recipient and one successful event per offer, decline and cancellation');
  });
  await check('SPACE-001 collision, concurrent acceptance and relinquishment',async()=>{
   const file=await make('Clash.txt');await h.api('/items',people.ben,{space:areas.ben,name:'Clash.txt',type:'file',base64:b64('unrelated')});
@@ -48,12 +71,13 @@ try{
   const request=await offer(file.id,{retainEditor:false});await decide(request.id,'ben','accept',{},409);assert.equal((await get(file.id)).role,'owner');
   const responses=await Promise.all([1,2].map(()=>h.raw(`/api/chest/ownership/${request.id}`,people.ben,{decision:'accept',name:'Transferred.txt'})));
   assert.deepEqual(responses.map(r=>r.status).sort(),[200,409]);await get(file.id,'ana',403);assert.equal((await get(file.id,'ben')).item.name,'Transferred.txt');
-  const accepted=(await h.api('/audit',people.owner)).filter(r=>r.action==='ownership.accept'&&r.object_id===file.id);assert.equal(accepted.length,1);
+  await ownershipAudit(h,people.owner,file.id,[{action:'ownership.offer',actor:emails.ana,offer:request.id,recipient:emails.ben},{action:'ownership.accept',actor:emails.ben,offer:request.id,recipient:emails.ben}]);
   assert.equal((await h.fetch(new URL(publicLink.url).pathname+'/f/'+file.id)).status,200,'the link survives the sender relinquishing direct access');
   const folder=await make('Incoming after handover',{type:'folder'}),intake=await h.api(`/items/${folder.id}/file-requests`,people.ana,{title:'Vendor files'}),handoff=await offer(folder.id,{retainEditor:false});await decide(handoff.id,'ben');
   assert.equal((await h.fetch(new URL(intake.url).pathname)).status,200,'the upload-only link survives the handoff');
   const form=new FormData();form.append('files',new File(['delivery schedule'],'schedule.txt'));
   const received=await h.fetch(new URL(intake.url).pathname,{method:'POST',headers:{origin:h.origin},body:form});assert.equal(received.status,200);
   assert.ok((await h.api('/notices',people.ben)).some(n=>n.payload.type==='file-request.upload'),'arrivals notify the new responsible owner');
+  await ownershipAudit(h,people.owner,folder.id,[{action:'ownership.offer',actor:emails.ana,offer:handoff.id,recipient:emails.ben},{action:'ownership.accept',actor:emails.ben,offer:handoff.id,recipient:emails.ben}]);
  });
 }finally{await h.close()}
