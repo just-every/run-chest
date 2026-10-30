@@ -5765,7 +5765,7 @@
       "executable": false
     },
     "tests/chest/organization-link-controls-flow.mjs": {
-      "sha256": "3a286e02a95c271f7860755568969a44cda3270d11b10cf5d824774114cfe29e",
+      "sha256": "4a68f7e409cda8d5a488c3e2881d6c68ae12bec1988e8862491e203d07e9b4d1",
       "executable": false
     },
     "tests/chest/owner-cloud-restore.mjs": {
