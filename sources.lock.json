@@ -589,7 +589,7 @@
       "executable": false
     },
     "public/chest-app.css": {
-      "sha256": "068ce2fe111a52ffff648d95d7ea51606c86418b4a136b100c4b9a85c37bd595",
+      "sha256": "a736d420e1d7233aa4401c84805ff969216b64f37400b8ccc1dcee2117f433cc",
       "executable": false
     },
     "public/chest-ask.js": {
@@ -606,6 +606,10 @@
     },
     "public/chest-collabora.js": {
       "sha256": "0037249cb4371c5f430f66aca36a64346dfd7618da67e8bae84549bc4a61a007",
+      "executable": false
+    },
+    "public/chest-copy.js": {
+      "sha256": "7acd4c9adb8f5c7d27a767ed044aed075c300821701600baa0e739295865ce9a",
       "executable": false
     },
     "public/chest-files.css": {
@@ -2417,7 +2421,7 @@
       "executable": false
     },
     "src/chest/files/public.ts": {
-      "sha256": "7c138a3d97555fc6a79d3704842c89189b35248826b9c6fdf68383c2fa6e598f",
+      "sha256": "c3caf285d4e5eff2c37cd4e7d99d1d5f3365d6bd38b3e36d694a8d2ad97de02f",
       "executable": false
     },
     "src/chest/files/repo.ts": {
@@ -2561,7 +2565,7 @@
       "executable": false
     },
     "src/chest/files/ui-public.ts": {
-      "sha256": "b91e36b7e38b5d304e3cd5d147b5aa92e94698c047bba8d9011a24cafdf64d5b",
+      "sha256": "81db644834e5bf679701964cfd7efcd420a9e69610685e1db44508f2de8e3492",
       "executable": false
     },
     "src/chest/files/ui-restricted-preview.ts": {
@@ -3280,6 +3284,10 @@
       "sha256": "2abdc449d48058c9c7c3d86ab82d575f6966a9fa8978880bb81f3c7c27189b4f",
       "executable": false
     },
+    "src/chest/ui-flash.ts": {
+      "sha256": "36934a4a5e6ee146e4042c31339554cf7a2380605b81ccfbef3613a211945038",
+      "executable": false
+    },
     "src/chest/ui-grants.ts": {
       "sha256": "b822d11819b050ff9c3fe49df6547a5254daf7a70af8f61e52a686e9a5dcb531",
       "executable": false
@@ -3313,7 +3321,7 @@
       "executable": false
     },
     "src/chest/ui.ts": {
-      "sha256": "7c5b8732e97aed526347956b95db0e2cbfedf2bd15c76b2b7375f070a9ac208c",
+      "sha256": "e944c9fa3ac97e9644f857fa6f25040e9a6cdebfc88f458e58cccdb6d7a69427",
       "executable": false
     },
     "src/chest/upload-protection/detect.ts": {
@@ -5457,7 +5465,7 @@
       "executable": false
     },
     "tests/chest/browser-approved-links.mjs": {
-      "sha256": "39f02374678f5e1bbab1e945b2289e7f4e30aee443da45025a28f93b569ea019",
+      "sha256": "368b795897b09f3aad5522828d0bf60ebce6a2ce66421a31d3dd72d6418b3376",
       "executable": false
     },
     "tests/chest/browser-arrival-rules.mjs": {
@@ -5497,7 +5505,7 @@
       "executable": false
     },
     "tests/chest/browser-files.mjs": {
-      "sha256": "edb906c3fa8c88788303990978b5e0192fb6b1454074fc1b905e951253995c59",
+      "sha256": "68c4666e8ab3eaa4e48f63b53122fea971ca7ae395cbe1d7422002b64fe65097",
       "executable": false
     },
     "tests/chest/browser-flow.mjs": {
@@ -5509,7 +5517,7 @@
       "executable": false
     },
     "tests/chest/browser-guest-links.mjs": {
-      "sha256": "fd8cc6c5ec42e3ad0f83d9def3fade35a11d0780babf39aaf95b75e26e597454",
+      "sha256": "14016a062180eefb07fade5b4fcffca8cd9982feea5f2ba63419d462a1ba20b1",
       "executable": false
     },
     "tests/chest/browser-integrations.mjs": {
@@ -5517,7 +5525,7 @@
       "executable": false
     },
     "tests/chest/browser-link-discussions.mjs": {
-      "sha256": "122a002c173c8de2fba7dfc92c58bc1b5694acc5deb1b0822db4c840ed2a4a93",
+      "sha256": "a6d75b3fedc4f0fd22d5948946628a88d52d053aed98abf35b62f05bf02585db",
       "executable": false
     },
     "tests/chest/browser-link-repairs.mjs": {
@@ -5525,7 +5533,7 @@
       "executable": false
     },
     "tests/chest/browser-links.mjs": {
-      "sha256": "1493e950a5663fd67d5fc388356bdea0f768e079e066fc38054a6cafde68d64f",
+      "sha256": "849f67a80f703fa28b4850d92295c3997e34514ef2541b3d7dbff6df10ef5be7",
       "executable": false
     },
     "tests/chest/browser-new-files.mjs": {
@@ -5757,7 +5765,7 @@
       "executable": false
     },
     "tests/chest/organization-link-controls-flow.mjs": {
-      "sha256": "c4b5dfeb40ed1296981c71bf6302b68949a04db5dbeb62ed83476c6143b2aa8f",
+      "sha256": "3a286e02a95c271f7860755568969a44cda3270d11b10cf5d824774114cfe29e",
       "executable": false
     },
     "tests/chest/owner-cloud-restore.mjs": {
