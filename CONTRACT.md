@@ -2295,13 +2295,15 @@ The owner-approved page-s1 homepage (the hero, then one supplier's folder from t
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026).
 
+ADMIN-003 runtime and its Administration journey are judged from commit 95409a15f575b3a70b8d365bd37bf0f4c14a9d37 (30 October 2026). The final candidate changes only its status, evidence, generated views and source lock; its relevant runtime and journey bytes are unchanged.
+
 EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fbfbf114 (28 October 2026). Its final candidate strengthens the preview-authority journey and records the exact candidate in Verify; the runtime bytes are unchanged from that source commit.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 9 | 4 | 0 | 13 |
-| Target and push further | 29 | 50 | 78 | 157 |
-| All | 38 | 54 | 78 | 170 |
+| Target and push further | 30 | 49 | 78 | 157 |
+| All | 39 | 53 | 78 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2385,7 +2387,7 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | `ADMIN-001` | Single sign-on and directory lifecycle | target | done | `tests/chest/organisation.mjs`; `tests/chest/organisation-lifecycle.mjs`; `tests/chest/organisation-deprovision.mjs`; `tests/chest/organisation-recovery.mjs`; `docs/organisation.md` |  |
 | `ADMIN-002` | Admin reports | target | partial | `tests/chest/administration-report-flow.mjs`; `tests/chest/administration-guest-flow.mjs`; `tests/chest/quota.mjs`; `docs/administration.md` | Transfer and sync-failure reporting are incomplete in the old gap ("complete transfer ... reporting"). |
 | `ADMIN-005` | Provider-only USD cost view | target | partial | `tests/chest/administration-accounting-flow.mjs`; `tests/chest/backup-archive.mjs`; `tests/chest/bulk.mjs`; `tests/chest/signatures.mjs` | Fresh-judge candidate: ct ruled on administrator-recorded licence records and probes (RL-101); the old gap's remaining items, trusted live licensed limits, provider-side capacity and complete provider refusal reporting, stay unknown under that ruling and are field proof R-11. |
-| `ADMIN-003` | Several admins, delegated roles and owner transfer | target | partial | `tests/chest/administration.mjs`; `docs/administration.md` | Points 1 and 2 pass, point 3's refusal of the former owner's owner-only actions is asserted, and the last super admin cannot be deactivated (`tests/chest/administration.mjs`); the new owner succeeding at an owner-only action, a refused demotion of the last super admin, and the audit of each step are not asserted. |
+| `ADMIN-003` | Several admins, delegated roles and owner transfer | target | done | `tests/chest/administration.mjs` (Administration journey: promotion and scoped help desk; content and policy refusals; fresh accepted transfer with both owners exercising the same promotion; real last-admin demotion refusal with unchanged authority; attributed grants, use, offer, acceptance and refusal audit records); `docs/administration.md` |  |
 | `ADMIN-006` | Admin rewind without content access | target | partial | `tests/chest/administration.mjs` | Point 1 passes. Asserted (`tests/chest/administration.mjs`): the account restore's bytes and versions, the team-space restore's name and parent, the moved file among the preview's changes, revoked links and the departed identity denied, the admin refused names, preview and download, and an apply refused after the scope is removed. Not asserted: every restored team-space byte, kept conflict copies, a preview accounting for membership and sharing changes, the admin refused search, and a preview requested after the scope is removed. |
 | `ADMIN-004` | Enforced multi-factor sign-in | target | done | `tests/chest/security.mjs`; `tests/chest/administration.mjs` |  |
 | `QUOTA-001` | Storage limits for users and spaces | target | done | `tests/chest/quota.mjs`; `tests/chest/browser-quota.mjs`; `tests/chest/space-policy.mjs`; `tests/chest/new-files.mjs` |  |

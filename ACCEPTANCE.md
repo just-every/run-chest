@@ -8,10 +8,10 @@ The primary journey: create a team space, move originals and rights in, install 
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 37 | 48 | 38 | 123 |
+| Core | 38 | 47 | 38 | 123 |
 | Agent surface | 0 | 2 | 24 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 38 | 54 | 78 | 170 |
+| Full target | 39 | 53 | 78 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -1063,7 +1063,7 @@ Core · target · **partial** · From ADMIN-002 · Register R-11
 
 #### ADMIN-003 — Several admins, delegated roles and owner transfer
 
-Core · target · **partial** · Cites BASE-ROLE-001
+Core · target · **done** · Cites BASE-ROLE-001
 
 **Requirement.** The owner promotes any number of super admins and assigns delegated roles, alone or combined, scoped to the organization or named groups: user management, help desk (resend invitations, revoke sessions and devices, reset sign-in factors), sharing and security policy, service settings (integrations, backup, sync and mobile policy, space creation and defaults, storage limits), content recovery, and read-only audit and reporting. Admins can define custom roles from these privileges. File names, previews and search hits count as content under BASE-ROLE-001, and content recovery restores items without opening them. The owner role transfers to another super admin with acceptance and a fresh sign-in, and the former owner keeps only roles left to them. The console warns while only one super admin exists, and the last cannot be demoted or deactivated. Every role grant, change and use is audited.
 
@@ -1073,8 +1073,8 @@ Core · target · **partial** · Cites BASE-ROLE-001
 3. After ownership moves to the second super admin, the former owner is refused owner-only actions on the next request and the new owner succeeds.
 4. Demoting the last super admin is refused, and the audit records each step.
 
-**Evidence.** `tests/chest/administration.mjs`; `docs/administration.md`
-**Gap.** Points 1 and 2 pass, point 3's refusal of the former owner's owner-only actions is asserted, and the last super admin cannot be deactivated (`tests/chest/administration.mjs`); the new owner succeeding at an owner-only action, a refused demotion of the last super admin, and the audit of each step are not asserted.
+**Evidence.** `tests/chest/administration.mjs` (Administration journey: promotion and scoped help desk; content and policy refusals; fresh accepted transfer with both owners exercising the same promotion; real last-admin demotion refusal with unchanged authority; attributed grants, use, offer, acceptance and refusal audit records); `docs/administration.md`
+**Gap.** None.
 
 #### ADMIN-006 — Admin rewind without content access
 
