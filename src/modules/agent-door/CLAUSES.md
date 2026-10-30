@@ -200,7 +200,7 @@ MCP method names below use spaced slashes; wire names omit those spaces.
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
-| `BASE-AGENT-001` | One MCP door per seed | target | missing | | Not yet judged through this seed's own doors. |
+| `BASE-AGENT-001` | One MCP door per seed | target | partial | `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs` | The clause stays partial until a ct judgment. |
 | `BASE-AGENT-002` | The seed's jobs are tools, through the UI's own actions | target | missing | | Not yet judged through this seed's own doors. |
 | `BASE-AGENT-003` | Records are resources | target | missing | | Not yet judged through this seed's own doors. |
 | `BASE-AGENT-004` | Business identity and short-lived, audience-bound tokens | target | missing | | Not yet judged through this seed's own doors. |

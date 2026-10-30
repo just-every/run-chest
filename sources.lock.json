@@ -221,7 +221,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "762e1139628b47c4a52f7140c68ea83cf807106cc49cec92537bc2747bd65bef",
+      "sha256": "3beb0b1d112bf13ff35ea0db77a00a4055443e90f7b499835194c006e9193599",
       "executable": false
     },
     "DEMO.md": {
@@ -3505,7 +3505,7 @@
       "executable": false
     },
     "src/modules/agent-door/CLAUSES.md": {
-      "sha256": "0568321ca8cc6c5ff5056d3e12868795aadfedd17c51aa693dd4517450a9e867",
+      "sha256": "1071483a800955f2302b2d29f7e9a18b5d096735b617d4b197fe1e7d107c7973",
       "executable": false
     },
     "src/modules/agent-door/conformance/audit-pages.mjs": {
