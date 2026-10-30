@@ -29,7 +29,7 @@ export async function filingPage(env:Bindings,s:Session,url:URL):Promise<string|
  }
  if(url.pathname==='/app/filing/duplicates'){
   const d:any=await duplicatesExecute(env,s,'GET',['filing','duplicates'],{},url)
-  return head('Merge duplicates','Review version lineage, source evidence and separate approvals before choosing a canonical file. Original identities and access stay separate.')+duplicatesPanel(d)
+  return head('Merge duplicates','Review version lineage, source evidence and separate approvals before choosing the file to keep. Original identities and access stay separate.')+duplicatesPanel(d)
  }
  if(url.pathname==='/app/filing/rules'){
   const d:any=await rulesExecute(env,s,'GET',['filing','rules'],{},url), a:any=await rulesExecute(env,s,'GET',['filing','agent'],{},url)

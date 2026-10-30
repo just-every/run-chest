@@ -1,12 +1,12 @@
-import { esc,field,form,details,filingFields,icon,kindLabel,isoDay,nameOf } from './ui-shared'
+import { esc,field,form,details,filingFields,icon,kindLabel,isoDay,nameOf,count } from './ui-shared'
 import { icons } from '../ui/icons'
 const relation=(d:any)=>d.reference?.kind?`${esc(kindLabel(d.reference.kind))} <span aria-hidden="true">·</span> ${esc(d.reference.name)}`:'Unfiled'
 // One record row: its status on a folder tab, title and relationship, then the mono facts and a chevron to the record.
 function row(r:any,q:string,named:(email:string)=>string){const d=r.payload,v=d.versions.find((v:any)=>v.id===d.approved),href=`/app/documents/${r.id}`
  return `<article class="rec"><span class="chip${v?' chip-action':''} rec-tag">${v?'Approved':'Awaiting approval'}</span><div class="rec-card">
  <div class="rec-name">${icon('document')}<div><h2><a href="${href}">${esc(d.title)}</a></h2><p class="rec-rel">${relation(d)}</p></div></div>
- <dl class="rec-facts"><div><dt>${v?'Approved:':'Awaiting approval'}</dt><dd>${v?`<span class="mono one-line" title="${esc(v.filename)}">${esc(v.filename)}</span>`:''}<span class="mono">${d.versions.length} version(s)</span></dd></div><div><dt>Owner:</dt><dd class="one-line" title="${esc(d.owner)}">${esc(named(d.owner))}</dd></div><div><dt>Review:</dt><dd class="mono">${isoDay(d.reviewDate||'Not scheduled')}</dd></div><div><dt>Expiry:</dt><dd class="mono">${isoDay(d.expiryDate||'Not scheduled')}</dd></div></dl>
- ${r.fieldIssues.length?`<p class="rec-issue"><a class="chip chip-issue" href="${href}">${r.fieldIssues.length} field issue(s) under the current document type</a></p>`:''}${q?`<p class="rec-match mono">${esc((d.versions.find((v:any)=>v.text.toLowerCase().includes(q.toLowerCase()))?.text||'').slice(0,180))}</p>`:''}
+ <dl class="rec-facts"><div><dt>${v?'Approved:':'Awaiting approval'}</dt><dd>${v?`<span class="mono one-line" title="${esc(v.filename)}">${esc(v.filename)}</span>`:''}<span class="mono">${count(d.versions.length,'version')}</span></dd></div><div><dt>Owner:</dt><dd class="one-line" title="${esc(d.owner)}">${esc(named(d.owner))}</dd></div><div><dt>Review:</dt><dd class="mono">${isoDay(d.reviewDate||'Not scheduled')}</dd></div><div><dt>Expiry:</dt><dd class="mono">${isoDay(d.expiryDate||'Not scheduled')}</dd></div></dl>
+ ${r.fieldIssues.length?`<p class="rec-issue"><a class="chip chip-issue" href="${href}">${count(r.fieldIssues.length,'field issue')} under the current document type</a></p>`:''}${q?`<p class="rec-match mono">${esc((d.versions.find((v:any)=>v.text.toLowerCase().includes(q.toLowerCase()))?.text||'').slice(0,180))}</p>`:''}
  <a class="rec-open" href="${href}" tabindex="-1" aria-hidden="true">${icon('chevron')}</a></div></article>`}
 // The review and expiry work panel: every scheduled date on an accessible record, with its state.
 function work(data:any){const today=new Date().toISOString().slice(0,10)

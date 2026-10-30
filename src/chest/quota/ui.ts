@@ -1,21 +1,21 @@
 import { canAdmin } from '../administration/roles'
-import { bytes, card, esc, field, form, hidden, select } from '../ui-shared'
+import { bytes, card, esc, field, form, gigabytes, hidden, select } from '../ui-shared'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { quotas } from './api'
 import { totalStorage } from './storage'
 
 type Storage = { id: string; usedBytes: number; limitBytes: number | null; scope?: 'user' | 'space'; rule?: string }
-const limitField = (value: number | null, label = 'Storage limit in bytes (blank means unlimited)') => field(label, 'limitBytes', value === null ? '' : String(value), 'number', false).replace('type="number"', 'type="number" min="0" step="1"')
+const limitField = (value: number | null, label = 'Storage limit in GB (blank means unlimited)') => field(label, 'limitGb', gigabytes(value), 'number', false).replace('type="number"', 'type="number" min="0" step="any"')
 const retained = 'Current files, retained versions and trash count. Shared files count in their owning area, never against recipients.'
-const exactBytes = (n: number) => `${bytes(n)} (${n.toLocaleString('en-US')} bytes)`
+const exactBytes = (n: number) => bytes(n)
 const ruleText = (d: Storage) => d.rule ? `<p class="quiet">Effective rule: ${esc(d.rule)}</p>` : ''
 export function storagePanel(d: Storage, owner = false, returnTo = `/app/spaces/${d.id}`) {
  const scope = d.scope === 'user' ? 'personal area' : 'space', title = d.scope === 'user' ? 'Personal storage' : 'Space storage'
  const usage = `${exactBytes(d.usedBytes)} used${d.limitBytes === null ? ' · no storage limit' : ` of ${exactBytes(d.limitBytes)}`}`
  const full = d.limitBytes !== null && d.usedBytes >= d.limitBytes
  const warning = full ? `<p role="status">This ${scope} has reached its storage limit. New uploads, versions, copies, incoming moves, editor saves and restores that add bytes are refused. ${esc(exactBytes(d.usedBytes))} used; ${esc(exactBytes(d.limitBytes!))} limit. Ask a service-settings admin to raise the limit or permanently erase retained files. Trashing alone does not free storage. Existing files can still be viewed, downloaded, shared and commented on.</p>` : d.limitBytes !== null && d.usedBytes >= d.limitBytes * .9 ? `<p role="status">This ${scope} is at ${Math.floor(d.usedBytes / d.limitBytes * 100)}% of its storage limit. Plan to free retained storage or ask an admin to raise the limit.</p>` : ''
- const settings = owner ? form(`/spaces/${d.id}/quota`, field('Storage limit in bytes (leave blank for no limit)', 'storageLimitBytes', d.limitBytes === null ? '' : String(d.limitBytes), 'number', false).replace('type="number"', 'type="number" min="0" step="1"') + `<p class="quiet">Before a new or lower limit is saved, review and confirm any areas already over it. ${d.scope === 'user' ? 'Leave blank to give this person unlimited storage.' : 'Leave blank for an explicit unlimited override.'}</p>`, 'Save storage limit', returnTo, { buttonClass: 'btn btn-outline btn-block' }) : ''
+ const settings = owner ? form(`/spaces/${d.id}/quota`, field('Storage limit in GB (leave blank for no limit)', 'storageLimitGb', gigabytes(d.limitBytes), 'number', false).replace('type="number"', 'type="number" min="0" step="any"') + `<p class="quiet">Before a new or lower limit is saved, review and confirm any areas already over it. ${d.scope === 'user' ? 'Leave blank to give this person unlimited storage.' : 'Leave blank for an explicit unlimited override.'}</p>`, 'Save storage limit', returnTo, { buttonClass: 'btn btn-outline btn-block' }) : ''
  return card(title, `<p>${esc(usage)}</p>${ruleText(d)}<p class="quiet">${retained}</p>${warning}${settings}`, 'side-card')
 }
 export function quotaPage(d: any) {

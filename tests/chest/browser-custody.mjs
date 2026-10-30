@@ -27,7 +27,7 @@ export async function retainRecoveryRecords({owner,reviewer,origin,collection,sc
  await owner.getByLabel(/^Reviewer/).selectOption(email);
  await owner.getByLabel('Original file').setInputFiles({name:'retained-trash.txt',mimeType:'text/plain',buffer:Buffer.from('Original retained in reversible trash')});
  await owner.getByRole('button',{name:'Upload and submit'}).click();await owner.waitForURL('**/app/documents/*');
- const trashId=owner.url().split('/').at(-1);await owner.getByRole('button',{name:'Move to reversible trash'}).click();
+ const trashId=owner.url().split('/').at(-1);await owner.getByRole('button',{name:'Move to trash',exact:true}).click();
  const trash=await json(owner,origin,`/documents/${trashId}`);assert.equal(trash.payload.trash,true);
  assert.equal((await reviewer.goto(origin+`/app/documents/${trashId}`)).status(),404);
  await owner.goto(origin+'/app/archive');

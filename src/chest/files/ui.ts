@@ -68,6 +68,7 @@ export function filesInput(input: any) {
  }
  if (input.path === '/space-policy' && input.scope === 'organisation') input.creatorGroups = Object.keys(input).filter(k => k.startsWith('creatorGroup:') && input[k] === 'true').map(k => k.slice(13))
  if (input.path === '/creation-settings') input.groups = Object.entries(input).filter(([key, value]) => key.startsWith('format:') && value).map(([key, format]) => ({ group: key.slice(7), format }))
+ for (const key of ['limitBytes', 'storageLimitBytes']) { const gb = input[key.replace('Bytes', 'Gb')]; if (typeof gb === 'string') { input[key] = gb.trim() === '' ? '' : String(Math.round(Number(gb) * 1073741824)); delete input[key.replace('Bytes', 'Gb')] } }
  if (typeof input.limitBytes === 'string') input.limitBytes = input.limitBytes.trim() === '' ? null : Number(input.limitBytes)
  if (typeof input.storageLimitBytes === 'string') input.storageLimitBytes = input.storageLimitBytes.trim() === '' ? null : Number(input.storageLimitBytes)
  for (const key of ['confirmExternal', 'allowExternal', 'allowNonMembers', 'allowEditors', 'warnExternal', 'scanIntake', 'externalAccess', 'nonMemberAccess', 'contentManagerFolderSharing', 'managerOverride', 'confirmOverLimit', 'noDownload', 'editorSharing', 'restricted', 'discoverable', 'starred', 'shortcut', 'remove', 'retainEditor', 'allowPublic', 'allowOrganisation', 'allowDiscovery', 'download']) if (input[key] === 'true' || input[key] === 'false') input[key] = input[key] === 'true'
