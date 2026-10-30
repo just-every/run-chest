@@ -2304,8 +2304,8 @@ ADMIN-006 runtime source is judged from commit 9d951ccdecac60aea1be5f560119bf2cd
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 11 | 2 | 0 | 13 |
-| Target and push further | 30 | 49 | 78 | 157 |
-| All | 41 | 51 | 78 | 170 |
+| Target and push further | 30 | 50 | 77 | 157 |
+| All | 41 | 52 | 77 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2453,7 +2453,7 @@ ADMIN-006 runtime source is judged from commit 9d951ccdecac60aea1be5f560119bf2cd
 | `SURFACE-007` | Narrowing access and repairing links | target | missing |  | No narrowing tool, class declaration or policy decision; today the integration API removes grants (`/unshare`), and revoke and Make private are browser-only (SHARE-007, AGENT-005). |
 | `SURFACE-008` | Collect documents in, send files out | target | missing |  | No send or reminder tools, class declarations or policy decisions; today `chest_create_request` exists, and sending, transfers and signing are browser-only. |
 | `SURFACE-009` | Devices and sync | target | missing |  | No device tools; the client states are themselves missing in SYNC-003, and the device list, revoke and deactivation are browser-only. |
-| `SURFACE-010` | Administration and security settings are classified, not withheld | target | missing |  | No admin tools, and the integration API has no admin scope; ADMIN-002 itself is partial. |
+| `SURFACE-010` | Administration and security settings are classified, not withheld | target | partial | `tests/chest/integrations.mjs` — scoped activity CSV, separate consent, staff refusal and revocation journey; `tests/chest/browser-integrations.mjs` — report consent and browser export reconciliation | Read-only activity reports use separately consented, persisted group bounds intersected with current delegated reporting authority on every request and output page. Shared Base Agent integration, canonical admin tools, standard, access, security and destructive classifications and company-policy decisions remain unproved. Storage-limit mutations and over-limit reporting, invitations and approval-gated mail, settings, quarantine and MFA changes, self-escalation refusal, backup restore previews and decisions, and space-creation classification remain missing. ADMIN-002 transfer and sync reporting and all existing administrative, account and provider prerequisites remain unchanged. |
 | `SURFACE-011` | Decisions and signatures are commitments | target | missing |  | No decision or signature tools, class declarations or agent attribution; decisions and signing are browser-only. |
 | `SURFACE-012` | Limits and Pause agents | target | partial | `tests/chest/integrations.mjs` | Points 2 and 3 pass on the integration API with an agent's OAuth token; there is no Pause agents control, spend cap or per-agent usage, MCP calls are not asserted, and the per-grant budgets are fixed values today. |
 | `SURFACE-013` | The records clerk journey under two company policies | target | missing |  | Needs SURFACE-001 to SURFACE-012 and the Base door. Register row R-25 records the same journey from stock vendor clients. |
