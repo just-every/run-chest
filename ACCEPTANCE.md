@@ -2097,7 +2097,7 @@ Agent surface · target · **partial** · From new · Cites BASE-AGENT-003, BASE
 5. A 20 MB version returns a byte link that resumes a range read, expires after 5 minutes and works only with the same grant.
 6. Access revoked mid-stream ends the stream before the next chunk.
 
-**Evidence.** `tests/chest/integrations.mjs` — Current OAuth ACL and SURFACE-003 original byte journey: points 1–6 on the native integration doors; canonical MCP blobs and resource reads; retained full and range hashes; browser quarantine parity; finite and zero byte budgets; 20 MB same-grant links, expiry and resumed ranges across restart; interrupted direct and linked streams and fresh denial after committed membership or grant revocation and restart.
+**Evidence.** `tests/chest/integrations.mjs` — Current OAuth ACL and SURFACE-003 original byte journey: points 1–6 on the native integration doors; canonical MCP blobs and resource reads; retained full and range hashes; browser quarantine parity; finite and zero byte budgets; 20 MB same-grant links, expiry and resumed ranges across restart; interrupted API, byte-link and embedded MCP streams and fresh denial after committed membership or grant revocation and restart.
 **Gap.** Native byte behavior is proved through the existing integration API and MCP transport. Adoption and conformance of the shared Base Agent door and inherited BASE-AGENT-011 global Pause behavior remain unproved; SURFACE-001 and SURFACE-012 own that shared-runtime integration.
 
 #### SURFACE-004 — Add and organize files

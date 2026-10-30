@@ -2,7 +2,8 @@ import type { Bindings } from '../../auth.server'
 import { ChestError, insist } from '../model'
 import { action, type Authorized } from './auth'
 import { resourceCall } from './resources'
-import { originalResource } from './bytes'
+import { guardedOutput, originalResource } from './bytes'
+import { headers } from '../api'
 const object=(properties:Record<string,unknown>,required:string[]=[])=>({type:'object',properties,required,additionalProperties:false}),string={type:'string'},id={type:'string',minLength:1},limit={type:'integer',minimum:1,maximum:100}
 const tools=[
  {name:'chest_list',description:'List currently accessible files and folders inside the grant; follow nextCursor.',inputSchema:object({parent:id,cursor:string,limit})},
@@ -31,7 +32,7 @@ export async function mcp(env: Bindings,auth: Authorized,payload: any) {
    const result=await originalResource(env,auth,decodeURIComponent(match[1]),decodeURIComponent(match[2]),true)
    const embedded=result.content[0]
    insist('resource' in embedded,'original_requires_byte_link',413)
-   return reply({contents:[embedded.resource]})
+   return guardedOutput(env,auth,decodeURIComponent(match[1]),result.structuredContent.sha256,Response.json(reply({contents:[embedded.resource]}),{headers}))
   }catch(error){return {jsonrpc:'2.0',id,error:{code:-32002,message:error instanceof ChestError?error.code:'service_unavailable'}}}
  }
  if(payload.method!=='tools/call')return {jsonrpc:'2.0',id,error:{code:-32601,message:'Method not found'}}
@@ -39,7 +40,11 @@ export async function mcp(env: Bindings,auth: Authorized,payload: any) {
  if(!tool)return {jsonrpc:'2.0',id,error:{code:-32602,message:'Unknown tool'}}
  try {
   const props=tool.inputSchema.properties;insist(a&&typeof a==='object'&&!Array.isArray(a)&&Object.keys(a).every(k=>k in props)&&tool.inputSchema.required.every(k=>a[k]!==undefined),'invalid_tool_arguments')
-  if(name==='chest.files.read'){insist(typeof a.id==='string'&&a.id.length>0&&typeof a.version==='string'&&a.version.length>0,'invalid_tool_arguments');return reply(await originalResource(env,auth,a.id,a.version))}
+  if(name==='chest.files.read'){
+   insist(typeof a.id==='string'&&a.id.length>0&&typeof a.version==='string'&&a.version.length>0,'invalid_tool_arguments')
+   const result=await originalResource(env,auth,a.id,a.version),answer=reply(result)
+   return result.content[0].type==='resource'?guardedOutput(env,auth,a.id,result.structuredContent.sha256,Response.json(answer,{headers})):answer
+  }
   let method='GET',path='',input:any={},query=new URLSearchParams()
   for(const [k,v] of Object.entries(a))if(!['id','key','base64'].includes(k))query.set(k,String(v))
   if(name==='chest_list')path='/items';if(name==='chest_search')path='/search';if(name==='chest_get')path=`/items/${encodeURIComponent(a.id)}`;if(name==='chest_versions')path=`/items/${encodeURIComponent(a.id)}/versions`

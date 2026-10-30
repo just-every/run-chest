@@ -31,19 +31,26 @@ export async function readOriginal(env: Bindings, auth: Authorized, item: string
  await commit(env, auth.session, [spend(auth, {bytes: size})], {fences: [...ctx.fences, ...(link ? [link] : [])]})
  const current = await live(env, auth) as Authorized
  const response = await original(env, current.session, await who(env, current.session), item, version, true, range)
+ response.headers.set('accept-ranges', 'bytes')
+ return guardedOutput(env, current, item, v.checksum, response, link?.payload.expires)
+}
+
+// Guard the transport as well as storage reads. An embedded MCP blob becomes
+// one large JSON buffer; it must not bypass bounded authorization at delivery.
+export function guardedOutput(env: Bindings, auth: Authorized, item: string, checksum: string, response: Response, expires?: string) {
  if (!response.body) return response
  const reader = response.body.getReader(); let pending = new Uint8Array(0), cancelled = false
  return new Response(new ReadableStream<Uint8Array>({
   async pull(controller) { try {
    if (!pending.length) { const next = await reader.read(); if (cancelled) return; if (next.done) { controller.close(); reader.releaseLock(); return } pending = next.value }
-   await live(env, current, item, 'download')
-   await assertContent(env, v.checksum)
-   if (link) insist(Date.parse(link.payload.expires) > Date.now(), 'byte_link_expired', 410)
+   await live(env, auth, item, 'download')
+   await assertContent(env, checksum)
+   if (expires) insist(Date.parse(expires) > Date.now(), 'byte_link_expired', 410)
    if (cancelled) return
    const chunk = pending.subarray(0, 256 * 1024); pending = pending.subarray(chunk.length); controller.enqueue(chunk)
   } catch (error) { pending = new Uint8Array(0); if (!cancelled) controller.error(error); await reader.cancel() } },
   async cancel() { cancelled = true; pending = new Uint8Array(0); await reader.cancel() },
- }, {highWaterMark: 0}), {status: response.status, headers: {...Object.fromEntries(response.headers), 'accept-ranges': 'bytes'}})
+ }, {highWaterMark: 0}), {status: response.status, headers: response.headers})
 }
 
 export async function originalResource(env: Bindings, auth: Authorized, item: string, version: string, blobOnly = false) {

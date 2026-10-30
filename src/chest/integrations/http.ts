@@ -37,7 +37,7 @@ export async function integrationsResponse(request: Request,original: Bindings):
   if(origin){insist(origin===env.AUTH_ORIGIN||auth.client.payload.pickerOrigins.includes(origin)||auth.client.payload.redirects.some(u=>new URL(u).origin===origin),'oauth_origin_mismatch',403);permittedOrigin=origin}
   insist(request.method==='GET'||request.method==='POST','method_not_allowed',405)
   auth=await requestBudget(env,auth)
-  if(isMcp){insist(request.method==='POST','method_not_allowed',405);const result=await mcp(env,auth,await input(request));return cross(result===undefined?new Response(null,{status:202}):Response.json(result,{headers}),permittedOrigin)}
+  if(isMcp){insist(request.method==='POST','method_not_allowed',405);const result=await mcp(env,auth,await input(request));return cross(result instanceof Response?result:result===undefined?new Response(null,{status:202}):Response.json(result,{headers}),permittedOrigin)}
   const resourcePath=path.slice('/api/chest/integrations/v1'.length),data=request.method==='POST'?await input(request):{},parts=resourcePath.split('/').filter(Boolean);let result:unknown
   if(parts[0]==='webhooks'){
    action(auth,'webhook')
