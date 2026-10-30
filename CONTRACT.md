@@ -2302,8 +2302,8 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 11 | 2 | 0 | 13 |
-| Target and push further | 29 | 50 | 78 | 157 |
-| All | 40 | 52 | 78 | 170 |
+| Target and push further | 29 | 51 | 77 | 157 |
+| All | 40 | 53 | 77 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2443,7 +2443,7 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 | `FOLLOW-002` | Reply and resolve from email | target | missing |  | Replies by email do not exist. |
 | `FOLLOW-003` | Personal notification settings | target | missing |  | Personal settings do not exist. |
 | `SURFACE-001` | The Agent surface is Chest's tool registry | target | missing |  | No registry, output schemas, annotations, class declarations, parity test, generated docs or Base harness. Today 9 tools run on `/mcp/chest` at protocol 2025-03-26 with input schemas only (`src/chest/integrations/mcp.ts`), and 39 of the table's 48 tools have no MCP tool. |
-| `SURFACE-002` | Find and read what the sponsor can open | target | missing |  | A restricted or out-of-grant item returns 403 while a missing one returns 404; there is no activity, trash view, report, exposure or event-feed tool, no resources, no sensitive class and no untrusted marker. Today `chest_list`, `chest_get`, `chest_search` and `chest_versions` exist. |
+| `SURFACE-002` | Find and read what the sponsor can open | target | partial | `tests/chest/integrations.mjs` — SURFACE-002 existence-blind metadata and versions: scoped HTTP and legacy MCP, live ACL, credential revocation and Worker restart. Point 2 is exercised through the existing authenticated integration API and chest_get and chest_versions, with authorized retained-version controls and authentication, action and no-download refusals. | The shared Base Agent door, canonical tool names and resources, search-order parity with every SEARCH-003 filter, role-specific browser field parity, access-list authority, activity, trash, request and report parity, event-feed revocation, sensitive classification and untrusted markers remain unimplemented or unproved. Today `chest_list`, `chest_get`, `chest_search` and `chest_versions` exist. |
 | `SURFACE-003` | Original bytes follow download rights | target | partial | `tests/chest/integrations.mjs` | Points 1 and 2 pass on the integration API's byte path with an agent's OAuth token; there is no MCP byte tool, blob resource or expiring byte link, and quarantine, byte-budget exhaustion and mid-stream revocation are not asserted for agent grants. |
 | `SURFACE-004` | Add and organize files | target | missing |  | No resumable agent upload, move, field or selection tools, job handles or exposure rule. Today `chest_upload` (base64 in one call) and `chest_create_folder` exist, and the integration API renames and adds versions. |
 | `SURFACE-005` | Recovery stays standard; destruction is its own class | target | missing |  | No trash, rewind, purge or erasure tools, class declarations or policy decisions; today the integration API restores and names versions. |

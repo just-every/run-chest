@@ -9,9 +9,9 @@ The primary journey: create a team space, move originals and rights in, install 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Core | 39 | 46 | 38 | 123 |
-| Agent surface | 0 | 2 | 24 | 26 |
+| Agent surface | 0 | 3 | 23 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 40 | 52 | 78 | 170 |
+| Full target | 40 | 53 | 77 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -2066,7 +2066,7 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-001, BASE
 
 #### SURFACE-002 — Find and read what the sponsor can open
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-003, BASE-AGENT-005, BASE-AGENT-006, BASE-AGENT-010 · Rules D-4
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-003, BASE-AGENT-005, BASE-AGENT-006, BASE-AGENT-010 · Rules D-4
 
 **Requirement.** The records clerk finds and reads through the read tools and the `chest://` resources. Reads are standard. A read that returns sensitive content (as Chest computes it above) also declares sensitive, with the data kind.
 
@@ -2080,8 +2080,8 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-003, BASE
 7. Reading a W-9's bytes or its OCR text declares sensitive with the kind "tax ID"; reading its masked typed fields declares standard only.
 8. OCR text and requester messages in results carry the untrusted marker.
 
-**Evidence.** None.
-**Gap.** A restricted or out-of-grant item returns 403 while a missing one returns 404; there is no activity, trash view, report, exposure or event-feed tool, no resources, no sensitive class and no untrusted marker. Today `chest_list`, `chest_get`, `chest_search` and `chest_versions` exist.
+**Evidence.** `tests/chest/integrations.mjs` — SURFACE-002 existence-blind metadata and versions: scoped HTTP and legacy MCP, live ACL, credential revocation and Worker restart. Point 2 is exercised through the existing authenticated integration API and chest_get and chest_versions, with authorized retained-version controls and authentication, action and no-download refusals.
+**Gap.** The shared Base Agent door, canonical tool names and resources, search-order parity with every SEARCH-003 filter, role-specific browser field parity, access-list authority, activity, trash, request and report parity, event-feed revocation, sensitive classification and untrusted markers remain unimplemented or unproved. Today `chest_list`, `chest_get`, `chest_search` and `chest_versions` exist.
 
 #### SURFACE-003 — Original bytes follow download rights
 
