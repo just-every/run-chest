@@ -9,14 +9,17 @@ import type { Bindings } from "../../auth.server";
 import { get } from "../store";
 import { place } from "../files/items";
 import { who } from "../files/access";
-import { agentSession, nativeSession } from "./identity.ts";
+import { agentSession, humanSession, type HumanSessions } from "./identity.ts";
 import { execute } from "../api";
 import { itemContext, mutation, nativeCall } from "./native.ts";
 import { exposure, standard } from "./risk.ts";
 import { object, id, text, bool, target, result } from "./schemas.ts";
 import type { Batch } from "../filing/batch-model";
 const listOfIds = { type: "array", items: id, minItems: 1, maxItems: 100 };
-export function planTools(env: Bindings): ToolDefinition[] {
+export function planTools(
+  env: Bindings,
+  humans: HumanSessions,
+): ToolDefinition[] {
   async function batch(a: Record<string, unknown>, c: ToolContext) {
     const row = await get<Batch>(env, "filing_batch", String(a.id));
     if (row.payload.by !== c.person.email)
@@ -154,7 +157,7 @@ export function planTools(env: Bindings): ToolDefinition[] {
           row = await get<Batch>(env, "filing_batch", saved.id);
         if (row.revision !== saved.revision)
           throw new ToolRefusal("filing_undo_stale");
-        const session = await nativeSession(env, c.person),
+        const session = await humanSession(env, c.person, humans),
           path = `/filing/batches/${encodeURIComponent(saved.id)}/undo`;
         await execute(
           env,

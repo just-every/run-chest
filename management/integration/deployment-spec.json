@@ -202,6 +202,12 @@
       "name": "0032_agent_custody_fence.sql",
       "sha256": "660fda004019aaab22789a35c32a6c20113ce2d4af91617db1f373ca3341196e",
       "sql": "-- Chest owns this conservative custody fence. Retained Base decisions cannot yet\n-- be redacted per client, so native erasure and first agent admission must not race.\n-- Existing agent registrations cause an explicit native preservation hold.\nCREATE TRIGGER chest_agent_custody_erasure_fence\nBEFORE INSERT ON agent_door_agents\nWHEN EXISTS (\n  SELECT 1 FROM chest_records\n  WHERE kind='erasure' AND json_extract(payload,'$.state')='pending'\n)\nBEGIN\n  SELECT RAISE(ABORT, 'agent_custody_erasure_pending');\nEND;\n"
+    },
+    {
+      "binding": "DB",
+      "name": "0033_agent_audit_custody.sql",
+      "sha256": "8e0868101ce558c90d0197a5b1615e5f227a58172e1a79b4263c51d968ea748d",
+      "sql": "-- A native audit anonymization made before first agent admission cannot later\n-- be contradicted by a new retained company-agent identity snapshot.\nCREATE TABLE chest_agent_custody_blocks (\n  operator_id TEXT PRIMARY KEY,\n  reason TEXT NOT NULL CHECK(reason='audit_identity_anonymized')\n);\nCREATE TRIGGER chest_agent_custody_identity_fence\nBEFORE INSERT ON agent_door_agents\nWHEN EXISTS (SELECT 1 FROM chest_agent_custody_blocks WHERE operator_id=NEW.sponsor)\nBEGIN\n  SELECT RAISE(ABORT, 'agent_decision_custody_held');\nEND;\n"
     }
   ],
   "compatibilityDate": "2026-09-08",

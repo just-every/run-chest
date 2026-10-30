@@ -109,7 +109,13 @@ export async function mutation(
           .filter((o) => kinds.includes(o.row.kind))
           .map((o) => publicRecord(o.row)),
         first = rows[0];
-      const result = { ...first, records: rows };
+      const result = {
+        ...first,
+        records: rows,
+        before: ops
+          .filter((o) => kinds.includes(o.row.kind) && o.previous)
+          .map((o) => publicRecord(o.previous!)),
+      };
       const receipt = fresh(
         "agent-effect",
         {
