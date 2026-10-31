@@ -1,9 +1,16 @@
 // CONNECT-007 via the built Worker; the OAuth client and webhook receiver are network edges.
 import assert from 'node:assert/strict';
 import {createHash,createHmac,randomBytes} from 'node:crypto';
+import {request as httpsRequest} from 'node:https';
 import {harness} from './harness.mjs';
 let signingSecret='',receiverMode='fail',received=new Map(),attempts=0;
-const h=await harness({bindings:{CHEST_OUTBOUND_HOSTS:'hooks.example.test,api.resend.com'},edge:async request=>{if(new URL(request.url).hostname!=='hooks.example.test')return;const body=await request.text(),signature=request.headers.get('x-chest-signature'),[,timestamp,mac]=/^t=(\d+),v1=([a-f0-9]+)$/.exec(signature)||[];assert.ok(timestamp&&Math.abs(Date.now()/1000-Number(timestamp))<60);assert.equal(mac,createHmac('sha256',signingSecret).update(timestamp+'.'+body).digest('hex'));const event=JSON.parse(body);assert.equal(request.headers.get('x-chest-event'),event.id);attempts++;if(receiverMode==='fail')return new Response('temporarily unavailable',{status:503});if(!received.has(event.id))received.set(event.id,event);if(receiverMode==='uncertain')await new Promise(resolve=>setTimeout(resolve,12000));return Response.json({accepted:event.id,duplicate:received.has(event.id)})}});
+const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+const h=await harness({bindings:{CHEST_OUTBOUND_HOSTS:'hooks.example.test,api.resend.com,synthetic-chest-scanner.test',CONTENT_SCANNER_URL:'https://synthetic-chest-scanner.test/scan',CONTENT_SCANNER_TOKEN:'synthetic-chest-1'},edge:async request=>{
+ if(request.url==='https://synthetic-chest-scanner.test/scan'){
+  const bytes=Buffer.from(await request.arrayBuffer());assert.equal(request.headers.get('authorization'),'Bearer synthetic-chest-1');assert.equal(request.headers.get('x-content-sha256'),sha(bytes));
+  return Response.json({checksum:sha(bytes),size:bytes.length,state:'infected',sensitive:false,reason:'Synthetic scanner-edge receipt',engine:'synthetic-chest-1'});
+ }
+ if(new URL(request.url).hostname!=='hooks.example.test')return;const body=await request.text(),signature=request.headers.get('x-chest-signature'),[,timestamp,mac]=/^t=(\d+),v1=([a-f0-9]+)$/.exec(signature)||[];assert.ok(timestamp&&Math.abs(Date.now()/1000-Number(timestamp))<60);assert.equal(mac,createHmac('sha256',signingSecret).update(timestamp+'.'+body).digest('hex'));const event=JSON.parse(body);assert.equal(request.headers.get('x-chest-event'),event.id);attempts++;if(receiverMode==='fail')return new Response('temporarily unavailable',{status:503});if(!received.has(event.id))received.set(event.id,event);if(receiverMode==='uncertain')await new Promise(resolve=>setTimeout(resolve,12000));return Response.json({accepted:event.id,duplicate:received.has(event.id)})}});
 const b64=s=>Buffer.from(s).toString('base64'),random=()=>randomBytes(32).toString('base64url');
 const call=async(token,path,{method='GET',body,key,status=200}={})=>{const response=await h.fetch('/api/chest/integrations/v1'+path,{method,headers:{authorization:'Bearer '+token,...(body?{'content-type':'application/json'}:{}),...(key?{'idempotency-key':key}:{})},...(body?{body:JSON.stringify(body)}:{})});assert.equal(response.status,status,`integration ${path}: ${response.status===status?'':await response.text()}`);return response.status===200?response.json():null};
 const form=(path,cookie,body)=>h.fetch(path,{method:'POST',headers:{cookie,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams(body)});
@@ -65,6 +72,60 @@ try{
  assert.equal(finalAudit.filter(r=>r.action==='integration.mutation'&&r.object_id===recoveryGrant.grant).length,1,'refused attempts add no successful mutation receipt');
  assert.equal(await downloadHash(`${linkPath}/f/${recoverable.id}`),sha(originalA),'grant revocation preserves the independent existing link');
  console.log('PROBE SURFACE-005 point 1: OAuth version restore -> exact A hash, retained A and B, stable item and original link; restart retry -> one restore and audit; viewer and revoked grant -> refusal with unchanged history');
+ // SURFACE-003: retained originals, finite byte budgets and scanner quarantine use the ordinary byte door.
+ const originalBytes=Buffer.from(Array.from({length:64},(_,i)=>i)),replacementBytes=Buffer.from(Array.from({length:128},(_,i)=>255-i));
+ const byteFile=await h.api('/items',staff,{parent:folder.id,name:'Budget original.bin',base64:b64(originalBytes)}),retainedVersion=byteFile.payload.current;
+ const byteReplacement=await h.api(`/items/${byteFile.id}/versions`,staff,{base64:b64(replacementBytes)});
+ const bytePath=(item,version)=>`/api/chest/integrations/v1/items/${item}/bytes/${version}`;
+ const byteRead=(credential,item,version,range)=>h.fetch(bytePath(item,version),{headers:{authorization:'Bearer '+credential,...(range?{range}:{})}});
+ for(const [version,expected] of [[retainedVersion,originalBytes],[byteReplacement.payload.current,replacementBytes]]){
+  const full=await byteRead(token,byteFile.id,version);assert.equal(full.status,200);assert.equal(sha(Buffer.from(await full.arrayBuffer())),sha(expected),'full read preserves the exact retained original');
+  const range=await byteRead(token,byteFile.id,version,'bytes=8-23');assert.equal(range.status,206);assert.equal(range.headers.get('content-range'),`bytes 8-23/${expected.length}`);assert.equal(sha(Buffer.from(await range.arrayBuffer())),sha(expected.subarray(8,24)),'range read preserves the exact retained interval');
+ }
+ const finite=await authorize(client,staff,['download'],[folder.id],{budget_bytes:'80'});
+ assert.equal(sha(Buffer.from(await(await byteRead(finite.access_token,byteFile.id,retainedVersion)).arrayBuffer())),sha(originalBytes));
+ const lastRange=await byteRead(finite.access_token,byteFile.id,retainedVersion,'bytes=8-23');assert.equal(lastRange.status,206);assert.equal(sha(Buffer.from(await lastRange.arrayBuffer())),sha(originalBytes.subarray(8,24)),'ranges charge the requested bytes, not the whole version');
+ for(const [credential,range] of [[finite.access_token,'bytes=0-0'],[(await authorize(client,staff,['download'],[folder.id],{budget_bytes:'0'})).access_token,undefined]]){
+  const refused=await byteRead(credential,byteFile.id,retainedVersion,range);assert.equal(refused.status,429);assert.match(refused.headers.get('content-type'),/application\/json/);assert.equal((await refused.json()).error,'budget_exhausted','budget refusal emits only the error document, never original bytes');
+ }
+ const short=await authorize(client,staff,['download'],[folder.id],{budget_bytes:'63'}),over=await byteRead(short.access_token,byteFile.id,retainedVersion);assert.equal(over.status,429);assert.equal((await over.json()).error,'budget_exhausted');
+ const afterRefusal=await byteRead(short.access_token,byteFile.id,retainedVersion,'bytes=0-62');assert.equal(afterRefusal.status,206);assert.equal(sha(Buffer.from(await afterRefusal.arrayBuffer())),sha(originalBytes.subarray(0,63)),'refusal leaves the byte allowance unchanged');
+ await h.api(`/items/${byteFile.id}/shares`,staff,{principal:h.vars.OWNER_EMAIL,role:'viewer'});
+ await h.api('/content-security/policy',owner,{enabled:true,sensitiveGroups:[],confirm:true});await h.api('/content-security/scan',owner,{item:byteFile.id},423);
+ for(const version of [retainedVersion,byteReplacement.payload.current])for(const range of [undefined,'bytes=8-23']){
+  const browser=await h.fetch(`/api/chest/items/${byteFile.id}/bytes/${version}?download=true`,{headers:{cookie:staff,...(range?{range}:{})}}),agent=await byteRead(token,byteFile.id,version,range);
+  assert.equal(agent.status,browser.status);assert.equal(agent.status,403);assert.match(agent.headers.get('content-type'),/application\/json/);assert.deepEqual(await agent.json(),await browser.json(),'quarantined originals return the browser refusal document and no original bytes');
+ }
+ await h.stop();await h.start();const stillHeld=await byteRead(token,byteFile.id,retainedVersion);assert.equal(stillHeld.status,403);assert.equal((await stillHeld.json()).error,'access_required','quarantine survives Worker restart');
+ await h.api('/content-security/release',owner,{checksum:sha(originalBytes),confirm:true,reason:'Reviewed the synthetic scanner false positive'});await h.api('/content-security/policy',owner,{enabled:false,sensitiveGroups:[],confirm:true});
+ assert.equal(sha(Buffer.from(await(await byteRead(token,byteFile.id,retainedVersion)).arrayBuffer())),sha(originalBytes),'explicit release retains the exact original');
+ // Revocation commits through the real membership API while the original response is open.
+ const streamSpace=await h.api('/spaces',owner,{name:'Live original access'}),members=[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:'staff@example.test',role:'viewer'}];
+ await h.api(`/spaces/${streamSpace.id}/members`,owner,{members});const streamRoot=await h.api('/items',owner,{space:streamSpace.id,type:'folder',name:'Streaming originals'});
+ // Below the in-memory original threshold: storage presents one buffer, which
+ // still needs multiple live authorization decisions before it can leave.
+ const streamBytes=Buffer.alloc(6*1024**2);for(let i=0;i<streamBytes.length;i+=256*1024)streamBytes.fill(i/(256*1024),i,i+256*1024);
+ const upload=await h.api('/uploads',owner,{parent:streamRoot.id,name:'Streaming original.bin',size:streamBytes.length,checksum:sha(streamBytes)});
+ for(let offset=0,n=1;offset<streamBytes.length;offset+=upload.partSize,n++){
+  const part=streamBytes.subarray(offset,offset+upload.partSize),response=await h.fetch(`/api/chest/uploads/${upload.id}/parts/${n}`,{method:'PUT',headers:{cookie:owner,origin:h.origin,'content-type':'application/octet-stream'},body:part});assert.equal(response.status,200);await response.json();
+ }
+ const completed=await h.api(`/uploads/${upload.id}/complete`,owner,{}),streamFile=completed.result.item,streamVersion=completed.result.version;
+ const streamGrant=await authorize(client,staff,['read','download'],[streamRoot.id]);
+ const allowedStream=await byteRead(streamGrant.access_token,streamFile,streamVersion);assert.equal(allowedStream.status,200);assert.equal(sha(Buffer.from(await allowedStream.arrayBuffer())),sha(streamBytes),'an authorized original completes with its retained hash');
+ // Use a paused live HTTPS socket to commit revocation while delivery is in progress.
+ const open=await new Promise((resolve,reject)=>{const request=httpsRequest(new URL(bytePath(streamFile,streamVersion),h.origin),{rejectUnauthorized:false,headers:{authorization:'Bearer '+streamGrant.access_token}},resolve);request.on('error',reject);request.end()});
+ assert.equal(open.statusCode,200);const streamReader=open[Symbol.asyncIterator](),prefix=[];let receivedBytes=0;
+ const firstChunk=await streamReader.next();assert.ok(!firstChunk.done&&firstChunk.value.length>0);prefix.push(Buffer.from(firstChunk.value));receivedBytes+=firstChunk.value.length;
+ const revokedMembers=await h.api(`/spaces/${streamSpace.id}/members`,owner,{members:members.slice(0,1)});assert.equal(revokedMembers.payload.members.length,1);
+ const immediatelyRefused=await byteRead(streamGrant.access_token,streamFile,streamVersion);assert.equal(immediatelyRefused.status,403,await immediatelyRefused.text());
+ // Miniflare may close a failed chunked response cleanly; either transport outcome
+ // must withhold the tail. Original hashes detect an incomplete response as well.
+ try{for(;;){const chunk=await streamReader.next();if(chunk.done)break;prefix.push(Buffer.from(chunk.value));receivedBytes+=chunk.value.length}}catch(error){assert.ok(error instanceof Error)}
+ assert.ok(receivedBytes<streamBytes.length,'revocation withholds the original tail');assert.equal(sha(Buffer.concat(prefix)),sha(streamBytes.subarray(0,receivedBytes)),'only an exact authorized prefix was emitted');
+ const refusedFresh=await byteRead(streamGrant.access_token,streamFile,streamVersion);assert.equal(refusedFresh.status,403);assert.equal((await refusedFresh.json()).error,'access_required');
+ await h.stop();await h.start();const refusedRestart=await byteRead(streamGrant.access_token,streamFile,streamVersion,'bytes=0-31');assert.equal(refusedRestart.status,403);assert.equal((await refusedRestart.json()).error,'access_required','restart cannot revive revoked byte access');
+ const retained=await h.api(`/items/${streamFile}`,owner);assert.equal(retained.versions.find(v=>v.id===streamVersion).checksum,sha(streamBytes),'revocation preserves the retained original');
+ console.log('SURFACE-003 original byte journey passed: retained full and range hashes, quarantine parity and restart, finite and zero byte budgets, interrupted stream and fresh denial after membership revocation and restart');
  // SECURITY-002: a paused OAuth source stops metadata and mutations too; browser authority remains independent.
  const securityGroup=await h.api('/groups',owner,{name:'Scoped download protection',members:['staff@example.test']});await h.api('/content-security/rule',owner,{scope:securityGroup.id,files:1,bytes:5*1024**3,deletions:200,pause:true});await h.sql('UPDATE chest_activity_events SET at=at-600001');
  const originalPath=`/api/chest/integrations/v1/items/${first.id}/bytes/${versions.items[0].id}`;assert.equal((await h.fetch(originalPath,{headers:{authorization:'Bearer '+token}})).status,200);assert.equal((await h.fetch(originalPath,{headers:{authorization:'Bearer '+token}})).status,423);await call(token,'/items',{status:423});assert.equal((await h.raw('/api/chest/files',staff)).status,200);
