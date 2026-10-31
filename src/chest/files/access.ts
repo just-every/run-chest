@@ -1,4 +1,4 @@
-import { sessionAgent, type AgentIdentity } from '../agent-policy'
+import { sessionAgent, type AgentIdentity } from '../agent-attribution'
 import { policy as contentPolicy } from '../content-security/policy'
 import { memberProjection } from './member-link-controls'
 import { contentReadable } from '../content-security/scan'

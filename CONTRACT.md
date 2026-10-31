@@ -1811,6 +1811,8 @@ Inherits BASE-AGENT-001 to BASE-AGENT-013. The company's policy decides every ca
 
 Chest writes only its delta here. An agent always acts for a named person, its sponsor, in that person's current role and never beyond it, and the surface builds on CONNECT-007's folder-scoped grants, idempotent writes and signed webhooks. Chest's own agents (AGENT-001 to AGENT-008) call the same tools and get the same decisions. Chest presets nothing: each tool declares the classes it can carry, Chest's server computes them for every call from the arguments and current records, never from the agent's flags or from file text, and the company's policy, from the paired Business or from Chest's own Agents settings, decides each call.
 
+**Delivered subset.** The production registry currently contains 41 native tools, matching 39 of this target table’s 48 names, plus seven metadata resources. The extra native `chest.versions.upload` alias preserves the existing version-only OAuth scope instead of widening it to upload. Core tools, policy, Pause, audit and idempotency, plus existing resources and the specialist prompt, are declared. Optional events, subscriptions, resource refresh, multi-sponsor journeys and new mail-event edges are undeclared; existing clause judgments remain unchanged pending review. The Today column is implementation scope, not a change to the requirements. See `docs/agent-adoption.md` for precise verb and capacity limits.
+
 **How Chest computes each class.**
 
 - *Standard:* everything below that none of the other tests raises: reading, filing, versions, trash and untrash, rewinds with Undo, internal shares, comments, drafts and proposals.
@@ -1825,54 +1827,54 @@ Chest declares no money, accounts, gated or live class. In the Risk class column
 
 | Tool | Does | Core clauses | Risk class | Today |
 | --- | --- | --- | --- | --- |
-| `chest.items.list` | A folder, trash, Shared with me or recent view, paginated | SPACE-001, CHEST-06, CHEST-13, SHARE-004 | standard | `chest_list` (folders only) |
-| `chest.items.get` | One item's metadata, the caller's rights and quarantine state | CHEST-06, ROLE-001, SECURITY-002 | standard | `chest_get` |
-| `chest.search` | Text and scans with every search filter, under current access | SEARCH-001, SEARCH-003, SEARCH-002 | standard (+ sensitive) | `chest_search` |
-| `chest.versions.list` | Version history with author, time, size, SHA-256 and arrival | VERSION-001, CHEST-07 | standard | `chest_versions` |
-| `chest.files.read` | A version's original bytes, within download rights | VERSION-001, ROLE-001, CHEST-06 | standard (+ sensitive) | API byte path only |
-| `chest.access.list` | Grants, guests, links and pending access requests on an item | SHARE-007, SHARE-004, SHARE-008, SHARE-009, SHARE-005, CHEST-10 | standard | API `GET /shares` only |
-| `chest.activity.list` | One item's history | AUDIT-001 | standard | new |
-| `chest.requests.list` | File requests and their submissions | SHARE-002 | standard | API `GET /requests` only |
-| `chest.reports.get` | The sponsor's storage use; for an admin sponsor, admin reports and CSV in scope | QUOTA-001, ADMIN-002, ADMIN-005 | standard | browser only |
-| `chest.exposure.list` | Links shared too widely, expired guests, broken links | SHARE-007, AGENT-005 | standard | inside Chest's own agent only |
-| `chest.events.list` | Change feed with a cursor, the same ids as webhooks | CONNECT-007, CONNECT-006 | standard | signed webhooks only |
-| `chest.devices.list` | Devices with last contact, client version and unfinished, failed or conflicted work | SYNC-003 | standard | browser only |
-| `chest.movein.status` | A move-in's inventory, gaps and progress | MIGRATE-001, AGENT-006, CHEST-11 | standard | browser only |
-| `chest.ask` | Cited answers and field extraction over granted folders; provider cost counts against the company's spend cap | AGENT-007 | standard (+ sensitive) | browser only |
-| `chest.pick` | Stable id and a policy-checked link | CONNECT-012 | standard | `chest_pick` |
-| `chest.files.upload` | Add an original or a new version; resumable over 10 MB | CHEST-03, TRANSFER-001, TRANSFER-002, VERSION-001 | standard or external | `chest_upload` (base64 in one call) |
-| `chest.files.create` | New document from the New menu or a template | EDIT-004, EDIT-013 | standard or external | API `/new-files` |
-| `chest.folders.create` | Create a folder | SPACE-001 | standard | `chest_create_folder` |
-| `chest.items.update` | Move, rename or set typed fields (including expiry dates), one item or a selection | CHEST-02, CHEST-04, CHEST-09, BULK-001 | standard or external | API rename only |
-| `chest.versions.restore` | Make an earlier version current as a new version | VERSION-001 | standard or external | API only |
-| `chest.versions.name` | Name a version | VERSION-001, CHEST-07 | standard | API only |
-| `chest.items.trash` | Move to trash, keeping originals and history | CHEST-13 | standard | new |
-| `chest.items.untrash` | Restore from trash to the original place | CHEST-13 | standard or external | new |
-| `chest.comments.add` | Comment, mention or assign a colleague; never grants access (D-3) | EDIT-003, FOLLOW-001 | standard or external | new |
-| `chest.share` | Share with a person or group up to the sponsor's role, optionally expiring, or grant a pending access request | SHARE-004, SHARE-008, SHARE-009, SHARE-005, SHARE-010, CHEST-10, ROLE-001, POLICY-001 | standard or external | `chest_share` (the agent's own `confirmExternal` clears the outside warning) |
-| `chest.links.create` | Create or widen an organization or public link, with password, expiry and limits | SHARE-001, SHARE-006, POLICY-002 | standard or external | API `/links` |
-| `chest.access.narrow` | Revoke a link, remove a grant or guest, or Make private | SHARE-007, AGENT-005 | standard | API `/unshare` only |
-| `chest.requests.create` | Create an upload-only request link without sending it; it exposes no content | SHARE-002 | standard | `chest_create_request` |
-| `chest.send` | Email a request, a reminder, a transfer or a signature envelope | SHARE-002, SHARE-003, SIGN-001, AGENT-004 | standard or external (+ sensitive) | new |
-| `chest.filing.propose` | The filing plan for new arrivals | AGENT-001, RULE-001 | standard | inside Chest's own agent only |
-| `chest.filing.apply` | Apply the filing plan: rename, tag and move, with Undo | AGENT-001, RULE-001 | standard or external | inside Chest's own agent only |
-| `chest.duplicates.propose` | Canonical-file proposal for duplicates and stale copies | AGENT-002 | standard | inside Chest's own agent only |
-| `chest.duplicates.apply` | Merge, overwrite or repoint duplicates, keeping originals and old references | AGENT-002 | standard or external | new |
-| `chest.rewind` | Rewind a folder, a space or a departed user's account to a recorded point, with preview and Undo | RECOVER-001, ADMIN-006 | standard or external | new |
-| `chest.devices.repair` | Pause, resume or retry a device's queue; a conflict keeps both copies | AGENT-003, SYNC-003 | standard | inside Chest's own agent only |
-| `chest.limits.set` | Storage limits for users and spaces, for an admin sponsor | QUOTA-001 | standard | browser only |
-| `chest.erasure.prepare` | Draft an erasure with what it would remove | ERASE-001 | standard | new |
-| `chest.erasure.run` | Run an erasure under ERASE-001's own checks | ERASE-001 | destructive | browser only |
-| `chest.trash.purge` | Empty trash, or permanently delete one item from it | CHEST-13 | destructive | browser only |
-| `chest.devices.revoke` | Revoke a device, optionally wiping Chest's cache on it | SYNC-003 | access (+ destructive, + security) | browser only |
-| `chest.spaces.create` | Create a team space with members and its defaults | SPACE-001, SPACE-002 | standard or access | browser only |
-| `chest.members.update` | Invite staff, change roles and admin roles, add or remove space members | CHEST-01, ROLE-001, ADMIN-003 | access (+ external) | browser only |
-| `chest.settings.update` | Sharing policy, space defaults, sign-in and directory, MFA, encryption custody, scanning and quarantine roles, mass-activity and ransomware rules, app policy | POLICY-001, POLICY-002, SPACE-002, ADMIN-001, ADMIN-004, SECURITY-001, SECURITY-002, SECURITY-004, SECURITY-003, SECURITY-005 | security | browser only |
-| `chest.quarantine.release` | Release a quarantined original with a recorded reason | SECURITY-002 | security | browser only |
-| `chest.backup.run` | Run an installation export or a scheduled backup now | CHEST-12, RECOVER-002 | security | browser only |
-| `chest.backup.restore` | Restore from an export or backup, previewing what it replaces | CHEST-12, RECOVER-002 | destructive · security | browser only |
-| `chest.decisions.record` | Assign a reviewer, request changes, or approve an exact version | CHEST-08 | standard or commitment | browser only |
-| `chest.sign` | Apply the sponsor's signature where the sponsor is a signer | SIGN-001 | commitment | browser only |
+| `chest.items.list` | A folder, trash, Shared with me or recent view, paginated | SPACE-001, CHEST-06, CHEST-13, SHARE-004 | standard | native visible folders; trash/Shared/recent views pending |
+| `chest.items.get` | One item's metadata, the caller's rights and quarantine state | CHEST-06, ROLE-001, SECURITY-002 | standard | native visible metadata; rights/quarantine detail pending |
+| `chest.search` | Text and scans with every search filter, under current access | SEARCH-001, SEARCH-003, SEARCH-002 | standard (+ sensitive) | native filters and download-safe snippets |
+| `chest.versions.list` | Version history with author, time, size, SHA-256 and arrival | VERSION-001, CHEST-07 | standard | native shared-door tool |
+| `chest.files.read` | A version's original bytes, within download rights | VERSION-001, ROLE-001, CHEST-06 | standard (+ sensitive) | native immutable bytes and Range; 512 KiB capacity |
+| `chest.access.list` | Grants, guests, links and pending access requests on an item | SHARE-007, SHARE-004, SHARE-008, SHARE-009, SHARE-005, CHEST-10 | standard | native grants; combined links/requests view pending |
+| `chest.activity.list` | One item's history | AUDIT-001 | standard | native shared-door tool |
+| `chest.requests.list` | File requests and their submissions | SHARE-002 | standard | native request metadata; submissions omitted |
+| `chest.reports.get` | The sponsor's storage use; for an admin sponsor, admin reports and CSV in scope | QUOTA-001, ADMIN-002, ADMIN-005 | standard | native admin reports; CSV/self-use view pending |
+| `chest.exposure.list` | Links shared too widely, expired guests, broken links | SHARE-007, AGENT-005 | standard | native shared-door tool |
+| `chest.events.list` | Change feed with a cursor, the same ids as webhooks | CONNECT-007, CONNECT-006 | standard | undeclared: events family and native webhook ID alignment |
+| `chest.devices.list` | Devices with last contact, client version and unfinished, failed or conflicted work | SYNC-003 | standard | native devices; companion queue diagnostics pending |
+| `chest.movein.status` | A move-in's inventory, gaps and progress | MIGRATE-001, AGENT-006, CHEST-11 | standard | native shared-door tool |
+| `chest.ask` | Cited answers and field extraction over granted folders; provider cost counts against the company's spend cap | AGENT-007 | standard (+ sensitive) | undeclared: Base spend reservations unavailable |
+| `chest.pick` | Stable id and a policy-checked link | CONNECT-012 | standard | native shared-door tool |
+| `chest.files.upload` | Add an original or a new version; resumable over 10 MB | CHEST-03, TRANSFER-001, TRANSFER-002, VERSION-001 | standard or external | native original/version; 512 KiB direct capacity |
+| `chest.files.create` | New document from the New menu or a template | EDIT-004, EDIT-013 | standard or external | native shared-door tool |
+| `chest.folders.create` | Create a folder | SPACE-001 | standard | native shared-door tool |
+| `chest.items.update` | Move, rename or set typed fields (including expiry dates), one item or a selection | CHEST-02, CHEST-04, CHEST-09, BULK-001 | standard or external | native single rename/move/typed filing; bulk pending |
+| `chest.versions.restore` | Make an earlier version current as a new version | VERSION-001 | standard or external | native shared-door tool |
+| `chest.versions.name` | Name a version | VERSION-001, CHEST-07 | standard | native shared-door tool |
+| `chest.items.trash` | Move to trash, keeping originals and history | CHEST-13 | standard | native shared-door tool |
+| `chest.items.untrash` | Restore from trash to the original place | CHEST-13 | standard or external | native shared-door tool |
+| `chest.comments.add` | Comment, mention or assign a colleague; never grants access (D-3) | EDIT-003, FOLLOW-001 | standard or external | native shared-door tool |
+| `chest.share` | Share with a person or group up to the sponsor's role, optionally expiring, or grant a pending access request | SHARE-004, SHARE-008, SHARE-009, SHARE-005, SHARE-010, CHEST-10, ROLE-001, POLICY-001 | standard or external | native shared-door tool |
+| `chest.links.create` | Create or widen an organization or public link, with password, expiry and limits | SHARE-001, SHARE-006, POLICY-002 | standard or external | native shared-door tool |
+| `chest.access.narrow` | Revoke a link, remove a grant or guest, or Make private | SHARE-007, AGENT-005 | standard | native principal removal; link revoke/Make private pending |
+| `chest.requests.create` | Create an upload-only request link without sending it; it exposes no content | SHARE-002 | standard | native shared-door tool |
+| `chest.send` | Email a request, a reminder, a transfer or a signature envelope | SHARE-002, SHARE-003, SIGN-001, AGENT-004 | standard or external (+ sensitive) | native parallel signature-envelope draft/send; other deliveries pending |
+| `chest.filing.propose` | The filing plan for new arrivals | AGENT-001, RULE-001 | standard | native deterministic bounded plan; paid classification unavailable |
+| `chest.filing.apply` | Apply the filing plan: rename, tag and move, with Undo | AGENT-001, RULE-001 | standard or external | native exact plan and human Undo |
+| `chest.duplicates.propose` | Canonical-file proposal for duplicates and stale copies | AGENT-002 | standard | native shared-door tool |
+| `chest.duplicates.apply` | Merge, overwrite or repoint duplicates, keeping originals and old references | AGENT-002 | standard or external | native pair merge preserving originals; repoint pending |
+| `chest.rewind` | Rewind a folder, a space or a departed user's account to a recorded point, with preview and Undo | RECOVER-001, ADMIN-006 | standard or external | native shared-door tool |
+| `chest.devices.repair` | Pause, resume or retry a device's queue; a conflict keeps both copies | AGENT-003, SYNC-003 | standard | undeclared: companion execution door |
+| `chest.limits.set` | Storage limits for users and spaces, for an admin sponsor | QUOTA-001 | standard | native shared-door tool |
+| `chest.erasure.prepare` | Draft an erasure with what it would remove | ERASE-001 | standard | undeclared: client custody boundary |
+| `chest.erasure.run` | Run an erasure under ERASE-001's own checks | ERASE-001 | destructive | undeclared: client custody boundary |
+| `chest.trash.purge` | Empty trash, or permanently delete one item from it | CHEST-13 | destructive | undeclared: client custody boundary |
+| `chest.devices.revoke` | Revoke a device, optionally wiping Chest's cache on it | SYNC-003 | access (+ destructive, + security) | native revoke only; wipe undeclared |
+| `chest.spaces.create` | Create a team space with members and its defaults | SPACE-001, SPACE-002 | standard or access | native empty team space; initial members/defaults separate |
+| `chest.members.update` | Invite staff, change roles and admin roles, add or remove space members | CHEST-01, ROLE-001, ADMIN-003 | access (+ external) | native space membership; staff/admin edits pending |
+| `chest.settings.update` | Sharing policy, space defaults, sign-in and directory, MFA, encryption custody, scanning and quarantine roles, mass-activity and ransomware rules, app policy | POLICY-001, POLICY-002, SPACE-002, ADMIN-001, ADMIN-004, SECURITY-001, SECURITY-002, SECURITY-004, SECURITY-003, SECURITY-005 | security | native sharing policy; other security families pending |
+| `chest.quarantine.release` | Release a quarantined original with a recorded reason | SECURITY-002 | security | native shared-door tool |
+| `chest.backup.run` | Run an installation export or a scheduled backup now | CHEST-12, RECOVER-002 | security | undeclared: independent backup runner continuation |
+| `chest.backup.restore` | Restore from an export or backup, previewing what it replaces | CHEST-12, RECOVER-002 | destructive · security | undeclared: installation restore CLI |
+| `chest.decisions.record` | Assign a reviewer, request changes, or approve an exact version | CHEST-08 | standard or commitment | native exact-version review; signature separate |
+| `chest.sign` | Apply the sponsor's signature where the sponsor is a signer | SIGN-001 | commitment | undeclared: native signer consent/queued completion |
 
 **Resources.** `chest://item/{id}`, `chest://item/{id}/version/{n}`, `chest://space/{id}`, `chest://request/{id}`, `chest://link/{id}`, `chest://device/{id}`, `chest://approval/{id}`.
 
@@ -2308,6 +2310,12 @@ CHEST-03 and CHEST-10 are judged from the code and tests at commit bdb9e2e6c8c2e
 EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fbfbf114 (28 October 2026). Its final candidate strengthens the preview-authority journey and records the exact candidate in Verify; the runtime bytes are unchanged from that source commit.
 
 ADMIN-006 runtime source is judged from commit 9d951ccdecac60aea1be5f560119bf2cd475db31 (30 October 2026). Its final candidate strengthens selected-item isolation and records the recovery journey in Verify; the runtime bytes are unchanged from that source commit.
+
+SURFACE-001 and SURFACE-002 retain main's missing Status, Evidence and Gap pending a new clause judgment. The replay supplies the candidate's registry, generated docs and native door assertions without accepting the clause.
+
+SURFACE-003 retains main's partial Status, Evidence and Gap pending a new clause judgment; its native byte-tool assertions remain in the replay.
+
+All existing Status, Evidence and Gap rows retain main's judgments pending fresh review. The replay does not promote SURFACE-004 or the Base agent clauses. Agent decision-custody limits are documented in docs/agent-adoption.md; they do not establish acceptance of erasure after agent admission.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |

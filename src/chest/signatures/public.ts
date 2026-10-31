@@ -32,7 +32,7 @@ export async function signResponse(request: Request, original: Bindings): Promis
   const row = await settle(env, found.row.id), signer = row.payload.signers.find(s => s.id === found.signer.id)!, base = `/sign/${secret}`, from = origin(request)
   if (row.payload.signers.find(s => s.id === signer.id)?.tokenHash !== found.signer.tokenHash) return publicPage('Signing link not found', '<p>This signing link was replaced. Ask the person who sent it for a new one.</p>', 404)
   insist(await contentReadable(env,[{checksum:row.payload.sourceChecksum}],'',true),'content_quarantined',423)
-  const requester = personName((await maybe<Person>(env, 'person', row.payload.createdBy))?.payload.name, row.payload.createdBy)
+  const requester = row.payload.preparedBy?.label ?? personName((await maybe<Person>(env, 'person', row.payload.createdBy))?.payload.name, row.payload.createdBy)
   if (request.method === 'POST' && sub === 'pin') return await sendPin(env, row.payload, row.id, signer, base, requester)
   const verified = await admitted(env, request, row.payload, row.id, signer)
   if (verified instanceof Response) return verified

@@ -67,7 +67,7 @@
       "label": "Setup token",
       "kind": "secret",
       "required": true,
-      "ownerVisible": true,
+      "ownerVisible": false,
       "generate": "hex",
       "group": "owner"
     },
@@ -208,9 +208,22 @@
     },
     {
       "type": "owner-claim",
-      "mode": "setup-token",
+      "mode": "signed",
       "emailField": "OWNER_EMAIL",
-      "tokenField": "SETUP_TOKEN"
+      "tokenField": "SETUP_TOKEN",
+      "path": "/auth/owner-claim"
     }
-  ]
+  ],
+  "business": {
+    "settings": 1,
+    "values": [
+      "display_name"
+    ],
+    "team": {
+      "roles": {
+        "admin": "admin",
+        "member": "member"
+      }
+    }
+  }
 }
