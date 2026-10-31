@@ -14,8 +14,9 @@ import { subscribe, deliverEvent } from './webhooks'
 import { list, get } from '../store'
 import type { Client, Subscription, Delivery } from './model'
 import { paginate } from './reads'
+import { requestBytes } from './capacity'
 import { mutate } from './mutations'
-async function input(request: Request) {insist(Number(request.headers.get('content-length')??0)<20_000_000,'request_too_large',413);if(request.headers.get('content-type')?.includes('application/json'))return request.json();return Object.fromEntries(await request.formData())}
+async function input(request: Request) {insist(Number(request.headers.get('content-length')??0)<requestBytes,'request_too_large',413);if(request.headers.get('content-type')?.includes('application/json'))return request.json();return Object.fromEntries(await request.formData())}
 function cross(response: Response,origin: string|null) {if(origin){response.headers.set('access-control-allow-origin',origin);response.headers.set('vary','Origin');response.headers.set('access-control-allow-methods','GET, POST, OPTIONS');response.headers.set('access-control-allow-headers','Authorization, Content-Type, Idempotency-Key, MCP-Protocol-Version');response.headers.set('access-control-expose-headers','Content-Disposition, Content-Range')}return response}
 export async function integrationsResponse(request: Request,original: Bindings): Promise<Response|null> {
  const url=new URL(request.url),path=url.pathname,isMetadata=path==='/.well-known/oauth-authorization-server'||path==='/.well-known/oauth-protected-resource/mcp/chest',isOauth=path.startsWith('/oauth/chest/'),isApi=path.startsWith('/api/chest/integrations/v1/'),isMcp=path==='/mcp/chest',isUi=path==='/app/integrations'||path==='/app/integrations/picker'
