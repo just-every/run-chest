@@ -10,6 +10,7 @@ export type SignEvent = { at: string; type: EventType; signer?: string; email?: 
 export type Fidelity = { summary: string; items: { level: 'info' | 'warning'; text: string }[] }
 export type Status = 'draft' | 'pending' | 'completed' | 'declined' | 'voided' | 'expired'
 export type SignRequest = {
+ preparedBy?: {label:string;agent:string;sponsor:string}
  item: string; version: string; name: string; sourceChecksum: string; sourceKind: 'pdf' | 'docx'
  rendition?: { checksum: string; size: number; pages: number; fidelity: Fidelity }
  document: { checksum: string; size: number; pages: { w: number; h: number }[] }
