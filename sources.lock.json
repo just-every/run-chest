@@ -5517,7 +5517,7 @@
       "executable": false
     },
     "tests/chest/browser-integrations.mjs": {
-      "sha256": "1b79277200efd2315e6d79fcbe6c432185b0a0a32391abf46586cf3ea987e928",
+      "sha256": "42584eb4a3e96bc262d36e993a58e4672e3c6fda563a6a71ec60c2622313194c",
       "executable": false
     },
     "tests/chest/browser-link-discussions.mjs": {
