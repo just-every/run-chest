@@ -217,7 +217,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "a3544e5a4f2c0a8d19542c7a06dc8791830157e828b723d9d7ec8962b4791602",
+      "sha256": "8f3b8b96b5f25c9a4af5b16fe055edb43584803bffd85616ed87ddbd0f318db1",
       "executable": false
     },
     "DEMO.md": {
@@ -685,7 +685,7 @@
       "executable": false
     },
     "public/chest-tooltip.js": {
-      "sha256": "db1598063745a91394295312453b15215d0c9b0b3a1efe6d4e569a12d609feda",
+      "sha256": "a01d8b87fc9a3fd38c23df84d4951bf371d3b51edc6fbd42cd8d2edc8470289a",
       "executable": false
     },
     "public/chest-upload.js": {
@@ -697,7 +697,7 @@
       "executable": false
     },
     "public/chest.css": {
-      "sha256": "d9fdc6f66d2c100b4926e13aa63ca55edea724ff6e1f8434c4b9b2a6532725d7",
+      "sha256": "7e5a0f3d5b16d584b09a57bfcfaa8a1c099b6422998b5511e08edc40b00f89f9",
       "executable": false
     },
     "public/fonts/caveat/caveat-latin-wght-normal.woff2": {
@@ -5453,7 +5453,7 @@
       "executable": false
     },
     "tests/chest/browser-accessibility.mjs": {
-      "sha256": "7ac53da0fcb707f0a74cbe5e5e18988e4a709058c696ba918161d98ba8e3011b",
+      "sha256": "54a584bbe2b91d245e5a1fa644c7db392f9bc1fcb85f02368a0e75a9b09da73a",
       "executable": false
     },
     "tests/chest/browser-agent-filing.mjs": {
