@@ -110,7 +110,24 @@ try{
  await h.api('/link-policy',owner,{...sharingRules,warnExternal:false});
  // Public sharing and request doors preserve ordinary policy and idempotency.
  await call(token,`/items/${first.id}/shares`,{method:'POST',body:{principal:h.vars.OWNER_EMAIL,role:'viewer'},key:'share-person-once'});assert.equal((await call(token,`/items/${first.id}/shares?limit=1`)).items.length,1);
- const request=await call(token,`/items/${folder.id}/requests`,{method:'POST',body:{title:'Vendor documents',maxMegabytes:10},key:'request-once'}),sameRequest=await call(token,`/items/${folder.id}/requests`,{method:'POST',body:{title:'Vendor documents',maxMegabytes:10},key:'request-once'});assert.equal(request.request.id,sameRequest.request.id);assert.equal((await call(token,`/requests/${request.request.id}`)).folder,folder.id);assertAgentAudit((await h.api('/audit',owner)).find(r=>r.action==='file-request.create'&&JSON.parse(r.detail).request===request.request.id));
+ // SURFACE-008: both existing agent doors create one upload-only link without sending mail.
+ for(const door of ['api','mcp']){
+  const before=(await call(token,`/items/${folder.id}/requests`)).items,mailBefore=h.mails.length;
+  const input={title:`synthetic-chest-${door==='api'?1:2} request`,message:'Send the requested originals here.'},key=`request-${door}-once`;
+  const create=async()=>{
+   if(door==='api')return call(token,`/items/${folder.id}/requests`,{method:'POST',body:input,key});
+   const result=(await rpc({jsonrpc:'2.0',id:8,method:['tools','call'].join('/'),params:{name:'chest_create_request',arguments:{id:folder.id,...input,key}}})).result;
+   assert.equal(result.isError,false,'legacy request tool completes');return result.structuredContent;
+  };
+  const request=await create();assert.equal(request.request.folder,folder.id);assert.equal(request.request.createdBy,uploadAudit.actor);assert.equal(request.request.open,true);assert.equal(new URL(request.url).origin,h.origin);assert.ok(new URL(request.url).pathname.startsWith('/r/'));
+  assert.equal(h.mails.length,mailBefore,`${door} creation sends no provider-edge mail`);
+  assert.deepEqual(await create(),request,'same key retains the complete request and link');
+  await h.stop();await h.start();assert.deepEqual(await create(),request,'restart retry retains the complete request and link');
+  const listed=(await call(token,`/items/${folder.id}/requests`)).items;assert.equal(listed.length,before.length+1,'retries publish only one request');assert.equal(listed.filter(r=>r.id===request.request.id).length,1);assert.equal((await call(token,`/requests/${request.request.id}`)).folder,folder.id);
+  const audits=(await h.api('/audit',owner)).filter(r=>r.action==='file-request.create'&&r.object_id===folder.id&&JSON.parse(r.detail).request===request.request.id);assert.equal(audits.length,1,'creation audit is once-only across restart');assertAgentAudit(audits[0]);
+  assert.equal((await h.api(`/items/${folder.id}`,staff)).fileRequests.length,before.length+1,'sponsor sees only one new request');
+  assert.equal(h.mails.length,mailBefore,`${door} retries and reads send no provider-edge mail`);
+ }
  await h.api('/link-policy',owner,{scope:'organisation',allowExternal:true,allowPublic:false,allowOrganisation:true,allowDiscovery:true,defaultAudience:'restricted',defaultRole:'viewer'});await call(token,`/items/${first.id}/links`,{method:'POST',body:{audience:'public'},key:'policy-denied-link',status:403});await h.api('/link-policy',owner,{scope:'organisation',allowExternal:true,allowPublic:true,allowOrganisation:true,allowDiscovery:true,defaultAudience:'restricted',defaultRole:'viewer'});
  // Signed delivery failure and uncertain acceptance are durable. Replay preserves event identity and deduplication.
  const hook=await call(token,'/webhooks',{method:'POST',body:{endpoint:'https://hooks.example.test/chest',events:['file.upload']},key:'subscribe-once'});signingSecret=hook.signingSecret;const subscribedAgain=await call(token,'/webhooks',{method:'POST',body:{endpoint:'https://hooks.example.test/chest',events:['file.upload']},key:'subscribe-once'});assert.equal(subscribedAgain.subscription.id,hook.subscription.id);
