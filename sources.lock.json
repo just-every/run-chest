@@ -313,7 +313,7 @@
       "executable": false
     },
     "docs/integrations.md": {
-      "sha256": "28e7771a72d3416715e46049e81d4af474a4dd53523cc38f8b02fb41e835af52",
+      "sha256": "9304a8f514a93012891457aa8a337de966419a9ff89ec15e2e8795ef48350aea",
       "executable": false
     },
     "docs/introduction.md": {
@@ -2329,7 +2329,7 @@
       "executable": false
     },
     "src/chest/files/exposure.ts": {
-      "sha256": "90974ce9cfcdfd14d49577811e814c9ca3910117ead949b352e1a4cc5d715790",
+      "sha256": "9142232dd65c39ca55d97b7205c165b104ec9182f63d931d1a214ba9f824dde6",
       "executable": false
     },
     "src/chest/files/file-requests.ts": {
@@ -2777,7 +2777,7 @@
       "executable": false
     },
     "src/chest/integrations/resources.ts": {
-      "sha256": "cc3c58d087c07cbbea638cbd69437ab94ebfcd9d96e15264feb628eaaeaadb32",
+      "sha256": "8f14767f0dc03b94de17e6c6fe6b55e49a7bdfec8300576790e4aab6ea17c867",
       "executable": false
     },
     "src/chest/integrations/secrets.ts": {
@@ -5509,7 +5509,7 @@
       "executable": false
     },
     "tests/chest/browser-integrations.mjs": {
-      "sha256": "2dddd4e26b9118948a41419c32da6c5a7c3f6b85e130ba1a0c134003d37e2acb",
+      "sha256": "81b346ba2f741ce4b6f25f9f12f115b288ef1ed52e569f4778041ffe511a22b1",
       "executable": false
     },
     "tests/chest/browser-link-discussions.mjs": {
@@ -5681,7 +5681,7 @@
       "executable": false
     },
     "tests/chest/integrations.mjs": {
-      "sha256": "bc59015715ae84968449b23eac080784f082eb5d4a97dd541d2ea4b5ca4bd1cd",
+      "sha256": "4e4f033337e15ba3c25f990e0e99badf2de43067b30ac615368fbb25eeb6abb5",
       "executable": false
     },
     "tests/chest/journey.mjs": {

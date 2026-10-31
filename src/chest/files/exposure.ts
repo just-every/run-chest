@@ -44,6 +44,6 @@ export async function makePrivate(env: Bindings, s: Session, w: Who, key: string
  const at = now(), pub = (await where<PublicLink>(env, 'public-link', '$.item', key)).filter(l => !l.payload.revokedAt), org = await where<Link>(env, 'link', '$.item', key)
  insist(pub.length + org.length > 0, 'nothing_to_make_private', 409)
  const ops: Op[] = [...pub.map(l => ({ row: next(l, { ...l.payload, revokedAt: at, revokedBy: s.operator.email }) as Row, previous: l as Row })), ...org.map(l => ({ row: l as Row, previous: l as Row, remove: true }))]
- await commit(env, s, ops, { changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'item.make-private', object: key, detail: { revoked: pub.map(l => l.id), removed: org.map(l => l.id), active: pub.filter(l => linkState(l.payload) === 'active').length } }] })
+ await commit(env, s, ops, { fences: ctx.fences, changes: [{ item: key, space: ctx.space.id, kind: 'access' }], audits: [{ action: 'item.make-private', object: key, detail: { revoked: pub.map(l => l.id), removed: org.map(l => l.id), active: pub.filter(l => linkState(l.payload) === 'active').length } }] })
  return { revoked: pub.length, removed: org.length, grantsKept: ctx.chain.at(-1)!.payload.grants.length }
 }
