@@ -6,13 +6,15 @@ import { canAdmin, canAdminGroup, requireAnyAdmin } from './roles'
 
 export type ReportScope = { global: boolean; emails: string[]; groups: { id: string; name: string }[] }
 // Use the same current group/area custody as administrative recovery. Content access is never implied.
-export async function reportScope(env: Bindings, s: Session, group?: string | null): Promise<ReportScope> {
+export async function reportScope(env: Bindings, s: Session, group?: string | null, bounds?: readonly string[]): Promise<ReportScope> {
  await requireAnyAdmin(env, s, 'audit-reporting')
  const global = await canAdmin(env, s, 'audit-reporting'), groups = []
  for (const row of await list<Group>(env, 'group')) if (global || await canAdminGroup(env, s, 'audit-reporting', row.id)) groups.push(row)
- const chosen = group ? groups.filter(g => g.id === group) : groups
+ const bounded = bounds ? groups.filter(g => bounds.includes(g.id)) : groups
+ if (bounds) insist(bounded.length, 'admin_group_scope_required', 403)
+ const chosen = group ? bounded.filter(g => g.id === group) : bounded
  insist(!group || chosen.length, 'admin_group_scope_required', 403)
- return { global: global && !group, emails: [...new Set(chosen.flatMap(g => g.payload.members))], groups: groups.map(g => ({ id: g.id, name: g.payload.name })) }
+ return { global: global && !group && !bounds, emails: [...new Set(chosen.flatMap(g => g.payload.members))], groups: bounded.map(g => ({ id: g.id, name: g.payload.name })) }
 }
 export function areaCondition(scope: ReportScope, alias = 'r') {
  return scope.global ? { sql: '1', params: [] as unknown[] } : {
