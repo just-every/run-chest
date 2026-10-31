@@ -70,6 +70,42 @@ Every product mutation needs `Idempotency-Key` (8–240 characters). Its receipt
 
 ROLE-001 and POLICY-001 remain authoritative: an app's `share` action does not make a viewer a sharer, and public links or external sharing are refused where current policy forbids them. Authenticated app and MCP shares are agent-initiated. External actions carry the server-computed `external` class through `createAgentDoor`, along with every other declared class. The company chooses autonomous, review, approval or blocked; an unset policy refuses effects. SDK reads and mutations enter this same native registry while retaining their original OAuth scope, resource fences, byte budgets and source-pause checks. Audit names the authenticated agent, native sponsor ID and consent/grant. `confirmExternal` is ignored as evidence of a human decision; native receipts say `humanConfirmed:false`. The browser still warns a person about external recipients where configured; internal shares are unchanged. Tokens cannot expand their own resources, scopes, budgets or expiry. Budget changes require fresh human consent and a new grant.
 
+## Read-only administrative activity
+
+Register `admin-report` as an allowed action and request it explicitly in OAuth
+consent. Add one `report_group` parameter for each selected group. The sponsor
+must currently hold the `audit-reporting` administrative privilege for every
+requested group. The consent page names those groups and requires a separate
+**Allow read-only administrative activity reports for these groups** checkbox.
+The selected IDs are persisted with the intent and grant; form fields cannot
+expand them. A report-only grant can omit file resources and conveys no file
+access. Existing file grants convey no administrative capability.
+
+`GET /api/chest/integrations/v1/administration/audit` returns `rows`, `next`,
+`until`, `limited` and the currently available selected `groups`.
+`GET /api/chest/integrations/v1/administration/audit/export` streams CSV with the
+browser report's columns and escaping. Use the same `group`, `category`, `actor`,
+`action`, `object`, `outcome`, `from`, `to` and `until` filters as the browser.
+Dates are inclusive UTC instants. JSON pages accept `limit` (1–300) and `cursor`;
+retain `until` when following `next`. CSV ignores an incoming cursor and emits
+all matching pages; `limit` controls its output page size, defaulting to 300.
+
+Every request and every CSV output page intersects the saved group selection
+with the sponsor's current delegated authority and current group membership.
+Later promotion never expands the saved selection. Selecting a group outside
+that intersection, or losing all selected groups, returns
+`admin_group_scope_required`. A staff sponsor receives `admin_required`, the
+browser's refusal code. An administrator without the separate capability gets
+`oauth_action_outside_grant`. Revocation, app policy and sponsor deactivation
+still govern the token. An export already in progress errors before its next
+authorized output page after revocation; previously emitted bytes cannot be
+recalled. Restart preserves both selection and revocation.
+
+Reports contain only event timestamps, actor identities, actions, object IDs and
+outcomes. They reuse the browser's custody scope and view-history privacy
+filter; they grant no original-byte, file-name or audit-payload access. No
+administrative mutation or canonical Agent tool is introduced by this slice.
+
 ## MCP
 
 Send JSON-RPC 2.0 POST requests to `/mcp`; `/mcp/chest` is an alias of that same door. The supported eras are `2026-07-28` and `2025-11-25`. The older era initializes; the current era also supports handshake-free discovery. Canonical protected-resource metadata, `/api/rer/agent-policy`, `/agents`, named approval and review pages, resources and the records-clerk prompt come from the shared door. Chest generates `/docs/agents` from the manifest that normal verification requires to equal its native registry.
@@ -116,5 +152,7 @@ The queue sends pending events only while the original grant, current resources/
 The Worker calls `sweepIntegrations` from its scheduled handler and request continuation. It scans bounded queue pages and sends a bounded pending batch each time; no dev server or independent process is required.
 
 ## Evidence
+
+`tests/chest/integrations.mjs` also reconciles the separately consented activity report across pagination and restart, excludes other group custody and original contents, matches staff refusals, and revokes open exports over an independent HTTP connection. The browser journey reconciles its actual CSV download with the same fixed filters and records the consent and reporting screens at 1440 and 390.
 
 `tests/chest/integrations.mjs` exercises OAuth/PKCE and exact redirects, scoped pagination/search, idempotent upload across restart, original downloads, MCP mutations/refusals, signed failed/uncertain webhook replay with receiver deduplication, imported-event suppression, budgets, revocation and allowlist/read-only/block policy. `tests/chest/browser-integrations.mjs` exercises consent, the real picker in an embedded consumer, scoped search, stable IDs/links, next-pick revocation the policy console and failed-webhook manual replay at 1440 and 390. `tests/chest/integration-client.mjs` serves the real HTTPS test consumer. The OAuth test client and webhook receiver are the network edges; product authorization, storage and mutation paths are real.
