@@ -5681,7 +5681,7 @@
       "executable": false
     },
     "tests/chest/integrations.mjs": {
-      "sha256": "237a21ac352f071d4dce61f01791433f81e8464fd942ca81cda98c6dcd469dea",
+      "sha256": "0a5cba197b63e924536580a17ffb85e731b704ee12ccac1c9b37ac12b5fbbb09",
       "executable": false
     },
     "tests/chest/journey.mjs": {
