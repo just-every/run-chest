@@ -345,7 +345,7 @@ Core · target · **partial** · Rules D-1
 3. An upload against an outdated base files a named conflict instead of overwriting.
 4. A revoked device key is refused at once.
 
-**Evidence.** `tests/chest/files.mjs`; `tests/chest/scale-sync.mjs`
+**Evidence.** `tests/chest/files.mjs`; `tests/chest/scale-sync.mjs`; `tests/chest/sync-tree-flow.mjs`
 **Gap.** Fresh-judge candidate: the old gap says this protocol exists; only the native clients (SYNC-008) were missing.
 
 #### SYNC-008 — macOS and Windows clients
