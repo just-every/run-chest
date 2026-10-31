@@ -7,6 +7,7 @@ import { addVersion, createItem, nameVersion, rename, restoreVersion, bytes as o
 import { createFile } from '../office/create-service'
 import { createLink } from '../files/links'
 import { share, unshare } from '../files/shares'
+import { makePrivate } from '../files/exposure'
 import { createFileRequest, requestsOn, describeRequest } from '../files/file-requests'
 import { get } from '../store'
 import type { FileRequest } from '../files/model'
@@ -34,7 +35,7 @@ export async function resourceCall(env: Bindings,auth: Authorized,method: string
   if(method==='POST'){
    const scope=sub==='versions'?'versions':sub==='rename'?'upload':sub==='requests'?'request':'share';const current=await resource(env,auth,key,scope);demand(current,scope==='versions'||scope==='upload'?'contribute':'share')
    const size=sub==='versions'&&!version?fromBase64(input.base64).length:0
-   const run=(s:Authorized['session'])=>{if(sub==='versions'&&!version)return addVersion(env,s,w,key,fromBase64(input.base64),{...input,device:undefined});if(sub==='versions'&&version&&verb==='restore')return restoreVersion(env,s,w,key,version);if(sub==='versions'&&version&&verb==='name')return nameVersion(env,s,w,key,version,input);if(sub==='rename')return rename(env,s,w,key,input);if(sub==='shares')return share(env,s,w,key,input);if(sub==='unshare')return unshare(env,s,w,key,input);if(sub==='links')return createLink(env,s,w,key,input);if(sub==='requests')return createFileRequest(env,s,w,key,input);insist(false,'not_found',404)}
+   const run=(s:Authorized['session'])=>{if(sub==='versions'&&!version)return addVersion(env,s,w,key,fromBase64(input.base64),{...input,device:undefined});if(sub==='versions'&&version&&verb==='restore')return restoreVersion(env,s,w,key,version);if(sub==='versions'&&version&&verb==='name')return nameVersion(env,s,w,key,version,input);if(sub==='rename')return rename(env,s,w,key,input);if(sub==='shares')return share(env,s,w,key,input);if(sub==='unshare')return unshare(env,s,w,key,input);if(sub==='make-private')return makePrivate(env,s,w,key);if(sub==='links')return createLink(env,s,w,key,input);if(sub==='requests')return createFileRequest(env,s,w,key,input);insist(false,'not_found',404)}
    return mutate(env,auth,idempotency,path,input,size,run)
   }
  }
