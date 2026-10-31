@@ -145,6 +145,7 @@ try{
  const beforeRefusal=await sharingSnapshot();assert.ok(beforeRefusal.grants.length&&beforeRefusal.links.length&&beforeRefusal.publicLinks.length&&beforeRefusal.receipts.length,'refusal checks preserve populated grants, both link kinds and successful receipts');assert.equal(beforeRefusal.storedReceipts.length,beforeRefusal.receipts.length,'stored successful receipts reconcile with public mutation audits');
  for(const phase of ['initial','retry','restart']){
   if(phase==='restart'){await h.stop();await h.start()}
+  await call(token,`/items/${first.id}/links`,{method:'POST',body:{audience:'public'},key:'policy-denied-link',status:403});
   const input={audience:'public',confirmExternal:true},response=await h.fetch(`/api/chest/integrations/v1/items/${first.id}/links`,{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','idempotency-key':'policy-denied-link'},body:JSON.stringify(input)});
   assert.equal(response.status,403,`${phase}: integration keeps the organization refusal`);const refusal=await response.json();assert.equal(refusal.error,'sharing_policy_public_disabled');assert.equal(refusal.riskClass,undefined,'a refused link returns no policy classification');assert.equal(refusal.policyDecision,undefined,'a refused link returns no agent decision');
   const sponsor=await h.raw(`/api/chest/items/${first.id}/links`,staff,input);assert.equal(sponsor.status,response.status);assert.deepEqual(await sponsor.json(),refusal,`${phase}: sponsor and integration API have identical refusal bodies`);
