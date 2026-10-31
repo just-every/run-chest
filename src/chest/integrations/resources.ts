@@ -9,13 +9,21 @@ import { createLink } from '../files/links'
 import { share, unshare } from '../files/shares'
 import { createFileRequest, requestsOn, describeRequest } from '../files/file-requests'
 import { get } from '../store'
+import { devices } from '../files/devices'
 import type { FileRequest } from '../files/model'
 import { action, live, resource, spend, type Authorized } from './auth'
 import { brief, listItems, scopedSearch, versions, paginate } from './reads'
 import { hash } from './secrets'
 import { mutate } from './mutations'
 export async function resourceCall(env: Bindings,auth: Authorized,method: string,path: string,input: any,url: URL,idempotency: string) {
- const [head,key,sub,version,verb]=path.split('/').filter(Boolean),w=await who(env,auth.session)
+ const [head,key,sub,version,verb]=path.split('/').filter(Boolean)
+ if(method==='GET'&&head==='devices'&&!key){
+  action(auth,'devices:self')
+  const rows=(await devices(env,auth.session,true)).map(d=>({id:d.id,owner:d.owner,name:d.name,platform:d.platform,createdAt:d.createdAt,revokedAt:d.revokedAt,lastSeen:d.lastSeen,clientVersion:null,work:{state:'unavailable',reason:'client_reporting_unavailable',unfinished:null,failed:null,conflicted:null}}))
+  await live(env,auth,undefined,'devices:self')
+  return paginate(rows,url,d=>d.id)
+ }
+ const w=await who(env,auth.session)
  if(method==='GET'&&head==='items'&&!key)return listItems(env,auth,url)
  if(method==='GET'&&head==='search')return scopedSearch(env,auth,url)
  if(method==='GET'&&head==='requests'&&key){const request=await get<FileRequest>(env,'file-request',key);await resource(env,auth,request.payload.folder,'request');return describeRequest(request)}
