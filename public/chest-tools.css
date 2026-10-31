@@ -101,3 +101,6 @@
 .sync-repair .btn { white-space: normal; max-width: 100%; text-align: center; }
 .sync-repair section + section { padding-top: 18px; border-top: 1px solid var(--chest-line); }
 .rec-rel.search-match { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+
+/* Sender settings remain readable inside the compact intake address list. */
+.events.intake-addresses input[type=email] { font-size: 14px; }
