@@ -1,15 +1,59 @@
 // CONNECT-007 at 1440 and 390: real OAuth consent, connected-app policy and embeddable picker.
 import assert from 'node:assert/strict';
-import {mkdir} from 'node:fs/promises';
+import {mkdir,readFile} from 'node:fs/promises';
+import {createHash,randomBytes} from 'node:crypto';
+import {integrationReportSetup} from './administration-report-flow.mjs';
+import {tooltips} from './tooltip-proof.mjs';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
 import {attachmentClient} from './integration-client.mjs';
 let receiverStatus=503;const h=await harness({edge:async request=>new URL(request.url).hostname==='hooks.example.test'?new Response('Receiver outcome',{status:receiverStatus}):undefined});let browser,consumer;
 async function shot(page,width,state){assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${state} fits ${width}`);await page.screenshot({path:`test-results/${width}-integrations-${state}.png`,fullPage:true})}
+const csvRowsForReport=text=>text.trimEnd().split('\r\n').slice(1);
 const cookies=cookie=>cookie.split('; ').map(v=>{const at=v.indexOf('=');return {name:v.slice(0,at),value:v.slice(at+1),url:h.origin}});
 try{
  await mkdir('test-results',{recursive:true});await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const cookie=await h.signIn(h.vars.OWNER_EMAIL);await h.fetch('/setup',{method:'POST',headers:{cookie,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});const space=(await h.api('/files',cookie)).personal;
- consumer=await attachmentClient(h.origin);browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic','--host-resolver-rules=MAP picker-client.example.test 127.0.0.1']});
+ consumer=await attachmentClient(h.origin);browser=await chromium.launch({headless:true,...(process.env.CHEST_CHROMIUM?{executablePath:process.env.CHEST_CHROMIUM}:{}),args:[...(process.env.CHEST_CHROMIUM?['--no-sandbox']:[]),'--use-mock-keychain','--password-store=basic','--host-resolver-rules=MAP picker-client.example.test 127.0.0.1']});
+ const report=await integrationReportSetup(h,cookie);
+ const reports=await h.api('/integrations/clients',report.admin,{name:'Administrative activity reader',redirects:[consumer.origin+'/callback/report'],actions:['admin-report']});
+ consumer.add('report',reports.client.id,[]);
+ for(const width of [1440,390]){
+  const context=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});
+  try{
+   await context.addCookies(cookies(report.admin));const page=await context.newPage();
+   const verifier=randomBytes(32).toString('base64url'),challenge=createHash('sha256').update(verifier).digest('base64url');
+   const consent=new URLSearchParams({client_id:reports.client.id,redirect_uri:consumer.origin+'/callback/report',response_type:'code',code_challenge_method:'S256',code_challenge:challenge,state:randomBytes(32).toString('base64url'),scope:'admin-report',report_group:report.group.id});
+   await page.goto(h.origin+'/oauth/chest/authorize?'+consent);
+   if(width===1440){
+    assert.ok((await page.locator('body').innerText()).includes(report.group.payload.name));
+    assert.ok(!(await page.locator('body').innerText()).includes(report.otherGroup.payload.name));
+    assert.equal(await page.getByRole('checkbox',{name:'Allow read-only administrative activity reports for these groups'}).isChecked(),false);
+   }
+   await tooltips(page,width,'integration-report-consent');await shot(page,width,'report-consent');
+   await page.getByRole('checkbox',{name:'Allow read-only administrative activity reports for these groups'}).check();
+   await Promise.all([page.waitForURL(/callback\/report/),page.getByRole('button',{name:'Authorize app',exact:true}).click()]);
+   const code=new URL(page.url()).searchParams.get('code');
+   const response=await h.fetch('/oauth/chest/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',client_id:reports.client.id,redirect_uri:consumer.origin+'/callback/report',code,code_verifier:verifier})});
+   assert.equal(response.status,200);const grant=await response.json();
+   await page.goto(h.origin+'/app/integrations');await shot(page,width,'report-grant');
+   await page.goto(h.origin+'/app/administration/audit?'+report.filter+'&group='+report.group.id+'&limit=2');
+   await page.getByRole('heading',{name:'Administrative activity',exact:true}).waitFor();
+   await tooltips(page,width,'integration-scoped-report');await shot(page,width,'report-activity');
+   if(width===1440){
+    const download=page.waitForEvent('download');await page.getByRole('link',{name:'Export CSV',exact:true}).click();
+    const browserCsv=await readFile(await(await download).path(),'utf8');
+    const integration=await h.fetch('/api/chest/integrations/v1/administration/audit/export?'+report.filter+'&limit=2',{headers:{authorization:'Bearer '+grant.access_token}});
+    assert.equal(integration.status,200);assert.equal(await integration.text(),browserCsv,'the OAuth CSV reconciles with the actual browser Export CSV control');
+    assert.equal(csvRowsForReport(browserCsv).length,305);
+    for(const hidden of [report.secret.id,report.file.payload.name,report.secret.payload.name,'synthetic-chest-44 private original'])assert.ok(!browserCsv.includes(hidden));
+    await Promise.all([page.waitForNavigation(),page.getByRole('link',{name:'Next page',exact:true}).click()]);await shot(page,width,'report-next-page');
+    await page.goto(h.origin+'/app/integrations');const row=page.locator('li').filter({has:page.getByRole('button',{name:'Revoke grant',exact:true})}).filter({hasText:'Administrative activity reader'});
+    await Promise.all([page.waitForNavigation(),row.getByRole('button',{name:'Revoke grant',exact:true}).click()]);
+    const revoked=await h.fetch('/api/chest/integrations/v1/administration/audit?'+report.filter,{headers:{authorization:'Bearer '+grant.access_token}});assert.equal(revoked.status,401);assert.equal((await revoked.json()).error,'oauth_grant_revoked');
+    await shot(page,width,'report-revoked');
+   }
+  }finally{await context.close()}
+ }
  for(const width of [1440,390]){
   await h.api('/integrations/policy',cookie,{scope:'organization',mode:'any',apps:{}});
   const folder=await h.api('/items',cookie,{space,type:'folder',name:`Partner files ${width}`}),file=await h.api('/items',cookie,{parent:folder.id,name:`Signed terms ${width}.txt`,base64:Buffer.from('The original agreed terms.').toString('base64')}),outside=await h.api('/items',cookie,{space,name:`Private forecast ${width}.txt`,base64:Buffer.from('Outside the authorized folder.').toString('base64')});
