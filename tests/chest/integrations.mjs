@@ -107,6 +107,30 @@ try{
  // Internal shares remain available even when external sharing is disabled and warnings are on.
  await call(token,`/items/${first.id}/shares`,{method:'POST',body:{principal:h.vars.OWNER_EMAIL,role:'viewer'},key:'share-person-once'});assertAgentAudit((await agentShares()).find(r=>JSON.parse(r.detail).principal===h.vars.OWNER_EMAIL),false);
  const internalLink=await call(token,`/items/${first.id}/links`,{method:'POST',body:{audience:'restricted'},key:'internal-agent-link'});assertAgentAudit((await h.api('/audit',owner)).find(r=>r.action==='link.create'&&JSON.parse(r.detail).link===internalLink.link.id),false);
+ // SURFACE-006: equivalent legacy share calls ignore every confirmation flag value.
+ await h.api('/link-policy',owner,sharingRules);
+ const receiptAudits=async()=>await h.api('/audit?'+new URLSearchParams({action:'integration.mutation',object:grant.grant}),owner);
+ const shareReplays=[];let compatibility;
+ for(const door of ['api','mcp'])for(const [flag,value] of [['omitted',undefined],['false',false],['true',true]]){
+  const input={principal:Object.keys(partners)[0],role:'commenter',...(value===undefined?{}:{confirmExternal:value})},key=`synthetic-chest-share-${door}-${flag}`;
+  const beforeShares=new Set((await agentShares()).map(row=>row.id)),beforeReceipts=new Set((await receiptAudits()).map(row=>row.id));
+  const invoke=async()=>{
+   if(door==='api')return call(token,`/items/${first.id}/shares`,{method:'POST',body:{...input,agent:'synthetic-chest-forged-agent',sponsor:'synthetic-chest-forged-sponsor',grant:'synthetic-chest-forged-grant'},key});
+   const reply=await rpc({jsonrpc:'2.0',id:key,method:['tools','call'].join('/'),params:{name:'chest_share',arguments:{id:first.id,...input,key}}});
+   assert.equal(reply.result.isError,false,`${door} ${flag} sharing succeeds without human confirmation`);return reply.result.structuredContent;
+  };
+  const result=await invoke();assert.equal(result.id,first.id,'sharing preserves the target item');
+  const added=(await agentShares()).filter(row=>!beforeShares.has(row.id));assert.equal(added.length,1,`${door} ${flag} publishes one share`);assertAgentAudit(added[0]);
+  const shareDetail=JSON.parse(added[0].detail);assert.equal(shareDetail.principal,input.principal,'audit names the actual recipient');assert.equal(shareDetail.role,input.role,'audit names the granted role');assert.equal(shareDetail.outcome,'succeeded','audit records the completed share');
+  const detail=JSON.parse(added[0].detail),decision=Object.fromEntries(['riskClass','policyDecision','policy','humanConfirmed'].map(field=>[field,detail[field]]));
+  if(compatibility)assert.deepEqual(decision,compatibility,'both doors and all flags keep the same compatibility class and decision');else compatibility=decision;
+  const actualGrant=(await h.api(`/items/${first.id}`,staff)).grants.find(row=>row.principal===input.principal);assert.equal(actualGrant.role,input.role);assert.equal(actualGrant.by,detail.sponsor,'the authenticated sponsor grants access');
+  assert.equal((await h.api(`/items/${first.id}`,partners[input.principal])).role,input.role,'the recipient can use the granted role');
+  const addedReceipts=(await receiptAudits()).filter(row=>!beforeReceipts.has(row.id));assert.equal(addedReceipts.length,1,'one successful mutation receipt is published');assert.equal(JSON.parse(addedReceipts[0].detail).path,`/items/${first.id}/shares`);
+  assert.deepEqual(await invoke(),result,'same-key retry returns the saved result');assert.equal((await agentShares()).filter(row=>!beforeShares.has(row.id)).length,1,'retry adds no share');assert.equal((await receiptAudits()).filter(row=>!beforeReceipts.has(row.id)).length,1,'retry adds no receipt');
+  shareReplays.push({invoke,result});
+ }
+ console.log('PROBE SURFACE-006 2: OAuth integration API and legacy MCP share with omitted, false and true confirmation -> identical compatibility class and decision, authenticated attribution, no human confirmation and once-only grants');
  await h.api('/link-policy',owner,{...sharingRules,warnExternal:false});
  // POLICY-001: a genuinely consented share grant cannot bypass a space's non-member policy.
  const sponsorEmail=['staff','example.test'].join('@'),memberEmail=['synthetic-chest-member','example.test'].join('@'),nonMemberEmail=['synthetic-chest-nonmember','example.test'].join('@');
@@ -138,7 +162,27 @@ try{
  // Public sharing and request doors preserve ordinary policy and idempotency.
  await call(token,`/items/${first.id}/shares`,{method:'POST',body:{principal:h.vars.OWNER_EMAIL,role:'viewer'},key:'share-person-once'});assert.equal((await call(token,`/items/${first.id}/shares?limit=1`)).items.length,1);
  const request=await call(token,`/items/${folder.id}/requests`,{method:'POST',body:{title:'Vendor documents',maxMegabytes:10},key:'request-once'}),sameRequest=await call(token,`/items/${folder.id}/requests`,{method:'POST',body:{title:'Vendor documents',maxMegabytes:10},key:'request-once'});assert.equal(request.request.id,sameRequest.request.id);assert.equal((await call(token,`/requests/${request.request.id}`)).folder,folder.id);assertAgentAudit((await h.api('/audit',owner)).find(r=>r.action==='file-request.create'&&JSON.parse(r.detail).request===request.request.id));
- await h.api('/link-policy',owner,{scope:'organisation',allowExternal:true,allowPublic:false,allowOrganisation:true,allowDiscovery:true,defaultAudience:'restricted',defaultRole:'viewer'});await call(token,`/items/${first.id}/links`,{method:'POST',body:{audience:'public'},key:'policy-denied-link',status:403});await h.api('/link-policy',owner,{scope:'organisation',allowExternal:true,allowPublic:true,allowOrganisation:true,allowDiscovery:true,defaultAudience:'restricted',defaultRole:'viewer'});
+ // Organization public-link refusals match the sponsor's API and browser form, and publish nothing.
+ await h.api('/link-policy',owner,{scope:'organisation',allowExternal:true,allowPublic:false,allowOrganisation:true,allowDiscovery:true,defaultAudience:'restricted',defaultRole:'viewer'});
+ const sharingSnapshot=async()=>{
+  const item=await h.api(`/items/${first.id}`,staff),audit=await h.api('/audit?'+new URLSearchParams({object:first.id}),owner),sort=rows=>rows.sort((a,b)=>a.id.localeCompare(b.id));
+  const storedReceipts=(await h.sql("SELECT id,payload FROM chest_records WHERE kind='integration-receipt' AND json_extract(payload,'$.grant')=? ORDER BY id",grant.grant)).results;
+  return {grants:item.grants,links:sort(item.links),publicLinks:sort(item.publicLinks),mutations:sort(audit.filter(row=>['share.grant','link.create','link.change','link.remove','link.revoke'].includes(row.action))),receipts:sort(await receiptAudits()),storedReceipts};
+ };
+ const beforeRefusal=await sharingSnapshot();assert.ok(beforeRefusal.grants.length&&beforeRefusal.links.length&&beforeRefusal.publicLinks.length&&beforeRefusal.receipts.length,'refusal checks preserve populated grants, both link kinds and successful receipts');assert.equal(beforeRefusal.storedReceipts.length,beforeRefusal.receipts.length,'stored successful receipts reconcile with public mutation audits');
+ for(const phase of ['initial','retry','restart']){
+  if(phase==='restart'){await h.stop();await h.start()}
+  await call(token,`/items/${first.id}/links`,{method:'POST',body:{audience:'public'},key:'policy-denied-link',status:403});
+  const input={audience:'public',confirmExternal:true},response=await h.fetch(`/api/chest/integrations/v1/items/${first.id}/links`,{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','idempotency-key':'policy-denied-link'},body:JSON.stringify(input)});
+  assert.equal(response.status,403,`${phase}: integration keeps the organization refusal`);const refusal=await response.json();assert.equal(refusal.error,'sharing_policy_public_disabled');assert.equal(refusal.riskClass,undefined,'a refused link returns no policy classification');assert.equal(refusal.policyDecision,undefined,'a refused link returns no agent decision');
+  const sponsor=await h.raw(`/api/chest/items/${first.id}/links`,staff,input);assert.equal(sponsor.status,response.status);assert.deepEqual(await sponsor.json(),refusal,`${phase}: sponsor and integration API have identical refusal bodies`);
+  const browser=await form('/app/action',staff,{path:`/items/${first.id}/links`,returnTo:`/app/items/${first.id}`,audience:'public',confirmExternal:'true'});assert.equal(browser.status,response.status);assert.match(await browser.text(),/sharing_policy_public_disabled/,`${phase}: sponsor browser form shows the same refusal code`);
+  assert.deepEqual(await sharingSnapshot(),beforeRefusal,`${phase}: refusal changes no grants, links, successful sharing audits or mutation receipts`);
+ }
+ for(const {invoke,result} of shareReplays)assert.deepEqual(await invoke(),result,'a successful share replays the same saved result after restart');
+ assert.deepEqual(await sharingSnapshot(),beforeRefusal,'successful retries after restart publish no duplicate grants, links or receipts');
+ console.log('PROBE SURFACE-006 6: disabled public links through integration API, sponsor API and browser form -> identical 403 sharing_policy_public_disabled; populated grants, links and successful receipts unchanged across retry and Worker restart');
+ await h.api('/link-policy',owner,{scope:'organisation',allowExternal:true,allowPublic:true,allowOrganisation:true,allowDiscovery:true,defaultAudience:'restricted',defaultRole:'viewer'});
  // Signed delivery failure and uncertain acceptance are durable. Replay preserves event identity and deduplication.
  const hook=await call(token,'/webhooks',{method:'POST',body:{endpoint:'https://hooks.example.test/chest',events:['file.upload']},key:'subscribe-once'});signingSecret=hook.signingSecret;const subscribedAgain=await call(token,'/webhooks',{method:'POST',body:{endpoint:'https://hooks.example.test/chest',events:['file.upload']},key:'subscribe-once'});assert.equal(subscribedAgain.subscription.id,hook.subscription.id);
  await call(token,'/items',{method:'POST',body:{parent:folder.id,name:'Webhook source.txt',base64:b64('A live event')},key:'webhook-file-once'});const failed=await waitDelivery(token,hook.subscription.id,d=>d.state==='failed');assert.equal(failed.status,503);await h.stop();await h.start();assert.ok((await call(token,`/webhooks/${hook.subscription.id}/deliveries`)).items.some(d=>d.id===failed.id&&d.state==='failed'));
