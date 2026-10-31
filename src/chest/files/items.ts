@@ -132,9 +132,13 @@ export async function bytes(env: Bindings, s: Session, w: Who, key: string, vers
  await recordAccess(env, s, item, action ?? (download || range ? 'version.download' : 'version.preview'), v.id,range?Number(response.headers.get('content-length')):v.size)
  return meterOriginal(env,response,key,s.operator.email,action??(download||range?'file download':'original preview'),range?Number(response.headers.get('content-length')):v.size)
 }
-async function ranged(env: Bindings, v: FileVersion, range: string) {
+export function byteRange(size: number, range: string) {
  const m = /^bytes=(\d+)-(\d*)$/.exec(range); if (!m) throw new ChestError('invalid_range', 416)
- const start = Number(m[1]), end = m[2] ? Math.min(Number(m[2]), v.size - 1) : v.size - 1; if (start > end || start >= v.size) throw new ChestError('invalid_range', 416)
- const blob = await env.BLOBS.get(`sha256/${v.checksum}`, { range: { offset: start, length: end - start + 1 } }); insist(blob, 'blob_missing', 503)
+ const start = Number(m[1]), end = m[2] ? Math.min(Number(m[2]), size - 1) : size - 1; if (start > end || start >= size) throw new ChestError('invalid_range', 416)
+ return {offset:start,length:end-start+1,end}
+}
+async function ranged(env: Bindings, v: FileVersion, range: string) {
+ const {offset:start,length,end}=byteRange(v.size,range)
+ const blob = await env.BLOBS.get(`sha256/${v.checksum}`, { range: { offset: start, length } }); insist(blob, 'blob_missing', 503)
  return new Response(blob.body, { status: 206, headers: { 'content-type': v.mediaType, 'content-range': `bytes ${start}-${end}/${v.size}`, 'content-length': String(end - start + 1), 'x-content-type-options': 'nosniff', 'cache-control': 'no-store', 'content-security-policy': "sandbox; default-src 'none'" } })
 }
