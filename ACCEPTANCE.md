@@ -211,7 +211,7 @@ Core · target · **partial** · From SPACE-001, CHEST-14
 4. Restrict a subfolder and see the effective-access explanation.
 5. Offboard the tree's creator: the team keeps the content and stable links, and the former user is denied.
 
-**Evidence.** `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`; `tests/chest/ownership.mjs`; `tests/chest/governance.mjs`; `tests/chest/browser-governance.mjs`
+**Evidence.** `tests/chest/files.mjs` — SPACE-001: effective inherited, direct, group and manager access, restricted ancestor concealment and immediate revocation before and after Worker restart; `tests/chest/browser-files.mjs` — accessJourney: rendered Your access panel reconciled with original reads, direct grant removal and group membership removal, with desktop assertions and phone proof; `tests/chest/ownership.mjs`; `tests/chest/governance.mjs`; `tests/chest/browser-governance.mjs`
 **Gap.** Fresh-judge candidate: the old gap named only the EDIT-004 provider experience and the SCALE-001 run, both now in their own clauses.
 
 #### SPACE-002 — Who creates spaces, and new-space defaults
