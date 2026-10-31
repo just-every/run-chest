@@ -4,8 +4,11 @@ import {createHash,randomBytes} from 'node:crypto';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
+import {scannerBindings,scannerEdge} from './content-scanner-fixture.mjs';
+import {integrationUploadFlow} from './integration-upload-flow.mjs';
+import {tooltips} from './tooltip-proof.mjs';
 import {attachmentClient} from './integration-client.mjs';
-let receiverStatus=503;const h=await harness({edge:async request=>new URL(request.url).hostname==='hooks.example.test'?new Response('Receiver outcome',{status:receiverStatus}):undefined});let browser,consumer;
+let receiverStatus=503;const h=await harness({bindings:scannerBindings,edge:async request=>await scannerEdge(request)??(new URL(request.url).hostname==='hooks.example.test'?new Response('Receiver outcome',{status:receiverStatus}):undefined)});let browser,consumer,uploadProof;
 async function shot(page,width,state){assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${state} fits ${width}`);await page.screenshot({path:`test-results/${width}-integrations-${state}.png`,fullPage:true})}
 const cookies=cookie=>cookie.split('; ').map(v=>{const at=v.indexOf('=');return {name:v.slice(0,at),value:v.slice(at+1),url:h.origin}});
 try{
@@ -14,8 +17,8 @@ try{
  for(const width of [1440,390]){
   await h.api('/integrations/policy',cookie,{scope:'organization',mode:'any',apps:{}});
   const folder=await h.api('/items',cookie,{space,type:'folder',name:`Partner files ${width}`}),file=await h.api('/items',cookie,{parent:folder.id,name:`Signed terms ${width}.txt`,base64:Buffer.from('The original agreed terms.').toString('base64')}),outside=await h.api('/items',cookie,{space,name:`Private forecast ${width}.txt`,base64:Buffer.from('Outside the authorized folder.').toString('base64')});
-  const app=await h.api('/integrations/clients',cookie,{name:`Picker partner ${width}`,redirects:[`${consumer.origin}/callback/${width}`],pickerOrigins:[consumer.origin],actions:['read','search','picker','upload','webhook','request']});
-  consumer.add(width,app.client.id,[folder.id],['read','search','picker','webhook','request']);
+  const app=await h.api('/integrations/clients',cookie,{name:`Picker partner ${width}`,redirects:[`${consumer.origin}/callback/${width}`],pickerOrigins:[consumer.origin],actions:['read','search','picker','upload','webhook','request','download','versions']});
+  consumer.add(width,app.client.id,[folder.id],['read','search','picker','webhook','request','download','upload','versions']);
   const context=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});await context.addCookies(cookies(cookie));await context.grantPermissions(['local-network-access'],{origin:consumer.origin});
   const host=await context.newPage(),admin=await context.newPage();host.setDefaultTimeout(15000);host.on('pageerror',e=>console.log('Partner client error:',e.message));await admin.goto(h.origin+'/app/integrations');await shot(admin,width,'console');
   await host.goto(`${consumer.origin}/host/${width}`);assert.equal(await host.evaluate(()=>typeof window.ChestPicker),'function','The third-party app loaded the real Chest component');const popupPromise=host.waitForEvent('popup');await host.getByRole('button',{name:'Attach from Chest'}).click();const popup=await popupPromise;popup.on('response',async r=>{if(r.url().includes('/integrations/v1/')&&r.status()>=400)console.log('Picker API refusal:',r.status(),(await r.json()).error)});await popup.setViewportSize({width,height:900});await popup.waitForURL(/\/oauth\/chest\/authorize/);await popup.getByRole('button',{name:'Authorize app',exact:true}).waitFor();await shot(popup,width,'consent');await popup.getByRole('button',{name:'Authorize app',exact:true}).click();try{await popup.waitForURL(/\/app\/integrations\/picker/)}catch(error){console.log('Picker transition:',new URL(popup.url()).pathname,await host.locator('#result').innerText());await popup.screenshot({path:'test-results/picker-transition.png',fullPage:true});throw error};await popup.getByRole('button',{name:file.payload.name,exact:true}).waitFor();assert.equal(await popup.getByRole('button',{name:outside.payload.name,exact:true}).count(),0);await shot(popup,width,'picker');
@@ -44,6 +47,7 @@ try{
   }
   assert.deepEqual((await h.api(`/items/${folder.id}`,cookie)).children,before,'anonymous visits and refused reads leave the populated folder unchanged');
   const retained=await h.fetch(`/api/chest/items/${file.id}/bytes/${file.payload.current}?download=true`,{headers:{cookie}});assert.equal(retained.status,200);assert.equal(await retained.text(),'The original agreed terms.','refusals preserve the retained original');
+  if(width===1440)uploadProof=await integrationUploadFlow(h,{owner:cookie,sponsor:cookie,token:access,folder,file});
   consumer.add(width,app.client.id,[folder.id]);
   const hookResponse=await h.fetch('/api/chest/integrations/v1/webhooks',{method:'POST',headers:{authorization:'Bearer '+access,'content-type':'application/json','idempotency-key':`browser-webhook-${width}`},body:JSON.stringify({endpoint:'https://hooks.example.test/browser',events:['file.upload']})});assert.equal(hookResponse.status,200);const hook=(await hookResponse.json()).subscription;
   receiverStatus=503;await h.api('/items',cookie,{parent:folder.id,name:`Webhook evidence ${width}.txt`,base64:Buffer.from('Recorded live file arrival.').toString('base64')});
@@ -81,10 +85,24 @@ try{
   }
   const grant=await host.evaluate(()=>window.picker.grant);assert.ok(grant);await h.api(`/integrations/grants/${grant}/revoke`,cookie,{});await host.getByRole('button',{name:'Attach from Chest'}).click();await host.waitForFunction(()=>document.querySelector('#result').dataset.error==='oauth_grant_revoked');await shot(host,width,'revoked-pick');
   await admin.goto(h.origin+'/app/integrations');await admin.getByLabel(/^Authorization mode/).selectOption('allowlist');await admin.getByLabel(`Picker partner ${width} policy`).selectOption('read_only');await Promise.all([admin.waitForNavigation(),admin.getByRole('button',{name:'Save app policy',exact:true}).click()]);await shot(admin,width,'allowlist-read-only');
-  await host.reload();const nextPopupPromise=host.waitForEvent('popup');await host.getByRole('button',{name:'Attach from Chest'}).click();const nextPopup=await nextPopupPromise;await nextPopup.setViewportSize({width,height:900});await nextPopup.getByRole('button',{name:'Authorize app',exact:true}).waitFor();await nextPopup.getByRole('button',{name:'Authorize app',exact:true}).click();await nextPopup.getByRole('button',{name:file.payload.name,exact:true}).waitFor();await nextPopup.getByRole('button',{name:file.payload.name,exact:true}).click();await host.waitForFunction(()=>document.querySelector('#result').textContent.startsWith('{'));
+  consumer.add(width,app.client.id,[folder.id]);await host.reload();const nextPopupPromise=host.waitForEvent('popup');await host.getByRole('button',{name:'Attach from Chest'}).click();const nextPopup=await nextPopupPromise;await nextPopup.setViewportSize({width,height:900});await nextPopup.getByRole('button',{name:'Authorize app',exact:true}).waitFor();await nextPopup.getByRole('button',{name:'Authorize app',exact:true}).click();await nextPopup.getByRole('button',{name:file.payload.name,exact:true}).waitFor();await nextPopup.getByRole('button',{name:file.payload.name,exact:true}).click();await host.waitForFunction(()=>document.querySelector('#result').textContent.startsWith('{'));
   await admin.goto(h.origin+'/app/integrations');await admin.getByLabel(/^Authorization mode/).selectOption('allowlist');await admin.getByLabel(`Picker partner ${width} policy`).selectOption('blocked');await Promise.all([admin.waitForNavigation(),admin.getByRole('button',{name:'Save app policy',exact:true}).click()]);await shot(admin,width,'blocked-app');await host.getByRole('button',{name:'Attach from Chest'}).click();await host.waitForFunction(()=>document.querySelector('#result').dataset.error==='oauth_grant_revoked');await shot(host,width,'blocked-next-pick');
   // An off-list app's consent names the organization rule and offers no Authorize action.
   await host.reload();const refusedPromise=host.waitForEvent('popup');await host.getByRole('button',{name:'Attach from Chest'}).click();const refused=await refusedPromise;await refused.setViewportSize({width,height:900});await refused.getByText('Code: app_policy_app_blocked',{exact:true}).waitFor();assert.equal(await refused.getByRole('button',{name:'Authorize app',exact:true}).count(),0);await shot(refused,width,'policy-refusal');await refused.close();await context.close();
  }
+ // Reconcile the same agent-produced history, existing link and held originals once at each proof width.
+ for(const width of [1440,390]){
+  const context=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});await context.addCookies(cookies(cookie));const page=await context.newPage();
+  await page.goto(`${h.origin}/app/items/${uploadProof.file}`);
+  if(width===1440){assert.equal(await page.locator('.versions article.ver').count(),uploadProof.originals.length);for(const original of uploadProof.originals)assert.equal(await page.locator(`[title="SHA-256 ${original.checksum}"]`).count(),1);assert.equal(await page.locator('.ver-current a').filter({hasText:'Download this version'}).getAttribute('href'),`/api/chest/items/${uploadProof.file}/bytes/${uploadProof.originals.at(-1).id}?download=true`);await tooltips(page,width,'integration-versions')}
+  await shot(page,width,'agent-version-history');
+  const guest=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true}),linkPage=await guest.newPage();await linkPage.goto(h.origin+uploadProof.linkPath);
+  if(width===1440){const download=linkPage.getByRole('link',{name:'Download',exact:true});const href=await download.getAttribute('href'),response=await guest.request.get(new URL(href,h.origin).href);assert.equal(response.status(),200);assert.equal(createHash('sha256').update(await response.body()).digest('hex'),uploadProof.originals.at(-1).checksum)}
+  await shot(linkPage,width,'agent-existing-link');await guest.close();
+  await page.goto(h.origin+'/app/upload-protection');
+  if(width===1440){for(const held of uploadProof.held){const row=page.locator('li').filter({has:page.getByText('SHA-256 '+held.checksum,{exact:true})});assert.match(await row.innerText(),/infected/);assert.match(await row.innerText(),new RegExp(held.filename.replace('.', '\\.')));assert.equal(await row.getByRole('button',{name:'Release false positive',exact:true}).count(),1)}await tooltips(page,width,'integration-quarantine')}
+  await shot(page,width,'agent-upload-quarantine');await context.close();
+ }
+ console.log('SURFACE-004 browser reconciles agent versions, original link and durable quarantine at 1440 and 390');
  console.log('CONNECT-007 browser OAuth, picker stable IDs/links/search/revoke and allowlist/read-only/block console at 1440 and 390 passed');
 }finally{await browser?.close();await consumer?.close();await h.close()}
