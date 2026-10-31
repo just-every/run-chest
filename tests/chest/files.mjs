@@ -3,6 +3,8 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {harness} from './harness.mjs';
+import {syncTreeFlow} from './sync-tree-flow.mjs';
+await syncTreeFlow();
 const h=await harness(),b64=v=>Buffer.from(v).toString('base64'),sha=v=>createHash('sha256').update(v).digest('hex'),day=86_400_000;
 const check=async(id,fn)=>{await fn();console.log(`${id} passed`)};
 const people={};let space,personalOf={};

@@ -2338,7 +2338,7 @@ ADMIN-006 runtime source is judged from commit 9d951ccdecac60aea1be5f560119bf2cd
 | `TRANSFER-002` | Whole folders and large originals | target | missing |  | Whole-folder upload, files above 4 GB and the 5 TB limit do not exist. The 5 TB upload itself is register row R-3. |
 | `BULK-001` | Multi-select actions and ZIP downloads in the browser | target | partial | `tests/chest/bulk.mjs`; `tests/chest/browser-bulk.mjs`; `docs/bulk.md` | After a restart a job finishes only on explicit continuation (the old gap's "autonomous server-side execution"); unbounded trees remain. |
 | `BULK-002` | Archives for guests and request recipients | target | missing |  | Guest and request-recipient archive grants and the 6 GB guest run do not exist. |
-| `SYNC-001` | Sync protocol for clients | target | partial | `tests/chest/files.mjs`; `tests/chest/scale-sync.mjs` | Fresh-judge candidate: the old gap says this protocol exists; only the native clients (SYNC-008) were missing. |
+| `SYNC-001` | Sync protocol for clients | target | partial | `tests/chest/files.mjs`; `tests/chest/scale-sync.mjs`; `tests/chest/sync-tree-flow.mjs` | Fresh-judge candidate: the old gap says this protocol exists; only the native clients (SYNC-008) were missing. |
 | `SYNC-008` | macOS and Windows clients | target | missing |  | No native client exists. |
 | `SYNC-009` | Supported platforms and managed install | target | missing |  | No client exists. Notarization and Authenticode receipts are R-4; Jamf and Intune runs are R-5. |
 | `SYNC-010` | Windows 10 22H2 | target | missing |  | No client exists. |
