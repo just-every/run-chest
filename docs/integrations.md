@@ -59,6 +59,7 @@ Use `Authorization: Bearer TOKEN`. The base is `/api/chest/integrations/v1`. Rea
 | `GET /items/:id/shares` | `share` | Paginated current grants, when the user can currently share. |
 | `POST /items/:id/shares` | `share` | Share using `principal`, `role` and normal expiry/message fields. |
 | `POST /items/:id/unshare` | `share` | Remove one `principal`. |
+| `POST /items/:id/make-private` | `share` | Revoke every public or guest link and remove organization and restricted links on this item, preserving named people and group grants, children and retained originals. Requires the sponsor's current sharing authority and an idempotency key; send `{}`. |
 | `POST /items/:id/links` | `share` | Create a link with the normal policy-controlled audience, version and download controls. |
 | `GET /items/:id/requests` | `request` | Paginated upload-only requests for a folder the user may share. |
 | `GET /requests/:id` | `request` | One request's settings, scoped by its destination folder. |
