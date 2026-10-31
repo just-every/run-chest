@@ -14,8 +14,11 @@ import { action, live, resource, spend, type Authorized } from './auth'
 import { brief, listItems, scopedSearch, versions, paginate } from './reads'
 import { hash } from './secrets'
 import { mutate } from './mutations'
+import { activityReport, activityReportCsv } from './reports'
 export async function resourceCall(env: Bindings,auth: Authorized,method: string,path: string,input: any,url: URL,idempotency: string) {
- const [head,key,sub,version,verb]=path.split('/').filter(Boolean),w=await who(env,auth.session)
+ const [head,key,sub,version,verb]=path.split('/').filter(Boolean)
+ if(method==='GET'&&head==='administration'&&key==='audit'&&(!sub||sub==='export'))return sub==='export'?activityReportCsv(env,auth,url.searchParams):activityReport(env,auth,url.searchParams)
+ const w=await who(env,auth.session)
  if(method==='GET'&&head==='items'&&!key)return listItems(env,auth,url)
  if(method==='GET'&&head==='search')return scopedSearch(env,auth,url)
  if(method==='GET'&&head==='requests'&&key){const request=await get<FileRequest>(env,'file-request',key);await resource(env,auth,request.payload.folder,'request');return describeRequest(request)}

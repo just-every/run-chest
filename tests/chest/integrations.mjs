@@ -1,7 +1,9 @@
 // CONNECT-007 via the built Worker; the OAuth client and webhook receiver are network edges.
 import assert from 'node:assert/strict';
 import {createHash,createHmac,randomBytes} from 'node:crypto';
+import {request as httpsRequest} from 'node:https';
 import {harness} from './harness.mjs';
+import {integrationReportSetup} from './administration-report-flow.mjs';
 let signingSecret='',receiverMode='fail',received=new Map(),attempts=0;
 const h=await harness({bindings:{CHEST_OUTBOUND_HOSTS:'hooks.example.test,api.resend.com'},edge:async request=>{if(new URL(request.url).hostname!=='hooks.example.test')return;const body=await request.text(),signature=request.headers.get('x-chest-signature'),[,timestamp,mac]=/^t=(\d+),v1=([a-f0-9]+)$/.exec(signature)||[];assert.ok(timestamp&&Math.abs(Date.now()/1000-Number(timestamp))<60);assert.equal(mac,createHmac('sha256',signingSecret).update(timestamp+'.'+body).digest('hex'));const event=JSON.parse(body);assert.equal(request.headers.get('x-chest-event'),event.id);attempts++;if(receiverMode==='fail')return new Response('temporarily unavailable',{status:503});if(!received.has(event.id))received.set(event.id,event);if(receiverMode==='uncertain')await new Promise(resolve=>setTimeout(resolve,12000));return Response.json({accepted:event.id,duplicate:received.has(event.id)})}});
 const b64=s=>Buffer.from(s).toString('base64'),random=()=>randomBytes(32).toString('base64url');
@@ -18,6 +20,94 @@ try{
  client=await h.api('/integrations/clients',staff,{name:'Scoped client and MCP agent',redirects:['https://client.example.test/callback'],pickerOrigins:['https://client.example.test'],actions:['read','search','download','upload','folder','versions','share','request','picker','webhook'],confidential:true});
  const expanded=await consentFor(client,staff,['read'],[folder.id]);expanded.params.set('redirect_uri','https://attacker.example.test/callback');assert.equal((await h.fetch('/oauth/chest/authorize?'+expanded.params,{headers:{cookie:staff}})).status,400,'redirect exact match');
  const grant=await authorize(client,staff,['read','search','download','upload','folder','versions','share','request','picker','webhook']);let token=grant.access_token;
+ // SURFACE-010: the report door requires separate consent and current delegated authority.
+ const report = await integrationReportSetup(h,owner);
+ const reportApp = await h.api('/integrations/clients',report.admin,{name:'Read-only report client',redirects:['https://client.example.test/callback'],actions:['read','admin-report']});
+ const reportConsent = async (groups=[report.group.id],cookie=report.admin) => {
+  const budget={report_group:groups[0]};
+  const pending=await consentFor(reportApp,cookie,['admin-report'],[],budget);
+  for(const group of groups.slice(1))pending.params.append('report_group',group);
+  if(groups.length>1)pending.response=await h.fetch('/oauth/chest/authorize?'+pending.params,{headers:{cookie}});
+  return pending;
+ };
+ const issueReport = async (groups=[report.group.id]) => {
+  const pending=await reportConsent(groups);assert.equal(pending.response.status,200,await pending.response.clone().text());
+  const intent=/name="intent" value="([^"]+)"/.exec(await pending.response.text())[1];
+  const absent=await form('/oauth/chest/authorize',report.admin,{intent,decision:'allow'});assert.equal(absent.status,403);assert.match(await absent.text(),/oauth_report_consent_required/);
+  const allowed=await form('/oauth/chest/authorize',report.admin,{intent,decision:'allow',adminReportConsent:'yes',report_group:report.otherGroup.id});assert.equal(allowed.status,303);
+  const response=await h.fetch('/oauth/chest/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',client_id:reportApp.client.id,redirect_uri:'https://client.example.test/callback',code:new URL(allowed.headers.get('location')).searchParams.get('code'),code_verifier:pending.verifier})});
+  assert.equal(response.status,200);return response.json();
+ };
+ const reportGrant=await issueReport(),reportToken=reportGrant.access_token;
+ const reportRaw=(path,access=reportToken)=>h.fetch('/api/chest/integrations/v1/administration/audit'+path,{headers:{authorization:'Bearer '+access}});
+ const pages = async (access=reportToken) => {
+  const rows=[],params=new URLSearchParams(report.filter);params.set('limit','100');let page;
+  do {const response=await reportRaw('?'+params,access);assert.equal(response.status,200);page=await response.json();rows.push(...page.rows);if(page.next)params.set('cursor',page.next)}while(page.next);
+  return rows;
+ };
+ const expected={rows:[]},browserParams=new URLSearchParams(report.filter);browserParams.set('group',report.group.id);browserParams.set('limit','300');let browserPage;
+ do{browserPage=await h.api('/administration/audit?'+browserParams,report.admin);expected.rows.push(...browserPage.rows);if(browserPage.next)browserParams.set('cursor',browserPage.next)}while(browserPage.next);
+ assert.equal(expected.rows.length,305);
+ assert.deepEqual(await pages(),expected.rows,'all bounded pages match the browser metadata report');
+ const exportPath='/export?'+report.filter+'&limit=2';
+ const csv=await reportRaw(exportPath);assert.equal(csv.status,200);const csvText=await csv.text();
+ const browserCsv=await h.raw('/api/chest/administration/audit/export?'+report.filter+'&group='+report.group.id,report.admin);
+ assert.equal(csvText,await browserCsv.text(),'paginated integration CSV equals the scoped browser CSV row for row');
+ const bounded=JSON.stringify(await pages());for(const hidden of [report.secret.id,report.outsideEmail,report.file.payload.name,report.secret.payload.name,'synthetic-chest-44 private original'])assert.ok(!bounded.includes(hidden),'report is content blind and excludes other selected authority');
+ const deniedGroup=await reportRaw('?'+report.filter+'&group='+report.otherGroup.id);assert.equal(deniedGroup.status,403);assert.equal((await deniedGroup.json()).error,'admin_group_scope_required');
+ assert.equal((await h.fetch('/api/chest/integrations/v1/items',{headers:{authorization:'Bearer '+reportToken}})).status,403,'report consent conveys no file action');
+ await h.api(`/items/${report.file.id}`,report.admin,undefined,403);
+ const reportFolder=await h.api('/items',report.admin,{space:(await h.api('/files',report.admin)).personal,type:'folder',name:'Report sponsor files'});
+ const ordinary=await authorize(reportApp,report.admin,['read'],[reportFolder.id]);
+ const noCapability=await reportRaw('',ordinary.access_token);assert.equal(noCapability.status,403);assert.equal((await noCapability.json()).error,'oauth_action_outside_grant');
+ const staffBrowser=await h.api('/administration/audit',staff,undefined,403),staffAgent=await reportRaw('',token);assert.equal(staffAgent.status,403);assert.equal((await staffAgent.json()).error,staffBrowser.error);
+ const staffConsent=await reportConsent([report.group.id],staff);assert.equal(staffConsent.response.status,403);assert.match(await staffConsent.response.text(),/admin_required/);
+ await h.stop();await h.start();assert.deepEqual(await pages(),expected.rows,'group selection persists across restart');
+ const firstPage=await (await reportRaw('?'+report.filter+'&limit=2')).json();assert.ok(firstPage.next);
+ const assertStopped = async (access,status,code) => {
+  for(const path of ['?'+report.filter,'?'+report.filter+'&cursor='+encodeURIComponent(firstPage.next),exportPath]){
+   const response=await reportRaw(path,access);assert.equal(response.status,status);assert.equal((await response.json()).error,code);
+  }
+ };
+ // A second HTTP connection lets revocation arrive while the first response remains open.
+ // Miniflare's dispatch connection otherwise queues a mutation behind that same response body.
+ const revokeOnAnotherConnection=(path,cookie,body)=>new Promise((resolve,reject)=>{
+  const request=httpsRequest(new URL('/api/chest'+path,h.origin),{method:'POST',rejectUnauthorized:false,headers:{cookie,origin:h.origin,'content-type':'application/json'}},response=>{
+   const chunks=[];response.on('data',chunk=>chunks.push(chunk));response.on('error',reject);response.on('end',()=>{try{assert.equal(response.statusCode,200,Buffer.concat(chunks).toString());resolve()}catch(error){reject(error)}});
+  });request.on('error',reject);request.end(JSON.stringify(body));
+ });
+ const interruptedCsv=async (access,revoke) => {
+  const response=await reportRaw(exportPath,access);assert.equal(response.status,200);const reader=response.body.getReader();
+  const first=await reader.read();assert.ok(!first.done&&new TextDecoder().decode(first.value).startsWith('At,Actor'));
+  await revoke();
+  const chunks=[first.value];
+  try {let next;while(!(next=await reader.read()).done)chunks.push(next.value)}catch { /* A transport may surface the server's abort as a read error. */ }
+  const emitted=Buffer.concat(chunks).toString(),rows=emitted.trimEnd().split('\r\n').slice(1);
+  assert.ok(rows.length>0&&rows.length<expected.rows.length,'revocation interrupts the open export before its remaining rows are emitted');
+  assert.ok(rows.every(row=>row.includes(report.file.id)),'an interrupted export contains only authorized custody');
+  reader.releaseLock();
+ };
+ // The live authority is intersected with both saved groups after one is removed.
+ const both=await issueReport([report.group.id,report.otherGroup.id]);assert.equal((await pages(both.access_token)).length,306);
+ await h.api('/administration/roles',owner,{id:report.delegation.id,groups:[report.group.id]});assert.deepEqual(await pages(both.access_token),expected.rows);
+ await interruptedCsv(reportToken,()=>revokeOnAnotherConnection('/administration/roles',owner,{id:report.delegation.id,groups:[report.otherGroup.id]}));
+ await assertStopped(reportToken,403,'admin_group_scope_required');await h.stop();await h.start();await assertStopped(reportToken,403,'admin_group_scope_required');
+ await h.api('/administration/roles',owner,{id:report.delegation.id,groups:[report.group.id]});
+ const revokedReport=await issueReport();await interruptedCsv(revokedReport.access_token,()=>revokeOnAnotherConnection(`/integrations/grants/${revokedReport.grant}/revoke`,report.admin,{}));
+ await assertStopped(revokedReport.access_token,401,'oauth_grant_revoked');await h.stop();await h.start();await assertStopped(revokedReport.access_token,401,'oauth_grant_revoked');
+ await h.api('/audit/privacy',report.member,{hidden:true});
+ assert.deepEqual(await pages(),[],'the integration report honors the browser view-history suppression');
+ await h.api('/audit/privacy',report.member,{hidden:false});
+ assert.deepEqual(await pages(),expected.rows);
+ await h.api('/administration/roles',owner,{action:'revoke',id:report.delegation.id});
+ await assertStopped(reportToken,403,'admin_required');
+ await h.api('/administration/roles',owner,{email:report.adminEmail,role:'audit-reporting',scope:'groups',groups:[report.group.id]});
+ const erasedReport=await issueReport();
+ await h.api('/erasure',owner,{email:report.adminEmail,confirm:report.adminEmail});
+ await assertStopped(erasedReport.access_token,401,'oauth_token_expired');
+ await h.stop();await h.start();await assertStopped(erasedReport.access_token,401,'oauth_token_expired');
+ console.log('PROBE SURFACE-010 1: real OAuth activity pages and CSV -> 305 scoped browser rows, content blind, separate consent, live intersection, scope and OAuth revocation stop streams and persisted reads');
+ console.log('PROBE SURFACE-010 2: staff OAuth report request -> 403 '+staffBrowser.error+', matching the browser');
  // Pagination returns only stable IDs under the folder; current role/no-download still govern every door.
  const seen=[];let cursor=null;do{const result=await call(token,'/items?limit=2'+(cursor?'&cursor='+cursor:''));seen.push(...result.items.map(r=>r.id));cursor=result.nextCursor}while(cursor);assert.equal(new Set(seen).size,7);assert.ok(seen.includes(folder.id)&&!seen.includes(other.id));await call(token,`/items/${other.id}`,{status:403});
  const search=await call(token,'/search?q=Searchable&type=documents&creator=me&limit=2');assert.equal(search.items.length,2);assert.ok(search.nextCursor);assert.ok(search.items.every(r=>initial.some(i=>i.id===r.id)));

@@ -36,8 +36,8 @@ export function eventFilters(params: URLSearchParams) {
  if (category !== 'all') conditions.push(categorySql[category])
  return { conditions, values }
 }
-export async function administrativeAudit(env: Bindings, s: Session, params: URLSearchParams, recordRead = true) {
- const scope = await reportScope(env, s, params.get('group')), filter = eventFilters(params), fence = eventCondition(scope)
+export async function administrativeAudit(env: Bindings, s: Session, params: URLSearchParams, recordRead = true, bounds?: readonly string[]) {
+ const scope = await reportScope(env, s, params.get('group'), bounds), filter = eventFilters(params), fence = eventCondition(scope)
  const limit = Number(params.get('limit') || 100); insist(Number.isInteger(limit) && limit > 0 && limit <= 300, 'invalid_limit')
  const after = cursor(params.get('cursor')), until = params.get('until') || new Date().toISOString()
  insist(Number.isFinite(Date.parse(until)), 'invalid_date')

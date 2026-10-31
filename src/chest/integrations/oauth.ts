@@ -5,6 +5,7 @@ import { get, snapshot } from '../store'
 import { commit, fresh, next } from '../files/repo'
 import { context, demand, who } from '../files/access'
 import { budget, resources } from './clients'
+import { reportScope } from '../administration/report-scope'
 import { attach, demandPolicy, scopeList } from './policy'
 import { equal, hash, insertSecret, random, seal, secret } from './secrets'
 import type { Client, Grant, Intent } from './model'
@@ -12,20 +13,23 @@ export async function beginConsent(env: Bindings,s: Session,url: URL) {
  const q=url.searchParams,client=await get<Client>(env,'integration-client',q.get('client_id')??'');insist(!client.payload.revokedAt,'oauth_client_revoked',403)
  const redirect=q.get('redirect_uri')??'';insist(client.payload.redirects.includes(redirect),'oauth_redirect_mismatch',400);insist(q.get('response_type')==='code'&&q.get('code_challenge_method')==='S256','oauth_pkce_required')
  const challenge=q.get('code_challenge')??'';insist(/^[A-Za-z0-9_-]{43}$/.test(challenge),'oauth_invalid_challenge');const state=q.get('state')??'';insist(state.length>=16&&state.length<=512,'oauth_state_required')
- const scopes=scopeList(q.get('scope')),roots=resources(q.getAll('resource'));insist(scopes.every(a=>client.payload.actions.includes(a)),'oauth_action_expansion',403)
+ const scopes=scopeList(q.get('scope')),roots=scopes.every(a=>a==='admin-report')&&!q.has('resource')?[]:resources(q.getAll('resource'));insist(scopes.every(a=>client.payload.actions.includes(a)),'oauth_action_expansion',403)
+ const reportGroups=scopes.includes('admin-report')?[...new Set(q.getAll('report_group'))]:undefined
+ if(reportGroups){insist(reportGroups.length>0&&reportGroups.length<=100,'oauth_report_groups_required');const allowed=await reportScope(env,s);insist(reportGroups.every(id=>allowed.groups.some(g=>g.id===id)),'admin_group_scope_required',403)}
  await demandPolicy(env,s,client.id,scopes);const fences: Row[]=[client],named=[];for(const root of roots){const c=await context(env,await who(env,s),root);demand(c,'view');fences.push(...c.fences);named.push({id:root,name:c.chain.at(-1)!.payload.name})}
  const pickerOrigin=q.get('picker_origin')??undefined;insist(!pickerOrigin||client.payload.pickerOrigins.includes(pickerOrigin),'oauth_picker_origin_mismatch',403)
- const row=fresh<Intent>('integration-intent',{client:client.id,user:s.operator.email,redirect,challenge,state,resources:roots,actions:scopes,budget:budget({requests:q.get('budget_requests')??undefined,mutations:q.get('budget_mutations')??undefined,bytes:q.get('budget_bytes')??undefined}),expires:new Date(Date.now()+10*60000).toISOString(),...(pickerOrigin?{pickerOrigin}:{})})
- await commit(env,s,[{row}],{fences,audits:[{action:'integration.consent.view',object:client.id,detail:{actions:scopes,resources:roots}}]});return {intent:row,client,named}
+ const row=fresh<Intent>('integration-intent',{client:client.id,user:s.operator.email,redirect,challenge,state,resources:roots,...(reportGroups?{reportGroups}:{}),actions:scopes,budget:budget({requests:q.get('budget_requests')??undefined,mutations:q.get('budget_mutations')??undefined,bytes:q.get('budget_bytes')??undefined}),expires:new Date(Date.now()+10*60000).toISOString(),...(pickerOrigin?{pickerOrigin}:{})})
+ await commit(env,s,[{row}],{fences,audits:[{action:'integration.consent.view',object:client.id,detail:{actions:scopes,resources:roots,...(reportGroups?{reportGroups}:{})}}]});return {intent:row,client,named,reportGroups:reportGroups?(await reportScope(env,s,null,reportGroups)).groups:[]}
 }
 export async function consent(env: Bindings,s: Session,input: any) {
  const row=await get<Intent>(env,'integration-intent',input.intent),i=row.payload;insist(i.user===s.operator.email&&!i.used&&Date.parse(i.expires)>Date.now(),'oauth_consent_expired',403)
  const client=await get<Client>(env,'integration-client',i.client);insist(!client.payload.revokedAt&&client.payload.redirects.includes(i.redirect),'oauth_client_revoked',403);await demandPolicy(env,s,client.id,i.actions)
  const result=new URL(i.redirect);result.searchParams.set('state',i.state)
  if(input.decision!=='allow'){await commit(env,s,[{row:next(row,{...i,used:now()}),previous:row}],{fences:[client]});result.searchParams.set('error','access_denied');return result.href}
+ if(i.actions.includes('admin-report')){insist(input.adminReportConsent==='yes','oauth_report_consent_required',403);insist(i.reportGroups?.length,'oauth_report_groups_required');const allowed=await reportScope(env,s);insist(i.reportGroups.every(id=>allowed.groups.some(g=>g.id===id)),'admin_group_scope_required',403)}
  const fences:Row[]=[client];for(const key of i.resources){const c=await context(env,await who(env,s),key);demand(c,'view');fences.push(...c.fences)}
- const grant=fresh<Grant>('integration-grant',{client:client.id,user:s.operator.email,operator:s.operator.id,operatorVersion:s.operator.version,resources:i.resources,actions:i.actions,budget:i.budget,used:{requests:0,mutations:0,bytes:0},at:now(),expires:new Date(Date.now()+24*3600000).toISOString()}),code=random('chest_code_'),id=`code:${await hash(code)}`
- await commit(env,s,[{row:grant},{row:next(row,{...i,used:now()}),previous:row}],{fences,audits:[{action:'integration.grant.authorize',object:grant.id,detail:{client:client.id,resources:i.resources,actions:i.actions,budget:i.budget}}],statements:[insertSecret(id,await seal(env,id,{grant:grant.id,client:client.id,redirect:i.redirect,challenge:i.challenge,expires:new Date(Date.now()+5*60000).toISOString()}),s.operator.email),{sql:'INSERT INTO chest_mfa_verified(session_id,method,verified_at,last_seen) SELECT ?,method,?,? FROM chest_mfa_verified WHERE session_id=?',params:[`integration:${grant.id}`,Date.now(),Date.now(),s.id]}]});result.searchParams.set('code',code);return result.href
+ const grant=fresh<Grant>('integration-grant',{client:client.id,user:s.operator.email,operator:s.operator.id,operatorVersion:s.operator.version,resources:i.resources,...(i.reportGroups?{reportGroups:i.reportGroups}:{}),actions:i.actions,budget:i.budget,used:{requests:0,mutations:0,bytes:0},at:now(),expires:new Date(Date.now()+24*3600000).toISOString()}),code=random('chest_code_'),id=`code:${await hash(code)}`
+ await commit(env,s,[{row:grant},{row:next(row,{...i,used:now()}),previous:row}],{fences,audits:[{action:'integration.grant.authorize',object:grant.id,detail:{client:client.id,resources:i.resources,...(i.reportGroups?{reportGroups:i.reportGroups}:{}),actions:i.actions,budget:i.budget}}],statements:[insertSecret(id,await seal(env,id,{grant:grant.id,client:client.id,redirect:i.redirect,challenge:i.challenge,expires:new Date(Date.now()+5*60000).toISOString()}),s.operator.email),{sql:'INSERT INTO chest_mfa_verified(session_id,method,verified_at,last_seen) SELECT ?,method,?,? FROM chest_mfa_verified WHERE session_id=?',params:[`integration:${grant.id}`,Date.now(),Date.now(),s.id]}]});result.searchParams.set('code',code);return result.href
 }
 export async function exchange(env: Bindings,input: any,origin: string|null) {
  insist(input.grant_type==='authorization_code','oauth_grant_type_not_supported');const client=await get<Client>(env,'integration-client',String(input.client_id??''));insist(!client.payload.revokedAt,'oauth_client_revoked',401)
