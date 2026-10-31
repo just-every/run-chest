@@ -2153,7 +2153,7 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-005, BASE
 7. Approving with the agent's own token returns 403.
 8. The integration API's `/shares` and `/links` give an agent token the same class and decision as the tools.
 
-**Evidence.** None.
+**Evidence.** `tests/chest/integrations.mjs` — Compatibility assertions cover omitted, false and true confirmation flags through OAuth API and legacy MCP, authenticated attribution, idempotent replay, and ordinary public-link refusals preserving populated grants, links and stored mutation receipts across retry and Worker restart. These assertions do not establish canonical company-policy classification or decisions.
 **Gap.** No recipient classification, policy decision, pending actions or receipts. Today `chest_share` forwards the agent's own `confirmExternal`, which the sharing policy (`src/chest/files/sharing-policy.ts`) accepts as the browser's confirmation, and the API's `/links` creates links under policy with no class or decision.
 
 #### SURFACE-007 — Narrowing access and repairing links
