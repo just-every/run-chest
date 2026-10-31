@@ -2308,13 +2308,15 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 
 ADMIN-006 runtime source is judged from commit 9d951ccdecac60aea1be5f560119bf2cd475db31 (30 October 2026). Its final candidate strengthens selected-item isolation and records the recovery journey in Verify; the runtime bytes are unchanged from that source commit.
 
+SURFACE-001 retains main's missing Status, Evidence and Gap pending a new clause judgment. The replay supplies the candidate's registry, generated docs and native door assertions without accepting the clause.
+
 The native agent-door subset does not replace main's accepted browser and API judgments. ERASE-001 retains its accepted status; agent decision-custody limits remain recorded under SURFACE-005 and BASE-AGENT-009. BASE-AGENT-001 stays partial pending a ct judgment.
 
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 11 | 2 | 0 | 13 |
-| Target and push further | 30 | 73 | 54 | 157 |
-| All | 41 | 75 | 54 | 170 |
+| Target and push further | 30 | 72 | 55 | 157 |
+| All | 41 | 74 | 55 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2453,7 +2455,7 @@ The native agent-door subset does not replace main's accepted browser and API ju
 | `FOLLOW-001` | Reminders and durable notifications | target | partial | `tests/chest/flows.mjs`; `tests/chest/files.mjs` | Due work, evidence completion and share, request and expiry notices by in-app and email exist; background reminders, push, chat channels and provider outcomes do not. |
 | `FOLLOW-002` | Reply and resolve from email | target | missing |  | Replies by email do not exist. |
 | `FOLLOW-003` | Personal notification settings | target | missing |  | Personal settings do not exist. |
-| `SURFACE-001` | The Agent surface is Chest's tool registry | target | partial | `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; production door conformance 8524/8524 points; `tests/chest/integrations.mjs` | Declared registry: 42 tools (41 native plus Base events), 40 of 48 target names and seven resources. Eight target jobs remain undeclared; embedded native agents and expanded event family have not adopted this registry. See docs/agent-adoption.md. |
+| `SURFACE-001` | The Agent surface is Chest's tool registry | target | missing |  | No registry, output schemas, annotations, class declarations, parity test, generated docs or Base harness. Today 9 tools run on `/mcp/chest` at protocol 2025-03-26 with input schemas only (`src/chest/integrations/mcp.ts`), and 39 of the table's 48 tools have no MCP tool. |
 | `SURFACE-002` | Find and read what the sponsor can open | target | partial | `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; production door conformance 8524/8524 points; `tests/chest/integrations.mjs` | Native visible records, versions, filtered search and download-safe snippets, activity, requests, exposure and reports are tools; trash/recent views, combined access detail and optional resource refresh/event subscriptions remain undeclared. |
 | `SURFACE-003` | Original bytes follow download rights | target | partial | `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; production door conformance 8524/8524 points; `tests/chest/integrations.mjs` | Native immutable download and Range, current ACL/no-download/source pause and explicit byte caps are enforced. Direct agent reads have 512 KiB capacity; large/resumable originals and mid-stream erasure/revocation proof remain gaps. |
 | `SURFACE-004` | Add and organize files | target | partial | `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; production door conformance 8524/8524 points; `tests/chest/integrations.mjs` | Single-item native uploads, folders, Office create, rename/move/typed filing, exact filing plans and pair merge are declared. Resumable/bulk and outside-reference repoint jobs remain gaps; an enabled arrival continuation refuses before admission until it can enter the company door. |
