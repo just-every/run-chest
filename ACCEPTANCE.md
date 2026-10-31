@@ -700,7 +700,7 @@ Core · target · **partial** · From POLICY-001
 1. With the organization default restricted and a group default of organization viewer, a group member's new link starts at organization viewer and a non-member's at restricted, and older links keep their audience.
 2. With discovery off, a request for a discoverable organization link is refused with the policy named.
 
-**Evidence.** `tests/chest/link-policy.mjs`; `tests/chest/browser-sharing-policy.mjs`
+**Evidence.** `tests/chest/link-policy.mjs`; `tests/chest/browser-sharing-policy.mjs`; named discovery refusal with no created link); `tests/chest/browser-links.mjs` (actual creator forms, saved audience and role, changed defaults without permission tightening, retained links and downloads after restart, discovery refusal; screens at 1440 and 390)
 **Gap.** Fresh-judge candidate: the old gap lists new-link defaults and discovery as delivered.
 
 ### Previews, search and editing
