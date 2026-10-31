@@ -687,7 +687,7 @@ Core · target · **partial** · Rules D-1, D-2
 2. A public link and an outside guest made under a looser policy are refused on the next request after tightening and listed as suspended.
 3. A space override blocking non-members refuses a member's share to another colleague.
 
-**Evidence.** `tests/chest/link-policy.mjs`; `tests/chest/browser-links.mjs`; `tests/chest/browser-sharing-policy.mjs`
+**Evidence.** `tests/chest/link-policy.mjs`; `tests/chest/browser-links.mjs`; `tests/chest/browser-sharing-policy.mjs`; `tests/chest/integrations.mjs` — POLICY-001 consented member share: internal non-member refusal, permitted member control, retry and Worker restart with unchanged originals and no grant, successful audit or mail on refusal.
 **Gap.** Fresh-judge candidate: the old gap named only the connector doors, which now carry their own policy point (CONNECT-001, -002, -008, -009, -010).
 
 #### POLICY-002 — Default link audience and discovery
