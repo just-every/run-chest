@@ -612,6 +612,10 @@
       "sha256": "698944e1ae2fa3cb890cefae0fc8c7ed0431ab56d6f21a3b07308d1be6eca7c4",
       "executable": false
     },
+    "public/chest-keyboard.js": {
+      "sha256": "340723c8c2c20ecd60812cf2c03926b2003b29ba5e04b78a82485458574bb094",
+      "executable": false
+    },
     "public/chest-movein.js": {
       "sha256": "c93e443dc4ba70a4e9e30cde5e0a3b96ceb2d30367c495f2509b519e2139a8a0",
       "executable": false
@@ -3301,7 +3305,7 @@
       "executable": false
     },
     "src/chest/ui-shell.ts": {
-      "sha256": "e7ac68118e5ab550e2bc61d7905d5744a4a52efc9465bd838f4f46c7c836cbe0",
+      "sha256": "69add4e5e942ca1391034d87b5b371cf53810829c1461496342e4add108f5999",
       "executable": false
     },
     "src/chest/ui-words.ts": {
@@ -5448,6 +5452,10 @@
       "sha256": "130d3e8840dbe85e72ecbb8e50f3b5298c25812290ff91f4a52201436c34c962",
       "executable": false
     },
+    "tests/chest/browser-accessibility.mjs": {
+      "sha256": "7ac53da0fcb707f0a74cbe5e5e18988e4a709058c696ba918161d98ba8e3011b",
+      "executable": false
+    },
     "tests/chest/browser-agent-filing.mjs": {
       "sha256": "3fb6612be9737ba0d75ad82bef48cb0a495f0bfd725cd0af214dc0541d99f762",
       "executable": false
@@ -5493,7 +5501,7 @@
       "executable": false
     },
     "tests/chest/browser-files.mjs": {
-      "sha256": "eb02ad0520d0b48449a09746cd1361c2a6f5d13e8aeb52f4efec3c318b6ef109",
+      "sha256": "d3a19275beee2293a2d69df9b7af142d93d9ae5bf2c6da383ff75714c8e724dc",
       "executable": false
     },
     "tests/chest/browser-flow.mjs": {
