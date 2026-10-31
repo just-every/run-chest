@@ -100,6 +100,7 @@ export async function accountingJourney(browser){
   const old=(await h.api('/administration/editor-report',owner)).refusals;
   let lastSessionToken;
   for(const width of [1440,390]){
+   await h.api('/administration/editor',owner,{...licensed.settings,codeAcknowledged:false,confirm:true});
    const context=await browser.newContext({viewport:{width,height:1000},ignoreHTTPSErrors:true});await context.addCookies(owner.split('; ').map(c=>{const i=c.indexOf('=');return{name:c.slice(0,i),value:c.slice(i+1),url:h.origin}}));const page=await context.newPage();
    await page.goto(h.origin+'/app/administration/costs');
    const costForm=page.locator('form').filter({has:page.getByRole('button',{name:'Save estimate rates',exact:true})});
@@ -110,9 +111,49 @@ export async function accountingJourney(browser){
    assert.equal(await page.getByLabel('Object-store provider',{exact:true}).count(),1);assert.match(await page.locator('body').innerText(),/Inbound is sent to the named provider/);
    assert.equal(await form.count(),1,(await page.locator('body').innerText()).slice(0,1000));
    await Promise.all([page.waitForNavigation(),page.getByRole('button',{name:'Read service capabilities',exact:true}).click()]);assert.match(await page.locator('body').innerText(),/Collabora Online Development Edition/);const observed=await h.api('/administration/editor',owner);assert.equal(observed.observation.connections,null);assert.equal(observed.observation.documents,null);
-   await form.getByLabel('Collabora edition').selectOption('CODE');await form.getByLabel('Concurrent document limit',{exact:true}).fill('1');await form.getByLabel('Concurrent connection limit',{exact:true}).fill('1');await form.getByLabel('Annual USD per user',{exact:true}).fill('0');await form.getByLabel('Provider quote and reported limit source',{exact:true}).fill(config.quote);await form.getByLabel('New editing sessions').selectOption('true');
+   const chooseCode=async()=>{
+    await form.getByLabel('Collabora edition').selectOption('CODE');await form.getByLabel('Concurrent document limit',{exact:true}).fill('1');await form.getByLabel('Concurrent connection limit',{exact:true}).fill('1');await form.getByLabel('Annual USD per user',{exact:true}).fill('0');await form.getByLabel('Provider quote and reported limit source',{exact:true}).fill(config.quote);await form.getByLabel('New editing sessions').selectOption('true');
+   };
+   const notice=page.getByRole('heading',{name:'Collabora edition and capacity',exact:true}).locator('..');
+   const checkNotice=async()=>{
+    const warning=notice.locator('p').filter({hasText:/CODE.*development and home use/});
+    assert.ok(await warning.isVisible(),'the production notice is visible beside the configuration');
+    assert.match(await warning.innerText(),/not supported business production/);
+    assert.match(await warning.innerText(),/subscription adds vendor support and maintained releases.*quote/);
+   };
+   await chooseCode();
    assert.match(await form.locator('..').innerText(),/development and home use/);await tooltips(page,width,'editor-configuration');await page.screenshot({path:`test-results/${width}-accounting-confirmation.png`,fullPage:true});
+   const beforeAcknowledgement=(await h.api('/administration/editor',owner)).settings;
+   await form.getByLabel('I confirm the edition, limits and provider price above.',{exact:true}).check();
+   if(width===1440){await checkNotice();assert.equal(await form.getByLabel('I acknowledge CODE’s production warning and the reported limits.',{exact:true}).isChecked(),false)}
+   const [refusal]=await Promise.all([page.waitForNavigation(),form.getByRole('button',{name:'Confirm editor configuration',exact:true}).click()]);
+   if(width===1440){
+    assert.equal(refusal.status(),400);assert.match(await page.locator('body').innerText(),/code_acknowledgement_required/);
+    assert.equal(beforeAcknowledgement.enabled,false);assert.equal(beforeAcknowledgement.codeAcknowledged,false);
+    assert.deepEqual((await h.api('/administration/editor',owner)).settings,beforeAcknowledgement,'unacknowledged browser enablement changes no saved configuration');
+    console.log('PROBE EDIT-012 1: real CODE form without acknowledgement -> 400 code_acknowledgement_required; disabled subscription configuration unchanged.');
+   }
+   await page.goto(h.origin+'/app/administration/costs');await chooseCode();
    await form.getByLabel('I acknowledge CODE’s production warning and the reported limits.',{exact:true}).check();await form.getByLabel('I confirm the edition, limits and provider price above.',{exact:true}).check();await Promise.all([page.waitForNavigation(),form.getByRole('button',{name:'Confirm editor configuration',exact:true}).click()]);
+   const saved=(await h.api('/administration/editor',owner)).settings;
+   const checkEnabled=async()=>{
+    await checkNotice();
+    assert.ok(await notice.getByText(/Collabora Online · CODE · New sessions enabled/).isVisible());
+    assert.equal(await form.getByLabel('Collabora edition').inputValue(),'CODE');
+    assert.equal(await form.getByLabel('New editing sessions').inputValue(),'true');
+    const current=await h.api('/administration/editor',owner);assert.deepEqual(current.settings,saved);
+    assert.equal(current.settings.codeAcknowledged,true);assert.equal(current.settings.enabled,true);assert.equal(current.settings.edition,'CODE');
+    assert.equal(current.settings.quote,config.quote);assert.equal(current.settings.documents,config.documents);assert.equal(current.settings.connections,config.connections);assert.equal(current.settings.annualUsd,0);
+    assert.match(current.notice,/CODE.*development and home use, not supported business production/);
+    assert.match(current.notice,/subscription adds vendor support and maintained releases.*quote/);
+    assert.equal(current.observation.documents,null);assert.equal(current.observation.connections,null);
+    assert.match(await notice.innerText(),/license, capacity and live use remain unreported/);
+   };
+   if(width===1440)await checkEnabled();
+   await page.reload();if(width===1440)await checkEnabled();
+   await h.stop();await h.start();await page.reload();if(width===1440){await checkEnabled();console.log('PROBE EDIT-012 2: acknowledged CODE form, reload and Worker restart -> enabled CODE and saved acknowledgement persist; complete production warning and subscription additions remain visible.');}
+   await notice.evaluate(section=>window.scrollTo(0,window.scrollY+section.getBoundingClientRect().top-120));
+   await page.screenshot({path:`test-results/${width}-accounting-code-enabled-restarted.png`});
    await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.expires',0) WHERE kind='editor-session'");
    const opens=await Promise.all([h.raw(`/api/chest/items/${file.id}/collabora`,owner,{}),h.raw(`/api/chest/items/${file.id}/collabora`,owner,{})]);assert.deepEqual(opens.map(r=>r.status).sort(),[200,409]);const denial=await opens.find(r=>r.status===409).json();assert.equal(denial.error,'editor_capacity_reached');assert.equal(denial.limit,'connections');assert.equal(denial.currentUse,1);assert.equal(denial.maximum,1);assert.equal(denial.preview,`/app/items/${file.id}`);
    const launch=await opens.find(r=>r.status===200).text(),token=launch.match(/name="access_token" value="([^"]+)"/)[1];lastSessionToken=token;assert.equal((await h.fetch(`/wopi/files/${file.id}?access_token=${token}`)).status,200,'existing session continues');
