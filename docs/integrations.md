@@ -49,6 +49,7 @@ Use `Authorization: Bearer TOKEN`. The base is `/api/chest/integrations/v1`. Rea
 | `GET /items/:id` | `read` | Stable ID, name, kind, parent, current version, size and original hash. |
 | `GET /items/:id/versions` | `read` | Retained version metadata with immutable IDs and hashes. |
 | `GET /items/:id/bytes/:version` | `download` | Original bytes; current no-download policy wins. Supports `Range`. |
+| `GET /devices` | `devices:self` | Read only the sponsor’s own device inventory and last contact, even for an administrator. |
 | `GET /search` | `search` | Scoped text search; named parameters `q`, `type`, `owner`, `creator`, `sharedBy`, `modifiedFrom`, `modifiedTo`, `location`, `versions` and `timeZone`. |
 | `POST /items` | `upload` or `folder` | Create a file (`parent`, `name`, `base64`) or a folder (`parent`, `name`, `type:"folder"`). The parent must be inside the grant. |
 | `POST /new-files` | `upload` | Create a valid blank document, spreadsheet or presentation, or use an accessible template; accepts the existing Chest creation fields. |
@@ -68,6 +69,14 @@ Use `Authorization: Bearer TOKEN`. The base is `/api/chest/integrations/v1`. Rea
 Every product mutation needs `Idempotency-Key` (8–240 characters). Its receipt and mutation publish in the same database transaction. Reusing the key with the same input returns the recorded outcome; different input is HTTP 409. A lost response cannot duplicate an upload or grant. If a process stops after commit but before recording a capability-bearing response, the replay explicitly reports `state:"committed"` and the stable result IDs instead of manufacturing another link/request or claiming the response was delivered. Revoke that link/request and create another only with a new key if its one-time URL was lost.
 
 ROLE-001 and POLICY-001 remain authoritative: an app's `share` action does not make a viewer a sharer, and public links or external sharing are refused where current policy forbids them. Authenticated app and MCP shares are agent-initiated. External actions carry risk class `external-share` through one agent policy hook; its compatibility policy currently returns `allow`, preserving autonomous sharing while Base policy integration is pending. The company policy can later choose allow, review, approve or block. Audit names the authenticated agent, its sponsor and grant, the risk class and policy decision. An app's `confirmExternal` flag is never human confirmation: these actions record `humanConfirmed:false` and need no confirmation flag. The browser still warns a person about external recipients where configured; internal shares are unchanged. Tokens cannot expand their own resources, scopes, budgets or expiry.
+
+## Read your own devices
+
+Register and request the separate `devices:self` action. A device-only grant needs no `resource`; a grant with file actions still needs explicit file roots. Consent requires the unchecked **Allow reading my own devices** choice as well as **Authorize app**. An existing `read` grant conveys no device authority. Read-only app policy permits this read capability.
+
+`GET /api/chest/integrations/v1/devices` uses the usual pagination and request budget. It returns only the authenticated sponsor’s devices, including when that sponsor is an administrator; caller-supplied owner, user or scope filters cannot widen it. Fields are `id`, `owner`, `name`, `platform`, `createdAt`, `revokedAt` and `lastSeen`, matching the current browser inventory. A device with no contact has `lastSeen:null`. Device credentials and their hashes are never returned. Client version is `null`; `work.state` is `unavailable`, with reason `client_reporting_unavailable` and null unfinished, failed and conflicted work. Enrollment and protocol contact do not establish a signed client or queue telemetry.
+
+The current sponsor identity, MFA, OAuth grant and app policy are checked on each page. Revoking a grant, blocking its app or deactivating its sponsor refuses further reads after restart too. This capability adds no device mutations, administrative inventory, queue execution or wipe claims. The shared Base Agent surface and canonical device tools remain unimplemented.
 
 ## MCP
 

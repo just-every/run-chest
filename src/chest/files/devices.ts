@@ -20,9 +20,9 @@ export async function enrol(env: Bindings, s: Session, input: any) {
  const proof=await env.DB.prepare('SELECT method FROM chest_mfa_verified WHERE session_id=?').bind(s.id).first<{method:string}>();await stampMfa(env,{...s,id:`device:${row.id}`},proof?.method??'none')
  return { device: { id: row.id, ...row.payload }, token }
 }
-export async function devices(env: Bindings, s: Session) {
+export async function devices(env: Bindings, s: Session, ownOnly = false) {
  const seen = new Map(((await env.DB.prepare('SELECT device,last_seen FROM chest_device_credentials').all()).results as any[]).map(r => [r.device, r.last_seen]))
- return (await list<Device>(env, 'device')).filter(d => isAdmin(s) || d.payload.owner === s.operator.email).map(d => ({ id: d.id, ...d.payload, lastSeen: seen.get(d.id) ?? null }))
+ return (await list<Device>(env, 'device')).filter(d => !ownOnly && isAdmin(s) || d.payload.owner === s.operator.email).map(d => ({ id: d.id, ...d.payload, lastSeen: seen.get(d.id) ?? null }))
 }
 export async function revoke(env: Bindings, s: Session, key: string) {
  const d = await get<Device>(env, 'device', key); insist(d.payload.owner === s.operator.email || isAdmin(s), 'not_found', 404); insist(!d.payload.revokedAt, 'device_revoked', 409)

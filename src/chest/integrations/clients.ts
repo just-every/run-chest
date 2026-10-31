@@ -6,7 +6,7 @@ import { scopeList } from './policy'
 import { endpoint, insertSecret, random, seal } from './secrets'
 import type { Budget, Client } from './model'
 export function budget(input: any): Budget {const result={requests:Number(input?.requests??1000),mutations:Number(input?.mutations??100),bytes:Number(input?.bytes??1073741824)};for(const [key,n] of Object.entries(result))insist(Number.isSafeInteger(n)&&n>=0&&n<=(key==='bytes'?1099511627776:1000000),'invalid_app_budget');insist(result.requests>0,'invalid_app_budget');return result}
-export function resources(input: unknown): string[] {const rows=Array.isArray(input)?input:typeof input==='string'?input.split(/[\s,]+/):[];insist(rows.length>0&&rows.length<=100&&rows.every(r=>typeof r==='string'&&r.length>0&&r.length<=240),'invalid_app_resources');return [...new Set(rows)]}
+export function resources(input: unknown, allowEmpty=false): string[] {const rows=Array.isArray(input)?input:typeof input==='string'?input.split(/[\s,]+/):[];insist((allowEmpty||rows.length>0)&&rows.length<=100&&rows.every(r=>typeof r==='string'&&r.length>0&&r.length<=240),'invalid_app_resources');return [...new Set(rows)]}
 export async function registerClient(env: Bindings,s: Session,input: any) {
  const redirects:unknown[]=Array.isArray(input.redirects)?input.redirects:[],origins:unknown[]=Array.isArray(input.pickerOrigins)?input.pickerOrigins:[]
  insist(redirects.length>0&&redirects.length<=20&&origins.length<=20,'invalid_app_redirects')
