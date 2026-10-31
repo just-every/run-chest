@@ -10,6 +10,7 @@ async function shot(page,width,state){assert.ok(await page.evaluate(()=>document
 const cookies=cookie=>cookie.split('; ').map(v=>{const at=v.indexOf('=');return {name:v.slice(0,at),value:v.slice(at+1),url:h.origin}});
 try{
  await mkdir('test-results',{recursive:true});await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const cookie=await h.signIn(h.vars.OWNER_EMAIL);await h.fetch('/setup',{method:'POST',headers:{cookie,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});const space=(await h.api('/files',cookie)).personal;
+ const policy=await h.fetch('/agents/api/policy',{method:'PUT',headers:{cookie,origin:h.origin,'content-type':'application/json'},body:JSON.stringify({document:{schema:'rer-agent-policy/1',catalogue:'rer-agent-classes/1',rules:[{id:'all',class:'*',do:'autonomous'}],spend:{none:true}}})});assert.equal(policy.status,200);
  consumer=await attachmentClient(h.origin);browser=await chromium.launch({headless:true,...(process.env.CHEST_CHROMIUM_PATH?{executablePath:process.env.CHEST_CHROMIUM_PATH}:{}),...(process.env.HTTPS_PROXY?{proxy:{server:process.env.HTTPS_PROXY,bypass:'picker-client.example.test,127.0.0.1,localhost'}}:{}),args:['--no-sandbox','--use-mock-keychain','--password-store=basic','--host-resolver-rules=MAP picker-client.example.test 127.0.0.1']});
  for(const width of [1440,390]){
   await h.api('/integrations/policy',cookie,{scope:'organization',mode:'any',apps:{}});
@@ -27,7 +28,7 @@ try{
   const before=(await h.api(`/items/${folder.id}`,cookie)).children;
   for(const door of ['api','mcp']){
    const title=`synthetic-chest-${width}-${door} request`,key=`browser-request-${width}-${door}`,input={title,message:'Upload documents for review.'};
-   const response=await h.fetch(door==='api'?`/api/chest/integrations/v1/items/${folder.id}/requests`:'/mcp/chest',{method:'POST',headers:{authorization:'Bearer '+access,'content-type':'application/json','idempotency-key':key},body:JSON.stringify(door==='api'?input:{jsonrpc:'2.0',id:1,method:['tools','call'].join('/'),params:{name:'chest_create_request',arguments:{id:folder.id,...input,key}}})});assert.equal(response.status,200);
+   const response=await h.fetch(door==='api'?`/api/chest/integrations/v1/items/${folder.id}/requests`:'/mcp/chest',{method:'POST',headers:{authorization:'Bearer '+access,'content-type':'application/json','idempotency-key':key,...(door==='mcp'?{'MCP-Protocol-Version':'2025-11-25',accept:'application/json, text/event-stream'}:{})},body:JSON.stringify(door==='api'?input:{jsonrpc:'2.0',id:1,method:['tools','call'].join('/'),params:{name:'chest.requests.create',arguments:{id:folder.id,...input,idempotency_key:key}}})});assert.equal(response.status,200);
    const payload=await response.json();if(door==='mcp')assert.equal(payload.result.isError,false);const made=door==='api'?payload:payload.result.structuredContent;
    const anonymous=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});
    try{

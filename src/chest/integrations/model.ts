@@ -1,9 +1,9 @@
 export const actions = ['read','search','download','upload','folder','versions','share','request','picker','webhook'] as const
 export type Action = typeof actions[number]
 export const readActions: readonly Action[] = ['read','search','download','picker','webhook']
-export type Budget = { requests: number; mutations: number; bytes: number }
+export type Budget = { requests: number | null; mutations: number | null; bytes: number | null }
 export type Client = { name: string; owner: string; redirects: string[]; pickerOrigins: string[]; actions: Action[]; confidential: boolean; at: string; revokedAt?: string }
-export type Grant = { client: string; user: string; operator: string; operatorVersion: number; resources: string[]; actions: Action[]; budget: Budget; used: Budget; at: string; expires: string; lastUse?: string; revokedAt?: string; reason?: string }
+export type Grant = { client: string; user: string; operator: string; operatorVersion: number; resources: string[]; actions: Action[]; budget: Budget; used: {requests:number;mutations:number;bytes:number}; at: string; expires: string; lastUse?: string; revokedAt?: string; reason?: string }
 export type AppPolicy = { scope: 'organization'|'group'; group?: string; mode: 'any'|'allowlist'|'none'; apps: Record<string,'trusted'|'read_only'|'blocked'>; at: string; by: string }
 export type Intent = { client: string; user: string; redirect: string; challenge: string; state: string; resources: string[]; actions: Action[]; budget: Budget; expires: string; used?: string; pickerOrigin?: string }
 export type Subscription = { grant: string; owner: string; endpoint: string; events: string[]; after: number; at: string; revokedAt?: string }

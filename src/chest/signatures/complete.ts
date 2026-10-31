@@ -28,7 +28,7 @@ export async function complete(env: Bindings, key: string, from: Origin) {
  const certificate = await seal(await auditCertificate(done, { source: p.sourceChecksum, document: p.document.checksum, signed: signedHash }, host), material, `Audit certificate for ${p.name}`, `Chest document signing (${host})`)
  const item = await get<Item>(env, 'item', p.item), ctx = await context(env, await whoFor(env, p.createdBy), p.item), policy = effectiveGovernance(ctx, item.payload)
  const base = item.payload.name.replace(/\.(pdf|docx)$/i, '')
- const filed = async (bytes: Uint8Array, filename: string, role: 'signed' | 'certificate') => { const v = await admit(env, bytes, filename, p.createdBy, 'signature', {}, { signature: { request: key, role, sourceVersion: p.version } }); return (policy ? { ...v, review: { reviewer: policy.reviewer, state: 'submitted' as const } } : v) as FileVersion }
+ const filed = async (bytes: Uint8Array, filename: string, role: 'signed' | 'certificate') => { const v = await admit(env, bytes, filename, p.createdBy, 'signature', {}, { signature: { request: key, role, sourceVersion: p.version },...(p.preparedBy?{preparedBy:p.preparedBy}:{}) }); return (policy ? { ...v, review: { reviewer: policy.reviewer, state: 'submitted' as const } } : v) as FileVersion }
  const signedVersion = await filed(signed, `${base}-signed.pdf`, 'signed'), certificateVersion = await filed(certificate, `${base}-certificate.pdf`, 'certificate')
  const finished = { ...done, signed: { version: signedVersion.id, checksum: signedVersion.checksum, size: signedVersion.size }, certificate: { version: certificateVersion.id, checksum: certificateVersion.checksum, size: certificateVersion.size } }
  try {

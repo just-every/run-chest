@@ -7,6 +7,7 @@ export const ident = name => '"' + name.replaceAll('"', '""') + '"';
 export const literal = value => value === null ? 'NULL' : typeof value === 'bigint' || typeof value === 'number' ? String(value) : ArrayBuffer.isView(value) ? `X'${Buffer.from(value.buffer, value.byteOffset, value.byteLength).toString('hex')}'` : "'" + String(value).replaceAll("'", "''") + "'";
 const portableAuth = new Set(['oa_operators', 'oa_invitation_cancellations', 'oa_auth_audit']);
 export const excludedTable = name =>
+  /^(agent_door_|bs_)/.test(name) ||
   name.startsWith('oa_') && !portableAuth.has(name) || name.startsWith('oc_') ||
   name.startsWith('rer_dependency_') || name.startsWith('rer_portability_') && !['rer_portability_state', 'rer_portability_journal', 'rer_portability_epochs'].includes(name) ||
   name.startsWith('ik_door_') && !['ik_door_namespaces'].includes(name) ||

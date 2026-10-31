@@ -35,7 +35,7 @@ export async function resource(env: Bindings,auth: Authorized,key: string,scope:
 }
 export async function live(env: Bindings,auth: Authorized,key?: string,scope?: Action) {const current=await credentialSession(env,auth.request,auth.tokenId);if(key&&scope)return resource(env,current,key,scope);if(scope)action(current,scope);return current}
 export function spend(auth: Authorized,delta: Partial<Budget>) {
- const g=auth.grant,used={...g.payload.used};for(const key of ['requests','mutations','bytes'] as const){used[key]+=(delta[key]??0);insist(Number.isSafeInteger(used[key])&&used[key]<=g.payload.budget[key],`oauth_${key}_budget_exhausted`,429)}
+ const g=auth.grant,used={...g.payload.used};for(const key of ['requests','mutations','bytes'] as const){used[key]+=(delta[key]??0);insist(Number.isSafeInteger(used[key])&&(g.payload.budget[key]===null||used[key]<=g.payload.budget[key]!),`oauth_${key}_budget_exhausted`,429)}
  return {row:next(g,{...g.payload,used,lastUse:now()}),previous:g}
 }
 export async function requestBudget(env: Bindings,auth: Authorized) {await commit(env,auth.session,[spend(auth,{requests:1})],{audits:[{action:'integration.call',object:auth.grant.id,detail:{client:auth.client.id}}]});return credentialSession(env,auth.request,auth.tokenId)}

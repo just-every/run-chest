@@ -1,4 +1,3 @@
-import { agentPolicy } from '../agent-policy'
 import type { Bindings } from '../../auth.server'
 import { list } from '../store'
 import { ChestError, insist, type Group, type Row } from '../model'
@@ -30,7 +29,9 @@ export async function sharePolicy(env:Bindings,w:Who,ctx:Ctx,emails:string[],inp
  const outside=audience==='named'?external.length>0:!['organisation','restricted'].includes(audience)
  let audit:Record<string,unknown>={}
  if(outside && w.agent){
-  const decision=await agentPolicy(env,{riskClass:'external-share',agent:w.agent,item:ctx.chain.at(-1)!.id,audience,recipients:external})
+  // Only the shared door may enter the native agent effect path.
+  insist(w.agent.door===true,'shared_agent_door_required',403)
+  const decision={decision:'allow',policy:'shared-agent-door'}
   audit={riskClass:'external-share',policyDecision:decision.decision,policy:decision.policy,humanConfirmed:false}
   insist(decision.decision==='allow','agent_policy_'+decision.decision,403)
  }else if(outside){

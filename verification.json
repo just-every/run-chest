@@ -8,6 +8,14 @@
         "pnpm run check --profile first-party",
         "pnpm run build",
         "pnpm run typecheck",
+        "node tests/chest/site.mjs"
+      ]
+    },
+    {
+      "name": "native-files",
+      "browser": false,
+      "hosted": false,
+      "commands": [
         "node tests/chest/flows.mjs",
         "node tests/chest/files.mjs",
         "node tests/chest/bulk.mjs",
@@ -15,29 +23,56 @@
         "node tests/chest/space-policy.mjs",
         "node tests/chest/new-files.mjs",
         "node tests/chest/governance.mjs",
-        "node tests/chest/link-versions.mjs",
+        "node tests/chest/link-versions.mjs"
+      ]
+    },
+    {
+      "name": "native-sharing",
+      "browser": false,
+      "hosted": false,
+      "commands": [
         "node tests/chest/link-policy.mjs",
         "node tests/chest/collection.mjs",
-        "node tests/chest/transfers.mjs",
         "node tests/chest/guest-links.mjs",
         "node tests/chest/link-discussions.mjs",
         "node tests/chest/reading.mjs",
         "node tests/chest/scan-fields.mjs",
         "node tests/chest/search.mjs",
         "node tests/chest/quota.mjs",
-        "node tests/chest/open-source.mjs",
+        "node tests/chest/open-source.mjs"
+      ]
+    },
+    {
+      "name": "native-transfer",
+      "browser": false,
+      "hosted": false,
+      "commands": [
+        "node tests/chest/transfers.mjs"
+      ]
+    },
+    {
+      "name": "native-filing",
+      "browser": false,
+      "hosted": false,
+      "commands": [
         "node tests/chest/filing.mjs",
         "node tests/chest/arrival-rules.mjs",
         "node tests/chest/agent-filing.mjs",
         "node tests/chest/audit.mjs",
         "node tests/chest/file-requests.mjs",
         "node tests/chest/link-repairs.mjs",
-        "node tests/chest/duplicate-reconciliation.mjs",
+        "node tests/chest/duplicate-reconciliation.mjs"
+      ]
+    },
+    {
+      "name": "native-archive",
+      "browser": false,
+      "hosted": false,
+      "commands": [
         "node tests/chest/backup-archive.mjs",
         "node tests/chest/erasure.mjs",
         "node tests/chest/erasure-archive.mjs",
-        "node tests/chest/integrations.mjs",
-        "node tests/chest/site.mjs"
+        "node tests/chest/integrations.mjs"
       ]
     },
     {

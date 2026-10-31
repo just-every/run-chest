@@ -1,3 +1,4 @@
+import { activityActor } from '../agent-attribution'
 import { area, card, esc, field, form, hidden, select, stamp } from '../ui-shared'
 import { eventWords } from '../ui-words'
 import { auditPage } from '../ui-receipts'
@@ -13,5 +14,5 @@ export function fileActivity(rows: any[], key: string, versions: any[] = []) {
  rows = rows.filter(r=>! /^(get|post|put|delete|provider|automation|public)\./.test(r.action) || r.detail.outcome && r.detail.outcome!=='succeeded')
  const versionName=(id:string)=>{const index=versions.findIndex(v=>v.id===id);return index>=0?`Version ${versions.length-index}`:'Retained version'}
  const visitors = rows.filter(r=>r.actor==='Link visitor'), events = rows.filter(r=>r.actor!=='Link visitor')
- return `<h2 class="section-title">Activity</h2><p><a class="link" href="/app/audit?object=${esc(key)}">Search or export this file's history</a></p>${events.length?`<ol class="events">${events.map(a=>`<li><span>${esc(a.actor)} ${esc(eventWords(a.action))} · ${stamp(a.at)}</span>${a.detail.version?`<p class="quiet">${esc(versionName(a.detail.version))}</p>`:''}${a.detail.source?`<p class="quiet">Restored from ${esc(versionName(a.detail.source).toLowerCase())}</p>`:''}${a.detail.outcome&&a.detail.outcome!=='succeeded'?`<p>${esc(a.detail.outcome)}</p>`:''}</li>`).join('')}</ol>`:'<p class="quiet">No activity to show.</p>'}${visitors.length?`<p class="quiet">${visitors.length} link visitor view${visitors.length===1?'':'s'} in this page of activity.</p>`:''}`
+ return `<h2 class="section-title">Activity</h2><p><a class="link" href="/app/audit?object=${esc(key)}">Search or export this file's history</a></p>${events.length?`<ol class="events">${events.map(a=>`<li><span>${esc(activityActor(a))} ${esc(eventWords(a.action))} · ${stamp(a.at)}</span>${a.detail.version?`<p class="quiet">${esc(versionName(a.detail.version))}</p>`:''}${a.detail.source?`<p class="quiet">Restored from ${esc(versionName(a.detail.source).toLowerCase())}</p>`:''}${a.detail.outcome&&a.detail.outcome!=='succeeded'?`<p>${esc(a.detail.outcome)}</p>`:''}</li>`).join('')}</ol>`:'<p class="quiet">No activity to show.</p>'}${visitors.length?`<p class="quiet">${visitors.length} link visitor view${visitors.length===1?'':'s'} in this page of activity.</p>`:''}`
 }

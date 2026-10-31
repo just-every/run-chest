@@ -1,3 +1,4 @@
+import { businessSettings } from '../auth.server'
 import type { Bindings } from '../auth.server'
 import type { Session } from '../modules/operator-auth/index.mjs'
 import { ChestError } from './model'
@@ -10,7 +11,7 @@ import { esc, avatar } from './ui-shared'
 import { icons, type IconName } from '../ui/icons'
 // The left rail of the picked app look, read once per page: the files nav, the team spaces with the open one
 // expanded down to the current folder, the workspace pages, then your sync devices, your storage and you.
-export type Rail = { personal: string; spaces: { id: string; name: string }[]; open: { space: string; chain: string[]; folders: Map<string | null, { id: string; name: string }[]> } | null; requests: number; devices: { count: number; lastSeen: string | null }; storage: { used: number; limit: number | null } }
+export type Rail = { businessName?:string; personal: string; spaces: { id: string; name: string }[]; open: { space: string; chain: string[]; folders: Map<string | null, { id: string; name: string }[]> } | null; requests: number; devices: { count: number; lastSeen: string | null }; storage: { used: number; limit: number | null } }
 export async function railData(env: Bindings, s: Session, path: string): Promise<Rail> {
  const w = await who(env, s), mine = await personal(env, s)
  const spaces = (await visibleSpaces(env, w)).filter(r => r.payload.kind === 'team').map(r => ({ id: r.id, name: r.payload.name })).sort((a, b) => a.name.localeCompare(b.name))
@@ -31,7 +32,7 @@ export async function railData(env: Bindings, s: Session, path: string): Promise
  // Storage across every space you belong to: the bytes used, against the sum of their limits when all have one.
  let storage = { used: 0, limit: 0 as number | null }
  for (const sp of [mine, ...(await visibleSpaces(env, w)).filter(r => r.payload.kind === 'team')]) { try { const q = await storageView(env, sp); storage = { used: storage.used + q.usedBytes, limit: storage.limit === null || q.limitBytes === null ? null : storage.limit + q.limitBytes } } catch (e) { if (!(e instanceof ChestError)) throw e } }
- return { personal: mine.id, spaces, open, requests: (await pending(env, w)).length, devices: { count: mineDevices.length, lastSeen }, storage }
+ return { businessName:(await businessSettings(env).publicBrand()).displayName, personal: mine.id, spaces, open, requests: (await pending(env, w)).length, devices: { count: mineDevices.length, lastSeen }, storage }
 }
 const bytes = (n: number) => n < 1048576 ? `${Math.max(1, Math.round(n / 1024))} KB` : n < 1073741824 ? `${(n / 1048576).toFixed(1).replace(/\.0$/, '')} MB` : n < 1099511627776 ? `${(n / 1073741824).toFixed(1).replace(/\.0$/, '')} GB` : `${(n / 1099511627776).toFixed(1).replace(/\.0$/, '')} TB`
 const ago = (at: string) => { const m = Math.max(0, Math.round((Date.now() - Date.parse(at)) / 60000)); return m < 1 ? 'just now' : m < 60 ? `${m}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago` }
@@ -60,6 +61,7 @@ export function rail(r: Rail, me: { name: string; email: string; role: string },
   { key: 'trash', href: '/app/files/trash', label: 'Trash', icon: 'trash' },
  ]
  const more: Link[] = [
+  { key: 'agents', href: '/agents', label: 'Agents', icon: 'people' },
   { key: 'library', href: '/app/library', label: 'Library', icon: 'books' },
   { key: 'notices', href: '/app/notices', label: 'Notices', icon: 'bell' },
   { key: 'archive', href: '/app/move-in', label: 'Move in', icon: 'move' },
@@ -71,6 +73,6 @@ export function rail(r: Rail, me: { name: string; email: string; role: string },
  ]
  const sync = r.devices.count ? `${r.devices.lastSeen ? `Synced ${ago(r.devices.lastSeen)}` : 'Not synced yet'}, ${r.devices.count} device${r.devices.count === 1 ? '' : 's'}` : 'No sync devices'
  const storage = r.storage.limit ? `<progress max="${r.storage.limit}" value="${Math.min(r.storage.used, r.storage.limit)}">${bytes(r.storage.used)}</progress><p>${bytes(r.storage.used)} of ${bytes(r.storage.limit)}</p>` : `<p>${bytes(r.storage.used)} used · no limit</p>`
- return `<nav class="app-nav" aria-label="Chest"><ul class="nav-list">${files.map(l => item(l, current, path)).join('')}</ul><p class="nav-head">Team spaces <a class="nav-add" href="/app/files#new-space" aria-label="New team space" data-tooltip="New team space">${icons.plus}</a></p>${r.spaces.length ? tree(r, path) : '<p class="nav-none">No team spaces yet.</p>'}<details class="nav-more"${more.some(l => l.key === current || l.href === path) ? ' open' : ''}><summary class="nav-head">Workspace <span class="tree-chev" aria-hidden="true">${icons.chevron}</span></summary><ul class="nav-list nav-small">${more.map(l => item(l, current, path)).join('')}</ul></details></nav>
+ return `${r.businessName?`<p class="rail-label">${esc(r.businessName)}</p>`:''}<nav class="app-nav" aria-label="Chest"><ul class="nav-list">${files.map(l => item(l, current, path)).join('')}</ul><p class="nav-head">Team spaces <a class="nav-add" href="/app/files#new-space" aria-label="New team space" data-tooltip="New team space">${icons.plus}</a></p>${r.spaces.length ? tree(r, path) : '<p class="nav-none">No team spaces yet.</p>'}<details class="nav-more"${more.some(l => l.key === current || l.href === path) ? ' open' : ''}><summary class="nav-head">Workspace <span class="tree-chev" aria-hidden="true">${icons.chevron}</span></summary><ul class="nav-list nav-small">${more.map(l => item(l, current, path)).join('')}</ul></details></nav>
  <div class="rail-foot"><a class="rail-sync${r.devices.count ? '' : ' is-off'}" href="/app/devices"><span class="dot" aria-hidden="true"></span>${sync}</a><div class="rail-storage" aria-label="Storage in your spaces">${storage}</div><div class="app-who">${avatar({ email: me.email, name: me.name })}<p><strong>${esc(me.name)}</strong><span class="mono">${esc(me.email)}</span></p></div><form class="app-signout" method="post" action="/app/signout"><button data-tooltip="Sign out">${icons.signout}<span class="sr-only">Sign out</span></button></form></div>`
 }

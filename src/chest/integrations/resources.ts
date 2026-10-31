@@ -1,42 +1,65 @@
 import type { Bindings } from '../../auth.server'
-import { insist } from '../model'
+import { ChestError, insist } from '../model'
+import { chestAgentDoor } from '../agent-door/index.ts'
 import { fromBase64 } from '../blobs'
-import { commit } from '../files/repo'
-import { demand, who } from '../files/access'
-import { addVersion, createItem, nameVersion, rename, restoreVersion, bytes as original } from '../files/items'
-import { createFile } from '../office/create-service'
-import { createLink } from '../files/links'
-import { share, unshare } from '../files/shares'
-import { createFileRequest, requestsOn, describeRequest } from '../files/file-requests'
+import { action, resource, type Authorized } from './auth'
+import { listItems, scopedSearch, brief, versions, paginate } from './reads'
 import { get } from '../store'
+import { requestsOn, describeRequest } from '../files/file-requests'
 import type { FileRequest } from '../files/model'
-import { action, live, resource, spend, type Authorized } from './auth'
-import { brief, listItems, scopedSearch, versions, paginate } from './reads'
-import { hash } from './secrets'
-import { mutate } from './mutations'
-export async function resourceCall(env: Bindings,auth: Authorized,method: string,path: string,input: any,url: URL,idempotency: string) {
- const [head,key,sub,version,verb]=path.split('/').filter(Boolean),w=await who(env,auth.session)
- if(method==='GET'&&head==='items'&&!key)return listItems(env,auth,url)
- if(method==='GET'&&head==='search')return scopedSearch(env,auth,url)
- if(method==='GET'&&head==='requests'&&key){const request=await get<FileRequest>(env,'file-request',key);await resource(env,auth,request.payload.folder,'request');return describeRequest(request)}
- if(method==='POST'&&head==='items'&&!key){insist(typeof input.parent==='string'&&input.parent,'oauth_parent_required');const destination=await resource(env,auth,input.parent,input.type==='folder'?'folder':'upload');demand(destination,'contribute');const size=input.type==='folder'?0:fromBase64(input.base64).length;return mutate(env,auth,idempotency,path,input,size,s=>createItem(env,s,w,{...input,device:undefined}))}
- if(method==='POST'&&head==='new-files'){const destination=await resource(env,auth,input.parent,'upload');demand(destination,'contribute');if(input.template&&!String(input.template).startsWith('builtin:')){const template=await get<any>(env,'office-template',input.template);await resource(env,auth,template.payload.source,'read');}return mutate(env,auth,idempotency,path,input,0,async s=>createFile(env,s,w,{...input,key:`${auth.grant.id}:${await hash(idempotency)}`}))}
- if(head==='items'&&key){
-  if(method==='GET'&&!sub){const ctx=await resource(env,auth,key,'read');return {...brief(ctx.chain.at(-1)!),canDownload:((await import('../files/access')).allowed(ctx,'download'))}}
-  if(method==='GET'&&sub==='versions'){const ctx=await resource(env,auth,key,'read');return versions(ctx.chain.at(-1)!,url)}
-  if(method==='GET'&&sub==='shares'){const c=await resource(env,auth,key,'share');demand(c,'share');return paginate(c.chain.at(-1)!.payload.grants,url,g=>g.principal)}
-  if(method==='GET'&&sub==='requests'){await resource(env,auth,key,'request');const c=await resource(env,auth,key,'request');demand(c,'share');const all=await requestsOn(env,key);return paginate(all.map(({submissions,...r})=>r),url,r=>r.id)}
-  if(method==='POST'&&sub==='pick'){const c=await resource(env,auth,key,'picker');return {id:key,name:c.chain.at(-1)!.payload.name,type:c.chain.at(-1)!.payload.type,url:`${env.AUTH_ORIGIN}/app/items/${encodeURIComponent(key)}`}}
-  if(method==='GET'&&sub==='bytes'&&version){const c=await resource(env,auth,key,'download');demand(c,'download');const v=c.chain.at(-1)!.payload.versions.find(v=>v.id===version);insist(v,'version_not_found',404)
-   await commit(env,auth.session,[spend(auth,{bytes:v.size})],{fences:c.fences});const current=await live(env,auth) as Authorized,response=await original(env,current.session,await who(env,current.session),key,version,true,auth.request.headers.get('range'))
-   if(!response.body)return response;const reader=response.body.getReader();return new Response(new ReadableStream({async pull(controller){try{const next=await reader.read();await live(env,current,key,'download');if(next.done){controller.close();reader.releaseLock()}else controller.enqueue(next.value)}catch(error){await reader.cancel();controller.error(error)}},async cancel(){await reader.cancel()}}),{status:response.status,headers:response.headers})
-  }
-  if(method==='POST'){
-   const scope=sub==='versions'?'versions':sub==='rename'?'upload':sub==='requests'?'request':'share';const current=await resource(env,auth,key,scope);demand(current,scope==='versions'||scope==='upload'?'contribute':'share')
-   const size=sub==='versions'&&!version?fromBase64(input.base64).length:0
-   const run=(s:Authorized['session'])=>{if(sub==='versions'&&!version)return addVersion(env,s,w,key,fromBase64(input.base64),{...input,device:undefined});if(sub==='versions'&&version&&verb==='restore')return restoreVersion(env,s,w,key,version);if(sub==='versions'&&version&&verb==='name')return nameVersion(env,s,w,key,version,input);if(sub==='rename')return rename(env,s,w,key,input);if(sub==='shares')return share(env,s,w,key,input);if(sub==='unshare')return unshare(env,s,w,key,input);if(sub==='links')return createLink(env,s,w,key,input);if(sub==='requests')return createFileRequest(env,s,w,key,input);insist(false,'not_found',404)}
-   return mutate(env,auth,idempotency,path,input,size,run)
-  }
+// OAuth APIs retain their native credential purpose and read formats. Mutations
+// enter the same policy, approval, audit and native service path as MCP.
+export async function resourceCall(env:Bindings,auth:Authorized,method:string,path:string,input:any,url:URL,key:string){
+ const [head,id,sub,version,verb]=path.split('/').filter(Boolean)
+ const invoke=async(tool:string,args:Record<string,unknown>)=>{
+  const answer=await chestAgentDoor(env).invoke(`chest.${tool}`,args,{person:{id:auth.session.operator.id},agent:{id:auth.client.id,name:auth.client.payload.name,specialist:'records clerk'},scopes:auth.grant.payload.actions,clientId:auth.tokenId})
+  if(answer.outcome==='refused')throw new ChestError(answer.code??'agent_refused',typeof answer.fields?.native_status==='number'?answer.fields.native_status:answer.code==='resource_unavailable'?403:answer.code?.includes('conflict')?409:answer.code?.includes('budget')?429:403)
+  if(answer.outcome==='pending')throw new ChestError('approval_required',403)
+  return answer
  }
- insist(false,'not_found',404)
+ // SDK read formats remain stable, after the same classified, audited native
+ // read tool has received the current company policy decision.
+ if(method==='GET'){
+  if(head==='items'&&!id)await invoke('items.list',{limit:Math.min(Number(url.searchParams.get('limit')||100),100)})
+  if(head==='search')await invoke('search',{q:url.searchParams.get('q')??''})
+  if(head==='items'&&id&&!sub)await invoke('items.get',{id})
+  if(head==='items'&&sub==='shares')await invoke('access.list',{id})
+  if(head==='items'&&sub==='requests')await invoke('requests.list',{id})
+  if(head==='items'&&sub==='versions')await invoke('versions.list',{id})
+  if(head==='requests'&&id){const row=await get<FileRequest>(env,'file-request',id);await resource(env,auth,row.payload.folder,'request');await invoke('requests.list',{id:row.payload.folder})}
+ }
+
+ if(method==='GET'&&head==='items'&&!id)return listItems(env,auth,url)
+ if(method==='GET'&&head==='search')return scopedSearch(env,auth,url)
+ if(method==='GET'&&head==='requests'&&id){const row=await get<FileRequest>(env,'file-request',id);await resource(env,auth,row.payload.folder,'request');return describeRequest(row)}
+ if(method==='GET'&&head==='items'&&id&&!sub){const c=await resource(env,auth,id,'read');return {...brief(c.chain.at(-1)!),canDownload:(await import('../files/access')).allowed(c,'download')}}
+ if(method==='GET'&&head==='items'&&sub==='shares'){const c=await resource(env,auth,id,'share');(await import('../files/access')).demand(c,'share');return paginate(c.chain.at(-1)!.payload.grants,url,g=>g.principal)}
+ if(method==='GET'&&head==='items'&&sub==='requests'){const c=await resource(env,auth,id,'request');(await import('../files/access')).demand(c,'share');return paginate((await requestsOn(env,id)).map(({submissions,...r})=>r),url,r=>r.id)}
+ if(method==='GET'&&head==='items'&&sub==='versions'){const c=await resource(env,auth,id,'read');return versions(c.chain.at(-1)!,url)}
+ let tool:string|undefined,args:Record<string,unknown>={...input,...(id?{id}:{}),...(method==='POST'?{idempotency_key:key}:{})}
+ if(head==='items'&&!id&&method==='POST')tool=input.type==='folder'?'folders.create':'files.upload'
+ if(head==='new-files'&&method==='POST')tool='files.create'
+ if(head==='items'&&id){
+  if(method==='GET'&&sub==='bytes'&&version){tool='files.read';args={id,version,...(auth.request.headers.get('range')?{range:auth.request.headers.get('range')}: {})}}
+  if(method==='POST'&&sub==='versions'){tool=verb==='restore'?'versions.restore':verb==='name'?'versions.name':'versions.upload';args={...args,...(version?{version}: {})}}
+  if(method==='POST'&&sub==='rename')tool='items.update'
+  if(method==='POST'&&sub==='shares')tool='share'
+  if(method==='POST'&&sub==='unshare')tool='access.narrow'
+  if(method==='POST'&&sub==='links')tool='links.create'
+  if(method==='POST'&&sub==='requests')tool='requests.create'
+  if(method==='POST'&&sub==='pick'){tool='pick';args={id}}
+ }
+ insist(tool,'not_found',404)
+ const answer=await chestAgentDoor(env).invoke(`chest.${tool}`,args,{person:{id:auth.session.operator.id},agent:{id:auth.client.id,name:auth.client.payload.name,specialist:'records clerk'},scopes:auth.grant.payload.actions,clientId:auth.tokenId})
+ if(answer.outcome==='refused')throw new ChestError(answer.code??'agent_refused',typeof answer.fields?.native_status==='number'?answer.fields.native_status:answer.code==='resource_unavailable'?403:answer.code?.includes('conflict')?409:answer.code?.includes('budget')?429:403)
+ if(answer.outcome==='pending')return {state:'pending',approval:answer.approval,decision:answer.decision}
+ const result=answer.result as any
+ if(tool==='files.read')return new Response(fromBase64(result.base64),{status:result.status,headers:{'content-type':result.mediaType??'application/octet-stream',...(result.contentRange?{'content-range':result.contentRange}:{})}})
+ // Keep the established OAuth item response fields while the shared door
+ // retains the exact native version and attribution in its saved result.
+ if (result && Array.isArray(result.versions) && 'current' in result) {
+  const current = result.versions.find((v:any) => v.id === result.current)
+  return {...result,size:current?.size??null,sha256:current?.checksum??null}
+ }
+ return result
 }
