@@ -121,6 +121,7 @@ try{
   };
   const result=await invoke();assert.equal(result.id,first.id,'sharing preserves the target item');
   const added=(await agentShares()).filter(row=>!beforeShares.has(row.id));assert.equal(added.length,1,`${door} ${flag} publishes one share`);assertAgentAudit(added[0]);
+  const shareDetail=JSON.parse(added[0].detail);assert.equal(shareDetail.principal,input.principal,'audit names the actual recipient');assert.equal(shareDetail.role,input.role,'audit names the granted role');assert.equal(shareDetail.outcome,'succeeded','audit records the completed share');
   const detail=JSON.parse(added[0].detail),decision=Object.fromEntries(['riskClass','policyDecision','policy','humanConfirmed'].map(field=>[field,detail[field]]));
   if(compatibility)assert.deepEqual(decision,compatibility,'both doors and all flags keep the same compatibility class and decision');else compatibility=decision;
   const actualGrant=(await h.api(`/items/${first.id}`,staff)).grants.find(row=>row.principal===input.principal);assert.equal(actualGrant.role,input.role);assert.equal(actualGrant.by,detail.sponsor,'the authenticated sponsor grants access');
@@ -138,9 +139,10 @@ try{
  await h.api('/link-policy',owner,{scope:'organisation',allowExternal:true,allowPublic:false,allowOrganisation:true,allowDiscovery:true,defaultAudience:'restricted',defaultRole:'viewer'});
  const sharingSnapshot=async()=>{
   const item=await h.api(`/items/${first.id}`,staff),audit=await h.api('/audit?'+new URLSearchParams({object:first.id}),owner),sort=rows=>rows.sort((a,b)=>a.id.localeCompare(b.id));
-  return {grants:item.grants,links:sort(item.links),publicLinks:sort(item.publicLinks),mutations:sort(audit.filter(row=>['share.grant','link.create','link.change','link.remove','link.revoke'].includes(row.action))),receipts:sort(await receiptAudits())};
+  const storedReceipts=(await h.sql("SELECT id,payload FROM chest_records WHERE kind='integration-receipt' AND json_extract(payload,'$.grant')=? ORDER BY id",grant.grant)).results;
+  return {grants:item.grants,links:sort(item.links),publicLinks:sort(item.publicLinks),mutations:sort(audit.filter(row=>['share.grant','link.create','link.change','link.remove','link.revoke'].includes(row.action))),receipts:sort(await receiptAudits()),storedReceipts};
  };
- const beforeRefusal=await sharingSnapshot();assert.ok(beforeRefusal.grants.length&&beforeRefusal.links.length&&beforeRefusal.publicLinks.length&&beforeRefusal.receipts.length,'refusal checks preserve populated grants, both link kinds and successful receipts');
+ const beforeRefusal=await sharingSnapshot();assert.ok(beforeRefusal.grants.length&&beforeRefusal.links.length&&beforeRefusal.publicLinks.length&&beforeRefusal.receipts.length,'refusal checks preserve populated grants, both link kinds and successful receipts');assert.equal(beforeRefusal.storedReceipts.length,beforeRefusal.receipts.length,'stored successful receipts reconcile with public mutation audits');
  for(const phase of ['initial','retry','restart']){
   if(phase==='restart'){await h.stop();await h.start()}
   const input={audience:'public',confirmExternal:true},response=await h.fetch(`/api/chest/integrations/v1/items/${first.id}/links`,{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','idempotency-key':'policy-denied-link'},body:JSON.stringify(input)});
