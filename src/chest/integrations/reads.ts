@@ -10,8 +10,9 @@ import { ancestors, category, filters, matches, sharedBy } from '../files/search
 import { hiddenMerged } from '../filing/duplicate-view'
 import { textHits } from '../read/jobs'
 import { action, resource, type Authorized } from './auth'
+import { pageItems } from './capacity'
 import type { Item } from '../files/model'
-export function pageArgs(url: URL) {const limit=Number(url.searchParams.get('limit')??25);insist(Number.isInteger(limit)&&limit>=1&&limit<=100,'invalid_page_limit');let cursor='';if(url.searchParams.has('cursor'))try{cursor=Buffer.from(url.searchParams.get('cursor')!,'base64url').toString();insist(cursor.length<=240,'invalid_page_cursor')}catch{insist(false,'invalid_page_cursor')};return {limit,cursor}}
+export function pageArgs(url: URL) {const limit=Number(url.searchParams.get('limit')??25);insist(Number.isInteger(limit)&&limit>=1&&limit<=pageItems,'invalid_page_limit');let cursor='';if(url.searchParams.has('cursor'))try{cursor=Buffer.from(url.searchParams.get('cursor')!,'base64url').toString();insist(cursor.length<=240,'invalid_page_cursor')}catch{insist(false,'invalid_page_cursor')};return {limit,cursor}}
 const cursorFor=(value:string)=>Buffer.from(value).toString('base64url')
 export function brief(row: Row<Item>) {const p=row.payload,v=p.versions.find(v=>v.id===p.current);return {id:row.id,name:p.name,type:p.type,parent:p.parent,current:p.current,updatedAt:p.updatedAt,size:v?.size??null,sha256:v?.checksum??null,mediaType:v?.mediaType??null}}
 export async function listItems(env: Bindings,auth: Authorized,url: URL) {
