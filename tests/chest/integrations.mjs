@@ -9,7 +9,7 @@ const call=async(token,path,{method='GET',body,key,status=200}={})=>{const respo
 const form=(path,cookie,body)=>h.fetch(path,{method:'POST',headers:{cookie,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams(body)});
 let owner,staff,folder,other,client;
 async function consentFor(app,cookie,scopes,roots=[folder.id],budget={}){const verifier=random(),challenge=createHash('sha256').update(verifier).digest('base64url'),params=new URLSearchParams({client_id:app.client.id,redirect_uri:'https://client.example.test/callback',response_type:'code',code_challenge_method:'S256',code_challenge:challenge,state:random(),scope:scopes.join(' '),...budget});for(const root of roots)params.append('resource',root);const response=await h.fetch('/oauth/chest/authorize?'+params,{headers:{cookie}});return {response,verifier,params}}
-async function authorize(app,cookie,scopes,roots,budget){const {response,verifier}=await consentFor(app,cookie,scopes,roots,budget);assert.equal(response.status,200,await response.clone().text());const html=await response.text(),intent=/name="intent" value="([^"]+)"/.exec(html)?.[1];assert.ok(intent);const allowed=await form('/oauth/chest/authorize',cookie,{intent,decision:'allow'});assert.equal(allowed.status,303);const callback=new URL(allowed.headers.get('location'));assert.equal(callback.origin,'https://client.example.test');const exchangeBody={grant_type:'authorization_code',client_id:app.client.id,redirect_uri:'https://client.example.test/callback',code:callback.searchParams.get('code'),code_verifier:verifier,...(app.clientSecret?{client_secret:app.clientSecret}:{})},exchange=body=>h.fetch('/oauth/chest/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded',origin:'https://client.example.test'},body:new URLSearchParams(body)});assert.equal((await exchange({...exchangeBody,code_verifier:random()})).status,400,'PKCE refuses a different verifier');const token=await exchange(exchangeBody);assert.equal(token.status,200,token.status===200?'':await token.clone().text());assert.equal((await exchange(exchangeBody)).status,400,'authorization code is single use');return token.json()}
+async function authorize(app,cookie,scopes,roots,budget,choices={}){const {response,verifier}=await consentFor(app,cookie,scopes,roots,budget);assert.equal(response.status,200,await response.clone().text());const html=await response.text(),intent=/name="intent" value="([^"]+)"/.exec(html)?.[1];assert.ok(intent);const allowed=await form('/oauth/chest/authorize',cookie,{intent,decision:'allow',...choices});assert.equal(allowed.status,303);const callback=new URL(allowed.headers.get('location'));assert.equal(callback.origin,'https://client.example.test');const exchangeBody={grant_type:'authorization_code',client_id:app.client.id,redirect_uri:'https://client.example.test/callback',code:callback.searchParams.get('code'),code_verifier:verifier,...(app.clientSecret?{client_secret:app.clientSecret}:{})},exchange=body=>h.fetch('/oauth/chest/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded',origin:'https://client.example.test'},body:new URLSearchParams(body)});assert.equal((await exchange({...exchangeBody,code_verifier:random()})).status,400,'PKCE refuses a different verifier');const token=await exchange(exchangeBody);assert.equal(token.status,200,token.status===200?'':await token.clone().text());assert.equal((await exchange(exchangeBody)).status,400,'authorization code is single use');return token.json()}
 async function waitDelivery(token,subscription,predicate){for(let n=0;n<30;n++){const result=await call(token,`/webhooks/${subscription}/deliveries`),found=result.items.find(predicate);if(found)return found;await new Promise(r=>setTimeout(r,50))}assert.fail('webhook delivery did not settle')}
 try{
  await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});owner=await h.signIn(h.vars.OWNER_EMAIL);await h.fetch('/setup',{method:'POST',headers:{cookie:owner,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
@@ -18,6 +18,42 @@ try{
  client=await h.api('/integrations/clients',staff,{name:'Scoped client and MCP agent',redirects:['https://client.example.test/callback'],pickerOrigins:['https://client.example.test'],actions:['read','search','download','upload','folder','versions','share','request','picker','webhook'],confidential:true});
  const expanded=await consentFor(client,staff,['read'],[folder.id]);expanded.params.set('redirect_uri','https://attacker.example.test/callback');assert.equal((await h.fetch('/oauth/chest/authorize?'+expanded.params,{headers:{cookie:staff}})).status,400,'redirect exact match');
  const grant=await authorize(client,staff,['read','search','download','upload','folder','versions','share','request','picker','webhook']);let token=grant.access_token;
+ // SURFACE-012: genuine consent without budgets admits 500 sequential internal arrivals.
+ const capacityRoot=await h.api('/items',owner,{space:(await h.api('/files',owner)).personal,type:'folder',name:'Internal arrivals'});
+ const unbounded=await authorize(client,owner,['read','upload','download'],[capacityRoot.id]);
+ const savedGrant=async(id,cookie=owner)=>(await h.api('/integrations',cookie)).grants.find(g=>g.id===id).payload;
+ assert.deepEqual((await savedGrant(unbounded.grant)).budget,{requests:null,mutations:null,bytes:null},'omitted budgets have no implicit cap');
+ const arrivals=new Map();
+ for(let n=0;n<500;n++){
+  const source=Buffer.from(`synthetic-chest-${n}: original arrival`),input={parent:capacityRoot.id,name:`Arrival ${n}.txt`,base64:source.toString('base64')};
+  const item=await call(unbounded.access_token,'/items',{method:'POST',body:input,key:`arrival-once-${n}`});
+  assert.ok(!arrivals.has(item.id),'each arrival has a unique stable ID');
+  const checksum=createHash('sha256').update(source).digest('hex');assert.equal(item.sha256,checksum);arrivals.set(item.id,{item,source,checksum,input});
+ }
+ assert.equal(arrivals.size,500);const beforeRestart=await savedGrant(unbounded.grant);
+ assert.equal(beforeRestart.used.mutations,500);assert.equal(beforeRestart.used.bytes,[...arrivals.values()].reduce((sum,a)=>sum+a.source.length,0));
+ const finiteRoot=await h.api('/items',owner,{space:(await h.api('/files',owner)).personal,type:'folder',name:'Finite budget checks'});
+ const finite=await authorize(client,owner,['read','upload','download'],[finiteRoot.id],{budget_requests:'10',budget_mutations:'1',budget_bytes:'6'});
+ const finiteInput={parent:finiteRoot.id,name:'Finite control.txt',base64:b64('finite')},finiteItem=await call(finite.access_token,'/items',{method:'POST',body:finiteInput,key:'finite-control-once'});
+ const finiteBefore=await savedGrant(finite.grant);
+ await h.stop();await h.start();
+ assert.deepEqual(await savedGrant(finite.grant),finiteBefore,'saved finite budgets and usage survive restart unchanged');
+ assert.deepEqual(await savedGrant(unbounded.grant),beforeRestart,'saved unlimited budgets and usage survive restart unchanged');
+ const listed=[];let after=null;do{const page=await call(unbounded.access_token,`/items?parent=${capacityRoot.id}&limit=100`+(after?'&cursor='+after:''));listed.push(...page.items);after=page.nextCursor}while(after);
+ assert.equal(listed.length,500);assert.equal(new Set(listed.map(i=>i.id)).size,500);assert.deepEqual(new Set(listed.map(i=>i.id)),new Set(arrivals.keys()));
+ for(const item of listed){
+  const expected=arrivals.get(item.id);assert.equal(item.current,expected.item.current);assert.equal(item.sha256,expected.checksum);
+  const response=await h.fetch(`/api/chest/integrations/v1/items/${item.id}/bytes/${item.current}`,{headers:{authorization:'Bearer '+unbounded.access_token}});assert.equal(response.status,200);
+  const original=Buffer.from(await response.arrayBuffer());assert.deepEqual(original,expected.source);assert.equal(createHash('sha256').update(original).digest('hex'),expected.checksum);
+ }
+ const replayArrival=[...arrivals.values()][0],arrivalReplay=await call(unbounded.access_token,'/items',{method:'POST',body:replayArrival.input,key:'arrival-once-0'});assert.equal(arrivalReplay.id,replayArrival.item.id);assert.equal((await savedGrant(unbounded.grant)).used.mutations,500,'restart replay creates no arrival');
+ assert.ok((await savedGrant(unbounded.grant)).used.requests>1000,'no implicit request cap after uploads and original reconciliation');
+ await call(finite.access_token,'/items',{method:'POST',body:{...finiteInput,name:'Finite refused.txt'},key:'finite-refusal-once',status:429});
+ const finiteRead=await h.fetch(`/api/chest/integrations/v1/items/${finiteItem.id}/bytes/${finiteItem.current}`,{headers:{authorization:'Bearer '+finite.access_token}});assert.equal(finiteRead.status,429);assert.equal((await finiteRead.json()).error,'oauth_bytes_budget_exhausted');
+ assert.ok(!(await h.api(`/items/${finiteRoot.id}`,owner)).children.some(i=>i.name==='Finite refused.txt'));assert.equal((await savedGrant(finite.grant)).used.mutations,1);
+ const edited=await authorize(client,staff,['read'],undefined,{budget_requests:'4',budget_mutations:'2',budget_bytes:'9'},{budget_requests:'0',budget_mutations:'',budget_bytes:''});
+ assert.deepEqual((await savedGrant(edited.grant,staff)).budget,{requests:0,mutations:null,bytes:null},'granter choices override requested budgets, preserving explicit zero');await call(edited.access_token,'/items',{status:429});
+ console.log('SURFACE-012: 500 sequential arrivals, unique IDs, original hashes and consent budgets reconcile across restart');
  // Pagination returns only stable IDs under the folder; current role/no-download still govern every door.
  const seen=[];let cursor=null;do{const result=await call(token,'/items?limit=2'+(cursor?'&cursor='+cursor:''));seen.push(...result.items.map(r=>r.id));cursor=result.nextCursor}while(cursor);assert.equal(new Set(seen).size,7);assert.ok(seen.includes(folder.id)&&!seen.includes(other.id));await call(token,`/items/${other.id}`,{status:403});
  const search=await call(token,'/search?q=Searchable&type=documents&creator=me&limit=2');assert.equal(search.items.length,2);assert.ok(search.nextCursor);assert.ok(search.items.every(r=>initial.some(i=>i.id===r.id)));

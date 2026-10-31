@@ -5,6 +5,7 @@
       "pages": [
         { "slug": "introduction", "title": "What Chest is", "file": "introduction.md", "summary": "Your team's files in spaces and folders, shared, searchable and kept in every version, on a Chest you run." },
         { "slug": "getting-started", "title": "Run Chest on your computer", "file": "getting-started.md", "summary": "Get Chest and start it with one line, then finish first-run setup." },
+        { "slug": "agents", "title": "Agent limits and budgets", "file": "agents.md", "summary": "Choose grant budgets, understand installation capacity and pace internal file arrivals." },
         { "slug": "set-up", "title": "Set up Chest", "file": "set-up.md", "summary": "Invite your staff and make team spaces; add groups, and the Library's collections and types if you need sign-off." }
       ]
     },
