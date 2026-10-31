@@ -2109,7 +2109,7 @@
       "executable": false
     },
     "src/chest/administration/report-ui.ts": {
-      "sha256": "5c1dae27fa153d5dd19e039ff2cda2ad18bfce873fa0a559813c725a585bf79a",
+      "sha256": "0439e4b6a83067233830856f1af0d7dd86e092c04429d84f1563bda356807409",
       "executable": false
     },
     "src/chest/administration/reports.ts": {
@@ -5381,7 +5381,7 @@
       "executable": false
     },
     "tests/chest/administration-accounting-flow.mjs": {
-      "sha256": "c0f3cde4dcd977d55dfb66dd0149bf5d4b2f65dd7bf2dd9d52d4b7ff29728931",
+      "sha256": "e1b64ce244c7e8188742d56ab580732b1aef35f662d90cc34e9074b885ad2262",
       "executable": false
     },
     "tests/chest/administration-guest-flow.mjs": {
