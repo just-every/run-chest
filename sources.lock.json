@@ -217,7 +217,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "d9620d58f36c7ce90c018dba6fc65e3931864f17c530b7546ed0c47d046b9310",
+      "sha256": "68b32515a075245c1d8f6201cea9376f2ea605df99949eda8e0b4a898236b2d2",
       "executable": false
     },
     "DEMO.md": {
@@ -5617,7 +5617,7 @@
       "executable": false
     },
     "tests/chest/files.mjs": {
-      "sha256": "ec927b034c1fea3d968b87d408589701b2c5903d665f7c804b6ee9551a2d67eb",
+      "sha256": "4a6e2623f8dae158f222020140ed73718d07db53c6b80d7ef1da9d0fe995b771",
       "executable": false
     },
     "tests/chest/filing.mjs": {
@@ -5882,6 +5882,10 @@
     },
     "tests/chest/space-policy.mjs": {
       "sha256": "c010ceb9d807d74af00f39a8c324186b4e6d4c8e8e22ca807dec9f0a91deb933",
+      "executable": false
+    },
+    "tests/chest/sync-tree-flow.mjs": {
+      "sha256": "f5e4bab27ee37a5bbb17c850bef9d93cd13c240a745fd0c9e4e9a9c9c448d0cb",
       "executable": false
     },
     "tests/chest/tooltip-proof.mjs": {
