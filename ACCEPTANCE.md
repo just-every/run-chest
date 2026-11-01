@@ -2223,8 +2223,8 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-005, BASE
 7. `chest.backup.restore` declares destructive and security and previews what it replaces before any decision.
 8. `chest.spaces.create` with only the sponsor as a member declares standard; with other members it declares access, direction widens.
 
-**Evidence.** None.
-**Gap.** No admin tools, and the integration API has no admin scope; ADMIN-002 itself is partial.
+**Evidence.** `tests/chest/integrations.mjs` and `tests/chest/browser-integrations.mjs` cover separately consented, group-bounded read-only activity reports.
+**Gap.** No admin tools, and the integration API has no admin scope; ADMIN-002 itself is partial. Shared Base Agent integration, canonical administrative tools, risk classifications and company-policy decisions remain unproved; scoped integration activity reports do not establish those requirements.
 
 #### SURFACE-011 — Decisions and signatures are commitments
 
