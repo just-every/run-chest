@@ -8,12 +8,12 @@ The primary journey: create a team space, move originals and rights in, install 
 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
-| Core | 40 | 45 | 38 | 123 |
-| Agent surface | 0 | 2 | 24 | 26 |
-| Later | 1 | 4 | 16 | 21 |
-| Full target | 41 | 51 | 78 | 170 |
+| Core | 46 | 39 | 38 | 123 |
+| Agent surface | 1 | 24 | 1 | 26 |
+| Later | 3 | 2 | 16 | 21 |
+| Full target | 50 | 65 | 55 | 170 |
 
-Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
+Judged from the code and tests at commit `8267f0b0bce5bc5c08bcabadb30cc7c2ff1bd054` (1 November 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
 ## Core
 
@@ -128,7 +128,7 @@ Core · published · **done** · Rules D-3
 
 #### CHEST-09 — Review and expiry work keep evidence
 
-Core · published · **partial**
+Core · published · **done**
 
 **Requirement.** Separate review and expiry dates create due and upcoming work. Completion records actor, date and evidence, never destroys the file, and never treats an expiry as a deletion. Automated reminders are FOLLOW-001.
 
@@ -137,7 +137,7 @@ Core · published · **partial**
 2. An empty completion is refused, and completing only the review with evidence leaves the expiry and the original in place.
 
 **Evidence.** `tests/chest/flows.mjs`; `tests/chest/browser-flow.mjs`
-**Gap.** Point 2 passes, and point 1's completion record and expiry date are asserted (`tests/chest/flows.mjs`), with the review work item selected on the document page (`tests/chest/browser-flow.mjs`); no test reads the work list, so both dates appearing there is not asserted.
+**Gap.** None.
 
 #### CHEST-10 — People and group grants
 
@@ -154,7 +154,7 @@ Core · published · **done**
 
 #### CHEST-11 — Reviewed, reversible archive admission
 
-Core · published · **partial**
+Core · published · **done**
 
 **Requirement.** An archive preview writes nothing and lists every item, hash, duplicate, mapping and gap. Apply binds the reviewed fingerprint and current authority, publishes inert records, resumes after restart, and undoes only untouched batches. Unsafe paths or corrupt bytes publish nothing. Source decisions never become new Chest approvals. The import journal is described in `docs/move-in.md`.
 
@@ -163,7 +163,7 @@ Core · published · **partial**
 2. After a restart the apply resumes, untouched records undo, and a conflicting native edit is kept.
 
 **Evidence.** `tests/chest/flows.mjs`; `tests/chest/journey.mjs`
-**Gap.** Point 1 passes, and point 2's undo of untouched records after a restart and the kept native edit are asserted (`tests/chest/flows.mjs`); the apply completes before the restart, so an interrupted apply resuming after a restart is not asserted.
+**Gap.** None.
 
 #### CHEST-12 — Complete independent local export and restore
 
@@ -335,7 +335,7 @@ Core · target · **missing** · From BULK-001
 
 #### SYNC-001 — Sync protocol for clients
 
-Core · target · **partial** · Rules D-1
+Core · target · **done** · Rules D-1
 
 **Requirement.** The server gives clients device keys, the tree, a change journal with cursors, ranged hydration, create and upload against a base version, and rename, move and delete. Restores, revocations and policy changes appear in the change feed.
 
@@ -346,7 +346,7 @@ Core · target · **partial** · Rules D-1
 4. A revoked device key is refused at once.
 
 **Evidence.** `tests/chest/files.mjs`; `tests/chest/scale-sync.mjs`; `tests/chest/sync-tree-flow.mjs`
-**Gap.** Fresh-judge candidate: the old gap says this protocol exists; only the native clients (SYNC-008) were missing.
+**Gap.** None.
 
 #### SYNC-008 — macOS and Windows clients
 
@@ -609,7 +609,7 @@ Core · target · **done** · Cites BASE-MAIL-001
 
 #### SHARE-004 — Item sharing and Shared with me
 
-Core · target · **partial**
+Core · target · **done**
 
 **Requirement.** Any staff member shares a personal-area item, and editors and content managers share space items, with colleagues or groups at viewer, commenter or editor, with an optional message, under POLICY-001. Recipients get an in-app notice and an email (and Slack or Teams where connected) and find the item under **Shared with me**, filterable by sharer and date, with add-to-my-area shortcuts that grant nothing more.
 
@@ -618,11 +618,11 @@ Core · target · **partial**
 2. The audit records the share.
 
 **Evidence.** `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`
-**Gap.** Point 1 passes (`tests/chest/files.mjs`, `tests/chest/browser-files.mjs`); no test asserts the share's audit row (point 2).
+**Gap.** None.
 
 #### SHARE-008 — Access requests
 
-Core · target · **partial** · From SHARE-004
+Core · target · **done** · From SHARE-004
 
 **Requirement.** A signed-in person who opens a link they cannot use sees **Request access** with an optional message and role, never the item's name or contents. The request goes to the item's sharers with share rights (owner, file editors, then space managers), who approve at the requested or a lower role, or decline, from the email, the notice or the share dialog; the requester is told. If the owner has left, the request goes to the successor set at offboarding, then space managers, then content-recovery admins; it never stalls silently. Requests expire after 30 days with the requester told. Each request, decision and grant is audited.
 
@@ -632,7 +632,7 @@ Core · target · **partial** · From SHARE-004
 3. With the owner of a third file deactivated, the request reaches the successor, and with none, a space manager.
 
 **Evidence.** `tests/chest/files.mjs`; `tests/chest/browser-files.mjs`
-**Gap.** Points 1 and 2 pass, and point 3's routing to a deactivated owner's successor is asserted (`tests/chest/files.mjs`); a file whose deactivated owner has no successor is never routed to a space manager.
+**Gap.** None.
 
 #### SHARE-009 — Expiring grants
 
@@ -1063,7 +1063,7 @@ Core · target · **partial** · From ADMIN-002 · Register R-11
 
 #### ADMIN-003 — Several admins, delegated roles and owner transfer
 
-Core · target · **partial** · Cites BASE-ROLE-001
+Core · target · **done** · Cites BASE-ROLE-001
 
 **Requirement.** The owner promotes any number of super admins and assigns delegated roles, alone or combined, scoped to the organization or named groups: user management, help desk (resend invitations, revoke sessions and devices, reset sign-in factors), sharing and security policy, service settings (integrations, backup, sync and mobile policy, space creation and defaults, storage limits), content recovery, and read-only audit and reporting. Admins can define custom roles from these privileges. File names, previews and search hits count as content under BASE-ROLE-001, and content recovery restores items without opening them. The owner role transfers to another super admin with acceptance and a fresh sign-in, and the former owner keeps only roles left to them. The console warns while only one super admin exists, and the last cannot be demoted or deactivated. Every role grant, change and use is audited.
 
@@ -1074,7 +1074,7 @@ Core · target · **partial** · Cites BASE-ROLE-001
 4. Demoting the last super admin is refused, and the audit records each step.
 
 **Evidence.** `tests/chest/administration.mjs`; `docs/administration.md`
-**Gap.** Points 1 and 2 pass, point 3's refusal of the former owner's owner-only actions is asserted, and the last super admin cannot be deactivated (`tests/chest/administration.mjs`); the new owner succeeding at an owner-only action, a refused demotion of the last super admin, and the audit of each step are not asserted.
+**Gap.** None.
 
 #### ADMIN-006 — Admin rewind without content access
 
@@ -1822,7 +1822,7 @@ Core · push-further · **missing** · From AGENT-007 · Cites BASE-AGENT-002, B
 
 #### BASE-AGENT-001 — One MCP door per seed
 
-Agent surface · target · **missing**
+Agent surface · target · **done**
 
 **Requirement.** Every seed, hosted or self-hosted, serves one remote MCP endpoint at `/mcp` over Streamable HTTP. It speaks the current revision (2026-07-28) and accepts 2025-11-25 clients through the twelve-month deprecation window. It implements `server / discover`, tools, resources and prompts. Lists are deterministic and carry `ttlMs` and `cacheScope: "private"`. Roots, Sampling and Logging are not served.
 
@@ -1834,12 +1834,12 @@ Agent surface · target · **missing**
 5. A foreign Origin returns 403, and a header and body method mismatch returns `HeaderMismatch`.
 6. An oversized body returns 413 with no effect.
 
-**Evidence.** None.
-**Gap.** Not yet judged through this seed's own doors.
+**Evidence.** `src/modules/agent-door/conformance/discovery.mjs`; `agent-surface.json`
+**Gap.** None.
 
 #### BASE-AGENT-002 — The seed's jobs are tools, through the UI's own actions
 
-Agent surface · target · **missing**
+Agent surface · target · **partial**
 
 **Requirement.** Each Core job a person does in the product is a tool. Where one is not, the Agent surface says why: it runs on a device, it is a person's interactive screen, it belongs to a connector or the import door, or it is an installation fact. Risk is never the reason: a risky job is a tool with its class (BASE-AGENT-006). Tools are named `<seed>.<area>.<verb>` and declare input and output schemas and truthful annotations. Each calls the same server action as the UI, so validation and authorization are written once, and the seed's embedded agents use the same registry. A business refusal returns `isError` with the seed's stable error code.
 
@@ -1851,12 +1851,12 @@ Agent surface · target · **missing**
 5. The UI action and its tool, on the same fixture, give the same record state and the same audit event type.
 6. The seed's embedded agents appear in the audit as calls to the same tools.
 
-**Evidence.** None.
-**Gap.** Not yet judged through this seed's own doors.
+**Evidence.** `src/modules/agent-door/conformance/surface.mjs`; `agent-surface.json`; `src/chest/agent-door/index.ts`
+**Gap.** Tools are named `chest.<area>.<verb>`, declare schemas and annotations, and the harness validates the registry and each fixture result. The undeclared table jobs (events, Ask, device repair, erasure, trash purge, backup, signing) are not tools, and the UI action and its tool leaving the same record state and audit event type is asserted only for the declared native journey.
 
 #### BASE-AGENT-003 — Records are resources
 
-Agent surface · target · **missing**
+Agent surface · target · **partial**
 
 **Requirement.** Each primary record type has a URI template, and tools return `resource_link`s to the records they touch. A read returns exactly the fields the caller's role sees in the UI. File bytes count against any byte budget on the grant. A record the caller cannot open reads as not found, identical to a missing id. Text from customers, imports or files carries an untrusted marker in `_meta`.
 
@@ -1868,12 +1868,12 @@ Agent surface · target · **missing**
 5. Bytes over budget return `budget_exhausted` and no partial content.
 6. Customer-sourced text carries the untrusted marker.
 
-**Evidence.** None.
-**Gap.** Not yet judged through this seed's own doors.
+**Evidence.** `src/chest/agent-door/resources.ts`; `src/chest/agent-door/reads.ts`; `agent-surface.json`
+**Gap.** Seven resource templates return sanitized native metadata, and a restricted record reads as unavailable like a missing one. Reads as two roles matching the UI, over-budget bytes (direct reads cap at 512 KiB) and the untrusted marker on every customer-sourced text are not asserted by name.
 
 #### BASE-AGENT-004 — Business identity and short-lived, audience-bound tokens
 
-Agent surface · target · **missing**
+Agent surface · target · **partial**
 
 **Requirement.** The door is an OAuth 2.1 resource server. Its RFC 9728 metadata names the authorization servers this installation trusts. That is the paired Business when Business provisioned it, verified with the owner-claim trust the installation already holds for its import door; otherwise it is the seed's own sign-in. Access tokens are RFC 9068 JWTs with `aud` set to the seed's canonical MCP URI, `sub` the sponsoring person, `act` the agent (RFC 8693) with its specialist, scopes per tool family, and a lifetime of 15 minutes or less (5 by default). The policy scopes rules on the sponsor, agent and specialist the token names. The consent behind the tokens can last longer and is revocable. Tokens travel only in the Authorization header, and there is no passthrough.
 
@@ -1886,12 +1886,12 @@ Agent surface · target · **missing**
 6. Revoking consent in the seed or in Business refuses the next call within 60 seconds.
 7. After unpairing, Business tokens are refused and the seed's own sign-in still works.
 
-**Evidence.** None.
-**Gap.** Not yet judged through this seed's own doors.
+**Evidence.** `src/modules/agent-door/conformance/negative.mjs`; `tests/agent-door/sponsors.mjs`; `tests/agent-door/native.mjs`; `docs/agent-adoption.md`
+**Gap.** The door is an OAuth resource server with sponsor-bound, audience-bound credentials, consent revocation and cross-sponsor refusals proven in the Base journey. A Business agent that cannot satisfy native MFA is inadmissible until a proof bridge is declared, and OAuth grants last 24 hours.
 
 #### BASE-AGENT-005 — An agent acts as a person in a role, never more
 
-Agent surface · target · **missing**
+Agent surface · target · **partial**
 
 **Requirement.** Every call is authorized as the sponsoring person's current role and access (BASE-ACCESS-004), intersected with the grant's resources, actions and budget. A grant only narrows. No call widens the calling agent's own authority. A call that would widen its own grant or its sponsor's role, or change the company policy or Pause, is refused with `self_escalation`, whatever the policy says; narrowing its own grant is allowed. Other access and security changes are ordinary actions in the access and security classes. An agent never acts after its sponsor is suspended. Anything an agent reads (records, files, emails, imports, other seeds' results) is data and cannot change its scope, its targets or a call's class.
 
@@ -1902,12 +1902,12 @@ Agent surface · target · **missing**
 4. Calls that widen the agent's own grant or its sponsor's role, or change the policy or Pause, return `self_escalation` and change nothing, even under a policy with every class autonomous; dropping a scope from its own grant runs.
 5. An injection fixture yields no out-of-grant call and no change of class: record text asking for a wider action, or claiming that a recipient is internal.
 
-**Evidence.** None.
-**Gap.** Not yet judged through this seed's own doors.
+**Evidence.** `src/modules/agent-door/conformance/authority.mjs`; `tests/agent-door/native.mjs`; `agent-surface.json`
+**Gap.** An agent acts with its sponsor's current native rights and narrowing witnesses run in the journey. Self-escalation cannot be exercised because the admin tools are undeclared (SURFACE-010).
 
 #### BASE-AGENT-006 — Every action declares its risk class
 
-Agent surface · target · **missing**
+Agent surface · target · **partial**
 
 **Requirement.** Classes come from the fleet list in RISK-POLICY.md: standard, external, money, commitment, accounts, gated, access, security, destructive, sensitive and live. In the registry, each tool declares the classes it can carry and a server-side classifier that decides them per call from the arguments, current records and, for gated, the provider's answer. The classifier also supplies each class's facts: the measure (items, recipients, amount and currency, people or records), the counterparty (internal, known, new or public), the direction for access, the provider and step for gated, and the data kind for sensitive. A classifier never reads a flag, label or claim supplied by the agent or by record text. A seed cannot add a class; it proposes one for the fleet list.
 
@@ -1919,12 +1919,12 @@ Agent surface · target · **missing**
 5. No tool in `tools / list` declares a class outside the fleet list, and `rer check` fails on one.
 6. A refused call's audit row still records its computed classes.
 
-**Evidence.** None.
-**Gap.** Not yet judged through this seed's own doors.
+**Evidence.** `src/chest/agent-door/risk.ts`; `agent-surface.json`; `src/modules/agent-door/conformance/journey.mjs`
+**Gap.** Every declared tool lists its possible classes and the journey checks each declared class and the recipient-computed external facts. The classes of the undeclared tools (purge, erasure, backup, signing, wipe) cannot be exercised.
 
 #### BASE-AGENT-007 — The company's policy decides, at one chokepoint
 
-Agent surface · target · **missing**
+Agent surface · target · **partial**
 
 **Requirement.** Every agent door calls one decision function: MCP, the integration API with agent tokens, and the seed's embedded agents. It evaluates the call's classes against the company's policy, as above. The seed ships no dispositions and fills no gap with one: agent access opens only under a complete policy that setup has asked for (RISK-POLICY.md), and before then every agent call returns `policy_unset` with the setup link and changes nothing. *Autonomous* runs the call. *Review* runs it and adds it to the review feed. *Approval* saves a pending action with server-computed facts and returns `input_required`, with a URL-mode elicitation to the seed's approval page and a pending handle. Each person the rule names approves the exact saved revision in a signed-in browser, and changed inputs need a new approval. The retried call returns the result and a receipt. A rejection returns `approval_rejected`, and a lapse past the wait the rule sets returns `approval_expired`. *Blocked* returns `policy_blocked`, naming the class, rule and revision.
 
@@ -1938,12 +1938,12 @@ Agent surface · target · **missing**
 7. A policy change applies to the next call within 60 seconds, and the audit cites the new revision.
 8. A policy document with a bad signature or another Business's id is rejected, and the door keeps the last valid revision.
 
-**Evidence.** None.
-**Gap.** Not yet judged through this seed's own doors.
+**Evidence.** `src/modules/agent-door/conformance/policy-phases.mjs`; `src/modules/agent-door/policy-store.ts`; `tests/agent-door/native.mjs`
+**Gap.** One chokepoint applies `policy_unset`, blocked, approval and review dispositions, with receipts and no effect on refusal, under the journey's two policies. The destructive and commitment classes have no declared tool that reaches them (purge, erasure, signing).
 
 #### BASE-AGENT-008 — Truthful attribution
 
-Agent surface · target · **missing**
+Agent surface · target · **partial**
 
 **Requirement.** Every agent act is recorded and shown as `"<agent> for <person>"`, and mail and messages an agent sends outside name it that way as their sender. An approval, a review mark, a confirmation (a warning dialog, a typed-field confirmation, a delivery confirmation), a decision or a signature attributed to a person comes only from that person's signed-in session. When an agent does the equivalent act, the record names the agent, and the act carries its own class; a binding decision or a signature is commitment. Agent doors ignore arguments that stand for a person's confirmation. No tool solves a bot check, or enters a person's own password or 2FA code at an outside service. A provider step that demands a person goes to a person, whatever the policy says; the gated class marks such steps before they run.
 
@@ -1956,12 +1956,12 @@ Agent surface · target · **missing**
 6. Activity and exports at 1440 and 390 show `"<agent> for <person>"` for every agent act.
 7. Mail an agent sends to an outside address names `"<agent> for <person>"` as its sender.
 
-**Evidence.** None.
-**Gap.** Not yet judged through this seed's own doors.
+**Evidence.** `src/modules/agent-door/conformance/authority.mjs`; `tests/agent-door/native.mjs`; `docs/agent-adoption.md`
+**Gap.** Attribution and named human approval are proven: an agent cannot approve its own action or claim a human confirmation, and native activity names the agent and sponsor. Agent-supplied confirmation flags on the integration API's share doors and the "agent for person" label on sent mail are not asserted.
 
 #### BASE-AGENT-009 — Every agent action is audited with its class and decision
 
-Agent surface · target · **missing**
+Agent surface · target · **partial**
 
 **Requirement.** Extending BASE-OPS-005, each call that reads private data or changes anything records the agent client, name and specialist, and the run or task id (`traceparent` when sent); the sponsoring person, the grant, the tool and the targets; the classes and their facts, and the policy revision and rule; the decision (autonomous, review, approval, blocked, unset or self_escalation) and the outcome (done, refused, pending or failed); the approval or review id and person, and the idempotency key. For a period, the seed's Agents page shows actions by class and decision with the notable ones, the review feed (Mark reviewed, Flag, and Undo where reversible), pending approvals, steps waiting for a person and setup questions. Business shows the same across seeds.
 
@@ -1974,8 +1974,8 @@ Agent surface · target · **missing**
 6. Removing the agent keeps its rows and its name.
 7. The Agents page works at 1440 and 390 with no serious or critical axe findings.
 
-**Evidence.** None.
-**Gap.** Not yet judged through this seed's own doors.
+**Evidence.** `src/modules/agent-door/conformance/audit.mjs`; `src/modules/agent-door/audit.ts`; `agent-surface.json`
+**Gap.** Every declared call is audited with its class and decision, and the harness counts calls against the policy revision in force. The undeclared jobs have no tool to call, so none is audited.
 
 #### BASE-AGENT-010 — Agents can follow changes
 
@@ -1996,7 +1996,7 @@ Agent surface · target · **missing**
 
 #### BASE-AGENT-011 — Limits are policy, and Pause stops everything
 
-Agent surface · target · **missing**
+Agent surface · target · **partial**
 
 **Requirement.** Business limits are rules in the company's policy: per-call and per-day thresholds on any class's measure, such as money moved, outside recipients or items destroyed; spend caps on provider cost (models, SMS, email) per seed, specialist or agent, which setup asks with the classes; "no cap" is an answer. Tools with provider cost declare an estimate before they run, and an exhausted cap returns `budget_exhausted` before any partial effect. The seed's capacity limits (request rate, body and byte sizes) protect the installation: they bound rate and size, never daily business volume, are documented and are not policy. A grant carries budgets only when the person granting it sets them. A **Pause agents** control in the seed, and Pause all agents in Business when paired, refuses every agent token within 60 seconds until a person resumes; browser sessions and devices keep working.
 
@@ -2009,12 +2009,12 @@ Agent surface · target · **missing**
 6. Pause and Pause all agents each stop the next call within 60 seconds, and resume restores access.
 7. An agent token cannot resume.
 
-**Evidence.** None.
-**Gap.** Not yet judged through this seed's own doors.
+**Evidence.** `src/modules/agent-door/conformance/policy-phases.mjs`; `src/modules/agent-door/counting.ts`; `docs/agent-adoption.md`
+**Gap.** Pause agents stops the next call while the person's session keeps working, and requests and bodies are capped. The journey declares no spend and no provider cost, so spend caps are unavailable until Base supplies reservations; byte budgets apply only if set at grant time.
 
 #### BASE-AGENT-012 — Writes are idempotent and conflict-safe
 
-Agent surface · target · **missing**
+Agent surface · target · **partial**
 
 **Requirement.** Every mutating tool requires an idempotency key and takes an optional expected revision. The same key with the same arguments returns the first outcome for at least 24 hours; the same key with different arguments returns `idempotency_conflict`; a stale revision returns `revision_conflict` with the current revision. Long work returns a job handle and a status tool, with no dependence on the Tasks extension.
 
@@ -2025,12 +2025,12 @@ Agent surface · target · **missing**
 4. A stale revision returns a conflict naming the current revision.
 5. A job handle used by another person's token reads as not found.
 
-**Evidence.** None.
-**Gap.** Not yet judged through this seed's own doors.
+**Evidence.** `src/modules/agent-door/conformance/replay.mjs`; `src/modules/agent-door/conformance/invocation.mjs`; `tests/agent-door/native.mjs`
+**Gap.** Declared writes are idempotent on a caller key, a replay returns the same receipt, and an approved call applies once. Resumable uploads and bulk writes (SURFACE-004) are not declared, and uploads into an enabled arrival rule are refused with `agent_arrival_continuation_unavailable`.
 
 #### BASE-AGENT-013 — Manifest, docs and the conformance journey
 
-Agent surface · target · **missing**
+Agent surface · target · **partial**
 
 **Requirement.** `server / discover` instructions and an on-site `/docs/agents` page are generated from the action registry. The page lists tools by job, with each tool's classes, the test that adds each computed class, its scopes, resource templates, event types, capacity limits and error codes, and the specialist role. `prompts / list` carries the specialist's jobs. Base ships the conformance journey, a harness that `rer verify` runs against `rer dev` and seeds run in CI. It is an MCP client; a signed-in test person takes a person's steps (setup answers, approvals, review marks, resume) through the URLs the door returns, and the same browser leg runs the UI-parity actions and the page checks at 1440 and 390. It runs every acceptance point of BASE-AGENT-001 to 012 and of the seed's SURFACE clauses under two company policies: *all autonomous* (`*`), and *held* (standard review, every other class the seed declares approval, which the test person grants), plus the single-class variants a point names. A point that names no disposition passes under both.
 
@@ -2041,14 +2041,14 @@ Agent surface · target · **missing**
 4. Every acceptance point runs under both policies, every decision matches the policy in force, and under all autonomous no call waits for a person or is refused by policy.
 5. A stranger agent given only the seed URL completes the specialist journey through MCP.
 
-**Evidence.** None.
-**Gap.** Not yet judged through this seed's own doors.
+**Evidence.** `agent-surface.json`; `docs/agent-adoption.md`; `src/modules/agent-door/conformance/index.mjs`
+**Gap.** The manifest, the generated catalogue at `/docs/agents` and the conformance journey under autonomous and held policies ship and run in Verify. The journey proves the declared subset only, so the Chest seeded-week journey (SURFACE-013) is not covered.
 
 ### Agent surface
 
 #### SURFACE-001 — The Agent surface is Chest's tool registry
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-001, BASE-AGENT-002, BASE-AGENT-006, BASE-AGENT-013
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-001, BASE-AGENT-002, BASE-AGENT-006, BASE-AGENT-013
 
 **Requirement.** Chest's delta on the Base agent door: the door serves exactly the tools, resource templates, event types and prompts in this section. They are generated from one action registry, which the browser, the integration API and Chest's own agents (AGENT-001 to AGENT-008) all call. `/mcp/chest` stays as an alias of `/mcp`.
 
@@ -2061,12 +2061,12 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-001, BASE
 6. A 2025-03-26 client on `/mcp/chest` and a 2026-07-28 client on `/mcp` list the same tools.
 7. The Base harness passes on Chest's fixtures in CI under both of its policies, all autonomous and held.
 
-**Evidence.** None.
-**Gap.** No registry, output schemas, annotations, class declarations, parity test, generated docs or Base harness. Today 9 tools run on `/mcp/chest` at protocol 2025-03-26 with input schemas only (`src/chest/integrations/mcp.ts`), and 39 of the table's 48 tools have no MCP tool.
+**Evidence.** `src/chest/agent-door/index.ts`; `agent-surface.json`; `tests/agent-door/native.mjs`; `docs/agent-adoption.md`
+**Gap.** `/mcp` serves 41 declared tools with classes, not-a-tool reasons, resource templates and the records-clerk prompt, `/mcp/chest` is an alias, and the Base conformance journey runs under autonomous and held policies. The table's `chest.events.list`, `chest.ask`, `chest.devices.repair`, `chest.erasure.prepare`, `chest.erasure.run`, `chest.trash.purge`, `chest.backup.run`, `chest.backup.restore` and `chest.sign` are undeclared, the registry adds `chest.quarantine.list` and `chest.versions.upload` that the table lacks, and browser and tool parity on one fixture is not asserted for each named job.
 
 #### SURFACE-002 — Find and read what the sponsor can open
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-003, BASE-AGENT-005, BASE-AGENT-006, BASE-AGENT-010 · Rules D-4
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-003, BASE-AGENT-005, BASE-AGENT-006, BASE-AGENT-010 · Rules D-4
 
 **Requirement.** The records clerk finds and reads through the read tools and the `chest://` resources. Reads are standard. A read that returns sensitive content (as Chest computes it above) also declares sensitive, with the data kind.
 
@@ -2080,8 +2080,8 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-003, BASE
 7. Reading a W-9's bytes or its OCR text declares sensitive with the kind "tax ID"; reading its masked typed fields declares standard only.
 8. OCR text and requester messages in results carry the untrusted marker.
 
-**Evidence.** None.
-**Gap.** A restricted or out-of-grant item returns 403 while a missing one returns 404; there is no activity, trash view, report, exposure or event-feed tool, no resources, no sensitive class and no untrusted marker. Today `chest_list`, `chest_get`, `chest_search` and `chest_versions` exist.
+**Evidence.** `src/chest/agent-door/reads.ts`; `src/chest/agent-door/resources.ts`; `agent-surface.json`; `tests/agent-door/native.mjs`
+**Gap.** `chest.search`, `chest.items.list`, `chest.items.get`, `chest.versions.list`, `chest.access.list`, `chest.activity.list`, `chest.requests.list`, `chest.reports.get` and `chest.exposure.list` read under the sponsor's current rights, and the journey runs a sensitive read. `chest.events.list` is undeclared, and no test compares the tools' search filters, role fields, Activity, Trash, Requests or storage views with the browser's.
 
 #### SURFACE-003 — Original bytes follow download rights
 
@@ -2102,7 +2102,7 @@ Agent surface · target · **partial** · From new · Cites BASE-AGENT-003, BASE
 
 #### SURFACE-004 — Add and organize files
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-002, BASE-AGENT-006, BASE-AGENT-012 · Rules D-1
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-002, BASE-AGENT-006, BASE-AGENT-012 · Rules D-1
 
 **Requirement.** Within the grant's folders and the sponsor's role, the records clerk uploads originals and new versions (resumable over 10 MB through TRANSFER-001's session protocol), creates folders and new files, and moves, renames and sets typed fields on one item or a selection. These are standard, because version history, trash or Undo reverses each one, unless the exposure rule makes a call external: an upload, new file or move that lands where outside people can already see. Moves and renames keep stable ids, versions, grants and links (CHEST-04).
 
@@ -2115,12 +2115,12 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-002, BASE
 6. An over-limit upload returns `storage_limit_exceeded` naming the limit, and a malware fixture is quarantined as in the browser.
 7. Moving a file into a folder shared with an outside vendor declares external with counterparty known and one recipient; the same move into an internal folder declares standard.
 
-**Evidence.** None.
-**Gap.** No resumable agent upload, move, field or selection tools, job handles or exposure rule. Today `chest_upload` (base64 in one call) and `chest_create_folder` exist, and the integration API renames and adds versions.
+**Evidence.** `src/chest/agent-door/actions.ts`; `src/chest/agent-door/work-tools.ts`; `src/chest/agent-door/plans.ts`; `agent-surface.json`; `tests/agent-door/native.mjs`
+**Gap.** Upload, new version, new file, folder, rename or move and filing run as declared tools that declare external where the destination is shared outside. Direct original upload is limited to 512 KiB, so resumable uploads, bulk moves with a job handle and selections remain gaps (`docs/agent-adoption.md`), and the storage-limit, malware and typed-field refusals are not asserted through the tools.
 
 #### SURFACE-005 — Recovery stays standard; destruction is its own class
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-DATA-002
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-DATA-002
 
 **Requirement.** Version restore and naming, trash and untrash, and rewinding a folder, a space or a departed user's account (RECOVER-001, ADMIN-006) keep every byte and can be undone, so they are standard, subject to the exposure rule. Emptying trash, permanently deleting from it (`chest.trash.purge`) and running an erasure (`chest.erasure.run`, ERASE-001) cannot be undone, so they are destructive, with the item count. An erasure still runs ERASE-001's own checks, such as preservation instructions, whatever the policy says. `chest.erasure.prepare` drafts an erasure and changes nothing.
 
@@ -2134,12 +2134,12 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE
 7. An erasure that ERASE-001 refuses for held content is refused under every policy.
 8. `chest.erasure.prepare` saves a draft that changes nothing.
 
-**Evidence.** None.
-**Gap.** No trash, rewind, purge or erasure tools, class declarations or policy decisions; today the integration API restores and names versions.
+**Evidence.** `src/chest/agent-door/work-tools.ts`; `src/chest/agent-door/plans.ts`; `agent-surface.json`; `tests/agent-door/native.mjs`
+**Gap.** Version restore and naming, trash and untrash, and `chest.rewind` with preview and Undo run as declared tools. `chest.trash.purge`, `chest.erasure.prepare` and `chest.erasure.run` are undeclared, so the destructive class and its approval, blocked and autonomous points have nothing to run, and nested-tree hashes and reader refusals are not asserted for the tools.
 
 #### SURFACE-006 — Sharing is classified by its recipient, never by the agent
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-005, BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008 · Rules D-3
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-005, BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008 · Rules D-3
 
 **Requirement.** `chest.share` shares with a person or group, or grants a pending access request; `chest.links.create` creates or widens a link. Chest classifies each call from the recipient. A colleague, a group or an organization link is standard. An outside address, a guest or a public link is external, with counterparty known, new or public as computed above. Arguments that stand for a person's confirmation, such as today's `confirmExternal`, are ignored (BASE-AGENT-008). POLICY-001 applies first: a share the organization's sharing policy forbids is refused before the agent policy is consulted. The integration API's `/shares` and `/links` with an agent token reach the same decision.
 
@@ -2154,11 +2154,11 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-005, BASE
 8. The integration API's `/shares` and `/links` give an agent token the same class and decision as the tools.
 
 **Evidence.** `tests/chest/integrations.mjs` — Compatibility assertions cover omitted, false and true confirmation flags through OAuth API and legacy MCP, authenticated attribution, idempotent replay, and ordinary public-link refusals preserving populated grants, links and stored mutation receipts across retry and Worker restart. These assertions do not establish canonical company-policy classification or decisions.
-**Gap.** No recipient classification, policy decision, pending actions or receipts. Today `chest_share` forwards the agent's own `confirmExternal`, which the sharing policy (`src/chest/files/sharing-policy.ts`) accepts as the browser's confirmation, and the API's `/links` creates links under policy with no class or decision.
+**Gap.** `chest.share` and `chest.links.create` are declared tools that classify from the recipient (standard, or external with counterparty), and the journey runs them under both policies. No test asserts the trusted-domain, new-domain and public-link counterparties, an ignored `confirmExternal`, or that the integration API's `/shares` and `/links` reach the same class and decision.
 
 #### SURFACE-007 — Narrowing access and repairing links
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE-AGENT-009
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-006, BASE-AGENT-009
 
 **Requirement.** Revoking a link, removing a grant or guest, and Make private only narrow access to items and leave a record that restores them, so `chest.access.narrow` is standard. Restoring a revoked link or grant widens access and is classified like a new share (SURFACE-006). The AGENT-005 repair loop uses this tool. The people who manage the item are notified.
 
@@ -2169,12 +2169,12 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE
 4. Removing an expired guest notifies the item's manager and shows in activity as "<agent> for <person>".
 5. With standard set to autonomous, the AGENT-005 repair loop finds and closes two over-shared links with no person involved.
 
-**Evidence.** None.
-**Gap.** No narrowing tool, class declaration or policy decision; today the integration API removes grants (`/unshare`), and revoke and Make private are browser-only (SHARE-007, AGENT-005).
+**Evidence.** `src/chest/agent-door/actions.ts`; `agent-surface.json`; `tests/agent-door/native.mjs`
+**Gap.** `chest.access.narrow` removes a grant or principal as a declared standard tool and `chest.exposure.list` reports shared-too-widely links. Link revoke and Make private through the tool, restoring a revoked link as a new share, the manager notice and the AGENT-005 repair loop running through the tool are not asserted.
 
 #### SURFACE-008 — Collect documents in, send files out
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008, BASE-MAIL-001
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008, BASE-MAIL-001
 
 **Requirement.** `chest.requests.create` makes an upload-only request link, sends nothing and exposes no content, so it is standard. `chest.send` emails a request, a reminder, a transfer or a signature envelope. To colleagues it is standard; to outside addresses it is external, with counterparty and recipient count, and sensitive as well when an attached file is. Mail outcomes keep BASE-MAIL-001's separate states, and each submission raises `request.submitted` for the agent that asked.
 
@@ -2187,12 +2187,12 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE
 6. A vendor's upload raises `request.submitted` with the request and item URIs, and the agent reads the file through SURFACE-002.
 7. The vendor's copy of the request email names "<agent> for <person>" as its sender.
 
-**Evidence.** None.
-**Gap.** No send or reminder tools, class declarations or policy decisions; today `chest_create_request` exists, and sending, transfers and signing are browser-only.
+**Evidence.** `src/chest/agent-door/delivery.ts`; `agent-surface.json`; `tests/agent-door/native.mjs`
+**Gap.** `chest.requests.create` and `chest.requests.list` are declared, and `chest.send` sends parallel signature envelopes with its class. Request, reminder and transfer sending, the per-day recipient cap, `request.submitted` events and the sender naming "agent for person" in the vendor's email are not delivered.
 
 #### SURFACE-009 — Devices and sync
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-003, BASE-AGENT-006
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-003, BASE-AGENT-006
 
 **Requirement.** `chest.devices.list` returns each device's last contact, client version, unfinished, failed and conflicted work and the actionable reason: the sponsor's own devices, or every device in scope for an admin sponsor (SYNC-003). Pausing, resuming or retrying a queue is standard (AGENT-003), and a conflict keeps both copies. Revoking a device is access, narrowing; asking for a cache wipe adds destructive and security. Downloaded copies are never reported as erased.
 
@@ -2204,12 +2204,12 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-003, BASE
 5. A revoke with a wipe declares access, destructive and security and takes the strictest of their dispositions.
 6. A wipe result reads "wipe requested", and never says copies downloaded earlier were erased.
 
-**Evidence.** None.
-**Gap.** No device tools; the client states are themselves missing in SYNC-003, and the device list, revoke and deactivation are browser-only.
+**Evidence.** `src/chest/agent-door/work-tools.ts`; `agent-surface.json`; `tests/agent-door/native.mjs`
+**Gap.** `chest.devices.list` and `chest.devices.revoke` are declared tools (revoke declares access). `chest.devices.repair`, queue pause, resume and retry, conflict states and the wipe request are undeclared, and the staff-versus-admin device scopes are not asserted.
 
 #### SURFACE-010 — Administration and security settings are classified, not withheld
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-005, BASE-AGENT-006, BASE-AGENT-007, BASE-ROLE-001
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-005, BASE-AGENT-006, BASE-AGENT-007, BASE-ROLE-001
 
 **Requirement.** An admin sponsor's agent can do the admin work its sponsor's admin scope allows. Admin reports and CSV (ADMIN-002) and storage limits (QUOTA-001) are standard. A space with members other than the sponsor is access. Staff invitations, roles and admin roles are access, plus external when an invitation goes outside the company. The settings in `chest.settings.update`, quarantine release and backups are security, and a restore is destructive and security too. A staff sponsor's agent gets no admin tool.
 
@@ -2223,12 +2223,12 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-005, BASE
 7. `chest.backup.restore` declares destructive and security and previews what it replaces before any decision.
 8. `chest.spaces.create` with only the sponsor as a member declares standard; with other members it declares access, direction widens.
 
-**Evidence.** None.
-**Gap.** No admin tools, and the integration API has no admin scope; ADMIN-002 itself is partial.
+**Evidence.** `src/chest/agent-door/work-tools.ts`; `src/chest/agent-door/delivery.ts`; `agent-surface.json`; `tests/agent-door/native.mjs`
+**Gap.** `chest.reports.get`, `chest.limits.set`, `chest.members.update` (space membership), `chest.settings.update` (sharing policy), `chest.quarantine.release` and `chest.spaces.create` are declared with their classes. Staff invitations, roles and admin roles, `chest.backup.restore`, the other security settings, the scoped activity CSV and `self_escalation` are not delivered or asserted.
 
 #### SURFACE-011 — Decisions and signatures are commitments
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008
 
 **Requirement.** For a sponsor who is the assigned reviewer, `chest.decisions.record` assigns, requests changes (standard) or approves an exact version under CHEST-08 (commitment). For a sponsor who is a signer, `chest.sign` applies the sponsor's signature under SIGN-001 (commitment), and only after the sponsor has accepted SIGN-001's consent disclosure. An agent's decision or signature always reads "<agent> for <person>" in the version history, the signature certificate and the audit.
 
@@ -2241,8 +2241,8 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE
 6. With commitment set to autonomous, a completed envelope signed by an agent shows "<agent> for <person>" on its certificate and in its audit trail.
 7. An approval or signature on a document that states a value and a counterparty records both with its commitment class.
 
-**Evidence.** None.
-**Gap.** No decision or signature tools, class declarations or agent attribution; decisions and signing are browser-only.
+**Evidence.** `src/chest/agent-door/work-tools.ts`; `agent-surface.json`; `tests/agent-door/native.mjs`
+**Gap.** `chest.decisions.record` assigns, requests changes and approves an exact version as a declared standard or commitment tool, and the journey runs it. `chest.sign` is undeclared, so agent signatures, the consent-disclosure refusal and the certificate attribution do not exist, and the commitment-policy points are asserted only inside the Base journey.
 
 #### SURFACE-012 — Limits and Pause agents
 
@@ -2263,7 +2263,7 @@ Agent surface · target · **partial** · From new · Cites BASE-AGENT-004, BASE
 
 #### SURFACE-013 — The records clerk journey under two company policies
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-007, BASE-AGENT-009, BASE-AGENT-013 · Register R-25
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-007, BASE-AGENT-009, BASE-AGENT-013 · Register R-25
 
 **Requirement.** `prompts/list` offers the records clerk's five jobs, each naming its clauses. A stranger agent proves the surface end to end through MCP alone. It runs the same seeded week under two company policies set in Chest's Agents settings, and each step goes as the policy in force says. Policy A: every class autonomous (`*`). Policy B: standard autonomous; sensitive review; external approval by the sponsor; access, security, destructive and commitment blocked.
 
@@ -2277,8 +2277,8 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-007, BASE
 7. Undo works on one filing under each policy.
 8. Activity shows every step as "<agent> for <person>" at 1440 and 390, and the audit counts zero calls whose decision differs from the policy revision in force.
 
-**Evidence.** None.
-**Gap.** Needs SURFACE-001 to SURFACE-012 and the Base door. Register row R-25 records the same journey from stock vendor clients.
+**Evidence.** `agent-surface.json`; `tests/agent-door/native.mjs`; `docs/agent-adoption.md`
+**Gap.** Before setup is answered the first call returns `policy_unset`, OAuth discovery and the Base journey run under autonomous and held policies, and one `records-clerk` prompt is offered. The five-job prompt list, the seeded week of W-9s, invoices and a contract, policy B's two approvals and its review feed, and the Activity screens at 1440 and 390 are not delivered, and the surface clauses it needs are still partial.
 
 ## Later
 
@@ -2286,7 +2286,7 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-007, BASE
 
 #### SPACE-003 — Hand ownership of one file to a colleague
 
-Later · target · **partial** · From SPACE-001
+Later · target · **done** · From SPACE-001
 
 **Requirement.** Outside offboarding, a user can hand ownership of one personal-area file or folder to a colleague, who gets an in-app and email request and accepts or declines. Until acceptance the sender stays owner. On acceptance the item moves to the recipient's area with its stable ID, versions, links and grants, and the sender stays editor unless they choose otherwise. Each step is audited.
 
@@ -2296,7 +2296,7 @@ Later · target · **partial** · From SPACE-001
 3. A declined offer changes nothing, and each step is audited.
 
 **Evidence.** `tests/chest/ownership.mjs`; `tests/chest/browser-ownership.mjs`
-**Gap.** Fresh-judge candidate: the old gap lists ownership offers with acceptance, decline, cancel and notices as delivered.
+**Gap.** None.
 
 #### SYNC-010 — Windows 10 22H2
 
@@ -2432,7 +2432,7 @@ Later · target · **missing** · Register R-22, R-23
 
 #### AUDIT-002 — File activity and view history for collaborators
 
-Later · target · **partial** · From AUDIT-001
+Later · target · **done** · From AUDIT-001
 
 **Requirement.** Each file's activity panel shows everyone with viewer access its edits, versions, comments, moves and sharing changes, and shows people who can edit it which colleagues viewed it and when, as Drive's activity dashboard does. Admins turn view history on or off per organization or group, each user can hide their own views, and guests' and link visitors' views appear only as counts unless the viewer is a manager. The panel follows current access and never reveals a viewer of something the requester cannot see.
 
@@ -2441,7 +2441,7 @@ Later · target · **partial** · From AUDIT-001
 2. A colleague who hides their views leaves the list, and turning view history off for the group removes it.
 
 **Evidence.** `tests/chest/audit.mjs`; `tests/chest/browser-audit.mjs`
-**Gap.** Point 2 passes, and point 1's one colleague's view shown to a contributor and no view history for a viewer are asserted (`tests/chest/audit.mjs`); the second colleague's name, the view times, and the viewer seeing edits are not.
+**Gap.** None.
 
 ### Move-in from incumbents
 
