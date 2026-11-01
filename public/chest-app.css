@@ -242,7 +242,7 @@ blockquote { margin: 0; }
 .ver-facts h3 .mono { font-family: var(--chest-font-ui); font-weight: 600; }
 .ver-facts p { color: var(--chest-body); font-size: 13px; overflow-wrap: anywhere; }
 .ver-facts p.mono { font-size: 12px; }
-.ver-facts .hash { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ver-facts .hash { overflow-wrap: anywhere; }
 .ver-links { margin-top: 6px !important; font-family: var(--chest-font-ui); }
 .ver-decide { display: grid; gap: 12px; align-content: start; min-width: 0; padding: 18px 20px; border-left: 1px solid var(--chest-line); }
 .ver-decide textarea { min-height: 60px; }

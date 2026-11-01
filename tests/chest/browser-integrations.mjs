@@ -81,6 +81,7 @@ try{
   const restoreToken=(await exchange.json()).access_token,restoreResponse=await context.request.post(`${h.origin}/api/chest/integrations/v1/items/${recovery.id}/versions/${a}/restore`,{headers:{authorization:'Bearer '+restoreToken,'idempotency-key':`browser-restore-${width}`},data:{}});assert.equal(restoreResponse.status(),200);const restored=await restoreResponse.json();assert.equal(restored.id,recovery.id);
   await admin.goto(`${h.origin}/app/items/${recovery.id}`);
   const history=admin.locator('.versions article.ver');assert.equal(await history.count(),3);const currentVersion=history.filter({has:admin.getByText('Current version',{exact:true})});assert.equal(await currentVersion.count(),1);
+  await currentVersion.getByText('Details',{exact:true}).click();
   await currentVersion.getByText('restore of version 1',{exact:false}).waitFor();
   for(const [version,bytes] of [[a,originalA],[b,originalB],[restored.current,originalA]]){
    const row=history.filter({has:admin.locator(`a[href="/api/chest/items/${recovery.id}/bytes/${version}?download=true"]`)});assert.equal(await row.count(),1,'sponsor sees each retained version');
