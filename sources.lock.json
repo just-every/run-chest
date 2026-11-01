@@ -221,7 +221,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "b3550956d6fe8a617e2e1bc16e14bdb822830b9312203a877bc90cd6024d9685",
+      "sha256": "7390eb687226b3c4c3c2b8b3e288d141cd2a95ccb67bc4b57b6fed566059909b",
       "executable": false
     },
     "DEMO.md": {
@@ -6021,7 +6021,7 @@
       "executable": false
     },
     "tests/chest/browser-ownership.mjs": {
-      "sha256": "bceedcccba12769aeea50ef818744c76bf6c582c96c0dcd369700e3c87555a08",
+      "sha256": "f47a0b46a32b7ad1cb3c6d71ed68f3761d475c9e7c1f220ae51e296ef6036275",
       "executable": false
     },
     "tests/chest/browser-preview.mjs": {
@@ -6284,8 +6284,12 @@
       "sha256": "a2d396358de292252922d82344defa476708fbbf127bfe63147ed3cbf1fd8315",
       "executable": false
     },
+    "tests/chest/ownership-proof.mjs": {
+      "sha256": "5cc244eddcf5855948986511d90432614df214f613c79670e0531358d3d5d01e",
+      "executable": false
+    },
     "tests/chest/ownership.mjs": {
-      "sha256": "967ab4caea2f179bab2dd05dbeead028b36d27e1a18e7c070f1add303dc63543",
+      "sha256": "cc0e0fcea777aacfc3fff44d087580fa5176b0dbe2ebce3a2703af94c835b74d",
       "executable": false
     },
     "tests/chest/photo.heic": {
