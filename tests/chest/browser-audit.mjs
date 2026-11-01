@@ -3,7 +3,7 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
 const h=await harness(),email=name=>[name,'example.test'].join('@'),cookies={};let browser;
-const viewZone='America/New_York',displayTime=at=>new Intl.DateTimeFormat('en-US',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short',timeZone:viewZone}).format(new Date(at));
+const viewZone='America/New_York',displayTime=at=>new Intl.DateTimeFormat('en-US',{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit',timeZone:viewZone}).format(new Date(at));
 try{
  await mkdir('test-results',{recursive:true});await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const cookie=await h.signIn(h.vars.OWNER_EMAIL);
  cookies.owner=cookie;
@@ -48,23 +48,23 @@ try{
   await contributor.goto(h.origin+`/app/items/${file.id}`);
   const events=contributor.locator('ol.events > li');
   for(const event of recorded){
-   const row=events.filter({hasText:event.actor}).filter({hasText:'opened it'}).filter({has:contributor.locator(`time[datetime="${event.at}"]`)});
+   const row=events.filter({hasText:event.actor.split('@')[0]}).filter({hasText:'opened it'}).filter({has:contributor.locator(`time[datetime="${event.at}"]`)});
    await row.waitFor();assert.equal(await row.locator('time').getAttribute('datetime'),event.at,'the displayed view time matches its public event');assert.equal(await row.locator('time').innerText(),displayTime(event.at),'the visible local time matches the public view record');
   }
   const proof=async(page,name)=>{for(const width of [1440,390]){await page.setViewportSize({width,height:1000});await page.screenshot({path:`test-results/${width}-audit-${name}.png`,fullPage:true})}await page.setViewportSize({width:1440,height:1000})};
   await proof(contributor,'contributor-activity');
-  await casey.reload();const viewerEvents=casey.locator('ol.events > li'),editRow=viewerEvents.filter({hasText:email('jordan')}).filter({hasText:'uploaded a new version'});
+  await casey.reload();const viewerEvents=casey.locator('ol.events > li'),editRow=viewerEvents.filter({hasText:'jordan'}).filter({hasText:'uploaded a new version'});
   await editRow.waitFor();assert.equal(await editRow.locator('time').getAttribute('datetime'),edit.at,'a viewer sees the actual edit timestamp');assert.equal(await editRow.locator('time').innerText(),displayTime(edit.at),'the viewer sees the edit on their own clock');
   assert.equal(await editRow.locator('p.quiet').innerText(),await casey.locator('.ver-current h3 > span').innerText(),'Activity labels the replacement with the same version number as Version history');
   assert.equal(await viewerEvents.filter({hasText:'opened it'}).count(),0,'a viewer sees no view-history rows');
-  assert.equal(await viewerEvents.filter({hasText:email('casey')}).count(),0,'the viewer identity does not leak through view history');
+  assert.equal(await viewerEvents.filter({hasText:'casey'}).count(),0,'the viewer identity does not leak through view history');
   await proof(casey,'viewer-activity');
   await h.api('/audit/privacy',cookies.jordan,{hidden:true});await contributor.reload();
-  assert.equal(await contributor.locator('ol.events > li').filter({hasText:email('jordan')}).filter({hasText:'opened it'}).count(),0,'hiding views removes the colleague from the browser list');
-  assert.ok(await contributor.locator('ol.events > li').filter({hasText:email('casey')}).filter({hasText:'opened it'}).count(),'the other colleague retains recorded opens');
+  assert.equal(await contributor.locator('ol.events > li').filter({hasText:'jordan'}).filter({hasText:'opened it'}).count(),0,'hiding views removes the colleague from the browser list');
+  assert.ok(await contributor.locator('ol.events > li').filter({hasText:'casey'}).filter({hasText:'opened it'}).count(),'the other colleague retains recorded opens');
   const group=await h.api('/groups',cookie,{name:'Private viewers',members:[email('casey')]});
   await h.api('/audit/privacy',cookie,{scope:'organization',enabled:true,groups:[group.id]});await contributor.reload();
-  assert.equal(await contributor.locator('ol.events > li').filter({hasText:email('casey')}).filter({hasText:'opened it'}).count(),0,'group suppression removes retained views');
+  assert.equal(await contributor.locator('ol.events > li').filter({hasText:'casey'}).filter({hasText:'opened it'}).count(),0,'group suppression removes retained views');
  }finally{for(const context of contexts)await context.close()}
  console.log('AUDIT-001 and AUDIT-002 browser passed: two colleague identities and public times, viewer edits without view history, hiding and group suppression; screens at 1440 and 390');
 }finally{await browser?.close();await h.close()}
