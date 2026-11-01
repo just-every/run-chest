@@ -173,7 +173,7 @@
       "executable": false
     },
     ".github/workflows/verify.yml": {
-      "sha256": "bcf88bcef9ebc94eeda06563ed45c3d5012092ac8f2750bba44c1e08da32905b",
+      "sha256": "f55e31d252206f88c26733546861b59d5a1d0aba009bf3d8d20c1d42f146b8a8",
       "executable": false
     },
     ".gitignore": {
@@ -6425,7 +6425,7 @@
       "executable": false
     },
     "verification.json": {
-      "sha256": "ea88aabb43e16056f2dc476dfb87cc7806e6bdfe93e7b4da5605bab27c02499e",
+      "sha256": "5e042989e19079a6db9a10de0ef6111aa9392840c848d0fbba2f43916731b778",
       "executable": false
     },
     "vite.config.ts": {
