@@ -71,7 +71,7 @@ try{
    const page=pages[person],opened=await go(page,`/app/items/${item.id}`);assert.equal(opened.status(),200);const form=createForm(page);assert.equal(await form.count(),1,person+' sees the Create link form');
    assert.equal(await form.getByLabel('Audience').inputValue(),audience);assert.equal(await form.getByLabel('Link role').inputValue(),'viewer');
    await proof(page,'default-'+person);await press(form,'Create link');
-   const url=(await page.locator('pre.receipt').innerText()).trim(),links=(await h.api(`/items/${item.id}`,cookies[person])).links;assert.equal(links.length,1);assert.equal(links[0].audience,audience);assert.equal(links[0].role,'viewer');
+   const url=(await page.locator('.flash input').inputValue()).trim(),links=(await h.api(`/items/${item.id}`,cookies[person])).links;assert.equal(links.length,1);assert.equal(links[0].audience,audience);assert.equal(links[0].role,'viewer');
    cases.push({person,item,bytes,url,saved:links[0],reader:person==='owner'?'jordan':'owner'});
   }
   await saveDefaults('organisation','organisation','commenter');await saveDefaults(`group:${group.id}`,'restricted','commenter');
