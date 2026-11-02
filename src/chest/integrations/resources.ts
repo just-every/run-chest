@@ -6,12 +6,14 @@ import { fromBase64 } from '../blobs'
 import { action, resource, type Authorized } from './auth'
 import { listItems, scopedSearch, brief, versions, paginate } from './reads'
 import { get } from '../store'
+import { activityReport, activityReportCsv } from './reports'
 import { requestsOn, describeRequest } from '../files/file-requests'
 import type { FileRequest } from '../files/model'
 // OAuth APIs retain their native credential purpose and read formats. Mutations
 // enter the same policy, approval, audit and native service path as MCP.
 export async function resourceCall(env:Bindings,auth:Authorized,method:string,path:string,input:any,url:URL,key:string){
  const [head,id,sub,version,verb]=path.split('/').filter(Boolean)
+ if(method==='GET'&&head==='administration'&&id==='audit'&&(!sub||sub==='export'))return sub==='export'?activityReportCsv(env,auth,url.searchParams):activityReport(env,auth,url.searchParams)
  const invoke=async(tool:string,args:Record<string,unknown>)=>{
   const answer=await chestAgentDoor(env).invoke(`chest.${tool}`,args,{person:{id:auth.session.operator.id},agent:{id:localAgentId(auth),name:auth.client.payload.name,specialist:'records clerk'},scopes:auth.grant.payload.actions,clientId:auth.tokenId})
   if(answer.outcome==='refused')throw new ChestError(answer.code??'agent_refused',typeof answer.fields?.native_status==='number'?answer.fields.native_status:answer.code==='resource_unavailable'?403:answer.code?.includes('conflict')?409:answer.code?.includes('budget')?429:403)
