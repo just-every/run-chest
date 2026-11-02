@@ -16,7 +16,7 @@ import { rank, type Space } from "../files/model";
 import { agentSession, humanSession, type HumanSessions } from "./identity.ts";
 import { itemContext, mutation } from "./native.ts";
 import { standard, exposure, recipientRisk } from "./risk.ts";
-import { object, text, id, target, result } from "./schemas.ts";
+import { object, text, id, bool, target, result } from "./schemas.ts";
 const array = { type: "array", items: text, maxItems: 20 };
 type Spec = {
   name: string;
@@ -27,7 +27,7 @@ type Spec = {
   input?: (a: any) => any;
   classes?: ToolDefinition["classes"];
   kind?: "create" | "space" | "share" | "member" | "restore";
-  records?: string[];
+  records?: string[] | ((a: any) => string[] | undefined);
   action?: "contribute" | "manage" | "share";
   classify?: (a: any, c: ToolContext) => Promise<ClassAndFacts[]>;
 };
@@ -230,9 +230,13 @@ export function actionTools(
     {
       name: "access.narrow",
       scope: "share",
-      schema: object({ id, principal: id }, ["id", "principal"]),
+      schema: object({ id, principal: id, makePrivate: bool }, ["id"]),
       clauses: ["SURFACE-007", "SHARE-007"],
-      path: (a) => `/items/${encodeURIComponent(a.id)}/unshare`,
+      // `principal` removes one named grant; `makePrivate` revokes every link on the item and keeps named people.
+      path: (a) =>
+        `/items/${encodeURIComponent(a.id)}/${a.makePrivate ? "make-private" : "unshare"}`,
+      input: (a) => (a.makePrivate ? {} : { id: a.id, principal: a.principal }),
+      records: (a) => (a.makePrivate ? ["link", "public-link"] : undefined),
       action: "share",
     },
     {
@@ -423,6 +427,10 @@ export function actionTools(
       },
       async run(a, c) {
         await resolve(a, c);
+        if (spec.name === "access.narrow" && !a.makePrivate === !a.principal)
+          throw new ToolRefusal("narrow_target_required");
+        const records =
+          typeof spec.records === "function" ? spec.records(a) : spec.records;
         const data = spec.input
             ? spec.input(a)
             : {
@@ -437,9 +445,11 @@ export function actionTools(
             spec.name,
             spec.path(a),
             data,
-            spec.records,
+            records,
           );
         // Native record changes feed the shared audit/event vocabulary.
+        // Narrowing reports on the item it narrowed, not the link rows it changed.
+        if (spec.name === "access.narrow") result.id = a.id;
         if (result.id)
           c.emit(
             `item.${spec.name.split(".").at(-1)}`,
@@ -449,11 +459,11 @@ export function actionTools(
         const resource =
           spec.kind === "space" || spec.kind === "member"
             ? `chest://space/${encodeURIComponent(result.id)}`
-            : spec.records?.includes("file-request")
+            : records?.includes("file-request")
               ? `chest://request/${encodeURIComponent(result.id)}`
-              : spec.records?.includes("link")
+              : records?.includes("link") && spec.name !== "access.narrow"
                 ? `chest://link/${encodeURIComponent(result.id)}`
-                : spec.records?.includes("comment")
+                : records?.includes("comment")
                   ? `chest://item/${encodeURIComponent(String(a.id))}`
                   : `chest://item/${encodeURIComponent(result.id)}`;
         const previous = result.before?.find(

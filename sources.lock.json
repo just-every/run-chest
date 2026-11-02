@@ -193,7 +193,7 @@
       "executable": false
     },
     "agent-surface.json": {
-      "sha256": "1ae23ebd6ffae87c85c618e9186c9328427c143e27825b5f2e61aeb0a17d59dc",
+      "sha256": "e3f102cc4531e2ad3d6ce1fec7385d7fefaeb4bd655b4f72de37d49c4d01774c",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -257,7 +257,7 @@
       "executable": false
     },
     "docs/agents.md": {
-      "sha256": "eb65050889750c0c7bd56d3e0f39d39a80248519ba4ced1250e8f224f96964dc",
+      "sha256": "05a86abb48b65c22a5afef0c269685c606bccf7cec56d35aa4b5913b8976604e",
       "executable": false
     },
     "docs/ask.md": {
@@ -329,7 +329,7 @@
       "executable": false
     },
     "docs/integrations.md": {
-      "sha256": "eb6b78e93546be51dbaf1a8128a30de92c44f46ab4a0bc7254811c7112e6334a",
+      "sha256": "535f3c02942d2fcfc02f32dce37410c07840a012900caea2fde967ae7348cbe9",
       "executable": false
     },
     "docs/introduction.md": {
@@ -2209,7 +2209,7 @@
       "executable": false
     },
     "src/chest/agent-door/actions.ts": {
-      "sha256": "e3d89fbb4eeb96146b103f3f9a4d70d0a7a56a396722f67f2260648db98a26f3",
+      "sha256": "5d3f55280d9671d40463834ee0a613fbbf2c2b2a6e5bdbf037fc48a115a572d0",
       "executable": false
     },
     "src/chest/agent-door/delivery.ts": {
@@ -2229,7 +2229,7 @@
       "executable": false
     },
     "src/chest/agent-door/native.ts": {
-      "sha256": "e5abefdab4dbf7109e376e2d22d03c468e0db0cfbacbb2af43b58f482dfe6dc4",
+      "sha256": "77b8cdf298a7cdb7001955e898e51ae93116e9b2017cdad60221ea1902de1863",
       "executable": false
     },
     "src/chest/agent-door/plans.ts": {
@@ -2449,7 +2449,7 @@
       "executable": false
     },
     "src/chest/files/exposure.ts": {
-      "sha256": "90974ce9cfcdfd14d49577811e814c9ca3910117ead949b352e1a4cc5d715790",
+      "sha256": "9142232dd65c39ca55d97b7205c165b104ec9182f63d931d1a214ba9f824dde6",
       "executable": false
     },
     "src/chest/files/file-requests.ts": {
@@ -2901,7 +2901,7 @@
       "executable": false
     },
     "src/chest/integrations/resources.ts": {
-      "sha256": "a5df2d003c9011fc752a62323e9c32baf37024f12438ee5a4f12ca78d5e31430",
+      "sha256": "21f905d72919f7be6838cbe641b296e2ff10dc694b36fb6c13050b1487b967bb",
       "executable": false
     },
     "src/chest/integrations/secrets.ts": {
@@ -6077,7 +6077,7 @@
       "executable": false
     },
     "tests/chest/browser-integrations.mjs": {
-      "sha256": "401a7823b99f4c4abc49f1b5e09cfd1dc59b8c948fa78a5a186adafcafd2fec4",
+      "sha256": "e6c6b33a2c4144c7baf13d7e0c6edbd689e3202d826336c1a23a31b8d57f6e64",
       "executable": false
     },
     "tests/chest/browser-link-discussions.mjs": {
@@ -6249,7 +6249,7 @@
       "executable": false
     },
     "tests/chest/integrations.mjs": {
-      "sha256": "89894ff9f5836ebda6670cd4be6224b941d56bc248c164a6707c77aba734e499",
+      "sha256": "21d775292a9203ef950ea2ba71d4463f8ebf29388adf0c8e137741fbff0775f7",
       "executable": false
     },
     "tests/chest/journey.mjs": {

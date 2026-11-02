@@ -46,6 +46,7 @@ export async function resourceCall(env:Bindings,auth:Authorized,method:string,pa
   if(method==='POST'&&sub==='rename')tool='items.update'
   if(method==='POST'&&sub==='shares')tool='share'
   if(method==='POST'&&sub==='unshare')tool='access.narrow'
+  if(method==='POST'&&sub==='make-private'){tool='access.narrow';args={id,makePrivate:true,idempotency_key:key}}
   if(method==='POST'&&sub==='links')tool='links.create'
   if(method==='POST'&&sub==='requests')tool='requests.create'
   if(method==='POST'&&sub==='pick'){tool='pick';args={id}}
@@ -55,6 +56,7 @@ export async function resourceCall(env:Bindings,auth:Authorized,method:string,pa
  if(answer.outcome==='refused')throw new ChestError(answer.code??'agent_refused',typeof answer.fields?.native_status==='number'?answer.fields.native_status:answer.code==='resource_unavailable'?403:answer.code?.includes('conflict')?409:answer.code?.includes('budget')?429:403)
  if(answer.outcome==='pending')return {state:'pending',approval:answer.approval,decision:answer.decision}
  const result=answer.result as any
+ if(sub==='make-private')return {revoked:result.revoked,removed:result.removed,grantsKept:result.grantsKept}
  if(tool==='files.read')return new Response(fromBase64(result.base64),{status:result.status,headers:{'content-type':result.mediaType??'application/octet-stream',...(result.contentRange?{'content-range':result.contentRange}:{})}})
  // Keep the established OAuth item response fields while the shared door
  // retains the exact native version and attribution in its saved result.

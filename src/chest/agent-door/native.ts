@@ -176,6 +176,13 @@ export async function mutation(
       ...(tool === "links.create"
         ? { link: executed.link, url: executed.url }
         : {}),
+      ...(tool === "access.narrow" && path.endsWith("/make-private")
+        ? {
+            revoked: executed.revoked,
+            removed: executed.removed,
+            grantsKept: executed.grantsKept,
+          }
+        : {}),
       ...(tool === "requests.create"
         ? { request: executed.request, url: executed.url }
         : {}),

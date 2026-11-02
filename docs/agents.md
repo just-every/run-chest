@@ -122,11 +122,13 @@ Input:
       "type": "string",
       "minLength": 1,
       "maxLength": 240
+    },
+    "makePrivate": {
+      "type": "boolean"
     }
   },
   "required": [
-    "id",
-    "principal"
+    "id"
   ],
   "additionalProperties": false
 }
