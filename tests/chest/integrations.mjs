@@ -156,7 +156,7 @@ try{
  console.log('PROBE SURFACE-010 1: real OAuth activity pages and CSV -> 305 scoped browser rows, content blind, separate consent, live intersection, scope and OAuth revocation stop streams and persisted reads');
  console.log('PROBE SURFACE-010 2: staff OAuth report request -> 403 '+staffBrowser.error+', matching the browser');
  // Pagination returns only stable IDs under the folder; current role/no-download still govern every door.
- const seen=[];let cursor=null;do{const result=await call(token,'/items?limit=2'+(cursor?'&cursor='+cursor:''));seen.push(...result.items.map(r=>r.id));cursor=result.nextCursor}while(cursor);assert.equal(new Set(seen).size,7);assert.ok(seen.includes(folder.id)&&!seen.includes(other.id));await call(token,`/items/${other.id}`,{status:403});
+ const seen=[];let cursor=null;do{const result=await call(token,'/items?limit=2'+(cursor?'&cursor='+cursor:''));seen.push(...result.items.map(r=>r.id));cursor=result.nextCursor}while(cursor);assert.equal(new Set(seen).size,7);assert.ok(seen.includes(folder.id)&&!seen.includes(other.id));await call(token,`/items/${other.id}`,{status:404});
  const search=await call(token,'/search?q=Searchable&type=documents&creator=me&limit=2');assert.equal(search.items.length,2);assert.ok(search.nextCursor);assert.ok(search.items.every(r=>initial.some(i=>i.id===r.id)));
  const uploadInput={parent:folder.id,name:'Idempotent.txt',base64:b64('One immutable upload')},first=await call(token,'/items',{method:'POST',body:uploadInput,key:'upload-once'});await h.stop();await h.start();const repeated=await call(token,'/items',{method:'POST',body:uploadInput,key:'upload-once'});assert.equal(repeated.id,first.id);assert.equal((await h.api(`/items/${folder.id}`,staff)).children.filter(i=>i.name==='Idempotent.txt').length,1);await call(token,'/items',{method:'POST',body:{...uploadInput,name:'Different.txt'},key:'upload-once',status:409});await call(token,'/items',{method:'POST',body:{parent:other.id,name:'Escape.txt',base64:b64('Escape')},key:'outside-folder',status:403});
  const uploadAudit=(await h.api('/audit',owner)).find(r=>r.action==='file.upload'&&r.object_id===first.id);assert.ok(uploadAudit,'upload audit exists');assert.equal(uploadAudit.actor,'agent:'+client.client.id,'native upload audit names its authenticated preparer');
@@ -420,8 +420,96 @@ try{
  const independent=await call(token,'/items',{method:'POST',body:{parent:folder.id,name:'Independent staff.txt',base64:b64('Still in owner storage')},key:'independent-staff-file'});
  const denied=await waitDelivery(token,blockedHook.subscription.id,d=>d.reason==='outbound_host_denied');assert.equal(denied.state,'failed');
  const independentBytes=await h.fetch(`/api/chest/integrations/v1/items/${independent.id}/bytes/${independent.current}`,{headers:{authorization:'Bearer '+token}});assert.equal(independentBytes.status,200);assert.equal(await independentBytes.text(),'Still in owner storage');
- // A current role/restriction or no-download change still wins over an existing OAuth grant.
- const controlled=await h.api('/spaces',owner,{name:'Current OAuth ACL'});await h.api(`/spaces/${controlled.id}/members`,owner,{members:[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:'staff@example.test',role:'viewer'}]});const sharedFolder=await h.api('/items',owner,{space:controlled.id,type:'folder',name:'Shared root'}),visibleFile=await h.api('/items',owner,{parent:sharedFolder.id,name:'Visible terms.txt',base64:b64('Shared original')}),hiddenFile=await h.api('/items',owner,{parent:sharedFolder.id,name:'Restricted terms.txt',base64:b64('Restricted original')});await h.api(`/items/${hiddenFile.id}/settings`,owner,{restricted:true});const reader=await authorize(client,staff,['read','download','picker'],[sharedFolder.id]);assert.ok(!(await call(reader.access_token,'/items')).items.some(i=>i.id===hiddenFile.id));await call(reader.access_token,`/items/${hiddenFile.id}`,{status:403});await h.api(`/items/${visibleFile.id}/settings`,owner,{noDownload:true});const noDownload=await h.fetch(`/api/chest/integrations/v1/items/${visibleFile.id}/bytes/${visibleFile.payload.current}`,{headers:{authorization:'Bearer '+reader.access_token}});assert.equal(noDownload.status,403);await h.api(`/spaces/${controlled.id}/members`,owner,{members:[{principal:h.vars.OWNER_EMAIL,role:'manager'}]});await call(reader.access_token,`/items/${visibleFile.id}/pick`,{method:'POST',body:{},status:403});
+ // SURFACE-002: metadata and retained versions conceal inaccessible items through both transports.
+ const controlled=await h.api('/spaces',owner,{name:'Current OAuth ACL'});
+ const aclMembers=[{principal:h.vars.OWNER_EMAIL,role:'manager'},{principal:'staff@example.test',role:'viewer'}];
+ await h.api(`/spaces/${controlled.id}/members`,owner,{members:aclMembers});
+ const sharedFolder=await h.api('/items',owner,{space:controlled.id,type:'folder',name:'Shared root'});
+ const visibleFile=await h.api('/items',owner,{parent:sharedFolder.id,name:'Visible terms.txt',base64:b64('synthetic-chest-1')});
+ const hiddenFile=await h.api('/items',owner,{parent:sharedFolder.id,name:'Restricted terms.txt',base64:b64('synthetic-chest-2')});
+ const outsideFile=await h.api('/items',owner,{space:controlled.id,name:'Outside terms.txt',base64:b64('synthetic-chest-3')});
+ const visibleUpdate=await h.api(`/items/${visibleFile.id}/versions`,owner,{base64:b64('synthetic-chest-4')});
+ await h.api(`/items/${hiddenFile.id}/versions`,owner,{base64:b64('synthetic-chest-5')});
+ await h.api(`/items/${hiddenFile.id}/settings`,owner,{restricted:true});
+ assert.equal((await h.api(`/items/${outsideFile.id}`,staff)).id,outsideFile.id,'the sponsor can open the existing item outside the grant');
+ assert.equal((await h.api(`/items/${hiddenFile.id}`,owner)).versions.length,2,'the restricted file has retained metadata to conceal');
+ await h.api(`/items/${hiddenFile.id}`,staff,undefined,403);
+ const aclReader=await authorize(client,staff,['read','download','picker'],[sharedFolder.id]);
+ const noRead=await authorize(client,staff,['download'],[sharedFolder.id]);
+ const missingId='synthetic-chest-404',concealed=[hiddenFile.id,outsideFile.id,missingId];
+ const httpRead=async(credential,id,versions=false)=>{
+  const response=await h.fetch(`/api/chest/integrations/v1/items/${id}${versions?'/versions?limit=1':''}`,{headers:credential?{authorization:'Bearer '+credential}:{}});
+  return {status:response.status,body:await response.text()};
+ };
+ const mcpRead=async(credential,name,id)=>{
+  const response=await h.fetch('/mcp/chest',{method:'POST',headers:{...(credential?{authorization:'Bearer '+credential}:{}),'content-type':'application/json','MCP-Protocol-Version':'2025-11-25',accept:'application/json, text/event-stream'},body:JSON.stringify({jsonrpc:'2.0',id:20,method:['tools','call'].join('/'),params:{name,arguments:{id}}})});
+  return {status:response.status,body:await response.json()};
+ };
+ // The native door answers a hidden, trashed, out-of-grant or missing item with one code and no distinct existence signal.
+ const mcpError=code=>response=>{assert.equal(response.status,200);assert.equal(response.body.result.isError,true);assert.deepEqual(JSON.parse(response.body.result.content[0].text),{code});assert.equal(response.body.result._meta['com.runeditrun/error'].code,code)};
+ const assertConcealed=async(ids,label)=>{
+  const absent=await httpRead(aclReader.access_token,missingId),absentVersions=await httpRead(aclReader.access_token,missingId,true);
+  assert.deepEqual(absent,{status:404,body:JSON.stringify({error:'not_found'})},label+' missing metadata');
+  assert.deepEqual(absentVersions,absent,label+' missing versions');
+  for(const id of ids){
+   assert.deepEqual(await httpRead(aclReader.access_token,id),absent,label+' metadata is existence blind');
+   assert.deepEqual(await httpRead(aclReader.access_token,id,true),absentVersions,label+' versions are existence blind');
+   for(const name of ['chest.items.get','chest.versions.list'])mcpError('resource_unavailable')(await mcpRead(aclReader.access_token,name,id));
+  }
+ };
+ const assertReadable=async()=>{
+  const metadata=await call(aclReader.access_token,`/items/${visibleFile.id}`);
+  assert.equal(metadata.id,visibleFile.id);assert.equal(metadata.name,'Visible terms.txt');
+  assert.equal(metadata.current,visibleUpdate.payload.current);assert.equal(metadata.sha256,createHash('sha256').update('synthetic-chest-4').digest('hex'));
+  const firstPage=await call(aclReader.access_token,`/items/${visibleFile.id}/versions?limit=1`);
+  assert.equal(firstPage.items.length,1);assert.ok(firstPage.nextCursor);
+  const secondPage=await call(aclReader.access_token,`/items/${visibleFile.id}/versions?limit=1&cursor=${firstPage.nextCursor}`);
+  const retained=[...firstPage.items,...secondPage.items];assert.equal(retained.length,2);assert.equal(secondPage.nextCursor,null);
+  assert.deepEqual(retained.map(v=>v.id).sort(),[visibleFile.payload.current,visibleUpdate.payload.current].sort());
+  assert.deepEqual(retained.map(v=>v.checksum).sort(),['synthetic-chest-1','synthetic-chest-4'].map(value=>createHash('sha256').update(value).digest('hex')).sort());
+  const metadataRpc=await mcpRead(aclReader.access_token,'chest.items.get',visibleFile.id);
+  assert.equal(metadataRpc.status,200);assert.equal(metadataRpc.body.result.isError,false);assert.equal(metadataRpc.body.result.structuredContent.id,visibleFile.id);assert.equal(metadataRpc.body.result.structuredContent.current,metadata.current);
+  const versionsRpc=await mcpRead(aclReader.access_token,'chest.versions.list',visibleFile.id);
+  assert.equal(versionsRpc.status,200);assert.equal(versionsRpc.body.result.isError,false);
+  assert.deepEqual(versionsRpc.body.result.structuredContent.versions.map(v=>v.id).sort(),retained.map(v=>v.id).sort());
+ };
+ await assertReadable();
+ assert.ok(!(await call(aclReader.access_token,'/items')).items.some(i=>concealed.includes(i.id)));
+ await assertConcealed(concealed,'current ACL');
+ // Scope and authentication errors are independent of whether the requested item exists.
+ for(const id of [visibleFile.id,...concealed]){
+  for(const versions of [false,true]){
+   assert.deepEqual(await httpRead(noRead.access_token,id,versions),{status:403,body:JSON.stringify({error:'oauth_action_outside_grant'})});
+   assert.deepEqual(await httpRead(null,id,versions),{status:401,body:JSON.stringify({error:'oauth_authentication_required'})});
+  }
+  for(const name of ['chest.items.get','chest.versions.list']){
+   const refused=await mcpRead(noRead.access_token,name,id);assert.equal(refused.status,403);assert.equal(refused.body.error.data.code,'insufficient_scope');
+   const anonymous=await mcpRead(null,name,id);assert.equal(anonymous.status,401);assert.equal(anonymous.body.error.message,'Unauthorized');
+  }
+ }
+ await h.stop();await h.start();
+ await assertReadable();await assertConcealed(concealed,'restarted ACL');
+ // Download refusal remains explicit for a visible file; metadata and versions remain readable.
+ await h.api(`/items/${visibleFile.id}/settings`,owner,{noDownload:true});
+ const noDownload=await h.fetch(`/api/chest/integrations/v1/items/${visibleFile.id}/bytes/${visibleUpdate.payload.current}`,{headers:{authorization:'Bearer '+aclReader.access_token}});
+ assert.equal(noDownload.status,403);
+ assert.equal((await call(aclReader.access_token,`/items/${visibleFile.id}`)).canDownload,false);await assertReadable();
+ await h.api(`/spaces/${controlled.id}/members`,owner,{members:[aclMembers[0]]});
+ await assertConcealed([visibleFile.id,...concealed],'revoked space access');
+ await call(aclReader.access_token,`/items/${visibleFile.id}/pick`,{method:'POST',body:{},status:403});
+ await h.stop();await h.start();
+ await assertConcealed([visibleFile.id,...concealed],'revoked space access after restart');
+ // Restoring access restores reads, but revoking the credential refuses every item before lookup.
+ await h.api(`/spaces/${controlled.id}/members`,owner,{members:aclMembers});await assertReadable();
+ await h.api(`/integrations/grants/${aclReader.grant}/revoke`,staff,{});
+ const assertRevokedGrant=async()=>{
+  for(const id of [visibleFile.id,...concealed]){
+   for(const versions of [false,true])assert.deepEqual(await httpRead(aclReader.access_token,id,versions),{status:401,body:JSON.stringify({error:'oauth_grant_revoked'})});
+   for(const name of ['chest.items.get','chest.versions.list'])assert.equal((await mcpRead(aclReader.access_token,name,id)).status,401);
+  }
+ };
+ await assertRevokedGrant();await h.stop();await h.start();await assertRevokedGrant();
+ console.log('SURFACE-002 existence-blind metadata and versions: scoped HTTP and native MCP door, live ACL, credential revocation and Worker restart passed');
  const noMutations=await authorize(client,staff,['upload'],undefined,{budget_mutations:'0'});await call(noMutations.access_token,'/items',{method:'POST',body:{parent:folder.id,name:'Budget refused.txt',base64:b64('Never published')},key:'budget-refused',status:429});assert.ok(!(await h.api(`/items/${folder.id}`,staff)).children.some(i=>i.name==='Budget refused.txt'));
  // Budgets, own-grant revoke, read-only/allowlist/block and live organization/group policy.
  const small=await authorize(client,staff,['read'],undefined,{budget_requests:'1'});await call(small.access_token,'/items');await call(small.access_token,'/items',{status:429});await h.api(`/integrations/grants/${grant.grant}/revoke`,staff,{});await call(token,'/items',{status:401});await call(token,narrowPath,{method:'POST',body:{},key:narrowKey,status:401});assert.equal((await h.raw(publicPath)).status,410,'a revoked-grant replay cannot revive the public link');

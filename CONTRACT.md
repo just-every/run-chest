@@ -2313,6 +2313,7 @@ EDIT-003 runtime source is judged from commit 084c67e0dc9e5ba79703b5acad7e84d3fb
 ADMIN-006 runtime source is judged from commit 9d951ccdecac60aea1be5f560119bf2cd475db31 (30 October 2026). Its final candidate strengthens selected-item isolation and records the recovery journey in Verify; the runtime bytes are unchanged from that source commit.
 
 SURFACE-001 and SURFACE-002 retain main's missing Status, Evidence and Gap pending a new clause judgment. The replay supplies the candidate's registry, generated docs and native door assertions without accepting the clause.
+SURFACE-002's existence-blind metadata and version assertions from candidate b2ccfb7d8a5ea3fbd259e2810b94c7458f7c91a3 are replayed in `tests/chest/integrations.mjs` (scoped HTTP and legacy MCP reads of a hidden, trashed or out-of-grant item return 404, with live ACL, credential revocation and Worker restart). Its missing Status, Evidence and Gap below retain main's current judgment pending a new ruling; the integration API proof does not establish the shared Base Agent door, resources, activity or event-feed parity.
 
 SURFACE-003 retains main's partial Status, Evidence and Gap pending a new clause judgment; its native byte-tool assertions remain in the replay.
 

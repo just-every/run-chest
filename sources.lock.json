@@ -221,7 +221,7 @@
       "executable": false
     },
     "CONTRACT.md": {
-      "sha256": "932831a099aab0f0955f01ceaf6fcf61cb27d2ea1efc938ffa5cad27293929a8",
+      "sha256": "dc101174fbea0a45512dfc358f3f660c3f82a05074eca65f863269600de140da",
       "executable": false
     },
     "DEMO.md": {
@@ -2861,7 +2861,7 @@
       "executable": false
     },
     "src/chest/integrations/auth.ts": {
-      "sha256": "c19f2b55803b97372524d5ff3ab29f54a46abdbb30472b6b0886566db1275608",
+      "sha256": "255bd7759f333ab65974de3a2cf32fb3a2b7a44f4b23d472c40b170cf5751ab7",
       "executable": false
     },
     "src/chest/integrations/capacity.ts": {
@@ -2905,7 +2905,7 @@
       "executable": false
     },
     "src/chest/integrations/resources.ts": {
-      "sha256": "2c25c61cbe01a12b00a50d3f69a7f94f634eed79f946235be99f98e23ac6cdd8",
+      "sha256": "9640512517fc452bc1750f7e00dc551a3f4f3779f379fb818dc3b25057e9c398",
       "executable": false
     },
     "src/chest/integrations/secrets.ts": {
@@ -6253,7 +6253,7 @@
       "executable": false
     },
     "tests/chest/integrations.mjs": {
-      "sha256": "7c2b1a893d5922f1f52ad838b58df73694ffa377c10b36534a7f6286fc18db4e",
+      "sha256": "02eda74f9d7ee03c93d27b664d381def13a66be0c5d3e790a9542f2145af26c2",
       "executable": false
     },
     "tests/chest/journey.mjs": {

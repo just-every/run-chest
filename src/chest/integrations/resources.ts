@@ -25,10 +25,11 @@ export async function resourceCall(env:Bindings,auth:Authorized,method:string,pa
  if(method==='GET'){
   if(head==='items'&&!id)await invoke('items.list',{limit:Math.min(Number(url.searchParams.get('limit')||100),100)})
   if(head==='search')await invoke('search',{q:url.searchParams.get('q')??''})
-  if(head==='items'&&id&&!sub)await invoke('items.get',{id})
+  // Metadata and version reads conceal inaccessible items (404) before the native door answers.
+  if(head==='items'&&id&&!sub){await resource(env,auth,id,'read');await invoke('items.get',{id})}
   if(head==='items'&&sub==='shares')await invoke('access.list',{id})
   if(head==='items'&&sub==='requests')await invoke('requests.list',{id})
-  if(head==='items'&&sub==='versions')await invoke('versions.list',{id})
+  if(head==='items'&&sub==='versions'){await resource(env,auth,id,'read');await invoke('versions.list',{id})}
   if(head==='requests'&&id){const row=await get<FileRequest>(env,'file-request',id);await resource(env,auth,row.payload.folder,'request');await invoke('requests.list',{id:row.payload.folder})}
  }
 
