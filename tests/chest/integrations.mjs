@@ -146,9 +146,13 @@ try{
  await assertStopped(reportToken,403,'admin_required');
  await h.api('/administration/roles',owner,{email:report.adminEmail,role:'audit-reporting',scope:'groups',groups:[report.group.id]});
  const erasedReport=await issueReport();
- await h.api('/erasure',owner,{email:report.adminEmail,confirm:report.adminEmail});
- await assertStopped(erasedReport.access_token,401,'oauth_token_expired');
- await h.stop();await h.start();await assertStopped(erasedReport.access_token,401,'oauth_token_expired');
+ // Current main holds identity erasure while retained agent decision custody exists, so nothing is erased and the grant stays unchanged.
+ const heldReport=await h.api('/erasure',owner,{email:report.adminEmail,confirm:report.adminEmail});assert.equal(heldReport.payload.state,'held');assert.ok(heldReport.payload.targets.some(t=>t.store==='agent decision custody'&&t.status==='held'));
+ assert.deepEqual(await pages(erasedReport.access_token),expected.rows,'a held erasure leaves the sponsor and scoped report authority unchanged');
+ // An offboarded sponsor's grant is revoked and refused with a stable error before and after restart.
+ await h.api('/people',owner,{action:'offboard',email:report.adminEmail,to:h.vars.OWNER_EMAIL});
+ await assertStopped(erasedReport.access_token,401,'oauth_grant_revoked');
+ await h.stop();await h.start();await assertStopped(erasedReport.access_token,401,'oauth_grant_revoked');
  console.log('PROBE SURFACE-010 1: real OAuth activity pages and CSV -> 305 scoped browser rows, content blind, separate consent, live intersection, scope and OAuth revocation stop streams and persisted reads');
  console.log('PROBE SURFACE-010 2: staff OAuth report request -> 403 '+staffBrowser.error+', matching the browser');
  // Pagination returns only stable IDs under the folder; current role/no-download still govern every door.
