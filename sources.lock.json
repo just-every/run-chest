@@ -6061,7 +6061,7 @@
       "executable": false
     },
     "tests/chest/browser-files.mjs": {
-      "sha256": "b0886d7e8dc2faff18f20f7818380e2ee7e9994f6693af080841b56aff387d6e",
+      "sha256": "ae7ebf0fed17516eac58c73c4af725ad665aa9dae60923ddf8eef746ec248ffd",
       "executable": false
     },
     "tests/chest/browser-flow.mjs": {
@@ -6185,7 +6185,7 @@
       "executable": false
     },
     "tests/chest/files.mjs": {
-      "sha256": "4a6e2623f8dae158f222020140ed73718d07db53c6b80d7ef1da9d0fe995b771",
+      "sha256": "f4e9f291fc086c68583f682ddddc1351dfea6fc0cb92ee7f9b5c1fef0b196b00",
       "executable": false
     },
     "tests/chest/filing.mjs": {
