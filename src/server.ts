@@ -47,9 +47,12 @@ export default withDemo(withOutboundPolicy({
     const env = runtimeBindings(original)
     const business = await businessSettings(env).handle(request)
     if (business) return business
-    const metadataAlias=new URL(request.url).pathname==='/.well-known/oauth-protected-resource/mcp/chest'
-    const agent = await chestAgentDoor(env).handle(metadataAlias?new Request(new URL('/.well-known/oauth-protected-resource/mcp',request.url),request):request)
-    if (agent) return documentResponse(agent)
+    const agentPath = new URL(request.url).pathname
+    if (agentPath === '/mcp' || agentPath === '/mcp/chest' || agentPath === '/agents' || agentPath.startsWith('/agents/') || agentPath === '/api/rer/agent-decisions' || agentPath === '/api/rer/agent-policy' || agentPath.startsWith('/.well-known/oauth-protected-resource')) {
+      const metadataAlias = agentPath === '/.well-known/oauth-protected-resource/mcp/chest'
+      const agent = await chestAgentDoor(env).handle(metadataAlias ? new Request(new URL('/.well-known/oauth-protected-resource/mcp', request.url), request) : request)
+      if (agent) return documentResponse(agent)
+    }
     if(new URL(request.url).pathname.startsWith('/app') || new URL(request.url).pathname.startsWith('/api/chest'))execution.waitUntil(Promise.all([sweepBackups(env),collectionSweep(env),sweepLinkRepairs(env),sweepAgents(env),sweepSignatures(env)]))
     const publicPage = await setupStateResponse(request, env) ?? await lobbyResponse(request, env, identity)
     if (publicPage) return documentResponse(publicPage)

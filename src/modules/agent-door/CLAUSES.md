@@ -7,6 +7,18 @@ requirements proves no implementation. New Status rows start missing; later
 syncs retain the seed's status, evidence and gap, including a newer judgment.
 MCP method names below use spaced slashes; wire names omit those spaces.
 
+Native subject erasure under BASE-DATA-003 overrides the personal fields and
+payload replay described in BASE-AGENT-009 and BASE-AGENT-012. Keep value-free
+decision fields and the existing audit sequence plus the native erasure
+tombstone; in-window replay refuses without executing or echoing erased payload.
+Installation-private keyed legacy replay aliases replace erased personal keys
+only until the call's replay horizon: the fixed 30-day `REPLAY_WINDOW_MS` after
+completion where no horizon exists. Delete aliases with their call at expiry.
+An old key after expiry is a new request under current authorization and cannot
+recover the erased value. Aliases never enter archives, exports or restore.
+The adoption guide defines the map, native transaction and restore custody.
+This clarification does not promote any clause judgment.
+
 ## Target clauses
 
 ### Agent surface (Base-delivered)
@@ -200,7 +212,7 @@ MCP method names below use spaced slashes; wire names omit those spaces.
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
-| `BASE-AGENT-001` | One MCP door per seed | target | partial | `agent-surface.json`; `tests/agent-door/owner.mjs`; `tests/agent-door/network.mjs`; rer 0.2.91 verify (rer-verify shard): 8352/8352 BASE-AGENT points; `tests/agent-door/native.mjs`; `tests/chest/integrations.mjs` | The clause stays partial until a ct judgment. |
+| `BASE-AGENT-001` | One MCP door per seed | target | missing | | Not yet judged through this seed's own doors. |
 | `BASE-AGENT-002` | The seed's jobs are tools, through the UI's own actions | target | missing | | Not yet judged through this seed's own doors. |
 | `BASE-AGENT-003` | Records are resources | target | missing | | Not yet judged through this seed's own doors. |
 | `BASE-AGENT-004` | Business identity and short-lived, audience-bound tokens | target | missing | | Not yet judged through this seed's own doors. |
