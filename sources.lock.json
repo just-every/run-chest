@@ -329,7 +329,7 @@
       "executable": false
     },
     "docs/integrations.md": {
-      "sha256": "535f3c02942d2fcfc02f32dce37410c07840a012900caea2fde967ae7348cbe9",
+      "sha256": "1d3dce499a0e27196aa01e5b6c9590511d877f420626b05b20b7d21dfddefd24",
       "executable": false
     },
     "docs/introduction.md": {
@@ -6249,7 +6249,7 @@
       "executable": false
     },
     "tests/chest/integrations.mjs": {
-      "sha256": "21d775292a9203ef950ea2ba71d4463f8ebf29388adf0c8e137741fbff0775f7",
+      "sha256": "1f6582f57827f6b8ba7c0b7e1a40ca5ecfbefc3a9849f277250d026544f45006",
       "executable": false
     },
     "tests/chest/journey.mjs": {

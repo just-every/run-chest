@@ -39,6 +39,8 @@ The response contains a bearer `access_token`, grant ID, scopes and expiry. Gran
 
 Grant budgets optionally cap calls, mutations and original bytes over the grant’s 24-hour lifetime. Omitted or blank budget parameters mean no grant limit for that dimension; an explicit 0 refuses that work. The granter can change each choice on the consent form before authorizing. Existing saved grants retain their numeric limits and usage. See [Agent limits and budgets](./agents.md) for installation capacity and pacing, which remain independent of grant budgets. API calls spend one request, including idempotent replays; original reads charge the selected original's full size even when requesting a range. Mutations charge newly admitted or restored version sizes. A successful webhook attempt spends a request before sending. A limit refusal is HTTP 429. A concurrent change can refuse a request rather than exceed its budget; reusing the same mutation key is safe.
 
+Quarantined originals return the same refusal as the browser, including retained versions and range reads. A byte allowance refusal returns HTTP 429, emits only the error document and leaves the byte allowance unchanged. Revoked access remains refused after a restart. Clients should check the retained size and SHA-256 before accepting an original.
+
 ## HTTP API
 
 Use `Authorization: Bearer TOKEN`. The base is `/api/chest/integrations/v1`. Reads paginate with `limit` (1–100, default 25) and opaque `cursor`; follow `nextCursor` until null. Cursors are positions, never access grants. No inaccessible item contributes a result or a count.
