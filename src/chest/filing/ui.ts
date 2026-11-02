@@ -6,7 +6,7 @@ import type { Space } from '../files/model'
 import { esc, field, hidden, select, form, card, stamp } from '../ui-shared'
 import { pathOf } from '../files/exposure'
 import { intakeExecute } from './intake'
-import { intakePage } from './ui-intake'
+import { intakePage, senderFields } from './ui-intake'
 import { rulesExecute } from './rules'
 import { batchesExecute } from './batches'
 import { batchPanel } from './ui-batches'
@@ -23,7 +23,7 @@ export async function filingPage(env:Bindings,s:Session,url:URL):Promise<string|
  const folders=[...all.values()].filter(e=>e.row.payload.type==='folder'&&!e.state.trash&&allowed(e,'manage')).map(e=>({id:e.row.id,label:pathOf(all,e.row.id)})).sort((a,b)=>a.label.localeCompare(b.label))
  if(url.pathname==='/app/filing/intake'){
   const data:any=await intakeExecute(env,s,'GET',['filing','intake'],{})
-  const configs=data.intakes.map((r:any)=>`<li><strong>${esc(r.payload.address)}</strong> → ${item(r.payload.folder,all.has(r.payload.folder)?pathOf(all,r.payload.folder):'Folder')}<p class="quiet">${r.payload.enabled?'Enabled':'Paused'} · configured by ${esc(r.payload.by)}</p>${form('/filing/intake',hidden('space',r.payload.space)+hidden('folder',r.payload.folder)+hidden('address',r.payload.address)+hidden('enabled',r.payload.enabled?'false':'true'),r.payload.enabled?'Pause intake':'Enable intake',url.pathname,inline)}</li>`).join('')
+  const configs=data.intakes.map((r:any)=>`<li><strong>${esc(r.payload.address)}</strong> → ${item(r.payload.folder,all.has(r.payload.folder)?pathOf(all,r.payload.folder):'Folder')}<p class="quiet">${r.payload.enabled?'Enabled':'Paused'} · configured by ${esc(r.payload.by)}</p><p>${r.payload.senderScope==='exact'?`Only envelope sender: <strong>${esc(r.payload.allowedSender)}</strong>`:'Any sender · no sender restriction'}</p>${form('/filing/intake',hidden('space',r.payload.space)+hidden('folder',r.payload.folder)+hidden('address',r.payload.address)+hidden('enabled',r.payload.enabled?'false':'true'),r.payload.enabled?'Pause intake':'Enable intake',url.pathname,inline)}<details class="disclosure"><summary class="btn btn-outline">Change sender restriction</summary>${form('/filing/intake',hidden('space',r.payload.space)+hidden('folder',r.payload.folder)+hidden('address',r.payload.address)+hidden('enabled',String(r.payload.enabled))+`<div class="form-grid">${senderFields(r.payload.senderScope??'any',r.payload.allowedSender??'')}</div>`,'Save sender restriction',url.pathname)}</details></li>`).join('')
   const receipts=data.receipts.map((r:any)=>`<li>${item(r.payload.item,r.payload.filename)}<p class="quiet">From ${esc(r.payload.sender)} · ${stamp(r.payload.at)}<br>Message ${esc(r.payload.messageId)}</p></li>`).join('')
   return intakePage({head:head('Email intake','Give a space its own email address. Files attached to emails sent there land in a folder you choose, exactly as sent, with who sent them and when.'),unavailable:data.unavailable,spaces,folders,configs,receipts,local:env.AUTH_LOCAL==='true',origin:env.AUTH_ORIGIN,path:url.pathname})
  }
