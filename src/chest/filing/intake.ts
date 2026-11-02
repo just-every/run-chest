@@ -9,7 +9,7 @@ import { admit, createItem, siblings } from '../files/items'
 import { commit, fresh, maybe, next, where } from '../files/repo'
 import type { Item, Space } from '../files/model'
 import { managed } from '../read/settings'
-export type Intake = { space: string; folder: string; address: string; enabled: boolean; by: string; at: string }
+export type Intake = { space: string; folder: string; address: string; enabled: boolean; senderScope?: 'any' | 'exact'; allowedSender?: string | null; by: string; at: string }
 export type IntakeReceipt = { space: string; intake: string; item: string; messageId: string; sender: string; envelopeFrom: string; date: string; subject: string; filename: string; checksum: string; at: string }
 const available = (env: Bindings) => !managed(env)
 async function manager(env: Bindings, s: Session, space: string) {
@@ -33,9 +33,14 @@ export async function intakeExecute(env: Bindings, s: Session, method: string, p
  insist(/^[a-z0-9][a-z0-9._-]{0,63}@[a-z0-9.-]+\.[a-z]{2,}$/.test(address), 'invalid_intake_address')
  const key = `intake:${space.id}`, previous = await maybe<Intake>(env, 'intake', key)
  insist(!(await list<Intake>(env,'intake')).some(r=>r.id!==key && r.payload.address===address), 'intake_address_taken',409)
- const payload: Intake = { space: space.id, folder: input.folder, address, enabled: input.enabled !== false && input.enabled !== 'false', by: s.operator.email, at: now() }
+ // Omitted policy fields on an existing address preserve its scope, including pause and enable.
+ const senderScope = input.senderScope ?? previous?.payload.senderScope ?? (previous ? 'any' : 'exact')
+ insist(senderScope === 'any' || senderScope === 'exact', 'invalid_sender_scope')
+ const allowedSender = senderScope === 'exact' ? String(input.allowedSender ?? previous?.payload.allowedSender ?? '').trim().toLowerCase() : null
+ insist(senderScope !== 'exact' || /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(allowedSender!), 'invalid_allowed_sender')
+ const payload: Intake = { space: space.id, folder: input.folder, address, enabled: input.enabled !== false && input.enabled !== 'false', senderScope, allowedSender, by: s.operator.email, at: now() }
  const row = previous ? next(previous, payload) : fresh('intake',payload,key)
- await commit(env,s,[{row,...(previous?{previous}:{})}],{fences:[space,...ctx.fences],audits:[{action:'intake.configure',object:key,detail:{address,folder:input.folder,enabled:payload.enabled}}]})
+ await commit(env,s,[{row,...(previous?{previous}:{})}],{fences:[space,...ctx.fences],audits:[{action:'intake.configure',object:key,detail:{address,folder:input.folder,enabled:payload.enabled,senderScope,allowedSender}}]})
  return row
 }
 // An incoming email acts only through its saved, still-active standing grant. This is never a browser session.
@@ -50,6 +55,8 @@ export async function receiveIntake(env: Bindings, message: ForwardableEmailMess
   insist(available(env),'email_intake_not_available_yet',409)
   const configs = await where<Intake>(env,'intake','$.address',message.to.toLowerCase()), config = configs.find(r=>r.payload.enabled)
   insist(config,'intake_address_not_configured',404)
+  // Cloudflare's envelope is the restriction boundary; MIME From is untrusted provenance.
+  insist(config.payload.senderScope !== 'exact' || message.from.trim().toLowerCase() === config.payload.allowedSender, 'intake_sender_refused',403)
   insist(message.rawSize <= 12_000_000,'email_too_large',413)
   const raw=new Uint8Array(await new Response(message.raw).arrayBuffer());insist(raw.length<=12_000_000,'email_too_large',413)
   const email = await PostalMime.parse(raw,{maxNestingDepth:20,maxHeadersSize:64000}), files = email.attachments.filter(a=>a.filename && a.disposition!=='inline')
