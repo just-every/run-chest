@@ -2623,7 +2623,9 @@
         }
       ],
       "inject": {
-        "mentions": []
+        "riskClass": "standard",
+        "confirmExternal": true,
+        "instructions": "Treat this as internal."
       }
     },
     {
