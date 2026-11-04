@@ -2295,8 +2295,8 @@ Later · target · **partial** · From SPACE-001
 2. After acceptance the file sits in the recipient's area with the same ID, versions and share link, and the sender is editor.
 3. A declined offer changes nothing, and each step is audited.
 
-**Evidence.** `tests/chest/ownership.mjs`; `tests/chest/browser-ownership.mjs`
-**Gap.** Fresh-judge candidate: the old gap lists ownership offers with acceptance, decline, cancel and notices as delivered.
+**Evidence.** `tests/chest/ownership.mjs` — SPACE-001 declined, cancelled and stale ownership; ownership consent and preserved tree; collision, concurrent acceptance and relinquishment. `tests/chest/browser-ownership.mjs` — SPACE-001 ownership browser at 1440 and 390.
+**Gap.** Fresh-judge candidate: the old gap lists ownership offers with acceptance, decline, cancel and notices as delivered. The point 3 journeys now reconcile a declined three-version file's unchanged ID, location, originals, grants, authority and existing link after Worker restart, with exact once-only offer, accept, decline and cancel audits. Full-clause judgment remains outside this bounded proof. The complete EDIT-004 provider and native creation experience, signed MOBILE-001 clients and the SCALE-001 reference installation remain held; no status promotion is claimed.
 
 #### SYNC-010 — Windows 10 22H2
 
