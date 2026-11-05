@@ -2324,8 +2324,8 @@ All existing Status, Evidence and Gap rows retain main's judgments pending fresh
 | Clauses | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Published | 11 | 2 | 0 | 13 |
-| Target and push further | 30 | 49 | 78 | 157 |
-| All | 41 | 51 | 78 | 170 |
+| Target and push further | 30 | 50 | 77 | 157 |
+| All | 41 | 52 | 77 | 170 |
 
 | Clause | Title | Kind | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- | --- |
@@ -2474,7 +2474,7 @@ All existing Status, Evidence and Gap rows retain main's judgments pending fresh
 | `SURFACE-008` | Collect documents in, send files out | target | missing |  | No send or reminder tools, class declarations or policy decisions; today `chest_create_request` exists, and sending, transfers and signing are browser-only. |
 | `SURFACE-009` | Devices and sync | target | missing |  | No device tools; the client states are themselves missing in SYNC-003, and the device list, revoke and deactivation are browser-only. |
 | `SURFACE-010` | Administration and security settings are classified, not withheld | target | missing |  | No admin tools, and the integration API has no admin scope; ADMIN-002 itself is partial. |
-| `SURFACE-011` | Decisions and signatures are commitments | target | missing |  | No decision or signature tools, class declarations or agent attribution; decisions and signing are browser-only. |
+| `SURFACE-011` | Decisions and signatures are commitments | target | partial | `tests/agent-door/native.mjs` beforeStep and afterStep: request-changes; changesThroughMcp: exact-version request changes, authenticated attribution, retry, restart and authority refusals; `tests/chest/browser-governance.mjs`: retained history, Activity and public audit at 1440 and 390 | Point 1 seed-side request-changes effect and attribution are proved. Shared Base integration and policy and runtime conformance holds remain; acceptance points 2–7, commitment approval and blocking, agent signatures, signer consent and completion, certificates, value and counterparty facts and full-clause judgment remain unproved. SIGN-001 native acceptance and all existing account, device and distribution prerequisites remain held. |
 | `SURFACE-012` | Limits and Pause agents | target | partial | `tests/chest/integrations.mjs` | Points 2 and 3 pass on the integration API with an agent's OAuth token; there is no Pause agents control, spend cap or per-agent usage, MCP calls are not asserted, and the per-grant budgets are fixed values today. |
 | `SURFACE-013` | The records clerk journey under two company policies | target | missing |  | Needs SURFACE-001 to SURFACE-012 and the Base door. Register row R-25 records the same journey from stock vendor clients. |
 | `AGENT-001` | File and classify what arrives | push-further | done | `tests/chest/filing.mjs`; `tests/chest/agent-filing.mjs`; `tests/chest/browser-agent-filing.mjs` |  |

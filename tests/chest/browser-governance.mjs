@@ -2,12 +2,14 @@ import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
 import {chromium} from '@playwright/test';
 import {harness} from './harness.mjs';
+import {changesThroughMcp} from '../agent-door/native.mjs';
+import {tooltips} from './tooltip-proof.mjs';
 const h=await harness();let browser;
 const press=async(p,name)=>{const page=p.page?p.page():p;await Promise.all([page.waitForNavigation(),p.getByRole('button',{name,exact:true}).click()])};
 try{
  await mkdir('test-results',{recursive:true});await h.raw('/auth/bootstrap',null,{token:h.vars.SETUP_TOKEN,displayName:'Alex Morgan'});const cookie=await h.signIn(h.vars.OWNER_EMAIL);await h.fetch('/setup',{method:'POST',headers:{cookie,origin:h.origin,'content-type':'application/x-www-form-urlencoded'},body:'confirm=yes'});
  const schema=await h.api('/schemas',cookie,{name:'Supplier agreement',fields:[{name:'Supplier',type:'text',required:true},{name:'Contract amount',type:'number',required:true},{name:'Signed',type:'boolean',required:true}]}),space=await h.api('/spaces',cookie,{name:'Harbor operations'});
- browser=await chromium.launch({headless:true,args:['--use-mock-keychain','--password-store=basic']});
+ browser=await chromium.launch({headless:true,...(process.env.CHEST_CHROMIUM_PATH?{executablePath:process.env.CHEST_CHROMIUM_PATH}:{}),args:['--no-sandbox','--use-mock-keychain','--password-store=basic']});
  for(const width of [1440,390]){
   const context=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true});await context.addCookies(cookie.split('; ').map(c=>{const i=c.indexOf('=');return {name:c.slice(0,i),value:c.slice(i+1),url:h.origin}}));const p=await context.newPage(),folder=await h.api('/items',cookie,{space:space.id,type:'folder',name:`Supplier agreements ${width}`});
   const fit=async(name)=>{await p.evaluate(()=>document.fonts.ready);assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await p.screenshot({path:`test-results/${width}-governance-${name}.png`,fullPage:true})};
@@ -23,5 +25,22 @@ try{
   await h.api(`/schemas/${schema.id}`,cookie,{name:'Supplier agreement',fields:[{name:'Supplier',type:'text',required:true},{name:'Contract amount',type:'number',required:true},{name:'Signed',type:'boolean',required:true}]});const request=await h.api(`/items/${folder.id}/file-requests`,cookie,{title:'Acme signed terms'}),publicContext=await browser.newContext({viewport:{width,height:900},ignoreHTTPSErrors:true}),g=await publicContext.newPage();
   await g.goto(request.url);await g.getByRole('textbox',{name:'Supplier · required',exact:true}).fill('Acme Supply');await g.getByLabel('Contract amount',{exact:false}).fill('9900');await g.getByLabel('Signed',{exact:false}).selectOption('true');await g.getByLabel('Files',{exact:true}).setInputFiles({name:'Vendor signed terms.txt',mimeType:'text/plain',buffer:Buffer.from('Acme signed terms')});await g.screenshot({path:`test-results/${width}-governance-file-request.png`,fullPage:true});assert.ok(await g.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),JSON.stringify({dimensions:await g.evaluate(()=>({doc:document.documentElement.scrollWidth,inner:innerWidth,body:document.body.scrollWidth})),elements:await g.locator('body *').evaluateAll(es=>es.filter(e=>e.getBoundingClientRect().right>innerWidth).map(e=>[e.tagName,e.className,e.getBoundingClientRect().right]))}));await press(g,'Upload');assert.equal(await g.getByRole('heading',{name:'Files received',exact:true}).count(),1);await publicContext.close();await context.close();
  }
+
+ const proof=await changesThroughMcp(h,cookie),context=await browser.newContext({viewport:{width:1440,height:1000},ignoreHTTPSErrors:true});
+ await context.addCookies(cookie.split('; ').map(c=>{const i=c.indexOf('=');return {name:c.slice(0,i),value:c.slice(i+1),url:h.origin}}));
+ const page=await context.newPage();await page.goto(h.origin+`/app/items/${proof.id}`);
+ const version=page.locator('article.ver').filter({has:page.locator(`a[href="/api/chest/items/${proof.id}/bytes/${proof.version}?download=true"]`)});
+ assert.equal(await version.count(),1);assert.match(await version.innerText(),/Changes requested/);
+ assert.ok((await version.innerText()).includes(proof.label));assert.ok((await version.innerText()).includes(proof.message));assert.equal(await version.locator('b').count(),0,'decision reason is escaped');
+ assert.equal(await version.locator(`time[datetime="${proof.review.at}"]`).count(),1);
+ const activity=page.locator('ol.events li').filter({hasText:proof.label}).filter({hasText:'Version 2'});
+ assert.equal(await activity.count(),1);assert.equal(await activity.locator('time').getAttribute('datetime'),proof.audit.at);
+ for(const width of [1440,390]){await page.setViewportSize({width,height:1000});await tooltips(page,width,'governance-decision');assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:`test-results/${width}-governance-agent-changes.png`,fullPage:true})}
+ await page.setViewportSize({width:1440,height:1000});await page.goto(h.origin+`/app/audit?object=${proof.id}&action=version.review.changes`);
+ const auditRow=page.locator('tr').filter({has:page.locator('td[data-label="Who"]',{hasText:proof.label})});
+ assert.equal(await auditRow.count(),1);assert.ok((await auditRow.innerText()).includes(proof.message));
+ for(const width of [1440,390]){await page.setViewportSize({width,height:1000});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:`test-results/${width}-governance-agent-audit.png`,fullPage:true})}
+ await context.close();
+ console.log('PROBE SURFACE-011 browser: exact retained version history, Activity and public audit show authenticated agent for reviewer with reason and decision time; screens at 1440 and 390');
  console.log('SPACE-001 typed-folder browser at 1440 and 390 passed');
 }finally{await browser?.close();await h.close()}

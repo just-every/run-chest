@@ -2770,6 +2770,44 @@
       ]
     },
     {
+      "id": "changes-upload",
+      "tool": "chest.versions.upload",
+      "args": {
+        "id": {
+          "$from": "review-upload",
+          "pointer": "/id"
+        },
+        "filename": "Requested revision.txt",
+        "base64": "c3ludGhldGljLWNoZXN0LTI6IHJldmlzZWQgcGF5bWVudCBwZXJpb2Qu"
+      },
+      "expect": [
+        {
+          "class": "external"
+        }
+      ]
+    },
+    {
+      "id": "request-changes",
+      "tool": "chest.decisions.record",
+      "args": {
+        "id": {
+          "$from": "review-upload",
+          "pointer": "/id"
+        },
+        "version": {
+          "$from": "changes-upload",
+          "pointer": "/versions/1/id"
+        },
+        "action": "changes",
+        "message": "Keep the agreed payment period."
+      },
+      "expect": [
+        {
+          "class": "standard"
+        }
+      ]
+    },
+    {
       "id": "private-space",
       "tool": "chest.spaces.create",
       "args": {
