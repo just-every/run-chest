@@ -9,9 +9,9 @@ The primary journey: create a team space, move originals and rights in, install 
 | Tier | Done | Partial | Missing | Total |
 | --- | ---: | ---: | ---: | ---: |
 | Core | 40 | 45 | 38 | 123 |
-| Agent surface | 0 | 2 | 24 | 26 |
+| Agent surface | 0 | 3 | 23 | 26 |
 | Later | 1 | 4 | 16 | 21 |
-| Full target | 41 | 51 | 78 | 170 |
+| Full target | 41 | 52 | 77 | 170 |
 
 Judged from the code and tests at commit `9e923814f40e83242ce8b8e8c6cc73fcae7a8ab7` (21 October 2026). Field proof register: 25 rows; 0 passed, 0 failed, 25 not run.
 
@@ -2228,7 +2228,7 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-005, BASE
 
 #### SURFACE-011 — Decisions and signatures are commitments
 
-Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008
+Agent surface · target · **partial** · From new · Cites BASE-AGENT-006, BASE-AGENT-007, BASE-AGENT-008
 
 **Requirement.** For a sponsor who is the assigned reviewer, `chest.decisions.record` assigns, requests changes (standard) or approves an exact version under CHEST-08 (commitment). For a sponsor who is a signer, `chest.sign` applies the sponsor's signature under SIGN-001 (commitment), and only after the sponsor has accepted SIGN-001's consent disclosure. An agent's decision or signature always reads "<agent> for <person>" in the version history, the signature certificate and the audit.
 
@@ -2241,8 +2241,8 @@ Agent surface · target · **missing** · From new · Cites BASE-AGENT-006, BASE
 6. With commitment set to autonomous, a completed envelope signed by an agent shows "<agent> for <person>" on its certificate and in its audit trail.
 7. An approval or signature on a document that states a value and a counterparty records both with its commitment class.
 
-**Evidence.** None.
-**Gap.** No decision or signature tools, class declarations or agent attribution; decisions and signing are browser-only.
+**Evidence.** `tests/agent-door/native.mjs` beforeStep and afterStep: request-changes; changesThroughMcp: exact-version request changes, authenticated attribution, retry, restart and authority refusals; `tests/chest/browser-governance.mjs`: retained history, Activity and public audit at 1440 and 390
+**Gap.** Point 1 seed-side request-changes effect and attribution are proved. Shared Base integration and policy and runtime conformance holds remain; acceptance points 2–7, commitment approval and blocking, agent signatures, signer consent and completion, certificates, value and counterparty facts and full-clause judgment remain unproved. SIGN-001 native acceptance and all existing account, device and distribution prerequisites remain held.
 
 #### SURFACE-012 — Limits and Pause agents
 
