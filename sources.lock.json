@@ -5925,7 +5925,7 @@
       "executable": false
     },
     "tests/agent-door/native.mjs": {
-      "sha256": "3cf4c98c54d76cc33af54af2919fd8a30240d039c978f4270e2e0416e0a4f9a4",
+      "sha256": "e15e98a79605b28d1f55a44031a87142da48e7d53c3587ed960894b80759c97e",
       "executable": false
     },
     "tests/agent-door/negative-reviewer.mjs": {

@@ -295,6 +295,10 @@ export async function changesThroughMcp(h, owner) {
   await h.api(`/items/${folder.id}/governance`, owner, {reviewer:email});
   const originals = [Buffer.from("synthetic-chest-1: agreed payment period."),Buffer.from("synthetic-chest-2: proposed changed payment period."),Buffer.from("synthetic-chest-3: another pending original.")];
   const file = await h.api("/items", owner, {parent:folder.id,name:"Payment terms.txt",base64:originals[0].toString("base64")});
+  const readerEmail = ["synthetic-chest-reader","example.test"].join("@");
+  await h.api("/people", owner, {action:"invite",email:readerEmail,name:"Casey Chen"});
+  const reader = await h.signIn(readerEmail, true);
+  await h.api(`/items/${file.id}/shares`, owner, {principal:readerEmail,role:"viewer"});
   const approved = file.payload.current;
   await h.api(`/items/${file.id}/versions/${approved}/review`, reviewer, {action:"approve"});
   const replacement = await h.api(`/items/${file.id}/versions`, owner, {base64:originals[1].toString("base64")});
@@ -319,6 +323,9 @@ export async function changesThroughMcp(h, owner) {
   const audits = async (id=file.id) => (await h.api("/audit", owner)).filter(r =>
     r.object_id === id && r.action.startsWith("version.review."));
   const before = await snapshot(), auditBefore = await audits();
+  assert.equal(before.grants.length, 1);
+  assert.equal(before.grants[0].principal, readerEmail);
+  assert.equal(before.grants[0].role, "viewer");
   const answer = await call(args);
   assert.equal(answer.isError, false);
   assert.deepEqual(answer._meta["com.runeditrun/decision"].classes.map(c=>c.class), ["standard"]);
@@ -393,8 +400,8 @@ export async function changesThroughMcp(h, owner) {
   assert.deepEqual((await h.api(`/items/${unassigned.id}`, owner)).versions, untouched.versions);
   assert.equal((await h.api("/audit", owner)).filter(r=>r.object_id===unassigned.id&&r.action==="version.review.changes").length,0);
   for (const [index,v] of later.payload.versions.entries()) {
-    const response = await h.fetch(`/api/chest/items/${file.id}/bytes/${v.id}?download=true`, {headers:{cookie:owner}});
-    assert.equal(response.status, 200);
+    const response = await h.fetch(`/api/chest/items/${file.id}/bytes/${v.id}?download=true`, {headers:{cookie:reader}});
+    assert.equal(response.status, 200, "the retained named reader grant still serves every original");
     const bytes = Buffer.from(await response.arrayBuffer());
     assert.deepEqual(bytes, originals[index]);
     assert.equal(createHash("sha256").update(bytes).digest("hex"), v.checksum);
