@@ -1230,8 +1230,8 @@ Core · target · **partial** · Cites BASE-ACCESSIBILITY-001, BASE-PUBLIC-003, 
 2. Disconnecting each service shows its state in words and recovers without fake success or lost edits.
 3. The documented stack installed in an owner test account shows its measured limits and actionable health signals.
 
-**Evidence.** `tests/chest/browser-flow.mjs`; `tests/chest/journey.mjs`; `docs/hosting.md`
-**Gap.** Responsive journeys and a hosted install exist; accessibility checks and per-service disconnect journeys are unproven. The VPAT and a human screen-reader pass are R-21.
+**Evidence.** `tests/chest/browser-accessibility.mjs` — accessibilityJourney, invoked by `tests/chest/browser-files.mjs`: keyboard store, open, internal share, search, trash and restore; `tests/chest/browser-flow.mjs`; `tests/chest/journey.mjs`; `docs/hosting.md`
+**Gap.** Responsive journeys, a hosted install and the browser keyboard slice for nested files exist. Remaining keyboard coverage, native and admin states, per-service disconnect and recovery, unfinished-input preservation beyond the exercised disclosure, owner-account installation and measured SCALE-001 deployment limits remain unproven. Signed native acceptance needs the Apple Developer ID and Microsoft Windows code-signing identities under SYNC-001. The VPAT and a human screen-reader pass remain R-21.
 
 #### SCALE-001 — Seeded scale run
 
