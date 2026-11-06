@@ -138,7 +138,7 @@ export async function accessibilityJourney({h, page, cookie, reader, width, asse
  await activate(page, page.getByRole('navigation', {name:'Breadcrumb'}).getByRole('link', {name:'Delivery originals',exact:true}));
 
  await activate(page, page.getByRole('main').getByRole('link', {name:'delivery-checklist.txt',exact:true}));
- const safeOriginal = page.getByRole('link', {name:'Open safe text preview',exact:true}).first();
+ const safeOriginal = page.getByRole('article').filter({has:page.getByRole('heading', {name:'Version 2 · delivery-checklist.txt',exact:true})}).getByRole('link', {name:'Preview',exact:true});
  await tabTo(page, safeOriginal);
  const [preview] = await Promise.all([page.waitForEvent('popup'), page.keyboard.press('Enter')]);
  await preview.waitForLoadState();
