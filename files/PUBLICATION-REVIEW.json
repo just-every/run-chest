@@ -1,0 +1,7 @@
+{
+  "selected_files_checked": 29,
+  "regular_files_only": true,
+  "bundle_literal_value_scan": "pass",
+  "images": "Synthetic test screenshots only; original candidate failure screenshot visually inspected",
+  "excluded": "No setup/build private logs, credential files, environment dumps, symlinks or private gate material selected."
+}

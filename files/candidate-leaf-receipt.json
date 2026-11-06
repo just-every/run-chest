@@ -1,0 +1,195 @@
+{
+  "label": "candidate",
+  "head": "269add145f68b382355dcc6d04c5a68c802cec70",
+  "width": 1440,
+  "targetName": "Open safe text preview",
+  "exact": true,
+  "node": "v24.19.0",
+  "originals": [
+    {
+      "filename": "delivery-checklist.txt",
+      "preview": "text",
+      "size": 64,
+      "checksum": "305ad9bd5f4ce1bc4010fc9e8136bf79fd1821f07745962997cb821059f82512"
+    },
+    {
+      "filename": "delivery-checklist.txt",
+      "preview": "text",
+      "size": 64,
+      "checksum": "94d5e63b94f498ae509dd0664ac6389c7f44ac8c9f225cc47523a77216ac6658"
+    }
+  ],
+  "targetCount": 0,
+  "previewLinks": [
+    {
+      "text": "Preview",
+      "retainedOriginal": true,
+      "download": null
+    },
+    {
+      "text": "Preview",
+      "retainedOriginal": true,
+      "download": null
+    }
+  ],
+  "textPreviewFrames": 1,
+  "result": "failed",
+  "assertion": "keyboard focus is visible and unobscured: {\"name\":\"Comment\",\"tag\":\"TEXTAREA\",\"shadow\":\"rgba(91, 63, 246, 0.22) 0px 0px 0px 3px\",\"outline\":\"rgb(9, 13, 48) none 3px\",\"box\":{\"x\":230,\"y\":944.890625,\"width\":854,\"height\":88},\"viewport\":{\"width\":1440,\"height\":1000},\"visible\":false,\"unobscured\":true,\"ring\":true}",
+  "code": "ERR_ASSERTION",
+  "active": "<textarea name=\"message\" required=\"\" style=\"\"></textarea>",
+  "focusEvents": [
+    {
+      "tag": "A",
+      "text": "Chest"
+    },
+    {
+      "tag": "A",
+      "text": "My files"
+    },
+    {
+      "tag": "A",
+      "text": "Shared with me"
+    },
+    {
+      "tag": "A",
+      "text": "Recent"
+    },
+    {
+      "tag": "A",
+      "text": "Starred"
+    },
+    {
+      "tag": "A",
+      "text": "Requests"
+    },
+    {
+      "tag": "A",
+      "text": "Links"
+    },
+    {
+      "tag": "A",
+      "text": "Trash"
+    },
+    {
+      "tag": "A",
+      "text": "New team space"
+    },
+    {
+      "tag": "SUMMARY",
+      "text": "Workspace"
+    },
+    {
+      "tag": "A",
+      "text": "No sync devices"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Sign out"
+    },
+    {
+      "tag": "A",
+      "text": "My files"
+    },
+    {
+      "tag": "A",
+      "text": "synthetic-chest-47-1440"
+    },
+    {
+      "tag": "A",
+      "text": "Harbor launch"
+    },
+    {
+      "tag": "A",
+      "text": "Delivery originals"
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "A",
+      "text": "New"
+    },
+    {
+      "tag": "A",
+      "text": "Upload"
+    },
+    {
+      "tag": "A",
+      "text": "Share"
+    },
+    {
+      "tag": "A",
+      "text": "Download"
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "SUMMARY",
+      "text": "Ask"
+    },
+    {
+      "tag": "A",
+      "text": "Compare versions"
+    },
+    {
+      "tag": "SUMMARY",
+      "text": "Details"
+    },
+    {
+      "tag": "A",
+      "text": "Download this version"
+    },
+    {
+      "tag": "A",
+      "text": "Preview"
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Save version name"
+    },
+    {
+      "tag": "SUMMARY",
+      "text": "Details"
+    },
+    {
+      "tag": "A",
+      "text": "Download this version"
+    },
+    {
+      "tag": "A",
+      "text": "Preview"
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Save version name"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Restore as current version"
+    },
+    {
+      "tag": "A",
+      "text": "Search or export this file's history"
+    },
+    {
+      "tag": "A",
+      "text": "Your assigned comments"
+    },
+    {
+      "tag": "TEXTAREA",
+      "text": ""
+    }
+  ],
+  "tabFocusEvents": 38
+}

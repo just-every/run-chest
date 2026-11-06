@@ -1,0 +1,7 @@
+{
+  "source_commit": "269add145f68b382355dcc6d04c5a68c802cec70",
+  "source_file": "tests/chest/browser-accessibility.mjs",
+  "source_sha256": "54a584bbe2b91d245e5a1fa644c7db392f9bc1fcb85f02368a0e75a9b09da73a",
+  "extracted": "lines 1-58, unchanged focusProof/tabTo; only Playwright import resolves from the chosen checkout; exported tabTo",
+  "helpers_sha256": "6a7a278f528bc03d10927780eef5c59d90f0ffeaf7b9f0f1011a54fed807f32a"
+}

@@ -1,0 +1,10 @@
+ ACCEPTANCE.md                         |   4 +-
+ CONTRACT.md                           |   2 +-
+ public/chest-keyboard.js              |  21 ++++
+ public/chest-tooltip.js               |   2 +-
+ public/chest.css                      |   2 +
+ sources.lock.json                     |  20 +++-
+ src/chest/ui-shell.ts                 |   2 +-
+ tests/chest/browser-accessibility.mjs | 218 ++++++++++++++++++++++++++++++++++
+ tests/chest/browser-files.mjs         |   2 +
+ 9 files changed, 262 insertions(+), 11 deletions(-)

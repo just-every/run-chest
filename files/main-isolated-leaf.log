@@ -1,0 +1,387 @@
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProxy environment variables detected. We'll use your proxy for fetch requests.[0m
+
+
+error accepting tls connection; kj::mv(e) = kj/compat/tls.c++:82: failed: OpenSSL error; message = error:10000416:SSL routines:OPENSSL_internal:SSLV3_ALERT_CERTIFICATE_UNKNOWN; clientId = 127.0.0.1:46312
+stack: /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@318e3f0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3195ed0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196300 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196428 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196794 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a392a8 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3197ac0
+error accepting tls connection; kj::mv(e) = kj/compat/tls.c++:82: failed: OpenSSL error; message = error:10000416:SSL routines:OPENSSL_internal:SSLV3_ALERT_CERTIFICATE_UNKNOWN; clientId = 127.0.0.1:46334
+stack: /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@318e3f0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3195ed0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196300 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196428 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196794 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a392a8 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3197ac0
+error accepting tls connection; kj::mv(e) = kj/compat/tls.c++:82: failed: OpenSSL error; message = error:10000416:SSL routines:OPENSSL_internal:SSLV3_ALERT_CERTIFICATE_UNKNOWN; clientId = 127.0.0.1:46348
+stack: /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@318e3f0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3195ed0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196300 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196428 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196794 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a392a8 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3197ac0
+error accepting tls connection; kj::mv(e) = kj/compat/tls.c++:82: failed: OpenSSL error; message = error:10000416:SSL routines:OPENSSL_internal:SSLV3_ALERT_CERTIFICATE_UNKNOWN; clientId = 127.0.0.1:46350
+stack: /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@318e3f0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3195ed0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196300 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196428 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196794 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a392a8 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3197ac0
+error accepting tls connection; kj::mv(e) = kj/compat/tls.c++:82: failed: OpenSSL error; message = error:10000416:SSL routines:OPENSSL_internal:SSLV3_ALERT_CERTIFICATE_UNKNOWN; clientId = 127.0.0.1:46352
+stack: /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@318e3f0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3195ed0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196300 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196428 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196794 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a392a8 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3197ac0
+error accepting tls connection; kj::mv(e) = kj/compat/tls.c++:82: failed: OpenSSL error; message = error:10000416:SSL routines:OPENSSL_internal:SSLV3_ALERT_CERTIFICATE_UNKNOWN; clientId = 127.0.0.1:46358
+stack: /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@318e3f0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3195ed0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196300 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196428 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196794 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a392a8 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3197ac0
+error accepting tls connection; kj::mv(e) = kj/compat/tls.c++:82: failed: OpenSSL error; message = error:10000416:SSL routines:OPENSSL_internal:SSLV3_ALERT_CERTIFICATE_UNKNOWN; clientId = 127.0.0.1:46366
+stack: /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@318e3f0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3195ed0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196300 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196428 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196794 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a392a8 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3197ac0
+error accepting tls connection; kj::mv(e) = kj/compat/tls.c++:82: failed: OpenSSL error; message = error:10000416:SSL routines:OPENSSL_internal:SSLV3_ALERT_CERTIFICATE_UNKNOWN; clientId = 127.0.0.1:46368
+stack: /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@318e3f0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3195ed0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196300 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196428 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196794 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a392a8 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3197ac0
+error accepting tls connection; kj::mv(e) = kj/compat/tls.c++:82: failed: OpenSSL error; message = error:10000416:SSL routines:OPENSSL_internal:SSLV3_ALERT_CERTIFICATE_UNKNOWN; clientId = 127.0.0.1:46380
+stack: /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@318e3f0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3195ed0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196300 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196428 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196794 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a392a8 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3197ac0
+error accepting tls connection; kj::mv(e) = kj/compat/tls.c++:82: failed: OpenSSL error; message = error:10000416:SSL routines:OPENSSL_internal:SSLV3_ALERT_CERTIFICATE_UNKNOWN; clientId = 127.0.0.1:46394
+stack: /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@318e3f0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3195ed0 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196300 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196428 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3196794 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@5a392a8 /home/agent/rer-consolidation/work/sx-chest-kbdfix-1/run-chest/node_modules/.pnpm/@cloudflare+workerd-linux-64@1.20260907.1/node_modules/@cloudflare/workerd-linux-64/bin/workerd@3197ac0
+{
+  "label": "main",
+  "head": "dec6581db16d6959957485b3deb25cbd03d1531d",
+  "width": 1440,
+  "height": 8000,
+  "targetName": "Open safe text preview",
+  "exact": true,
+  "node": "v24.19.0",
+  "originals": [
+    {
+      "filename": "delivery-checklist.txt",
+      "preview": "text",
+      "size": 64,
+      "checksum": "305ad9bd5f4ce1bc4010fc9e8136bf79fd1821f07745962997cb821059f82512"
+    },
+    {
+      "filename": "delivery-checklist.txt",
+      "preview": "text",
+      "size": 64,
+      "checksum": "94d5e63b94f498ae509dd0664ac6389c7f44ac8c9f225cc47523a77216ac6658"
+    }
+  ],
+  "targetCount": 0,
+  "previewLinks": [
+    {
+      "text": "Preview",
+      "retainedOriginal": true,
+      "download": null
+    },
+    {
+      "text": "Preview",
+      "retainedOriginal": true,
+      "download": null
+    }
+  ],
+  "textPreviewFrames": 1,
+  "result": "failed",
+  "assertion": "no keyboard trap while reaching getByRole('link', { name: 'Open safe text preview', exact: true }).first(): []; active=<a class=\"wordmark\" href=\"/app/files\"><img class=\"wordmark-mark\" src=\"/brand/mark.svg\" alt=\"\" width=\"30\" height=\"30\"><span data-rer-name=\"\">Chest</span></a>",
+  "code": "ERR_ASSERTION",
+  "active": "<a class=\"wordmark\" href=\"/app/files\"><img class=\"wordmark-mark\" src=\"/brand/mark.svg\" alt=\"\" width=\"30\" height=\"30\"><span data-rer-name=\"\">Chest</span></a>",
+  "focusEvents": [
+    {
+      "tag": "A",
+      "text": "Chest"
+    },
+    {
+      "tag": "A",
+      "text": "My files"
+    },
+    {
+      "tag": "A",
+      "text": "Shared with me"
+    },
+    {
+      "tag": "A",
+      "text": "Recent"
+    },
+    {
+      "tag": "A",
+      "text": "Starred"
+    },
+    {
+      "tag": "A",
+      "text": "Requests"
+    },
+    {
+      "tag": "A",
+      "text": "Links"
+    },
+    {
+      "tag": "A",
+      "text": "Trash"
+    },
+    {
+      "tag": "A",
+      "text": "New team space"
+    },
+    {
+      "tag": "SUMMARY",
+      "text": "Workspace"
+    },
+    {
+      "tag": "A",
+      "text": "No sync devices"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Sign out"
+    },
+    {
+      "tag": "A",
+      "text": "My files"
+    },
+    {
+      "tag": "A",
+      "text": "synthetic-chest-47-1440"
+    },
+    {
+      "tag": "A",
+      "text": "Harbor launch"
+    },
+    {
+      "tag": "A",
+      "text": "Delivery originals"
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "A",
+      "text": "New"
+    },
+    {
+      "tag": "A",
+      "text": "Upload"
+    },
+    {
+      "tag": "A",
+      "text": "Share"
+    },
+    {
+      "tag": "A",
+      "text": "Download"
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "SUMMARY",
+      "text": "Ask"
+    },
+    {
+      "tag": "A",
+      "text": "Compare versions"
+    },
+    {
+      "tag": "SUMMARY",
+      "text": "Details"
+    },
+    {
+      "tag": "A",
+      "text": "Download this version"
+    },
+    {
+      "tag": "A",
+      "text": "Preview"
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Save version name"
+    },
+    {
+      "tag": "SUMMARY",
+      "text": "Details"
+    },
+    {
+      "tag": "A",
+      "text": "Download this version"
+    },
+    {
+      "tag": "A",
+      "text": "Preview"
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Save version name"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Restore as current version"
+    },
+    {
+      "tag": "A",
+      "text": "Search or export this file's history"
+    },
+    {
+      "tag": "A",
+      "text": "Your assigned comments"
+    },
+    {
+      "tag": "TEXTAREA",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Post comment"
+    },
+    {
+      "tag": "SUMMARY",
+      "text": "Rename"
+    },
+    {
+      "tag": "SUMMARY",
+      "text": "Move"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Move to trash"
+    },
+    {
+      "tag": "A",
+      "text": "Details"
+    },
+    {
+      "tag": "A",
+      "text": "Versions"
+    },
+    {
+      "tag": "A",
+      "text": "Sharing"
+    },
+    {
+      "tag": "A",
+      "text": "See all"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Restore"
+    },
+    {
+      "tag": "A",
+      "text": "Manage"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Star"
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Anyone with the linkInvited emails (verification required)"
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "NoYes"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Create delivery package"
+    },
+    {
+      "tag": "SUMMARY",
+      "text": "Transfer ownership"
+    },
+    {
+      "tag": "SELECT",
+      "text": "Owner · owner@example.test"
+    },
+    {
+      "tag": "SELECT",
+      "text": "viewercommentereditor"
+    },
+    {
+      "tag": "TEXTAREA",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Share"
+    },
+    {
+      "tag": "SELECT",
+      "text": "Only people already given accessOrganization with the linkAnyone with the linkNamed external guests "
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "ViewerCommenterEditor (organization or named guests)Contributor (named guest folder)"
+    },
+    {
+      "tag": "SELECT",
+      "text": "NoYes"
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "text": ""
+    },
+    {
+      "tag": "SELECT",
+      "text": "Current version, including future uploadsVersion 2 · delivery-checklist.txt · Nov 6, 2026, 8:38 PMVe"
+    },
+    {
+      "tag": "SELECT",
+      "text": "AllowedPreview only; original downloads are off"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Create link"
+    },
+    {
+      "tag": "SELECT",
+      "text": "NoYes"
+    },
+    {
+      "tag": "SELECT",
+      "text": "OffOn"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Save access settings"
+    },
+    {
+      "tag": "A",
+      "text": "Chest"
+    }
+  ],
+  "tabFocusEvents": 80
+}

@@ -1,0 +1,67 @@
+{
+  "tag": "sx-chest-kbdfix-1",
+  "repository": "just-every/run-chest",
+  "outcome": "BLOCKED main fails the same leaf",
+  "branch": "cloud/sx-chest-kbdfix-1",
+  "head": "dec6581db16d6959957485b3deb25cbd03d1531d",
+  "candidate_head": "269add145f68b382355dcc6d04c5a68c802cec70",
+  "main_head": "dec6581db16d6959957485b3deb25cbd03d1531d",
+  "product_changes": false,
+  "product_commit_created": false,
+  "product_pushed": false,
+  "pr": null,
+  "candidate_manifest_command": "node scripts/verify-ci.mjs browser-files",
+  "candidate_manifest_exit": 1,
+  "candidate_manifest_viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "isolated_main_exit": 1,
+  "isolated_candidate_exit": 1,
+  "isolated_viewport": {
+    "width": 1440,
+    "height": 8000
+  },
+  "identical_isolated_assertion": true,
+  "candidate_target_count": 0,
+  "main_target_count": 0,
+  "candidate_preview_link_count": 2,
+  "main_preview_link_count": 2,
+  "candidate_focus_events": 80,
+  "main_focus_events": 80,
+  "matching_originals": true,
+  "main_and_candidate_file_page_sources_identical": true,
+  "standard_viewport_comparison_limit": "Additional visibility failures occur in diagnostic runs; see retained actual receipts. Only the full candidate shard reproduced the reported trap at 1440x1000.",
+  "three_consecutive_passes": false,
+  "whole_group_pass": false,
+  "contract_status_gap_evidence_changed": false,
+  "clause": {
+    "id": "OPS-001",
+    "before": "PARTIAL",
+    "after": "PARTIAL"
+  },
+  "counts_before": {
+    "done": 41,
+    "partial": 51,
+    "missing": 78,
+    "total": 170
+  },
+  "counts_after": {
+    "done": 41,
+    "partial": 51,
+    "missing": 78,
+    "total": 170
+  },
+  "ci": {
+    "conclusion": "failure",
+    "head_sha": "269add145f68b382355dcc6d04c5a68c802cec70",
+    "html_url": "https://github.com/just-every/run-chest/actions/runs/42279132311",
+    "id": 42279132311,
+    "run_attempt": 2,
+    "status": "completed"
+  },
+  "ci_new_run": null,
+  "github_api_calls": 1,
+  "f50_f52_superseded": false,
+  "tracked_worktree_clean": true
+}
