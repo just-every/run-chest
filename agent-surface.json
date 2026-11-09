@@ -1752,7 +1752,15 @@
         "SYNC-009",
         "MOBILE-001",
         "MOBILE-002",
-        "MOBILE-003"
+        "MOBILE-003",
+        "SYNC-002",
+        "SYNC-011",
+        "SYNC-004",
+        "SYNC-006",
+        "SYNC-007",
+        "SYNC-013",
+        "SYNC-014",
+        "PREVIEW-003"
       ]
     },
     {
@@ -1763,7 +1771,12 @@
         "PREVIEW-002",
         "EDIT-001",
         "EDIT-005",
-        "BULK-002"
+        "BULK-002",
+        "EDIT-007",
+        "EDIT-008",
+        "EDIT-009",
+        "EDIT-014",
+        "EDIT-002"
       ]
     },
     {
@@ -1775,7 +1788,13 @@
         "MIGRATE-002",
         "MIGRATE-003",
         "MIGRATE-004",
-        "MIGRATE-005"
+        "MIGRATE-005",
+        "MIGRATE-009",
+        "MIGRATE-010",
+        "MIGRATE-011",
+        "MIGRATE-006",
+        "MIGRATE-007",
+        "MIGRATE-014"
       ]
     },
     {
@@ -1787,7 +1806,8 @@
         "CONNECT-009",
         "CONNECT-010",
         "CONNECT-014",
-        "CONNECT-015"
+        "CONNECT-015",
+        "CONNECT-011"
       ]
     },
     {

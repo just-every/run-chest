@@ -193,7 +193,7 @@
       "executable": false
     },
     "agent-surface.json": {
-      "sha256": "dbc5dd4d6ebb13461320ec7f732bee639f61d5c5db5f3a4df62315fce23ee985",
+      "sha256": "afb4ddae82d86f385518717b4a3626758fdf1e2417a87a9225ab3781489c77f6",
       "executable": false
     },
     "AGENTS.consumer.md": {
@@ -2229,7 +2229,7 @@
       "executable": false
     },
     "src/chest/agent-door/index.ts": {
-      "sha256": "cf52a30ada42f4c38a10470da48053bad7795be5e6afd43209ab502dfaf8c79f",
+      "sha256": "2ec0df137b7f19c4f353ae6f39591988199711a43811dfd3b038fdc272516926",
       "executable": false
     },
     "src/chest/agent-door/native.ts": {
@@ -5929,7 +5929,7 @@
       "executable": false
     },
     "tests/agent-door/native.mjs": {
-      "sha256": "e15e98a79605b28d1f55a44031a87142da48e7d53c3587ed960894b80759c97e",
+      "sha256": "ec6ec77877a2c205749c6df168da9ac08d5e64ef96ab5408989adff4b11eadf1",
       "executable": false
     },
     "tests/agent-door/negative-reviewer.mjs": {

@@ -326,6 +326,7 @@ export async function changesThroughMcp(h, owner) {
   assert.equal(before.grants.length, 1);
   assert.equal(before.grants[0].principal, readerEmail);
   assert.equal(before.grants[0].role, "viewer");
+  await discoveryReasons(h, owner, credential, snapshot, audits);
   const answer = await call(args);
   assert.equal(answer.isError, false);
   assert.deepEqual(answer._meta["com.runeditrun/decision"].classes.map(c=>c.class), ["standard"]);
@@ -408,4 +409,72 @@ export async function changesThroughMcp(h, owner) {
   }
   console.log("PROBE SURFACE-011 refusals: consumed version, revoked access including captured retry across restart, and unassigned reviewer -> symbolic content-free errors, unchanged versions and successful decision audit; all three original hashes retained");
   return {id:file.id,version,approved,pending,label,message,review,audit,reviewer};
+}
+
+// Contract-assigned reasons for twenty discovery mappings (CONTRACT.md SURFACE-001 "Not tools, and why").
+const assigned = {
+  device: ["PREVIEW-003", "SYNC-002", "SYNC-004", "SYNC-006", "SYNC-007", "SYNC-011", "SYNC-013", "SYNC-014"],
+  screen: ["EDIT-002", "EDIT-007", "EDIT-008", "EDIT-009", "EDIT-014"],
+  "import-door": ["MIGRATE-006", "MIGRATE-007", "MIGRATE-009", "MIGRATE-010", "MIGRATE-011", "MIGRATE-014"],
+  connector: ["CONNECT-011"],
+};
+// Authenticated discovery on both door paths reports each assigned reason and changes nothing.
+async function discoveryReasons(h, owner, credential, snapshot, audits) {
+  const rpc = async (path, version, method, token) => {
+    const response = await h.fetch(path, {
+      method: "POST",
+      headers: {
+        ...(token ? { authorization: "Bearer " + token } : {}),
+        "content-type": "application/json",
+        "MCP-Protocol-Version": version,
+        "Mcp-Method": method,
+        accept: "application/json, text/event-stream",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method,
+        params: { _meta: { "io.modelcontextprotocol/protocolVersion": version } },
+      }),
+    });
+    return { status: response.status, body: await response.json() };
+  };
+  const door = async () => {
+    const token = await credential(), tools = {};
+    for (const [path, version] of [["/mcp", "2026-07-28"], ["/mcp/chest", "2025-11-25"]]) {
+      const listed = await rpc(path, version, "tools/list", token);
+      assert.equal(listed.status, 200);
+      tools[path] = listed.body.result.tools.map((t) => t.name);
+    }
+    return {
+      tools,
+      agents: (await (await h.fetch("/agents/api/agents", { headers: { cookie: owner } })).json()).agents.map((a) => a.id).sort(),
+      // The fixture's own owner reads are audited; every other event would be a change.
+      audit: (await h.api("/audit", owner)).filter((r) => !["item.read", "get.items.open"].includes(r.action)).map((r) => r.id),
+      state: await snapshot(),
+      rows: await audits(),
+    };
+  };
+  const before = await door();
+  assert.equal((await rpc("/mcp", "2026-07-28", "server/discover")).status, 401, "discovery stays authenticated");
+  assert.equal((await rpc("/mcp/chest", "2025-11-25", "server/discover")).status, 401);
+  for (const [path, version] of [["/mcp", "2026-07-28"], ["/mcp/chest", "2025-11-25"]]) {
+    const found = await rpc(path, version, "server/discover", await credential());
+    assert.equal(found.status, 200);
+    const reasons = new Map();
+    for (const item of found.body.result._meta["com.runeditrun/notTools"]) {
+      assert.notEqual(item.reason, "risk", "risk is never a reason");
+      for (const clause of item.clauses) {
+        assert.ok(!reasons.has(clause), clause + " has one reason");
+        reasons.set(clause, item.reason);
+      }
+    }
+    for (const [reason, clauses] of Object.entries(assigned))
+      for (const clause of clauses)
+        assert.equal(reasons.get(clause), reason, `${path} reports ${clause} as ${reason}`);
+    assert.equal(found.body.result.tools, undefined, "discovery carries no tool list");
+  }
+  const afterDoor = await door();
+  assert.deepEqual(afterDoor, before, "discovery adds no tool, agent, grant, audit event or record change");
+  console.log("PROBE SURFACE-001 2: authenticated server/discover on /mcp and /mcp/chest -> twenty omitted mappings carry their contract-assigned reasons, none is risk, tools, agents, grants, audit and records unchanged");
 }
