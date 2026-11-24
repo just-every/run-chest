@@ -3,7 +3,7 @@ import type { Session } from '../../modules/operator-auth/index.mjs'
 import { ChestError, type Row } from '../model'
 import { get, list } from '../store'
 import type { Item } from '../files/model'
-import { commit, maybe, next, where } from '../files/repo'
+import { commit, folderItems, maybe, next, where } from '../files/repo'
 import type { Extraction } from '../read/jobs'
 import { previewAgent,applyAgent,type FilingSuggestion } from './agent-plan'
 import { scopeContext,type AgentScope } from './agent-scope'
@@ -49,7 +49,7 @@ export function sweepAgents(env:Bindings,only?:string,s?:Session):Promise<void>{
    if(s&&scope.payload.by!==s.operator.email)throw new ChestError('filing_scope_owner_required',403)
    try{
     await scopeContext(env,scope)
-    for(const item of await where<Item>(env,'item','$.parent',scope.payload.source)){
+    for(const item of await folderItems(env,scope.payload.space,scope.payload.source)){
      await classifyArrival(env,item,scope)
      if(Date.now()>until)return
     }

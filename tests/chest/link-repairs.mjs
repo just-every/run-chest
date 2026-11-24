@@ -29,8 +29,8 @@ try{
  const locked=await h.api('/items',owner,{space:space.id,type:'file',name:'Unrelated payroll.txt',base64:b64('Private payroll cannot enter a restricted scan.')});
  await h.api('/link-repairs/scope',jordan,{item:locked.id},403);
  const auto=await h.api(`/items/${folder.id}/public-links`,owner,{});await h.api('/link-repairs/scope',owner,{item:folder.id,automatic:true});
- for(let i=0;i<30;i++){await h.raw('/api/chest/files',owner);if((await h.raw(new URL(auto.url).pathname)).status===410)break;await new Promise(r=>setTimeout(r,50))}
- assert.equal((await h.raw(new URL(auto.url).pathname)).status,410,'preauthorized restrictive action runs on subsequent traffic');
+ for(let i=0;i<30;i++){await h.scheduled();if((await h.raw(new URL(auto.url).pathname)).status===410)break;await new Promise(r=>setTimeout(r,50))}
+ assert.equal((await h.raw(new URL(auto.url).pathname)).status,410,'preauthorized restrictive action runs on the scheduled sweep');
  assert.equal((await h.api(`/items/${folder.id}`,owner)).grants.length,2,'named grants survive');
  assert.ok((await h.api('/link-repairs',owner)).history.some(r=>r.automatic));
  await h.api('/link-repairs/scope',owner,{item:folder.id,automatic:false});

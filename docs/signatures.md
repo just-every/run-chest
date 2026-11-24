@@ -59,4 +59,4 @@ secret. A missing or wrong old key fails without generating a replacement signin
 secrets in the owner's private recovery system; they do not travel in a product backup. `SECURITY-001` retains the
 remaining installation-wide rotation and recovery obligations. Signed records stay with the file until an
 authorized erasure (ERASE-001), which also removes the file's requests and signer links. Reminders and expiry are
-processed by the scheduled sweep and on requests; they stop on completion, decline, void and expiry.
+sent by the scheduled sweep (every 15 minutes), and an expired request closes when it is next read or swept; reminders stop on completion, decline, void and expiry.

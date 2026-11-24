@@ -2,12 +2,13 @@ import { administrativePersonAction } from './administration/people'
 import { operatorAuth,type Bindings } from '../auth.server'
 import type { Session } from '../modules/operator-auth/index.mjs'
 import { owner } from './access'
-import { get,list,write,changed } from './store'
+import { decode,get,write,changed } from './store'
 import { insist,id,type Person } from './model'
 import { personLine } from './names'
 export async function syncPeople(env:Bindings,request:Request,s:Session) {
  const operators=s.operator.role==='owner'?await operatorAuth(env).listOperators(request):[s.operator]
- const current=await list<Person>(env,'person')
+ // Only the people being synced are read, not every person the installation has ever known.
+ const current=(await env.DB.prepare("SELECT * FROM chest_records WHERE kind='person' AND id IN (SELECT value FROM json_each(?))").bind(JSON.stringify(operators.map(o=>o.email))).all()).results.map(decode<Person>)
  for(const o of operators){const payload={email:o.email,name:o.displayName,role:o.role,status:o.status,development:o.email.endsWith('@dev.localhost')};const old=current.find(p=>p.id===o.email);if(!old||JSON.stringify(old.payload)!==JSON.stringify(payload))await write(env,s,{id:o.email,kind:'person',payload,revision:id()},'identity.sync',old)}
 }
 export async function peopleAction(env:Bindings,request:Request,s:Session,input:any) {

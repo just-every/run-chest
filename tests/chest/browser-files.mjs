@@ -198,10 +198,10 @@ async function journey(width){
  // Grant expiry: Eve gets commenter for two days; the one-day notice arrives, Ana extends once, then access ends.
  const until=new Date(Date.now()+2*day).toISOString().slice(0,10);await go(p.ana,`/app/items/${plan}`);await p.ana.getByLabel('Person or group').selectOption('eve@example.test');await p.ana.getByLabel(/^Role/).selectOption('commenter');await p.ana.getByLabel('Access expires (optional)').fill(until);await press(p.ana,'Share');
  const age=async ms=>{const at=new Date(Date.now()+ms).toISOString();await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.expires',?) WHERE id=?",at,`expiry:${plan}:eve@example.test`);await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.grants',(SELECT json_group_array(CASE WHEN json_extract(value,'$.principal')='eve@example.test' THEN json_set(value,'$.expires',?) ELSE json(value) END) FROM json_each(payload,'$.grants'))) WHERE id=?",at,plan)};
- await age(12*3600_000);await go(p.eve,'/app/notices');await p.eve.getByText(`Access to "plan-${width}.txt" for eve@example.test`,{exact:false}).waitFor();
+ await age(12*3600_000);await h.scheduled();await go(p.eve,'/app/notices');await p.eve.getByText(`Access to "plan-${width}.txt" for eve@example.test`,{exact:false}).waitFor();
  await go(p.ana,`/app/items/${plan}`);const was=(await json(p.ana,`/items/${plan}`)).grants.find(g=>g.principal==='eve@example.test').expires;await press(row(p.ana,'eve@example.test · commenter'),'Extend by 7 days');
  assert.equal(Date.parse((await json(p.ana,`/items/${plan}`)).grants.find(g=>g.principal==='eve@example.test').expires)-Date.parse(was),7*day);
- await age(-1000);await go(p.eve,`/app/items/${plan}`);await p.eve.getByRole('heading',{name:'Request access'}).waitFor();assert.equal((await audit('share.expired',plan)).length,1);
+ await age(-1000);await h.scheduled();await go(p.eve,`/app/items/${plan}`);await p.eve.getByRole('heading',{name:'Request access'}).waitFor();assert.equal((await audit('share.expired',plan)).length,1);
  // Sync devices: no native sync app ships; the scoped command-line companion has a separate key flow. A key for a
  // future client is listed and revoked from the page, and stops working for the sync protocol.
  await go(p.ana,'/app/devices');assert.equal(await p.ana.getByRole('button',{name:'Create device key'}).count(),0);

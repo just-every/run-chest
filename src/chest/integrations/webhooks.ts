@@ -1,12 +1,12 @@
 import { providerFetch } from '../administration/provider-usage'
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
-import { get, list } from '../store'
+import { decode, get } from '../store'
 import { ChestError, insist, now, type Row } from '../model'
 import { commit, fresh, maybe, next } from '../files/repo'
 import { action, credentialSession, live, resource, spend, type Authorized } from './auth'
 import { endpoint, insertSecret, random, seal, secret, sign } from './secrets'
-import { eventKinds, liveEventPredicate } from './events'
+import { eventKinds, liveEventOf, liveEventPredicate } from './events'
 import type { Delivery, Event, Subscription } from './model'
 type HookSecret = { key: string; tokenId: string }
 export async function subscribe(env: Bindings,auth: Authorized,input: any) {
@@ -16,7 +16,9 @@ export async function subscribe(env: Bindings,auth: Authorized,input: any) {
 }
 async function hookAuth(env: Bindings,subscription: Row<Subscription>) {insist(!subscription.payload.revokedAt,'webhook_revoked',403);const saved=await secret<HookSecret>(env,`hook:${subscription.id}`);insist(saved,'webhook_reauthorization_required',403);const request=new Request(`${env.AUTH_ORIGIN}/api/chest/integrations/v1/webhooks`),auth=await credentialSession(env,request,saved.value.tokenId);insist(auth.grant.id===subscription.payload.grant,'webhook_grant_mismatch',403);action(auth,'webhook');return {auth,key:saved.value.key}}
 export async function queueEvents(env: Bindings,subscription: Row<Subscription>) {
- const {auth}=await hookAuth(env,subscription),events=(await env.DB.prepare(`SELECT CAST(json_extract(p.value,'$.position') AS INTEGER) AS position,r.* FROM chest_records r JOIN chest_integration_secrets p ON p.id='event:'||r.id WHERE r.kind='integration-event' AND CAST(json_extract(p.value,'$.position') AS INTEGER)>? AND ${liveEventPredicate} ORDER BY position LIMIT 50`).bind(subscription.payload.after).all()).results as any[];if(!events.length)return
+ // Events are read by position from the indexed event clock: a poll with nothing new reads no event rows at all.
+ const events=(await env.DB.prepare(`SELECT q.position AS position,r.* FROM chest_integration_secrets q JOIN chest_records r ON r.id=substr(q.id,7) WHERE q.position>? AND r.kind='integration-event' AND ${liveEventOf('q')} ORDER BY q.position LIMIT 50`).bind(subscription.payload.after).all()).results as any[];if(!events.length)return
+ const {auth}=await hookAuth(env,subscription)
  let after=subscription.payload.after;const ops=[]
  for(const raw of events){after=raw.position;const event=JSON.parse(raw.payload) as Event;if(event.imported||!subscription.payload.events.includes(event.kind))continue
   try{await resource(env,auth,event.item,'webhook')}catch(error){if(error instanceof ChestError&&(error.status===403||error.status===404))continue;throw error}
@@ -41,7 +43,9 @@ export async function replayDelivery(env: Bindings,s: Session,key: string) {cons
 export async function sweepIntegrations(env: Bindings) {
  // No automatic retry after sending started: a dead process may have reached the receiver. The console exposes
  // uncertainty and the human chooses replay with the same event ID, which receivers must deduplicate.
- const stale=new Date(Date.now()-60000).toISOString();for(const row of await list<Delivery>(env,'integration-delivery'))if(row.payload.state==='sending'&&row.payload.startedAt!<stale)try{await commit(env,null,[{row:next(row,{...row.payload,state:'uncertain',reason:'runner_interrupted'}),previous:row}])}catch{}
- for(const subscription of (await list<Subscription>(env,'integration-subscription')).filter(r=>!r.payload.revokedAt))try{await queueEvents(env,subscription)}catch{}
- for(const delivery of (await list<Delivery>(env,'integration-delivery')).filter(r=>r.payload.state==='pending').slice(0,10))try{await deliverEvent(env,delivery.id)}catch(error){if(error instanceof ChestError){try{await commit(env,null,[{row:next(delivery,{...delivery.payload,state:'failed',reason:error.code,finishedAt:now()}),previous:delivery}])}catch{}}}
+ // Every read below is by state or position on an index, so a quiet webhook costs the same however long its history.
+ const open=async<T>(sql:string)=>(await env.DB.prepare(sql).all()).results.map(decode<T>)
+ const stale=new Date(Date.now()-60000).toISOString();for(const row of await open<Delivery>("SELECT * FROM chest_records WHERE kind='integration-delivery' AND json_extract(payload,'$.state')='sending' ORDER BY id"))if(row.payload.startedAt!<stale)try{await commit(env,null,[{row:next(row,{...row.payload,state:'uncertain',reason:'runner_interrupted'}),previous:row}])}catch{}
+ for(const subscription of await open<Subscription>("SELECT * FROM chest_records WHERE kind='integration-subscription' AND json_extract(payload,'$.revokedAt') IS NULL ORDER BY id"))try{await queueEvents(env,subscription)}catch{}
+ for(const delivery of await open<Delivery>("SELECT * FROM chest_records WHERE kind='integration-delivery' AND json_extract(payload,'$.state')='pending' ORDER BY id LIMIT 10"))try{await deliverEvent(env,delivery.id)}catch(error){if(error instanceof ChestError){try{await commit(env,null,[{row:next(delivery,{...delivery.payload,state:'failed',reason:error.code,finishedAt:now()}),previous:delivery}])}catch{}}}
 }

@@ -1,6 +1,6 @@
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
-import { get, list } from '../store'
+import { decode, get, list } from '../store'
 import { validPerson } from '../access'
 import { insist, now, type Group, type Row } from '../model'
 import { commit, fresh, maybe, next, type Op } from './repo'
@@ -133,7 +133,8 @@ export async function decide(env: Bindings, s: Session, w: Who, id: string, inpu
  await deliver(env, s, [told])
  return { id, status: decided.payload.status, grantedRole: granted?.role ?? null }
 }
-export async function pending(env: Bindings, w: Who, item?: string) { return (await list<AccessRequest>(env, 'request')).filter(r => r.payload.status === 'pending' && r.payload.approvers.includes(w.email) && (!item || r.payload.item === item)) }
+// Only requests still waiting are read (the index holds just those), however many were decided before.
+export async function pending(env: Bindings, w: Who, item?: string) { return (await env.DB.prepare("SELECT * FROM chest_records INDEXED BY chest_request_pending WHERE kind='request' AND json_extract(payload,'$.status')='pending' ORDER BY id").all()).results.map(decode<AccessRequest>).filter(r => r.payload.status === 'pending' && r.payload.approvers.includes(w.email) && (!item || r.payload.item === item)) }
 export async function notices(env: Bindings, w: Who) {
  const rows=[]
  for(const row of (await list<Notice>(env,'notice')).filter(n=>n.payload.to===w.email)){
@@ -147,14 +148,19 @@ export async function markRead(env: Bindings, s: Session, w: Who) {
  if (unread.length) await commit(env, s, unread.map(n => ({ row: next(n, { ...n.payload, read: true }), previous: n })))
  return { read: unread.length }
 }
-// Time-based duties run on the next request after they fall due: the one-day expiry notice, refusing and recording
-// an expired grant, and closing requests after 30 days. Each duty commits alone; a concurrent request that already
-// performed it makes this commit's snapshot stale, so nothing is sent twice.
+// Time-based duties run on the scheduled sweep (every 15 minutes): the one-day expiry notice, refusing and recording
+// an expired grant, and closing requests after 30 days. Access itself never waits for it: a grant past its expiry
+// stops working at once (`live`), and an expired request cannot be decided. Each duty commits alone; a concurrent
+// sweep that already performed it makes this commit's snapshot stale, so nothing is sent twice. Only rows due within
+// two days are read (the slack covers expiry strings with a zone offset); the exact test below decides what is due.
 export async function sweep(env: Bindings) {
- const t = Date.now()
- for (const x of await list<Expiry>(env, 'expiry')) {
+ const t = Date.now(), horizon = new Date(t + 2 * day).toISOString()
+ const due = async <T>(sql: string) => (await env.DB.prepare(sql).bind(horizon).all()).results.map(decode<T>)
+ for (const x of await due<Expiry>("SELECT * FROM chest_records INDEXED BY chest_expiry_due WHERE kind='expiry' AND json_extract(payload,'$.expires')<=? ORDER BY id")) {
   try {
-   const item = await maybe<Item>(env, 'item', x.payload.item); if (!item) continue
+   const item = await maybe<Item>(env, 'item', x.payload.item)
+   // The item was erased: nothing is left for this record to expire or announce.
+   if (!item) { await commit(env, null, [{ row: x, previous: x, remove: true }]); continue }
    const grant = item.payload.grants.find(g => g.principal === x.payload.principal && g.expires === x.payload.expires)
    if (Date.parse(x.payload.expires) <= t) {
     await commit(env, null, [{ row: x, previous: x, remove: true }, ...(grant ? [{ row: next(item, { ...item.payload, grants: item.payload.grants.filter(g => g !== grant) }), previous: item }] : [])], { changes: [{ item: item.id, space: item.payload.space, kind: 'access' }], audits: [{ action: 'share.expired', object: item.id, detail: { principal: x.payload.principal, expires: x.payload.expires } }] })
@@ -168,7 +174,7 @@ export async function sweep(env: Bindings) {
    }
   } catch (e) { if (!String((e as Error)?.message).includes('CHECK constraint failed')) throw e }
  }
- for (const r of await list<AccessRequest>(env, 'request')) {
+ for (const r of await due<AccessRequest>("SELECT * FROM chest_records INDEXED BY chest_request_pending WHERE kind='request' AND json_extract(payload,'$.status')='pending' AND json_extract(payload,'$.expiresAt')<=? ORDER BY id")) {
   if (r.payload.status !== 'pending' || Date.parse(r.payload.expiresAt) > t) continue
   try {
    const told = notice(r.payload.requester, 'request.expired', null, 'chest:system', 'Your access request expired after 30 days without a decision.', r.id)

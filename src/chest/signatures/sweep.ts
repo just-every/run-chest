@@ -4,7 +4,6 @@ import { now, type Person } from '../model'
 import { maybe } from '../files/repo'
 import { cancelled, reminder, tell } from './messages'
 import { event, getRequest, mutate, SYSTEM } from './store'
-import { KIND } from './store'
 import type { SignRequest } from './model'
 const day = 86_400_000
 // An expired request is closed on the next read or sweep: the source version stays as it was, nothing is filed.
@@ -18,7 +17,7 @@ export async function settle(env: Bindings, key: string) {
 }
 // Due reminders: one per invited signer per cadence; completed, declined, voided and expired requests send none.
 export async function sweepSignatures(env: Bindings) {
- const ids = (await env.DB.prepare("SELECT id FROM chest_records WHERE kind=? AND json_extract(payload,'$.status')='pending'").bind(KIND).all()).results.map((r: any) => String(r.id))
+ const ids = (await env.DB.prepare("SELECT id FROM chest_records INDEXED BY chest_signature_pending WHERE kind='signature' AND json_extract(payload,'$.status')='pending' ORDER BY id").all()).results.map((r: any) => String(r.id))
  for (const key of ids) {
   const row = await settle(env, key), p = row.payload
   if (p.status !== 'pending' || !p.reminderDays) continue

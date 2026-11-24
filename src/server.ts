@@ -3,6 +3,7 @@ import { withOutboundPolicy } from './chest/outbound'
 import { wopiResponse } from './chest/office/wopi'
 import { integrationsResponse } from './chest/integrations/http'
 import { sweepIntegrations } from './chest/integrations/webhooks'
+import { sweep } from './chest/files/shares'
 import { sweepBackups } from './chest/backups/service'
 import { collectionSweep } from './chest/collection'
 import { withDemo } from './modules/demo/index.mjs'
@@ -39,7 +40,9 @@ function documentResponse(response: Response): Response {
 }
 
 export default withDemo(withOutboundPolicy({
-  async scheduled(_controller, original) { await Promise.all([sweepIntegrations(runtimeBindings(original)),sweepBackups(runtimeBindings(original)),collectionSweep(runtimeBindings(original)),sweepLinkRepairs(runtimeBindings(original)),sweepAgents(runtimeBindings(original)),sweepSignatures(runtimeBindings(original))]) },
+  // Time-based duties run here, every 15 minutes (deploy.json and wrangler.jsonc): expiry notices and expired grants,
+  // signature reminders, backup-failure notices, link repairs and collection reminders. Requests never run them.
+  async scheduled(_controller, original) { const env=runtimeBindings(original);await Promise.all([sweepIntegrations(env),sweep(env),sweepBackups(env),collectionSweep(env),sweepLinkRepairs(env),sweepAgents(env),sweepSignatures(env)]) },
   async email(message, env) { await receiveIntake(runtimeBindings(env), message) },
   async fetch(request, original, execution) {
     const asset = await staticAssetResponse(request, original)
@@ -53,7 +56,7 @@ export default withDemo(withOutboundPolicy({
       const agent = await chestAgentDoor(env).handle(metadataAlias ? new Request(new URL('/.well-known/oauth-protected-resource/mcp', request.url), request) : request)
       if (agent) return documentResponse(agent)
     }
-    if(new URL(request.url).pathname.startsWith('/app') || new URL(request.url).pathname.startsWith('/api/chest'))execution.waitUntil(Promise.all([sweepBackups(env),collectionSweep(env),sweepLinkRepairs(env),sweepAgents(env),sweepSignatures(env)]))
+    if(new URL(request.url).pathname.startsWith('/app') || new URL(request.url).pathname.startsWith('/api/chest'))execution.waitUntil(sweepAgents(env))
     const publicPage = await setupStateResponse(request, env) ?? await lobbyResponse(request, env, identity)
     if (publicPage) return documentResponse(publicPage)
     const wopi = await wopiResponse(request,env);if(wopi)return documentResponse(wopi)

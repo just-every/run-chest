@@ -48,7 +48,7 @@ export async function linkRepairsExecute(env:Bindings,s:Session,method:string,pa
  if(method==='POST' && parts[1] && parts[2]==='undo')return undoRepair(env,s,w,parts[1])
  insist(false,'not_found',404)
 }
-// Traffic and scheduled events run due grants. Each grant is re-authorized against its active person and current
+// The scheduled sweep runs due grants. Each grant is re-authorized against its active person and current
 // item ACL, including every ancestor and current groups. No cached session or owner-wide capability is created.
 export async function sweepLinkRepairs(env:Bindings){
  for(const scope of (await list<LinkScope>(env,'link-scope')).filter(r=>r.payload.automatic && (!r.payload.lastScan || Date.parse(r.payload.lastScan)<Date.now()-15*60000)).slice(0,20)){

@@ -1,9 +1,9 @@
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { insist, now, type Row } from '../model'
-import { get, list, ownerPredicate, snapshot } from '../store'
+import { decode, get, list, ownerPredicate, snapshot } from '../store'
 import { context, demand, whoFor } from '../files/access'
-import { commit, fresh, next, where } from '../files/repo'
+import { commit, fresh, next } from '../files/repo'
 import { deliver, notice } from '../files/notify'
 import type { Checklist, Evidence, Reminder } from './model'
 import { recipientAccess, refresh } from './evidence'
@@ -19,15 +19,19 @@ export async function standingSession(env:Bindings,row:Row<Checklist>) {
  const session={id:`collection:${row.id}`,kind:'owner collection authority',operator:{id:actor.id,email:actor.email,role:actor.role},predicate:{sql:`(${p.sql}) AND EXISTS(SELECT 1 FROM oa_operators WHERE id=? AND status='active' AND role='owner' AND version=?)`,params:[...p.params,actor.id,actor.version]}} as unknown as Session
  return {session,fences:ctx.fences}
 }
+// The newest reminder to one recipient, from the index on (checklist, recipient, time): history never has to be read.
+async function newestReminder(env:Bindings,collection:string,recipient:string) {
+ const found=await env.DB.prepare("SELECT * FROM chest_records WHERE kind='collection-reminder' AND json_extract(payload,'$.collection')=? AND json_extract(payload,'$.recipient')=? ORDER BY json_extract(payload,'$.at') DESC LIMIT 1").bind(collection,recipient).first()
+ return found?decode<Reminder>(found):undefined
+}
 export async function remind(env:Bindings,row:Row<Checklist>,session:Session) {
  const p=row.payload,result=await refresh(env,row,session),sent:Row<Reminder>[]=[]
  if(!p.enabled||!p.sendReminders||result.state==='accepted')return {state:result.state,reminders:sent}
  const authority=await context(env,await whoFor(env,p.owner),p.folder);demand(authority,'share');const guard=ownerPredicate(session)
- const previous=await where<Reminder>(env,'collection-reminder','$.collection',row.id)
  for(const email of p.recipients) {
   const pending=result.evidence.filter(e=>!e.recipients.find(r=>r.email===email)?.confirmed)
   if(!pending.length)continue
-  const latest=previous.filter(r=>r.payload.recipient===email).sort((a,b)=>b.payload.at.localeCompare(a.payload.at))[0]
+  const latest=await newestReminder(env,row.id,email)
   if(latest&&Date.parse(latest.payload.at)+p.cadenceHours*3600000>Date.now())continue
   // Access loss is a proposed redelivery, never a reason to send to a new audience or grant access.
   const current=await Promise.all(pending.map(e=>recipientAccess(env,email,e.requirement.item??p.folder)))

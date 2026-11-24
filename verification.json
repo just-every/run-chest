@@ -24,7 +24,8 @@
         "node tests/chest/duplicate-reconciliation.mjs",
         "node tests/chest/backup-archive.mjs",
         "node tests/chest/erasure.mjs",
-        "node tests/chest/erasure-archive.mjs"
+        "node tests/chest/erasure-archive.mjs",
+        "node tests/chest/d1-read-budget.mjs"
       ]
     },
     {
@@ -165,6 +166,7 @@
     "tests/chest/browser-upload-protection.mjs": [],
     "tests/chest/bulk.mjs": [],
     "tests/chest/collection.mjs": [],
+    "tests/chest/d1-read-budget.mjs": [],
     "tests/chest/duplicate-reconciliation.mjs": [],
     "tests/chest/erasure-archive.mjs": [],
     "tests/chest/erasure.mjs": [],

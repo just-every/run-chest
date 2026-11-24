@@ -21,6 +21,10 @@
       "bucket_name": "chest-originals"
     }
   ],
+  // The scheduled sweep (src/server.ts): expiry notices, reminders and repairs. deploy.json declares the same schedule.
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  },
   "vars": {
     "AUTH_LOCAL": "false",
     "MAIL_PROVIDER": "",

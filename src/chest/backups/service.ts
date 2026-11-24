@@ -1,7 +1,7 @@
 import type { Bindings } from '../../auth.server'
 import type { Session } from '../../modules/operator-auth/index.mjs'
 import { owner } from '../access'
-import { list } from '../store'
+import { decode,list } from '../store'
 import { insist,now } from '../model'
 import { commit,fresh,maybe,next } from '../files/repo'
 import { notice,deliver } from '../files/notify'
@@ -25,7 +25,7 @@ export async function backupAction(env:Bindings,s:Session,input:any){
 // An independent runner holds the Cloudflare credentials and records outcomes directly in D1.
 // The application only sends the recorded failure notice, not backups or decryption keys.
 export async function sweepBackups(env:Bindings){
- for(const row of (await list<BackupRun>(env,'backup-run')).filter(r=>['failed','interrupted'].includes(r.payload.state)&&!r.payload.notifiedAt)){
+ for(const row of (await env.DB.prepare("SELECT * FROM chest_records INDEXED BY chest_backup_unnotified WHERE kind='backup-run' AND json_extract(payload,'$.state') IN ('failed','interrupted') AND json_extract(payload,'$.notifiedAt') IS NULL ORDER BY id").all()).results.map(decode<BackupRun>)){
   const message=notice(env.OWNER_EMAIL,'backup.failed',null,env.OWNER_EMAIL,`Independent backup did not complete (${row.payload.state}). Originals are unchanged. Open Administration to inspect the backup runner and try again after checking the independent copy.`)
   try{await commit(env,null,[{row:next(row,{...row.payload,notifiedAt:now()}),previous:row},{row:message}],{audits:[{action:'backup.failure.notice',object:row.id,detail:{state:row.payload.state}}]});await deliver(env,null,[message])}catch{ /* A parallel sweep may already have claimed this notice. Its durable run remains visible. */ }
  }

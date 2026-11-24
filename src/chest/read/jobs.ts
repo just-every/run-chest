@@ -45,27 +45,39 @@ async function save<T extends { updatedAt: string }>(env: Bindings, row: Row<T>,
  return r.meta.changes === 1 ? { ...row, payload: fresh, revision } : null
 }
 // Every readable version of a file or record gets its extraction; the newest version of a record whose type has
-// fields gets a field reading. Both are created as waiting work.
+// fields gets a field reading. Both are created as waiting work. Looking is bounded by what changed: a database
+// trigger marks every file or record written (chest_reader_dirty), a pass works through a few marks, and a mark is
+// cleared only if the record was not written again meanwhile. A pass over a quiet library reads no library rows.
+// (`+r.kind` keeps SQLite from scanning every record of a kind instead of looking up the marked ones by id.)
+const DIRTY_PASS = 25, DIRTY_PASSES = 20
 async function discover(env: Bindings) {
  const at = now(), types = READABLE.map(() => '?').join(',')
- // Invalidate old RTF readings before reuse; clearing the revision also fences an older running reader.
- const upgraded = await env.DB.prepare(`UPDATE chest_records SET payload=json_set(payload,'$.parser',?,'$.state','queued','$.pages',json('[]'),'$.text','','$.searchText','','$.truncatedAt',NULL,'$.problem',NULL,'$.lease',NULL,'$.updatedAt',?),revision=? WHERE kind='extract' AND (json_extract(payload,'$.mediaType')=? OR json_extract(payload,'$.format')='RTF document') AND coalesce(json_extract(payload,'$.parser'),'')<>?`).bind(RTF_PARSER, at, crypto.randomUUID(), RTF_MEDIA_TYPE, RTF_PARSER).run()
- const versions = (await env.DB.prepare(`SELECT DISTINCT json_extract(v.value,'$.checksum') AS checksum, json_extract(v.value,'$.mediaType') AS mediaType, json_extract(v.value,'$.size') AS size FROM chest_records r, json_each(r.payload,'$.versions') v WHERE r.kind IN ('item','document') AND json_extract(v.value,'$.mediaType') IN (${types}) AND NOT EXISTS (SELECT 1 FROM chest_records e WHERE e.id='extract:'||json_extract(v.value,'$.checksum')) LIMIT 25`).bind(...READABLE).all()).results as { checksum: string; mediaType: string; size: number }[]
- const latest = (await env.DB.prepare(`SELECT r.id AS document, json_extract(r.payload,'$.versions[#-1].id') AS version, json_extract(r.payload,'$.versions[#-1].checksum') AS checksum FROM chest_records r WHERE ((r.kind='document' AND json_extract(r.payload,'$.trash')=0) OR (r.kind='item' AND json_extract(r.payload,'$.trash') IS NULL AND json_extract(r.payload,'$.filing.schema') IS NOT NULL)) AND json_extract(r.payload,'$.versions[#-1].mediaType') IN (${types}) AND NOT EXISTS (SELECT 1 FROM chest_records x WHERE x.id='reading:'||r.id||':'||json_extract(r.payload,'$.versions[#-1].id')) LIMIT 25`).bind(...READABLE).all()).results as { document: string; version: string; checksum: string }[]
+ // Invalidate old RTF readings before reuse; clearing the revision also fences an older running reader. The index
+ // on RTF extractions (migration 0036) keeps this to those few rows.
+ const upgraded = await env.DB.prepare(`UPDATE chest_records INDEXED BY chest_extract_rtf SET payload=json_set(payload,'$.parser',?,'$.state','queued','$.pages',json('[]'),'$.text','','$.searchText','','$.truncatedAt',NULL,'$.problem',NULL,'$.lease',NULL,'$.updatedAt',?),revision=? WHERE kind='extract' AND (json_extract(payload,'$.mediaType')='${RTF_MEDIA_TYPE}' OR json_extract(payload,'$.format')='RTF document') AND coalesce(json_extract(payload,'$.parser'),'')<>?`).bind(RTF_PARSER, at, crypto.randomUUID(), RTF_PARSER).run()
+ for (let pass = 0; pass < DIRTY_PASSES; pass++) {
+ const dirty = (await env.DB.prepare('SELECT id,n FROM chest_reader_dirty ORDER BY id LIMIT ?').bind(DIRTY_PASS).all()).results as { id: string; n: number }[]
+ if (!dirty.length) break
+ const ids = JSON.stringify(dirty.map(d => d.id))
+ const versions = (await env.DB.prepare(`SELECT DISTINCT json_extract(v.value,'$.checksum') AS checksum, json_extract(v.value,'$.mediaType') AS mediaType, json_extract(v.value,'$.size') AS size FROM json_each(?) j JOIN chest_records r ON r.id=j.value, json_each(r.payload,'$.versions') v WHERE r.kind IN ('item','document') AND json_extract(v.value,'$.mediaType') IN (${types}) AND NOT EXISTS (SELECT 1 FROM chest_records e WHERE e.id='extract:'||json_extract(v.value,'$.checksum'))`).bind(ids, ...READABLE).all()).results as { checksum: string; mediaType: string; size: number }[]
+ const latest = (await env.DB.prepare(`SELECT r.id AS document, json_extract(r.payload,'$.versions[#-1].id') AS version, json_extract(r.payload,'$.versions[#-1].checksum') AS checksum FROM json_each(?) j JOIN chest_records r ON r.id=j.value WHERE ((+r.kind='document' AND json_extract(r.payload,'$.trash')=0) OR (+r.kind='item' AND json_extract(r.payload,'$.trash') IS NULL AND json_extract(r.payload,'$.filing.schema') IS NOT NULL)) AND json_extract(r.payload,'$.versions[#-1].mediaType') IN (${types}) AND NOT EXISTS (SELECT 1 FROM chest_records x WHERE x.id='reading:'||r.id||':'||json_extract(r.payload,'$.versions[#-1].id'))`).bind(ids, ...READABLE).all()).results as { document: string; version: string; checksum: string }[]
  const insert = (key: string, kind: string, payload: unknown) => env.DB.prepare('INSERT INTO chest_records(id,kind,payload,revision) VALUES(?,?,?,?) ON CONFLICT(id) DO NOTHING').bind(key, kind, JSON.stringify(payload), crypto.randomUUID())
  const statements = [
   ...versions.map(v => insert(extractId(v.checksum), 'extract', { mediaType: v.mediaType, size: v.size, state: 'queued', pages: [], text: '', truncatedAt: null, model: null, problem: null, lease: null, usage: { input: 0, output: 0 }, createdAt: at, updatedAt: at } satisfies Extraction)),
   ...latest.map(r => insert(readingId(r.document, r.version), 'reading', { document: r.document, version: r.version, checksum: r.checksum, state: 'waiting', proposals: [], model: null, problem: null, lease: null, attempts: 0, usage: { input: 0, output: 0 }, createdAt: at, updatedAt: at } satisfies Reading)),
  ]
- if (statements.length) await env.DB.batch(statements)
- return statements.length > 0 || upgraded.meta.changes > 0
+ await env.DB.batch([...statements, ...dirty.map(d => env.DB.prepare('DELETE FROM chest_reader_dirty WHERE id=? AND n=?').bind(d.id, d.n))])
+ if (statements.length > 0) return true
+ if (dirty.length < DIRTY_PASS) break
+ }
+ return upgraded.meta.changes > 0
 }
 // The next unit: an extraction with work left, or a field reading whose extraction has finished.
 async function nextUnit(env: Bindings): Promise<Row<any> | null> {
  const t = now()
- const extract = await env.DB.prepare(`SELECT * FROM chest_records WHERE kind='extract' AND json_extract(payload,'$.state') IN ('queued','reading') AND coalesce(json_extract(payload,'$.lease'),'')<? ORDER BY json_extract(payload,'$.createdAt') LIMIT 1`).bind(t).first()
+ const extract = await env.DB.prepare(`SELECT * FROM chest_records INDEXED BY chest_extract_open WHERE kind='extract' AND json_extract(payload,'$.state') IN ('queued','reading') AND coalesce(json_extract(payload,'$.lease'),'')<? ORDER BY json_extract(payload,'$.createdAt') LIMIT 1`).bind(t).first()
  if (extract) return decode(extract)
- const reading = await env.DB.prepare(`SELECT r.* FROM chest_records r WHERE r.kind='reading' AND json_extract(r.payload,'$.state') IN ('waiting','reading') AND coalesce(json_extract(r.payload,'$.lease'),'')<? AND EXISTS (SELECT 1 FROM chest_records e WHERE e.id='extract:'||json_extract(r.payload,'$.checksum') AND json_extract(e.payload,'$.state') NOT IN ('queued','reading')) ORDER BY json_extract(r.payload,'$.createdAt') LIMIT 1`).bind(t).first()
+ const reading = await env.DB.prepare(`SELECT r.* FROM chest_records r INDEXED BY chest_reading_open WHERE r.kind='reading' AND json_extract(r.payload,'$.state') IN ('waiting','reading') AND coalesce(json_extract(r.payload,'$.lease'),'')<? AND EXISTS (SELECT 1 FROM chest_records e WHERE e.id='extract:'||json_extract(r.payload,'$.checksum') AND json_extract(e.payload,'$.state') NOT IN ('queued','reading')) ORDER BY json_extract(r.payload,'$.createdAt') LIMIT 1`).bind(t).first()
  return reading ? decode(reading) : null
 }
 async function original(env: Bindings, checksum: string, size: number) {

@@ -74,8 +74,8 @@ checks every original's hash and size. Only then does the console show a verifie
 backup, with its date, object count, encrypted bytes and checksum. Retention
 removes older archives after successful readback, always retaining the newest.
 Failed runs stay visible and generate an in-app and email notice through the
-installation's configured mail provider when Chest next processes its scheduled
-work or a private request.
+installation's configured mail provider on the next scheduled sweep (every 15
+minutes).
 
 The archive includes current records, retained versions, original bytes,
 comments, rules, migration mappings, audit and sanitized execution history.

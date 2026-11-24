@@ -22,7 +22,7 @@ try{
    ])await h.sql('INSERT INTO chest_records(id,kind,payload,revision) VALUES(?,?,?,?)',id,kind,JSON.stringify(payload),'synthetic-chest-22');
   }
   await page.reload();assert.ok((await h.api('/backups',owner)).lastSuccess);await expect(card.locator('li').filter({hasText:'failed'})).toBeVisible();await expect(card.locator('li').filter({hasText:'68300000 encrypted bytes'})).toBeVisible();await shot(page,width,'outcomes');
-  await page.goto(h.origin+'/app/notices');await expect(page.getByText(/Independent backup did not complete \(failed\)/)).toBeVisible();await expect.poll(()=>h.mails.filter(m=>m.text.includes('Independent backup did not complete (failed)')).length).toBe(1);
+  await h.scheduled();await page.goto(h.origin+'/app/notices');await expect(page.getByText(/Independent backup did not complete \(failed\)/)).toBeVisible();await expect.poll(()=>h.mails.filter(m=>m.text.includes('Independent backup did not complete (failed)')).length).toBe(1);
   await page.goto(h.origin+'/app/administration#independent-backups');
   await press(page,card.getByRole('button',{name:'Request backup now'}));assert.ok((await h.api('/backups',owner)).settings.requestedAt);await shot(page,width,'requested');
   await card.locator('select[name=enabled]').selectOption('false');await press(page,card.getByRole('button',{name:'Save backup schedule'}));assert.equal((await h.api('/backups',owner)).settings.enabled,false);await card.locator('summary').click();await shot(page,width,'paused-instructions');await context.close();

@@ -232,7 +232,7 @@ try{
   await h.api('/people',people.owner,{action:'reactivate',email:'eve@example.test'});people.eve=await h.signIn('eve@example.test');
   // Requests close after 30 days and the requester is told.
   await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.expiresAt',?) WHERE id=?",new Date(Date.now()-1000).toISOString(),spaceRequest.request);
-  assert.equal((await h.api(`/requests/${spaceRequest.request}`,people.dee)).status,'expired');assert.ok((await h.api('/notices',people.dee)).some(n=>n.payload.type==='request.expired'));
+  await h.scheduled();assert.equal((await h.api(`/requests/${spaceRequest.request}`,people.dee)).status,'expired');assert.ok((await h.api('/notices',people.dee)).some(n=>n.payload.type==='request.expired'));
   // Grant expiry: commenter on a space file for two days; the one-day notice reaches both, one extend moves it once.
   const device=await h.api('/devices',people.dee,{name:'Dee desktop',platform:'windows'}),hydrate=()=>h.fetch(`/api/chest/sync/items/${space.terms}/content`,{headers:{authorization:`Bearer ${device.token}`}});
   await h.api('/policy',people.ana,{maxGrantDays:10},403);await h.api('/policy',people.owner,{maxGrantDays:10});
@@ -240,12 +240,12 @@ try{
   const until=new Date(Date.now()+2*day).toISOString().slice(0,10);await h.api(`/items/${space.terms}/shares`,people.ana,{principal:'dee@example.test',role:'commenter',expires:until});
   assert.equal((await hydrate()).status,200);await h.api(`/items/${space.terms}/comments`,people.dee,{message:'Noted'});
   const age=async ms=>{const at=new Date(Date.now()+ms).toISOString();await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.expires',?) WHERE id=?",at,`expiry:${space.terms}:dee@example.test`);await h.sql("UPDATE chest_records SET payload=json_set(payload,'$.grants',(SELECT json_group_array(CASE WHEN json_extract(value,'$.principal')='dee@example.test' THEN json_set(value,'$.expires',?) ELSE json(value) END) FROM json_each(payload,'$.grants'))) WHERE id=?",at,space.terms)};
-  await age(12*3600_000);await h.api('/files',people.mo);
+  await age(12*3600_000);await h.scheduled();
   for(const who of ['ana','dee'])assert.equal((await h.api('/notices',people[who])).filter(n=>n.payload.type==='share.expiring'&&n.payload.item===space.terms).length,1,`${who} gets one expiry notice`);
   const grant=(await h.api(`/items/${space.terms}`,people.ana)).grants.find(g=>g.principal==='dee@example.test');
   const extended=await h.api(`/items/${space.terms}/extend`,people.ana,{principal:'dee@example.test',from:grant.expires});const moved=extended.payload.grants.find(g=>g.principal==='dee@example.test').expires;assert.equal(Date.parse(moved)-Date.parse(grant.expires),7*day);
   await h.api(`/items/${space.terms}/extend`,people.ana,{principal:'dee@example.test',from:grant.expires},409);
-  await age(-1000);await h.api('/files',people.mo);
+  await age(-1000);await h.scheduled();
   await h.api(`/items/${space.terms}`,people.dee,undefined,403);await bytesOf('dee',space.terms,(await h.api(`/items/${space.terms}`,people.ana)).item.current,403);assert.equal((await hydrate()).status,403);await h.api(`/items/${space.terms}/comments`,people.dee,{message:'late'},403);
   assert.equal((await h.api('/search?q=net%2030',people.dee)).count,0);assert.ok(!(await h.api('/shared',people.dee)).some(s=>s.id===space.terms));
   assert.equal((await audit('share.expired')).filter(e=>e.object_id===space.terms).length,1);

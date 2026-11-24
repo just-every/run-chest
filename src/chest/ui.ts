@@ -30,7 +30,6 @@ import { library } from './ui-library'
 import { documentPage } from './ui-document'
 import { adminPage,archivePage } from './ui-admin'
 import { filesInput,filesPage,filesPath,filesReceipt } from './files/ui'
-import { sweep } from './files/shares'
 import { kick } from './read/jobs'
 import { readerView } from './read/settings'
 import { readerCard,testReceipt } from './read/ui'
@@ -51,7 +50,7 @@ async function ui(request:Request,original:Bindings){const url=new URL(request.u
  try {
  // Sign out: revoke this session (the auth service checks method and origin), clear the cookie, go to sign-in.
  if(url.pathname==='/app/signout'){insist(request.method==='POST','method_not_allowed',405);const {cookie}=await operatorAuth(env).signOut(request);return new Response(null,{status:303,headers:{...headers,location:'/signin','set-cookie':cookie}})}
- const s=await authenticated(env,request);await syncPeople(env,request,s);await sweep(env);if(request.method==='GET')kick(env);const me=await withRail(env,s,url.pathname)
+ const s=await authenticated(env,request);await syncPeople(env,request,s);if(request.method==='GET')kick(env);const me=await withRail(env,s,url.pathname)
  if(request.method==='POST'&&url.pathname==='/app/action'){
   const fields=await request.formData();const input:any={};for(const [key,value] of fields)if(typeof value==='string')input[key]=value
   const returnTo=input.returnTo||'/app/files';back=returnTo

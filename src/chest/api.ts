@@ -27,7 +27,6 @@ import { previewArchive,applyArchive,archiveAction } from './archive'
 import { filesExecute } from './files/api'
 import { syncRoute } from './files/sync-api'
 import { offboard } from './files/people'
-import { sweep } from './files/shares'
 import { everything,who } from './files/access'
 import { filingExecute } from './filing/api'
 import { readingExecute } from './read/api'
@@ -118,6 +117,6 @@ export function failure(error:unknown){
 export async function apiResponse(request:Request,original:Bindings){const pathname=new URL(request.url).pathname;if(!pathname.startsWith('/api/chest/'))return null;const env=runtimeBindings(original)
  // Sync clients authenticate with their device credential, never a browser cookie.
  if(pathname.startsWith('/api/chest/sync/'))try{insist(Number(request.headers.get('content-length')||0)<20_000_000,'request_too_large',413);const result=await syncRoute(env,request,pathname.slice('/api/chest'.length));return result instanceof Response?result:Response.json(result,{headers})}catch(e){return failure(e)}
- try{const s=await authenticated(env,request);await syncPeople(env,request,s);await sweep(env);insist(Number(request.headers.get('content-length')||0)<20_000_000,'request_too_large',413);let input={};if(request.method==='POST'){insist(request.headers.get('content-type')?.includes('application/json'),'json_required');try{input=await request.json()}catch{throw new ChestError('invalid_json')}insist(input&&typeof input==='object'&&!Array.isArray(input),'invalid_input')}
+ try{const s=await authenticated(env,request);await syncPeople(env,request,s);insist(Number(request.headers.get('content-length')||0)<20_000_000,'request_too_large',413);let input={};if(request.method==='POST'){insist(request.headers.get('content-type')?.includes('application/json'),'json_required');try{input=await request.json()}catch{throw new ChestError('invalid_json')}insist(input&&typeof input==='object'&&!Array.isArray(input),'invalid_input')}
  const result=await execute(env,request,s,request.method,new URL(request.url).pathname.slice('/api/chest'.length),input);kick(env,request);return result instanceof Response?result:Response.json(result,{headers})}catch(e){return failure(e)}
 }

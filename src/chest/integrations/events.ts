@@ -16,7 +16,9 @@ export function integrationEventStatements(events: Op[]) {
  return events.flatMap(({row})=>[
   {sql:"INSERT INTO chest_integration_secrets(id,value) VALUES('event-clock','0') ON CONFLICT(id) DO NOTHING",params:[] as unknown[]},
   {sql:"UPDATE chest_integration_secrets SET value=CAST(CAST(value AS INTEGER)+1 AS TEXT) WHERE id='event-clock'",params:[] as unknown[]},
-  {sql:"INSERT INTO chest_integration_secrets(id,value) SELECT ?,json_object('position',(SELECT CAST(value AS INTEGER) FROM chest_integration_secrets WHERE id='event-clock'),'row',rowid,'revision',revision,'payload',payload) FROM chest_records WHERE id=? AND kind='integration-event'",params:[`event:${row.id}`,row.id]},
+  {sql:"INSERT INTO chest_integration_secrets(id,value,position) SELECT ?,json_object('position',(SELECT CAST(value AS INTEGER) FROM chest_integration_secrets WHERE id='event-clock'),'row',rowid,'revision',revision,'payload',payload),(SELECT CAST(value AS INTEGER) FROM chest_integration_secrets WHERE id='event-clock') FROM chest_records WHERE id=? AND kind='integration-event'",params:[`event:${row.id}`,row.id]},
  ])
 }
-export const liveEventPredicate = "EXISTS(SELECT 1 FROM chest_integration_secrets p WHERE p.id='event:'||r.id AND json_extract(p.value,'$.row')=r.rowid AND json_extract(p.value,'$.revision')=r.revision AND json_extract(p.value,'$.payload')=r.payload)"
+// An event is live while the secret row written with it still names this row, revision and payload.
+export const liveEventOf = (secret: string) => `json_extract(${secret}.value,'$.row')=r.rowid AND json_extract(${secret}.value,'$.revision')=r.revision AND json_extract(${secret}.value,'$.payload')=r.payload`
+export const liveEventPredicate = `EXISTS(SELECT 1 FROM chest_integration_secrets p WHERE p.id='event:'||r.id AND ${liveEventOf('p')})`
