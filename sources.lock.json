@@ -568,6 +568,10 @@
       "sha256": "05c475cfb42504c4254a773817b3b204936722b2112ce2e3ac884c2d4827a453",
       "executable": false
     },
+    "migrations/core/0036_bounded_reads.sql": {
+      "sha256": "785985f803164b0dfb0b8bf45de4d95f6ca180ec2f1ac856898c15bc18fa20d4",
+      "executable": false
+    },
     "ONBOARDING.md": {
       "sha256": "e829eb20c1bbef6b779324ff9b9df2544370bc8ce5650bdae7cd031d85687fdf",
       "executable": false
@@ -6182,6 +6186,14 @@
     },
     "tests/chest/content-security-flow.mjs": {
       "sha256": "5c28f6a48bebb3a6e060de54dd2ece587545d1724afdd25c093df45d7e76f196",
+      "executable": false
+    },
+    "tests/chest/d1-meter-entry.js": {
+      "sha256": "e790e00387e4c20377efe51ba393bf1cc9f42f9433ffd9b7896443704a3f7d16",
+      "executable": false
+    },
+    "tests/chest/d1-read-budget.mjs": {
+      "sha256": "45942676e6e17ee2210a307d2726ef38a08ce2ea31c6976c843cd91df059918d",
       "executable": false
     },
     "tests/chest/duplicate-reconciliation.mjs": {
