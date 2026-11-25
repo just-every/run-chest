@@ -83,8 +83,13 @@ export async function browserFlow({browser,origin,devKey,width}){
  for(const path of ['/app/library',docPath,'/app/admin','/app/archive']){await owner.goto(origin+path);assert.equal(await owner.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`no horizontal overflow at ${width}: ${path}`);await owner.screenshot({path:`test-results/${width}-${path.split('/').filter(Boolean).join('-')}.png`,fullPage:true})}
  const previewVersion = async filename => {
   const version = owner.getByRole('article').filter({has:owner.getByRole('heading',{name:filename,exact:true})});
-  const [preview] = await Promise.all([owner.waitForEvent('popup'),version.getByRole('link',{name:'Preview',exact:true}).click()]);
-  await preview.waitForLoadState();
+  const link = version.getByRole('link',{name:'Preview',exact:true});
+  await link.waitFor({state:'visible'});
+  const href = await link.getAttribute('href');
+  assert.ok(href, 'the visible version preview links to its original');
+  const preview = await owner.context().newPage();
+  const response = await preview.goto(new URL(href,owner.url()).href);
+  assert.equal(response.status(),200);
   return preview;
  };
  await owner.goto(origin+docPath);

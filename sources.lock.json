@@ -6077,7 +6077,7 @@
       "executable": false
     },
     "tests/chest/browser-flow.mjs": {
-      "sha256": "5e61a8d129897dba9ef54ba751352830da04e2564a862f8022759b982ca5ec09",
+      "sha256": "3bec60e2b880d8df3273864de573aac1769322c84bbb56e67b5e06e9fa2ca17f",
       "executable": false
     },
     "tests/chest/browser-governance.mjs": {
