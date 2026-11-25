@@ -129,6 +129,14 @@ export function preserved(before,after) {
      const migrated=after.tables[table].rows.map(JSON.parse).find(r=>r.id===operator.id);assert.deepEqual(migrated,{...operator,role:'member',version:operator.version+1},'legacy role migration also advances the identity version to revoke earlier sessions');row=JSON.stringify(migrated);
     }
    }
+   if(table==='chest_records'){
+    const record=JSON.parse(serialized),payload=record.kind==='person'?JSON.parse(record.payload):null;
+    if(payload?.role==='admin'){
+     // The person mirror follows its operator through ADMIN-003 on the next owner request.
+     const migrated=after.tables[table].rows.map(JSON.parse).find(r=>r.kind==='person'&&r.id===record.id);
+     assert.deepEqual(JSON.parse(migrated.payload),{...payload,role:'member'},'the earlier administrator person record keeps every field but its content role');row=JSON.stringify(migrated);
+    }
+   }
    assert.ok(counts.get(row)>0,`an earlier row changed in ${table}`);counts.set(row,counts.get(row)-1)
   }
  }

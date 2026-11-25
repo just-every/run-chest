@@ -6493,7 +6493,7 @@
       "executable": false
     },
     "tests/chest/upgrade-local.mjs": {
-      "sha256": "2a644d2aec70b396528a514f8743a3035883358ab2c93aa867526da653594334",
+      "sha256": "57ecb284e5f7cd6d4b860ca3fc94be1e035666443475b74d309b4c727062f93f",
       "executable": false
     },
     "tests/chest/upgrade.mjs": {
