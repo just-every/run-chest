@@ -29,6 +29,8 @@ export const commandAdapter = createCommandAdapter(lifecycle, {
  // Local dev identity: the local-only Worker entry, the build output rer build
  // scans for the dev layer.
  devIdentity: { entry: 'src/server.dev.ts', output: ['dist'] },
+ // Copied from the locked pdf.js package by scripts/build-review-viewer.mjs on every app build.
+ generatedOutputs: ['public/chest-pdfjs.mjs', 'public/chest-pdfjs.LICENSE.txt'],
  localOnlyKeys: ['RER_DEV_ORIGIN', 'RER_DEV_IDENTITY'],
  product: model.product.name, input: { names: { email: 'OWNER_EMAIL', name: 'displayName' }, async defaults(root) { const { readFile } = await import('node:fs/promises'); const branding = JSON.parse(await readFile(join(root, 'src/branding.json'), 'utf8')); return { APP_NAME: branding.name, PRIMARY_COLOR: branding.primaryColor }; } },
 });
