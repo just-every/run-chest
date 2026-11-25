@@ -38,16 +38,18 @@ export async function serve(root,port,env) {
  }catch(e){await stop();throw e}
 }
 export async function interruptUpgrade(root,port,env,before) {
- // Interrupt the owner's setup command between two committed migrations.
+ // Use the packaged dispatcher so launcher's setup repair cannot write private settings
+ // ahead of the migration we interrupt.
  const path=await database(root),previous=new Set(before.tables.d1_migrations.rows.map(row=>JSON.parse(row).name));
  const migrations=(await readdir(join(root,'migrations/core'))).filter(name=>name.endsWith('.sql')&&!previous.has(name));
  assert.ok(migrations.length>1,'the upgrade has multiple real pending migrations to interrupt');
  const db=new DatabaseSync(path);let locked=false;
- const p=spawn(process.execPath,[currentRer,'setup','--port',String(port),'--json'],{cwd:root,env,stdio:['ignore','pipe','pipe']});
+ const dispatcher=join(root,'node_modules/@runeditrun/rer/bin/rer.mjs');
+ const p=spawn(process.execPath,[dispatcher,'dev','--port',String(port),'--json'],{cwd:root,env,stdio:['ignore','pipe','pipe']});
  let output='',pending='',ready=false,spawnError,interrupted=false;
  const closed=new Promise(resolve=>p.once('close',resolve));
  p.on('error',error=>{spawnError=error});p.stderr.on('data',c=>output+=c);
- p.stdout.on('data',c=>{output+=c;pending+=c;let end;while((end=pending.indexOf('\n'))>=0){const line=pending.slice(0,end);pending=pending.slice(end+1);try{const event=JSON.parse(line);if(event.verb==='setup'&&event.event==='result'&&event.ok)ready=true}catch{}}});
+ p.stdout.on('data',c=>{output+=c;pending+=c;let end;while((end=pending.indexOf('\n'))>=0){const line=pending.slice(0,end);pending=pending.slice(end+1);try{const event=JSON.parse(line);if(event.verb==='dev'&&event.event==='ready')ready=true}catch{}}});
  try {
   const deadline=Date.now()+240_000;
   while(!interrupted) {
