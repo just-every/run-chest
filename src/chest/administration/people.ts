@@ -24,6 +24,7 @@ export async function administrativePersonAction(env:Bindings,request:Request,s:
   const resend=action==='resend-invite',target=resend?await env.DB.prepare("SELECT display_name AS name FROM oa_operators WHERE email=? AND status='invited'").bind(email).first<{name:string}>():null
   if(resend){insist(target,'invitation_not_found',404);await requireAdmin(env,s,'help-desk',email)}
   else if(input.group)await requireAdminGroup(env,s,'user-management',String(input.group));else await requireAdmin(env,s,'user-management',email)
+  insist(env.MAIL_PROVIDER !== 'none','mail_off',503)
   const auth=createOperatorAuth({db:env.DB,config:authConfig(env),mailSender:namingInviter(operatorMail(env),personLine(s.operator.displayName,s.operator.email)),clientIp:r=>r.headers.get('CF-Connecting-IP')??'',rolePolicy:async({actor,action,role})=>actor.id===s.operator.id&&action==='operators:invite'&&role==='member'&&!!await env.DB.prepare(`SELECT 1 WHERE (${sessionPredicate(s).sql})`).bind(...sessionPredicate(s).params).first()})
   await auth.invite(request,{email,displayName:target?.name??String(input.name),role:'member',returnTo:'/app/files'})
   const audited=Object.assign({...s},{predicate:undefined})

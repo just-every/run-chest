@@ -4,6 +4,7 @@ import { attempt } from '../audit/journal'
 import { esc } from '../ui-shared'
 // Signing mail goes through the installation's mail provider; the provider's own outcome is journaled, never assumed.
 export async function sendMail(env: Bindings, to: string, subject: string, text: string, deliveryId: string, object: string, purpose: string) {
+ if (env.MAIL_PROVIDER === 'none') return 'failed:mail_off'
  const sender = operatorMail(env)
  if (!sender || !env.MAIL_FROM) return 'not_configured'
  try {

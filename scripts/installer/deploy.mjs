@@ -4,8 +4,8 @@ import { privateDirectory, writePrivateFile } from '@runeditrun/rer/private-file
 import { ownerDeploy } from '@runeditrun/rer/deploy';
 import { missing, invalid } from '@runeditrun/rer/errors';
 
-// A hosted Chest's mail is chosen with deploy settings, never by editing deploy.json: MAIL_PROVIDER (sendgrid or
-// resend) and MAIL_FROM (a sender the provider has verified), from the environment or the --env-file. The key is
+// A hosted Chest's mail is chosen from the environment or --env-file. MAIL_PROVIDER=none turns mail off.
+// SendGrid and Resend need MAIL_FROM (a sender the provider has verified). The key is
 // MAIL_API_KEY, or the provider's own SENDGRID_API_KEY / RESEND_API_KEY. With no MAIL_PROVIDER, the one provider
 // whose key is set is used. deploy.json's own mail values are only what `rer verify` serves locally.
 // Docs: docs/hosting.md (https://run-chest.com/docs/hosting).
@@ -30,9 +30,9 @@ export const deploy = lifecycle => {
   return Object.assign(async context => {
     const { options, root } = context;
     // Removing a deployment or changing one secret keeps the mail the Worker already has.
-    if (options.remove || options.setSecret || options.unsetSecret || options.rotateSecret) return base(context);
+    if (options.remove || options.setSecret || options.unsetSecret || options.rotateSecret || options.reopenInstallationKey) return base(context);
     let mail;
-    try { mail = mailSettings(process.env); }
+    try { mail = process.env.MAIL_PROVIDER?.trim() === 'none' ? { provider: 'none' } : mailSettings(process.env); }
     catch (error) {
       // A dry run still builds and checks everything else, and says what a real deploy needs.
       if (!options.dryRun) throw error;
@@ -40,10 +40,16 @@ export const deploy = lifecycle => {
       return base(context);
     }
     const declaration = JSON.parse(await readFile(join(root, 'deploy.json'), 'utf8'));
-    declaration.vars.MAIL_PROVIDER = mail.provider; declaration.vars.MAIL_FROM = mail.from;
+    declaration.vars.MAIL_PROVIDER = mail.provider;
     if (process.env.CHEST_OUTBOUND_HOSTS?.trim()) declaration.vars.CHEST_OUTBOUND_HOSTS = process.env.CHEST_OUTBOUND_HOSTS.trim();
-    process.env.MAIL_API_KEY = mail.apiKey;
-    context.store.report(`Mail: ${mail.provider === 'sendgrid' ? 'SendGrid' : 'Resend'}, sending from ${mail.from}.`);
+    if (mail.provider === 'none') {
+      delete declaration.vars.MAIL_FROM;
+    } else {
+      declaration.vars.MAIL_FROM = mail.from;
+      process.env.MAIL_PROVIDER = mail.provider;
+      process.env.MAIL_API_KEY = mail.apiKey;
+      context.store.report(`Mail: ${mail.provider === 'sendgrid' ? 'SendGrid' : 'Resend'}, sending from ${mail.from}.`);
+    }
     const directory = await privateDirectory(root, ['.seed', 'installer']);
     const path = join(directory, 'owner-deploy.json');
     await writePrivateFile(path, JSON.stringify(declaration) + '\n');

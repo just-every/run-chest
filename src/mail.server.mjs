@@ -2,7 +2,14 @@ import { providerFetch } from './chest/administration/provider-usage'
 import { attempt } from './chest/audit/journal'
 import { createMailSender } from './modules/mail/index.mjs'
 
+const mailOffSender = Object.freeze({
+ async send() {
+  throw Object.assign(new Error('Outbound email is off.'), { code: 'mail_off' })
+ },
+})
+
 export function operatorMail(env) {
+ if (env.MAIL_PROVIDER === 'none') return mailOffSender
  if (env.RER_DEMO === '1' || env.AUTH_LOCAL === 'true') {
   return createMailSender({ provider: 'development', mode: 'development' })
  }

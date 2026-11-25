@@ -1,6 +1,6 @@
 # Run it locally
 
-Start Chest with one line, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-chest`. git is required; rer brings Node and pnpm. Have Node 22 or later? `npx -y @runeditrun/rer dev just-every/run-chest` does the same; to only set it up, run `npx -y @runeditrun/rer setup just-every/run-chest`. Chest pins the published `@runeditrun/rer` 0.2.96; every verb runs that package. `rer demo` runs a throwaway demo with sample data; see [DEMO.md](DEMO.md).
+Start Chest with one line, `curl -fsSL https://runeditrun.com/install.sh | sh -s -- dev just-every/run-chest`. git is required; rer brings Node and pnpm. Have Node 22 or later? `npx -y @runeditrun/rer dev just-every/run-chest` does the same; to only set it up, run `npx -y @runeditrun/rer setup just-every/run-chest`. Chest pins the published `@runeditrun/rer` 0.2.134; every verb runs that package. `rer demo` runs a throwaway demo with sample data; see [DEMO.md](DEMO.md).
 
 ## Launch with one command
 
@@ -39,6 +39,14 @@ with exit 3 and a message naming the field.
   `rer build --site` writes the same site to its declared folder and names it;
   `rer deploy --site --dry-run` prints the site Worker, custom domains and www
   redirect it would create, with no provider request.
+
+## Run on Cloudflare with mail off
+
+Use `MAIL_PROVIDER=none rer deploy --dry-run` to plan an installation with no
+mail sender or key. Use the same setting for the deployment. From the checkout
+that deployed it, run `rer signin` with that deployment’s Cloudflare access to
+get a one-time owner link. Email sign-in, staff invitations and other outbound
+email stay unavailable until an email provider is configured.
 
 ## Install for a real owner
 

@@ -1,14 +1,17 @@
-import { fileURLToPath as __rerTestEntryPath } from 'node:url';
-const __rerTestEntry = __rerTestEntryPath(import.meta.resolve('@runeditrun/rer/internal/global/rer.mjs'));
-const __rerTestEntryArgs = args => args[1] === 'dev' && !args.some(arg => ['--foreground', '--detach', '--stop', '--help'].includes(arg)) ? [...args, '--foreground'] : args;
+import {createRequire} from 'node:module';
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {readFile,statfs} from 'node:fs/promises';
 import {loadavg,tmpdir} from 'node:os';
-import {join} from 'node:path';
+import {dirname,join} from 'node:path';
 import {createRedaction,credentialValues} from '@runeditrun/rer/redaction';
 import {localVariables} from '@runeditrun/rer/local/environment';
-export async function command(root,args,{refuse=false,exitCode,env={}}={}){const p=spawn(process.execPath,__rerTestEntryArgs([__rerTestEntry,...args]),{cwd:root,stdio:['ignore','pipe','pipe'],env:{...process.env,CI:'true',WRANGLER_SEND_METRICS:'false',...env}});let output='';for(const s of [p.stdout,p.stderr])s.on('data',c=>output+=c);const code=await new Promise(r=>p.once('exit',r));if(exitCode!==undefined)assert.equal(code,exitCode,`${args[0]} returned an unexpected command status`);else if(refuse)assert.notEqual(code,0,`${args[0]} must refuse`);else assert.equal(code,0,`${args[0]} failed (private command output withheld)`);return output}
+
+const require = createRequire(import.meta.url);
+const manifest = require.resolve('@runeditrun/rer/package.json');
+export const rerBin = join(dirname(manifest),require(manifest).bin.rer);
+const foreground = args => args[0] === 'dev' && !args.some(arg => ['--foreground', '--detach', '--stop', '--help'].includes(arg)) ? [...args, '--foreground'] : args;
+export async function command(root,args,{refuse=false,exitCode,env={}}={}){const p=spawn(process.execPath,[rerBin,...foreground(args)],{cwd:root,stdio:['ignore','pipe','pipe'],env:{...process.env,CI:'true',WRANGLER_SEND_METRICS:'false',...env}});let output='';for(const s of [p.stdout,p.stderr])s.on('data',c=>output+=c);const code=await new Promise(r=>p.once('exit',r));if(exitCode!==undefined)assert.equal(code,exitCode,`${args[0]} returned an unexpected command status`);else if(refuse)assert.notEqual(code,0,`${args[0]} must refuse`);else assert.equal(code,0,`${args[0]} failed (private command output withheld)`);return output}
 // Only the CLI's structured, approved error reaches the test log. Never print
 // its ready event (which carries a dev key), progress stream or private capture.
 async function startupDiagnostic(root,failure){
@@ -28,7 +31,7 @@ async function startupDiagnostic(root,failure){
  return `${code}: ${message}\nStartup resources: ${JSON.stringify({load1m:loadavg()[0],checkoutFreeGiB:checkoutGiB,temporaryFreeGiB:temporaryGiB})}`;
 }
 export async function serving(root,verb,port,extra=[]){
- const p=spawn(process.execPath,__rerTestEntryArgs([__rerTestEntry,verb,'--port',String(port),'--json',...extra]),{cwd:root,stdio:['ignore','pipe','pipe'],env:{...process.env,WRANGLER_SEND_METRICS:'false'}});
+ const p=spawn(process.execPath,[rerBin,...foreground([verb,'--port',String(port),'--json',...extra])],{cwd:root,stdio:['ignore','pipe','pipe'],env:{...process.env,WRANGLER_SEND_METRICS:'false'}});
  let pending='',ready=false,failure,spawnCode;
  p.stdout.setEncoding('utf8');
  p.stdout.on('data',chunk=>{pending+=chunk;let end;while((end=pending.indexOf('\n'))>=0){const line=pending.slice(0,end);pending=pending.slice(end+1);try{const event=JSON.parse(line);if(event.version!==1||event.verb!==verb)continue;if(event.event==='ready')ready=true;if(event.event==='error')failure=event}catch{ /* Non-event output stays private. */ }}});

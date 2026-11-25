@@ -31,7 +31,8 @@ export async function deliver(env: Bindings, actor: Session | null, rows: Row<No
  const sender = operatorMail(env), updated: { row: Row<Notice>; previous: Row<Notice> }[] = []
  for (const row of rows) {
   let outcome = 'not_configured'
-  if (sender && env.MAIL_FROM) {
+  if (env.MAIL_PROVIDER === 'none') outcome = 'failed:mail_off'
+  else if (sender && env.MAIL_FROM) {
    try { const message = compose(env, row.payload, (actor&&sessionAgent(actor)?.label)||personName((await maybe<Person>(env, 'person', row.payload.from))?.payload.name, row.payload.from)), result = await attempt(env,actor?.operator.email ?? 'chest:notifications','provider.mail',row.payload.item ?? row.id,{authority:actor?`${actor.kind}:${actor.operator.role}`:'notice delivery',notice:row.id,provider:String(env.MAIL_PROVIDER)},()=>sender.send({ deliveryId: row.id, from: env.MAIL_FROM!, to: [row.payload.to], subject: message.subject, text: message.text, html: `<p>${message.text.replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`).replace(/\n/g, '<br>')}</p>`, headers: { 'Auto-Submitted': 'auto-generated' } })); outcome = result.status === 'development' ? 'suppressed' : `${result.status}${result.providerMessageId ? ':' + result.providerMessageId : ''}` }
    catch (e: any) { outcome = `failed:${typeof e?.code === 'string' ? e.code : 'send_error'}` }
   }

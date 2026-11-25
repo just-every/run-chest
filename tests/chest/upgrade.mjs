@@ -8,7 +8,7 @@ import {createHash} from 'node:crypto';
 import {chromium} from '@playwright/test';
 import {localVariables} from '@runeditrun/rer/local/environment';
 import {command,currentRer,runtimeEnvironment,serve,snapshot,preserved,interruptUpgrade,archiveSnapshot} from './upgrade-local.mjs';
-const scratch=await mkdtemp(join(tmpdir(),'chest-upgrade-')),root=join(scratch,'chest'),recovery=join(scratch,'recovery'),home=join(scratch,'installer-home'),env=runtimeEnvironment(home),setupEnv=runtimeEnvironment(home,true),candidate=process.cwd(),answers='.rer/local/upgrade-answers.json',fleetEmail=['fleet','runeditrun.com'].join('@');
+const scratch=await mkdtemp(join(tmpdir(),'chest-upgrade-')),root=join(scratch,'chest'),recovery=join(scratch,'recovery'),home=join(scratch,'installer-home'),env=runtimeEnvironment(home),candidate=process.cwd(),answers='.rer/local/upgrade-answers.json',fleetEmail=['fleet','runeditrun.com'].join('@');
 let server,browser;
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 try {
@@ -16,13 +16,13 @@ try {
  await command(scratch,['git','clone','--depth','1','--filter=blob:none','--branch','v0.1.0','https://github.com/just-every/run-chest.git',root],env);
  await command(root,['git','config','user.name','Run Edit Run fleet'],env);
  await command(root,['git','config','user.email',fleetEmail],env);
- await command(root,[process.execPath,currentRer,'install'],setupEnv);
+ await command(root,[process.execPath,currentRer,'install'],env);
  assert.equal((await command(root,['git','status','--porcelain','--untracked-files=no'],env)).trim(),'','install leaves the tagged application source unchanged');
  console.log('Installed genuine tagged application; preparing the owner.');
  await mkdir(join(root,'.rer/local'),{recursive:true,mode:0o700});await writeFile(join(root,answers),JSON.stringify({APP_NAME:'synthetic-chest-1',PRIMARY_COLOR:'#427c73',OWNER_EMAIL:'owner@example.test'}),{mode:0o600});
- await command(root,[process.execPath,currentRer,'setup','--answers',answers],setupEnv);
+ await command(root,[process.execPath,currentRer,'setup','--answers',answers],env);
  const socket=createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r));const origin=`http://127.0.0.1:${port}`;
- server=await serve(root,port,env,true);console.log('Prior-release application is serving.');
+ server=await serve(root,port,env);console.log('Prior-release application is serving.');
  const key=(await readFile(join(root,'.rer/local/dev-key.env'),'utf8')).trim().split('=')[1];
  const session=async(as,devKey=key)=>{const response=await fetch(origin+'/auth/dev/enter?as='+as,{headers:{'x-rer-dev-key':devKey},redirect:'manual'});assert.equal(response.status,303);return response.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ')};
  const owner=await session('owner'),member=await session('member'),legacyAdmin=await session('admin');
@@ -56,7 +56,7 @@ try {
  await api('/library');
  await server.stop();server=null;
  const settingsBefore=await readFile(join(root,'.dev.vars'),'utf8'),brandingBefore=await readFile(join(root,'src/branding.json'),'utf8');
- await command(root,[process.execPath,currentRer,'export','--output','exports/pre-upgrade.rer'],setupEnv);
+ await command(root,[process.execPath,currentRer,'export','--output','exports/pre-upgrade.rer'],env);
  const backupPath=join(root,'exports/pre-upgrade.rer'),backupHash=hash(await readFile(backupPath)),backup=await archiveSnapshot(backupPath);
  assert.ok(((await stat(backupPath)).mode&0o077)===0,'pre-upgrade archive is private');
  const before=await snapshot(root);console.log('Populated prior release and captured every application row and original.');
@@ -70,20 +70,20 @@ try {
  await command(scratch,['git','clone','--no-local','--depth','1','--branch','v0.1.0',root,recovery],env);
  await command(recovery,['git','config','user.name','Run Edit Run fleet'],env);
  await command(recovery,['git','config','user.email',fleetEmail],env);
- await command(recovery,[process.execPath,currentRer,'install'],setupEnv);
+ await command(recovery,[process.execPath,currentRer,'install'],env);
  await mkdir(join(recovery,'exports'),{mode:0o700});
  await copyFile(backupPath,join(recovery,'exports/pre-upgrade.rer'));await chmod(join(recovery,'exports/pre-upgrade.rer'),0o600);
- await command(recovery,[process.execPath,currentRer,'import','--input','exports/pre-upgrade.rer','--yes'],setupEnv);
- await command(recovery,[process.execPath,currentRer,'export','--output','exports/recovered.rer'],setupEnv);
+ await command(recovery,[process.execPath,currentRer,'import','--input','exports/pre-upgrade.rer','--yes'],env);
+ await command(recovery,[process.execPath,currentRer,'export','--output','exports/recovered.rer'],env);
  assert.deepEqual(await archiveSnapshot(join(recovery,'exports/recovered.rer')),backup,'rollback reconciles every portable cell, table and original byte chunk');
  assert.deepEqual((await snapshot(recovery)).objects,before.objects,'rollback retains original bytes and object metadata');
  await mkdir(join(recovery,'.rer/local'),{recursive:true,mode:0o700});await copyFile(join(root,answers),join(recovery,answers));
- await command(recovery,[process.execPath,currentRer,'setup','--answers',answers,'--port',String(port)],setupEnv);
+ await command(recovery,[process.execPath,currentRer,'setup','--answers',answers,'--port',String(port)],env);
  const restoredSettings=localVariables(await readFile(join(recovery,'.dev.vars'),'utf8')),priorSettings=localVariables(settingsBefore);
  for(const name of ['OWNER_EMAIL','MAIL_PROVIDER','MAIL_FROM'])assert.equal(restoredSettings[name],priorSettings[name],`rollback preserves configured ${name}`);
  assert.ok(restoredSettings.SESSION_SECRET&&restoredSettings.SESSION_SECRET!==priorSettings.SESSION_SECRET,'rollback regenerates the private session secret');
  assert.equal(await readFile(join(recovery,'src/branding.json'),'utf8'),brandingBefore,'rollback restores owner-selected application settings');
- server=await serve(recovery,port,env,true);
+ server=await serve(recovery,port,env);
  const recoveryKey=(await readFile(join(recovery,'.rer/local/dev-key.env'),'utf8')).trim().split('=')[1];assert.ok(recoveryKey!==key,'recovery has a fresh dev identity key');
  for(const cookie of [owner,member,legacyAdmin])assert.equal((await fetch(origin+'/api/chest/library',{headers:{cookie,'x-rer-dev-key':recoveryKey}})).status,401,'pre-upgrade credentials cannot open the recovered installation');
  const recoveredOwner=await session('owner',recoveryKey),recoveredMember=await session('member',recoveryKey);await session('admin',recoveryKey);
@@ -117,5 +117,5 @@ try {
  for(const document of documents)for(const version of document.payload.versions){const r=await fetch(`${origin}/api/chest/documents/${document.id}/bytes/${version.id}?download=true`,{headers:{cookie:upgradedOwner}});assert.equal(r.status,200);assert.equal(hash(new Uint8Array(await r.arrayBuffer())),version.checksum)}
  const post=await fetch(origin+'/api/chest/spaces',{method:'POST',headers:{cookie:upgradedOwner,origin,'content-type':'application/json'},body:JSON.stringify({name:'Harbor upgraded project'})});assert.equal(post.status,200);const space=await post.json();
  await screenshots(upgradedOwner,[['library','/app/library'],['document',`/app/documents/${documents[0].id}`],['files',`/app/spaces/${space.id}`]],'upgrade');
- console.log(`RECOVER-002 passed: ${Object.keys(before.tables).length} prior tables, every earlier row and ${before.objects.length} originals preserved; all Library versions download and Files works at 1440/390. The tagged application used the currently supported installer runtime.`);
+ console.log(`RECOVER-002 passed: ${Object.keys(before.tables).length} prior tables, every earlier row and ${before.objects.length} originals preserved; all Library versions download and Files works at 1440/390. Each checkout used its pinned rer package.`);
 }finally{await browser?.close();await server?.stop();await rm(scratch,{recursive:true,force:true})}

@@ -81,10 +81,27 @@ export async function browserFlow({browser,origin,devKey,width}){
  await owner.goto(origin+'/app/archive');await owner.getByLabel('Batch reference').fill(job.id);await owner.getByLabel(/^Action/).selectOption('undo');await owner.getByRole('button',{name:'Run batch action'}).click();assert.equal(JSON.parse(await owner.locator('pre').innerText()).state,'undone');assert.equal((await json(owner,origin,'/library')).count,before);
  await owner.goto(origin+docPath);await owner.getByRole('button',{name:'Move to trash',exact:true}).click();assert.ok(!(await json(owner,origin,'/library')).documents.some(r=>r.id===docId));await owner.getByRole('button',{name:'Restore from trash'}).click();assert.ok((await json(owner,origin,'/library')).documents.some(r=>r.id===docId));
  for(const path of ['/app/library',docPath,'/app/admin','/app/archive']){await owner.goto(origin+path);assert.equal(await owner.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`no horizontal overflow at ${width}: ${path}`);await owner.screenshot({path:`test-results/${width}-${path.split('/').filter(Boolean).join('-')}.png`,fullPage:true})}
- await owner.goto(origin+docPath);const preview=owner.context().waitForEvent('page');await owner.getByRole('link',{name:'Preview',exact:true}).first().click();const page=await preview;await page.waitForLoadState();assert.ok((await page.locator('body').innerText()).includes('Replacement evidence B'));await page.screenshot({path:`test-results/${width}-text-preview.png`});await page.close();
- for(const [name,bytes,mime] of [['pixel.png',png,'image/png'],['certificate.pdf',pdf(),'application/pdf']]){await owner.goto(origin+docPath);await owner.getByText('Submit replacement',{exact:true}).click();await owner.getByLabel('Replacement file').setInputFiles({name,mimeType:mime,buffer:bytes});await owner.getByRole('button',{name:'Submit new immutable version'}).click();}
- const imageOpened=owner.context().waitForEvent('page');await owner.getByRole('link',{name:'Preview',exact:true}).click();const imagePage=await imageOpened;await imagePage.waitForLoadState();await imagePage.waitForFunction(()=>document.images.length===1&&document.images[0].naturalWidth>0);await imagePage.screenshot({path:`test-results/${width}-raster-preview.png`});await imagePage.close();
- const pdfOpened=owner.context().waitForEvent('page');await owner.getByRole('link',{name:'Preview',exact:true}).click();const pdfPage=await pdfOpened;await pdfPage.waitForLoadState();assert.equal(await pdfReady(pdfPage),'Chest supplier evidence','native viewer renders the PDF text');await pdfPage.screenshot({path:`test-results/${width}-pdf-preview.png`});await pdfPage.close();
+ const previewVersion = async filename => {
+  const version = owner.getByRole('article').filter({has:owner.getByRole('heading',{name:filename,exact:true})});
+  const [preview] = await Promise.all([owner.waitForEvent('popup'),version.getByRole('link',{name:'Preview',exact:true}).click()]);
+  await preview.waitForLoadState();
+  return preview;
+ };
+ await owner.goto(origin+docPath);
+ const textPage=await previewVersion('certificate-B.txt');
+ assert.ok((await textPage.locator('body').innerText()).includes('Replacement evidence B'));
+ await textPage.screenshot({path:`test-results/${width}-text-preview.png`});await textPage.close();
+ for(const [name,bytes,mime] of [['pixel.png',png,'image/png'],['certificate.pdf',pdf(),'application/pdf']]){
+  await owner.getByText('Submit replacement',{exact:true}).click();
+  await owner.getByLabel('Replacement file').setInputFiles({name,mimeType:mime,buffer:bytes});
+  await Promise.all([owner.waitForNavigation(),owner.getByRole('button',{name:'Submit new immutable version'}).click()]);
+ }
+ const imagePage=await previewVersion('pixel.png');
+ await imagePage.waitForFunction(()=>document.images.length===1&&document.images[0].naturalWidth>0);
+ await imagePage.screenshot({path:`test-results/${width}-raster-preview.png`});await imagePage.close();
+ const pdfPage=await previewVersion('certificate.pdf');
+ assert.equal(await pdfReady(pdfPage),'Chest supplier evidence','native viewer renders the PDF text');
+ await pdfPage.screenshot({path:`test-results/${width}-pdf-preview.png`});await pdfPage.close();
  // The same signed-in reviewer must lose every preview/download immediately
  // when the collection grant is removed, then regain the exact original bytes.
  const originals=new Map([['certificate-B.txt',Buffer.from('Replacement evidence B')],['pixel.png',png],['certificate.pdf',pdf()]]);

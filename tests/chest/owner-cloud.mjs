@@ -1,7 +1,4 @@
 import assert from 'node:assert/strict';
-import {createReadStream} from 'node:fs';
-import {Readable} from 'node:stream';
-import {diffArchives} from '@runeditrun/rer/internal/modules/portability/diff.mjs';
 import {cloudResources,deploymentEnvironment} from './hosted-cloud.mjs';
 import {rerCommand} from './owner-process.mjs';
 import {emailSignIn,waitForMailLink} from './hosted-mail.mjs';
@@ -17,7 +14,7 @@ export async function cloudJourney({browser,head,ownerEmail,memberEmail,from,exp
  cloudOrigin=await resources.deploy(env);
  await rerCommand(['import','--target','remote','--origin',cloudOrigin,'--input','exports/server.rer','--yes'],env);
  await rerCommand(['export','--target','remote','--origin',cloudOrigin,'--output','exports/cloud.rer'],env);
- const difference=await diffArchives(Readable.toWeb(createReadStream('exports/server.rer')),Readable.toWeb(createReadStream('exports/cloud.rer')));
+ const difference=JSON.parse(await rerCommand(['archive','diff','exports/server.rer','exports/cloud.rer'],env));
  assert.deepEqual(difference.tables,[],'every portable record survives the server to cloud move');
  assert.deepEqual(difference.objects,{added:[],removed:[],changed:[]},'every original and its metadata survives the server to cloud move');
  assert.equal(difference.schemaChanged,false);assert.equal(difference.configurationChanged,false);

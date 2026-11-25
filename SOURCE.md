@@ -7,7 +7,7 @@ edition-authoring source. `base-copies.json` records verbatim copies;
 provenance, including their historical comparison origins. The hydration README is adapted for package-mode commands, with its
 original path mapped in `edition.json`; it makes no claim of byte equality.
 
-The published `@runeditrun/rer` 0.2.96 is pinned exactly in `package.json` and
+The published `@runeditrun/rer` 0.2.134 is pinned exactly in `package.json` and
 `pnpm-lock.yaml`. It owns command execution and archive format v2, whose integrity
 digest binds the manifest, including source identity, erasure epoch and journal.
 Version 1 archives require the acknowledged, backup-only recovery procedure in
@@ -51,7 +51,7 @@ workflow and clause-judgment adaptations remain recorded in `base-copies.json`.
 
 Chest owns the reversible arrival-rule planner and executor in `src/chest/filing/batch-*.ts`,
 its bounded Office-to-text and ZIP transforms, and the exercising HTTP and browser journeys.
-The command package is pinned to `@runeditrun/rer` 0.2.96; copied Base modules retain
+The command package is pinned to `@runeditrun/rer` 0.2.134; copied Base modules retain
 their separately recorded revisions.
 
 The arrival agent uses explicit inbox/destination grants and the installation reader provider.

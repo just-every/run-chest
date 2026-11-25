@@ -1,7 +1,5 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
-import {createRequire} from 'node:module';
-import {fileURLToPath} from 'node:url';
 import {join,dirname} from 'node:path';
 import {readdir,readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
@@ -10,10 +8,9 @@ import {getPlatformProxy} from 'wrangler';
 import {createRedaction,credentialValues} from '@runeditrun/rer/redaction';
 import {localVariables} from '@runeditrun/rer/local/environment';
 import {readArchive} from '@runeditrun/rer/modules/portability';
-const require=createRequire(import.meta.url),runtime=dirname(require.resolve('@runeditrun/rer/package.json'));
-const loader=fileURLToPath(new URL('./upgrade-runtime-loader.mjs',import.meta.url));
-export const currentRer=join(runtime,'global/rer.mjs');
-export function runtimeEnvironment(home,compatible=false) {return {...process.env,HOME:home,PATH:dirname(process.execPath)+':'+process.env.PATH,CI:'true',WRANGLER_SEND_METRICS:'false',NODE_OPTIONS:`${process.env.NODE_OPTIONS??''}${compatible?' --experimental-loader='+loader:''}`}}
+import {rerBin} from './local.mjs';
+export const currentRer=rerBin;
+export function runtimeEnvironment(home) {return {...process.env,HOME:home,PATH:dirname(process.execPath)+':'+process.env.PATH,CI:'true',WRANGLER_SEND_METRICS:'false'}}
 async function diagnostic(root,env,output) {
  const redact=createRedaction();redact.addSecrets(credentialValues(env));
  for(const file of ['.dev.vars','.rer/local/dev-key.env'])try{redact.addSecrets(localVariables(await readFile(join(root,file),'utf8')))}catch{}
@@ -29,9 +26,8 @@ export async function command(root,argv,env) {
  }
  return output;
 }
-export async function serve(root,port,env,legacy=false) {
- const entry=legacy?join(root,'node_modules/@runeditrun/rer/bin/rer.mjs'):currentRer;
- const p=spawn(process.execPath,[entry,'dev',...legacy?[]:['--foreground'],'--port',String(port),'--json'],{cwd:root,env,stdio:['ignore','pipe','pipe']});let output='',pending='',ready=false,failed=false;
+export async function serve(root,port,env) {
+ const p=spawn(process.execPath,[currentRer,'dev','--foreground','--port',String(port),'--json'],{cwd:root,env,stdio:['ignore','pipe','pipe']});let output='',pending='',ready=false,failed=false;
  const closed=new Promise(r=>p.once('close',r));
  p.on('error',()=>{failed=true});p.stderr.on('data',c=>output+=c);p.stdout.on('data',c=>{output+=c;pending+=c;let i;while((i=pending.indexOf('\n'))>=0){const line=pending.slice(0,i);pending=pending.slice(i+1);try{const event=JSON.parse(line);if(event.verb==='dev'&&event.event==='ready')ready=true;if(event.event==='error')failed=true}catch{}}});
  const stop=async()=>{if(p.exitCode===null&&p.signalCode===null)p.kill('SIGTERM');await closed};
@@ -42,17 +38,16 @@ export async function serve(root,port,env,legacy=false) {
  }catch(e){await stop();throw e}
 }
 export async function interruptUpgrade(root,port,env,before) {
- // Use the public dispatcher directly: the global launcher's prerequisite
- // repair could finish setup before dev reaches its own migration phase.
+ // Interrupt the owner's setup command between two committed migrations.
  const path=await database(root),previous=new Set(before.tables.d1_migrations.rows.map(row=>JSON.parse(row).name));
  const migrations=(await readdir(join(root,'migrations/core'))).filter(name=>name.endsWith('.sql')&&!previous.has(name));
  assert.ok(migrations.length>1,'the upgrade has multiple real pending migrations to interrupt');
  const db=new DatabaseSync(path);let locked=false;
- const p=spawn(process.execPath,[join(runtime,'bin/rer.mjs'),'dev','--port',String(port),'--json'],{cwd:root,env,stdio:['ignore','pipe','pipe']});
+ const p=spawn(process.execPath,[currentRer,'setup','--port',String(port),'--json'],{cwd:root,env,stdio:['ignore','pipe','pipe']});
  let output='',pending='',ready=false,spawnError,interrupted=false;
  const closed=new Promise(resolve=>p.once('close',resolve));
  p.on('error',error=>{spawnError=error});p.stderr.on('data',c=>output+=c);
- p.stdout.on('data',c=>{output+=c;pending+=c;let end;while((end=pending.indexOf('\n'))>=0){const line=pending.slice(0,end);pending=pending.slice(end+1);try{const event=JSON.parse(line);if(event.verb==='dev'&&event.event==='ready')ready=true}catch{}}});
+ p.stdout.on('data',c=>{output+=c;pending+=c;let end;while((end=pending.indexOf('\n'))>=0){const line=pending.slice(0,end);pending=pending.slice(end+1);try{const event=JSON.parse(line);if(event.verb==='setup'&&event.event==='result'&&event.ok)ready=true}catch{}}});
  try {
   const deadline=Date.now()+240_000;
   while(!interrupted) {

@@ -2,7 +2,7 @@ import { createBusinessSettings } from './modules/business-settings/index.ts'
 import { assertDomainSession } from './chest/organisation/domains'
 import { firstRunResponse } from './base/setup'
 import { fontDocumentResponse } from './base/font-response'
-import { createOperatorAuth, createAuthHandler, createSignInHandler, devGate, devNotFound, type AuthConfig } from './modules/operator-auth/index.mjs'
+import { createOperatorAuth, createAuthHandler, createSignInHandler, AuthError, devGate, devNotFound, type AuthConfig } from './modules/operator-auth/index.mjs'
 import { operatorMail } from './mail.server.mjs'
 import { createOwnerClaimHandler, OwnerClaimError } from './modules/owner-claim/index.mjs'
 import branding from './branding.json'
@@ -42,7 +42,7 @@ export interface Bindings {
  SIGNING_KEY_PREVIOUS_SECRET?: string
  SESSION_SECRET: string
  SETUP_TOKEN?: string
- MAIL_PROVIDER?: 'development' | 'resend' | 'sendgrid' | 'cloudflare' | 'rer'
+ MAIL_PROVIDER?: 'development' | 'resend' | 'sendgrid' | 'cloudflare' | 'rer' | 'none'
  MAIL_FROM?: string
  MAIL_RELAY_URL?: string
  MAIL_API_KEY?: string
@@ -70,7 +70,16 @@ export function baseOperatorAuth(env: Bindings, inviter?: string) {
 
 export function operatorAuth(env:Bindings,inviter?:string){
  const auth=baseOperatorAuth(env,inviter)
- return {...auth,async getSession(request:Request){const s=await auth.getSession(request);if(s){await assertDomainSession(env,s);await requireMfa(env,s)}return s}}
+ const mailOff = env.MAIL_PROVIDER === 'none'
+ return {...auth, ...(mailOff ? {
+  emailSignInAvailable: false,
+  async requestMagicLink(request: Request) {
+   const url = new URL(request.url), host = request.headers.get('host')
+   if (url.origin !== env.AUTH_ORIGIN || (host && host.toLowerCase() !== url.host.toLowerCase())) throw new AuthError('invalid_host')
+   if (request.headers.get('origin') !== env.AUTH_ORIGIN || request.headers.get('sec-fetch-site') === 'cross-site') throw new AuthError('invalid_origin')
+   throw new AuthError('mail_off', 503)
+  },
+ } : {}), async getSession(request:Request){const s=await auth.getSession(request);if(s){await assertDomainSession(env,s);await requireMfa(env,s)}return s}}
 }
 
 export async function authResponse(request: Request, original: Bindings): Promise<Response | null> {
