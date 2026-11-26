@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2 (26 Nov 2026)
+
+- Chest prepares the sample photos and scanned pages at build time so each new demo can open its signed-in Harborworks library.
+
 ## 0.2.1 (26 Nov 2026)
 
 - **Hosted setup.** Configure Chest from the deployment descriptor. With outbound mail off, the owner can sign in with `rer signin`.

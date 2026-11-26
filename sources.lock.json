@@ -213,7 +213,7 @@
       "executable": false
     },
     "CHANGELOG.md": {
-      "sha256": "9908fb5fdf45bf6a2748955a90937ec86010ce9c8c7d88b6088b7bea7e441fb7",
+      "sha256": "54368d1795dc34d7a0d2d30025df60d9bf1abbc94ab07c4dfe8b746d95cce2f9",
       "executable": false
     },
     "CLAUDE.md": {
@@ -225,7 +225,7 @@
       "executable": false
     },
     "DEMO.md": {
-      "sha256": "85ff1e9897df861b00d0198481a1efe178f662f7d76d38ae87c02025c6d0e02b",
+      "sha256": "1a4d21bb79e2e498125d17b089de445a3b595db035f2aac00188fd22eb2578a9",
       "executable": false
     },
     "deploy-demo.json": {
@@ -581,7 +581,7 @@
       "executable": false
     },
     "package.json": {
-      "sha256": "27f188f3ccd62b7e14ab7e93252025208fba910e1b498643845b859e3c87a47f",
+      "sha256": "28a207637de945131b0e94d85233ed73e94022f74af15dfb4d14bc6be20d5fb7",
       "executable": false
     },
     "packaging.json": {
@@ -972,8 +972,12 @@
       "sha256": "c243e959719206b2b4a3129fa359a670bfb9088c119cb49e09281b44707f1091",
       "executable": false
     },
-    "RELEASE.json": {
+    "release-history/0.2.1.json": {
       "sha256": "cf4dc0043b1cf90101bd7c131e2b8e297764476037e8f52d3019a41fced76e47",
+      "executable": false
+    },
+    "RELEASE.json": {
+      "sha256": "4c8eb2ba12146e36010b42c1a966f5cfd3ff829de45e2df3981be77102fc5b99",
       "executable": false
     },
     "rer-project.json": {
@@ -1150,6 +1154,10 @@
     },
     "scripts/delivery/base/sql-statements.mjs": {
       "sha256": "8819f7f91b7781905796ea35b01dd1a55e08ed3893ff6d8aafaf03d2f35c1c9a",
+      "executable": false
+    },
+    "scripts/demo-pictures.ts": {
+      "sha256": "e127829e5cd63f00938a3de72f5c246767a517a22750c8cb2f405671305ce709",
       "executable": false
     },
     "scripts/edition-authoring/adopt.mjs": {
@@ -1945,7 +1953,7 @@
       "executable": false
     },
     "seed.json": {
-      "sha256": "8fbb667bde2a05fd3999f8b2527b229dfab2a984d85711d82b55ea0f759f6327",
+      "sha256": "bfa0264e6635ab38d79bbcb8f9e90f4e74c2e9ee3131b3709d7e596715f5424d",
       "executable": false
     },
     "services/collabora/compose.yaml": {
@@ -3473,11 +3481,11 @@
       "executable": false
     },
     "src/demo-files.ts": {
-      "sha256": "e6c4406515629e393587c3e1398019be3c0e3dcf180aa06113b62a138f869d2e",
+      "sha256": "f25a94d08006f83ec4c2488425759df842920d69d756e416d1aa94bdbf9c8128",
       "executable": false
     },
     "src/demo-media.ts": {
-      "sha256": "cf647caf2e071084d6cd99bf5b8ffbbcc04e2082ce123d1dcc1099c53d2908a6",
+      "sha256": "3bf78437202d2480aa6fe0a6d89bce02e830f85265ec6dfde0a1c32314d00432",
       "executable": false
     },
     "src/demo-pdf.ts": {
@@ -3485,11 +3493,11 @@
       "executable": false
     },
     "src/demo-sample.ts": {
-      "sha256": "c11c306890754b352062b2b82080e7cd675b80bd83c4c5b8e5f5fc982153585e",
+      "sha256": "8b326a1d2fc59586a0cd62c78f7e8f83ab81d479597f53ed8a53d5e218903eec",
       "executable": false
     },
     "src/demo.ts": {
-      "sha256": "88e6e278dcafa36ae6aad1864b69eb967cc7f629a19fd7b678c39886f4692515",
+      "sha256": "931e529cbdce4780a612df03d40561cbab9e142c3a41439f12bc406b250bc40c",
       "executable": false
     },
     "src/dev-personas.ts": {
@@ -6521,7 +6529,7 @@
       "executable": false
     },
     "vite.config.ts": {
-      "sha256": "59cedf2a839e0a08392f9f3b1e1e9e53ed866887788b282b611d68a5e2462955",
+      "sha256": "8e80190f2c427d1894586a1f12d7667034b270869f1b199ccf23be9773599ff9",
       "executable": false
     },
     "vite.site.config.ts": {

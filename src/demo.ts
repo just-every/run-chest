@@ -3,6 +3,7 @@ import type { Document, Person, Version } from './chest/model'
 import { schemaDefinition, validateFields } from './chest/fields'
 import { inspect, retain } from './chest/blobs'
 import { collections, documents, groups, schemas, team } from './demo-sample'
+import { demoPictures } from './demo-media'
 import { seedFiles } from './demo-files'
 
 export const ownerName = 'Dana Reyes'
@@ -37,7 +38,8 @@ export async function seedDemo(env: Bindings, { ownerEmail, now }: { ownerEmail:
   for (const [id, schema] of types) { records.push(record(id, 'schema', schema)); log(me, 'schema.create', id, at(-199, records.length)) }
   for (const { id, ...collection } of collections) { records.push(record(id, 'collection', collection)); log(me, 'collection.create', id, at(-198, records.length)); log(me, 'access.change', id, at(-198, records.length - 1)) }
 
-  for (const sample of documents(me, now)) {
+  const picture = await demoPictures(env)
+  for (const sample of documents(me, now, picture)) {
     const versions: Version[] = []
     for (const [index, input] of sample.versions.entries()) {
       const version = await inspect(input.bytes, input.filename, input.by, input.reviewer)
@@ -68,5 +70,5 @@ export async function seedDemo(env: Bindings, { ownerEmail, now }: { ownerEmail:
   ])
   // Everyday files: team spaces, the Vendors / Acme folder and its history (src/demo-files.ts).
   const person = (id: string) => { const p = team.find(t => t.id === id)!; return { email: p.email, name: p.name } }
-  await seedFiles(env, { me, meName: ownerName, luis: person('demo-luis'), maria: person('demo-maria'), priya: person('demo-priya'), now })
+  await seedFiles(env, picture, { me, meName: ownerName, luis: person('demo-luis'), maria: person('demo-maria'), priya: person('demo-priya'), now })
 }

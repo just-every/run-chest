@@ -3,7 +3,7 @@
 // Dan Hale, the Accounts team). Every date is relative to the demo's start.
 import type { Field, Grant } from './chest/model'
 import { pdf as page } from './demo-pdf'
-import { scan } from './demo-media'
+import type { DemoPicture } from './demo-media'
 
 const domain = 'harborworks.example'
 export const team = [
@@ -46,13 +46,13 @@ export type SampleDocument = {
   reference: { kind: 'supplier' | 'customer' | 'project'; name: string } | null; review: number | null; expiry: number | null
   versions: SampleVersion[]; private?: boolean; grants?: Grant[]; trash?: number; completed?: { kind: 'review' | 'expiry'; by: string; days: number; evidence: string }
 }
-// The library's PDFs are scans of signed or issued papers, with their text layer.
-const pdf = (title: string, lines: string[]) => page(title, lines, scan(30 + title.length % 4))
 const text = (lines: string[]) => new TextEncoder().encode(lines.join('\n') + '\n')
 const year = (days: number, now: Date) => new Date(now.getTime() + days * 86_400_000).toISOString().slice(0, 10)
 
 /** The sample records for an owner; `days` are relative to now (negative is past). */
-export function documents(owner: string, now: Date): SampleDocument[] {
+export function documents(owner: string, now: Date, picture: DemoPicture): SampleDocument[] {
+  // Place the current document text over the original scanned page.
+  const pdf = (title: string, lines: string[]) => page(title, lines, picture(`scan-${30 + title.length % 4}.jpg`))
   const on = (days: number) => year(days, now)
   const approve = (by: string, days: number, message = ''): Event => ({ action: 'approve', by, days, message })
   return [

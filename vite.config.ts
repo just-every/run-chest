@@ -1,3 +1,4 @@
+import { demoPictures } from './scripts/demo-pictures'
 import { seedIcons } from '@runeditrun/rer/seed-icons'
 import { demoSockets } from './src/modules/demo/vite.mjs'
 import { cloudflare } from '@cloudflare/vite-plugin'
@@ -16,4 +17,4 @@ const serve = { assets, main: './src/server.dev.ts', vars: { ...local('RER_DEV_O
 // key, installer state), export archives, settings or local data.
 const server = { fs: { allow: ['src', 'public', 'node_modules'], deny: ['**/.rer/**', '**/.seed/**', '**/exports/**', '**/*.rer'] } }
 
-export default defineConfig(({ command, isPreview }) => ({ server, plugins: [seedIcons(), demoSockets(), cloudflare({ inspectorPort: false, viteEnvironment: { name: 'ssr' }, persistState: { path: process.env.RER_STATE_DIR ?? '.wrangler/state' }, ...(command === 'serve' && !isPreview ? { config: serve } : process.env.RER_DEV_ORIGIN ? { config: { assets, vars: local('RER_DEV_ORIGIN') } } : { config: { assets } }) }), tanstackStart(), react()] }))
+export default defineConfig(({ command, isPreview }) => ({ server, plugins: [demoPictures(), seedIcons(), demoSockets(), cloudflare({ inspectorPort: false, viteEnvironment: { name: 'ssr' }, persistState: { path: process.env.RER_STATE_DIR ?? '.wrangler/state' }, ...(command === 'serve' && !isPreview ? { config: serve } : process.env.RER_DEV_ORIGIN ? { config: { assets, vars: local('RER_DEV_ORIGIN') } } : { config: { assets } }) }), tanstackStart(), react()] }))

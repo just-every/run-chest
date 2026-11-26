@@ -41,7 +41,7 @@ start.
   organization's storage plan (100 GB per team space, 10 GB per person's My
   files), so the rail's storage meter draws. Originals have working sizes:
   scans of about 80 KB a page, Office files with the preview picture Office saves,
-  phone and product photos of several hundred KB to 2 MB (`src/demo-media.ts`).
+  phone and product photos of several hundred KB to 2 MB (`scripts/demo-pictures.ts` builds the shared sample artwork; each copy admits its originals into its own R2 storage).
 
 Originals go through Chest's own byte inspection and R2 custody
 (`src/chest/blobs.ts`); records go into the same tables with fixed IDs and

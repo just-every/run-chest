@@ -1,26 +1,10 @@
 {
-  "version": "0.2.1",
+  "version": "0.2.2",
   "date": "2026-11-26",
-  "publicReleaseNotes": "Chest adds a hosted deployment descriptor, owner sign-in with outbound mail off, scoped agent operations, and original previews for file versions. Existing archive and project identities stay the same.",
+  "publicReleaseNotes": "Chest prepares sample photos and scanned artwork when it builds the app. A new hosted demo opens the signed-in Harborworks library without encoding images during session start.",
   "extensionPointChanges": [],
-  "migrations": [
-    "migrations/core/0021_mfa.sql",
-    "migrations/core/0022_admin_roles.sql",
-    "migrations/core/0023_integrations.sql",
-    "migrations/core/0024_lifecycle.sql",
-    "migrations/core/0025_signatures.sql",
-    "migrations/core/0026_content_security.sql",
-    "migrations/core/0027_item_enumeration.sql",
-    "migrations/core/0028_folder_items.sql",
-    "migrations/core/0029_agent_door.sql",
-    "migrations/core/0030_business_settings.sql",
-    "migrations/core/0031_business_people.sql",
-    "migrations/core/0032_agent_custody_fence.sql",
-    "migrations/core/0033_agent_audit_custody.sql",
-    "migrations/core/0034_agent_door_relay.sql",
-    "migrations/core/0035_agent_replay_custody.sql"
-  ],
+  "migrations": [],
   "breaking": false,
-  "agentUpdateInstructions": "Before upgrading from 0.2.0, stop writes and make a complete backup using ARCHIVE.md. Retain the exact source and private configuration. Install the updated checkout with rer install, then use rer dev locally or follow OPERATIONS.md for hosted deployment. The listed migrations apply forward without rewriting prior migration bytes. The command package is pinned to rer 0.2.134. Restore only into fresh empty resources, reconfigure owner authentication and provider credentials, and compare records and original bytes before routing traffic.",
-  "previousVersion": "0.2.0"
+  "agentUpdateInstructions": "Back up Chest using ARCHIVE.md before upgrading from 0.2.1. Install the tagged checkout and rebuild the Worker using OPERATIONS.md. Hosted demo operators deploy the tag with the Run demo workflow.",
+  "previousVersion": "0.2.1"
 }
