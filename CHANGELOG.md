@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.2.1 (26 Nov 2026)
+
+- **Hosted setup.** Configure Chest from the deployment descriptor. With outbound mail off, the owner can sign in with `rer signin`.
+- **Files and access.** Open the original from any version's preview. The keyboard file journey covers nested folders, and scoped agent operations respect file grants and consent.
+- **Upgrade.** Fifteen forward migrations add security, file and folder indexing, business administration, and agent custody and replay support. See `RELEASE.json` for the complete list. This release uses `@runeditrun/rer` 0.2.134.
 
 - **Contract page.** run-chest.com/contract takes Base's rer 0.2.72 header: the bar and nav wrap, so the page no longer scrolls sideways at 320 px (and none from 300 to 1600). Every Base copy is refreshed to rer-v0.2.72 (with the pin moved to `@runeditrun/rer` 0.2.72), which also brings Base's chunked import-door job creation for multi-MB sources.
 - **Run page.** run-chest.com/run takes Base's rer 0.2.71 /run page: the install command never runs under the Copy button, and the page does not scroll sideways at any width from 320 to 1600 px. Every Base copy is refreshed to rer-v0.2.71 (with the pin moved to `@runeditrun/rer` 0.2.71), and the run site keeps Chest's own favicons.
